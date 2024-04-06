@@ -1,0 +1,16 @@
+#include "<%= project_header %>"
+
+<% init_names.keys.each do |init_name| -%>
+#include "<%= init_name %>"
+<% end -%>
+
+extern "C"
+void <%= init_name %>()
+{
+  return Rice::detail::cpp_protect([]
+  {
+  <% init_names.values.each do |init_function| -%>
+    <%= init_function %>();
+  <% end -%>
+});
+}
