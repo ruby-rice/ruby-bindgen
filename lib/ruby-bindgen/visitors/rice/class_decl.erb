@@ -1,0 +1,15 @@
+
+<%- children = render_children(cursor, nil, ".\n") -%>
+<%- if under && base -%>
+Class <%= cursor.cruby_name %> = define_class_under<<%= cursor.spelling %>, <%= base.spelling %>>(<%= under.cruby_name %>, "<%= cursor.ruby_name %>")<%= children.empty? ? ";" : "." %>
+<%= children %><%= !children.empty? ? ";" : "" %>
+<%- elsif under -%>
+Class <%= cursor.cruby_name %> = define_class_under<<%= cursor.spelling %>>(<%= under.cruby_name %>, "<%= cursor.ruby_name %>")<%= children.empty? ? ";" : "." %>
+<%= children %><%= !children.empty? ? ";" : "" %>
+<%- elsif base -%>
+Class <%= cursor.cruby_name %> = define_class<<%= cursor.spelling %>, <%= base.spelling %>>("<%= cursor.ruby_name %>")<%= children.empty? ? ";" : "." %>
+<%= children %><%= !children.empty? ? ";" : "" %>
+<%- else -%>
+Class <%= cursor.cruby_name %> = define_class<<%= cursor.spelling %>>("<%= cursor.ruby_name %>")<%= children.empty? ? ";" : "." %>
+<%= children %><%= !children.empty? ? ";" : "" %>
+<%- end -%>

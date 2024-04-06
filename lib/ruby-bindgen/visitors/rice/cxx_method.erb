@@ -1,0 +1,7 @@
+<%- if cursor.public? -%>
+<%- if cursor.static? -%>
+define_singleton_function("<%= cursor.ruby_name %>", &<%= cursor.semantic_parent.spelling %>::<%= cursor.spelling %>)
+<%- else -%>
+define_method("<%= cursor.ruby_name %>", &<%= cursor.semantic_parent.spelling %>::<%= cursor.spelling %>)
+<%- end -%>
+<%- end -%>

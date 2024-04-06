@@ -1,0 +1,3 @@
+<%- if cursor.public? && cursor.semantic_parent.kind == :cursor_class_decl -%>
+define_singleton_attr("<%= cursor.ruby_name %>", "&<%= cursor.semantic_parent.spelling %>::<%= cursor.spelling %>")
+<%- end -%>

@@ -1,0 +1,4 @@
+
+<%- children = render_children(cursor, nil, ".\n") -%>
+Enum<<%= cursor.spelling %>> <%= cursor.cruby_name %> = define_enum<<%= cursor.spelling %>>("<%= cursor.ruby_name %>", <%= under ? under.cruby_name : "rb_cObject" %>)<%= children.empty? ? ";" : "." %>
+<%= children %><%= !children.empty? ? ";" : "" %>
