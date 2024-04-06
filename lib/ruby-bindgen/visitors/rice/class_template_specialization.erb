@@ -1,0 +1,6 @@
+<%- if under -%>
+Data_Type<<%= template_specialization %>> <%= cursor.cruby_name %> = define_class_under<<%= template_specialization %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
+<%- else -%>
+Data_Type<<%= template_specialization %>> <%= cursor.cruby_name %> = define_class<<%= template_specialization %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
+<%- end -%>
+<%= cursor.cruby_name %>.define(&<%= cursor_template.display_name %>_builder<Data_Type<<%= template_specialization %>>, <%= template_arguments %>>);

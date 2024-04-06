@@ -1,0 +1,166 @@
+cmake_minimum_required (VERSION 3.26)
+
+project(<%= project %>)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package("Ruby")
+
+if (MSVC)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+  add_compile_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
+  add_compile_options(/bigobj)
+  # The default of /EHsc crashes Ruby when calling longjmp with optimizations on (/O2)
+  string(REGEX REPLACE "/EHsc" "/EHs" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+else (GCC)
+  add_compile_options(-ftemplate-backtrace-limit=0)
+  # https://github.com/doxygen/doxygen/issues/9269#issuecomment-1094975328
+  add_compile_options(-Wa,-mbig-obj)
+endif ()
+
+add_library (${CMAKE_PROJECT_NAME} SHARED)
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES SUFFIX ".so")
+
+# Subdirectories
+<% directories.each do |directory| -%>
+add_subdirectory ("<%= directory.relative_path_from(directory.parent) %>")
+<% end -%>
+
+# Sources
+<% if !files.empty? -%>
+target_sources(${CMAKE_PROJECT_NAME} PUBLIC
+  <% files.each do |file| -%>
+  "<%= file.relative_path_from(file.parent) %>"
+  <% end -%>
+)
+<% end -%>
+
+
+
+
+  cmake_minimum_required (VERSION 3.26)
+
+  project("ruby_opencv")
+
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+  find_package("Ruby")
+
+  add_library (${CMAKE_PROJECT_NAME} SHARED)
+  set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES PREFIX "")
+  set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES SUFFIX ".so")
+
+  if (MINGW)
+  target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/msys64/ucrt64/include/opencv4")
+  target_link_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/msys64/ucrt64/lib")
+
+  elseif (MSVC)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+  add_compile_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
+  add_compile_definitions(CVAPI_EXPORTS)
+  add_compile_options(/bigobj)
+
+  # The default of /EHsc crashes Ruby when calling longjmp with optimizations on (/O2)
+  string(REGEX REPLACE "/EHsc" "/EHs" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME})
+  set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY VS_DEBUGGER_COMMAND $<$<CONFIG:DEBUG>:\$(ProjectDir))
+
+  set(OpenCV_DIR "${VCPKG_INSTALLED_DIR}/x64-windows/share/opencv4")
+
+  target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Source/vcpkg/installed/x64-windows/include")
+  target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.41.34120/include")
+  target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Program Files (x86)/Windows Kits/10/include/10.0.22621.0/ucrt")
+  target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/lib/clang/17/include")
+  target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/include")
+  target_link_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Source/vcpkg/installed/x64-windows/debug/lib")
+
+  elseif (GCC)
+  add_compile_options(-ftemplate-backtrace-limit=0)
+  # https://github.com/doxygen/doxygen/issues/9269#issuecomment-1094975328
+  add_compile_options(-Wa,-mbig-obj)
+  endif ()
+
+  if (NOT MSVC)
+  target_link_libraries(${CMAKE_PROJECT_NAME}
+  #"opencv_aruco
+  #"opencv_bgsegm
+  #"opencv_bioinspired
+  #"opencv_calib3d
+  #"opencv_ccalib
+  "opencv_core"
+  #"opencv_cudaarithm
+  #"opencv_cudabgsegm
+  #"opencv_cudacodec
+  #"opencv_cudafeatures2d
+  #"opencv_cudafilters
+  #"opencv_cudaimgproc
+  #"opencv_cudalegacy
+  #"opencv_cudaobjdetect
+  #"opencv_cudaoptflow
+  #"opencv_cudastereo
+  #"opencv_cudawarping
+  #"opencv_cudev
+  #"opencv_datasets
+  #"opencv_dnn_objdetect
+  #"opencv_dnn_superres
+  #"opencv_dnn
+  #"opencv_dpm
+  #"opencv_face
+  #"opencv_features2d
+  #"opencv_flann
+  #"opencv_fuzzy
+  #"opencv_hdf
+  #"opencv_hfs
+  #"opencv_highgui
+  #"opencv_img_hash
+  "opencv_imgcodecs"
+  #"opencv_imgproc
+  #"opencv_intensity_transform
+  #"opencv_line_descriptor
+  #"opencv_mcc
+  #"opencv_ml
+  #"opencv_objdetect
+  #"opencv_optflow
+  #"opencv_phase_unwrapping
+  #"opencv_photo
+  #"opencv_plot
+  #"opencv_quality
+  #"opencv_rapid
+  #"opencv_reg
+  #"opencv_saliency
+  #"opencv_shape
+  #"opencv_stereo
+  #"opencv_stitching
+  #"opencv_structured_light
+  #"opencv_superres
+  #"opencv_surface_matching
+  #"opencv_text
+  #"opencv_tracking
+  #"opencv_video
+  #"opencv_videoio
+  #"opencv_videostab
+  #"opencv_wechat_qrcode
+  #"opencv_xfeatures2d
+  #"opencv_ximgproc
+  #"opencv_xobjdetect
+  #"opencv_xphoto
+  )
+  endif ()
+
+  find_package(OpenCV REQUIRED)
+
+  target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Source/rice")
+  target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${Ruby_INCLUDE_DIR} ${Ruby_CONFIG_INCLUDE_DIR})
+
+  #target_link_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Source/vcpkg/installed/x64-windows/lib")
+  target_link_libraries(${CMAKE_PROJECT_NAME} ${Ruby_LIBRARY})
+
+  # Subdirectories
+  add_subdirectory ("opencv2")
+
+  # Sources
+  target_sources(${CMAKE_PROJECT_NAME} PUBLIC
+  "ruby-opencv-rb.cpp"
+  )

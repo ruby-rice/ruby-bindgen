@@ -1,0 +1,123 @@
+#! /usr/bin/env ruby
+
+# To make testing/debugging easier test within this source tree versus an installed gem
+
+# First require ruby-prof
+require 'ruby-bindgen'
+
+# Now setup option parser
+require 'ostruct'
+require 'optparse'
+
+module RubyBindGen
+  # == Synopsis
+  #
+  # Generates Ruby bindings for C and C++ libraries
+  #
+  # == Usage
+  # ruby-bindgen [options] input -- [clang options (see clang documnetation)]
+  #
+  # Options:
+  #    -i, --input           Raise exceptions encountered during profiling (true) or suppress them (false)
+  #    -o, --output           Raise exceptions encountered during profiling (true) or suppress them (false)
+  #    -f, --format           Raise exceptions encountered during profiling (true) or suppress them (false)
+
+  class Cmd
+    # :enddoc:
+    attr_accessor :options
+
+    def initialize
+      setup_options
+      parse_args
+    end
+
+    def setup_options
+      @options = OpenStruct.new
+      options.input = nil
+      options.output = nil
+      options.format = nil
+      options.include = nil
+      options.exclude = []
+      options.clang_args = []
+    end
+
+    def option_parser
+      OptionParser.new do |opts|
+        opts.banner = "ruby-bindgen #{RubyBindgen::VERSION}\n" +
+            "Usage: ruby-bindgen [options] -- [clang options (see clang documentation)]"
+
+        opts.separator ""
+        opts.separator "Options:"
+
+        opts.on('-i input', '--input input', 'Path to input directory') do |value|
+          if !File.directory?(value)
+            raise("Must specify input path to a directory: #{value}")
+          end
+          options.input = value
+        end
+
+        opts.on('--include include', 'include pattern for files to process. Relative to input directory. Defaults to **/*.{h,hpp}') do |value|
+          options.include = value
+        end
+
+        opts.on('--exclude exclude', 'include pattern to exclude files to process. Relative to input directory') do |value|
+          options.exclude << value
+        end
+
+        opts.on('-o output', '--output output', '=output', 'Path to output directory') do |value|
+          if !File.directory?(value)
+            raise("Must specify output path to a directory: #{value}")
+          end
+          options.output = value
+        end
+
+        opts.on('-f format', '--format format', ['ffi', 'rice'], 'Output format (ffi or rice)') do |value|
+          options.format = value
+        end
+
+        opts.on_tail("-h", "--help", "Show help message") do
+          puts opts
+          exit
+        end
+      end
+    end
+
+    def parse_args
+      self.options.clang_args = self.option_parser.parse!
+
+      if self.options.input.nil?
+        raise("Must specify input path (--input)")
+      end
+
+      if self.options.output.nil?
+        raise("Must specify output path (--output)")
+      end
+
+      if self.options.format.nil?
+        raise("Must specify format (--format)")
+      end
+    rescue OptionParser::InvalidOption, OptionParser::InvalidArgument, OptionParser::MissingArgument => e
+      puts self.option_parser
+      puts e.message
+      exit(-1)
+    end
+
+    def run
+      inputter = RubyBindgen::Inputter.new(self.options.input, self.options.include, self.options.exclude)
+      parser = RubyBindgen::Parser.new(inputter, self.options.clang_args)
+      outputter = RubyBindgen::Outputter.new(self.options.output)
+      visitor = RubyBindgen::Visitors::Rice.new("ruby-opencv", outputter)
+      parser.generate(visitor)
+      #
+      # parser.generate(RubyBindgen::Visitors::Rice)
+      # #validate_result('rice/opencv4.hpp')
+
+    end
+  end
+end
+
+# Parse command line options
+cmd = RubyBindGen::Cmd.new
+
+# Generate bindings some code
+cmd.run
