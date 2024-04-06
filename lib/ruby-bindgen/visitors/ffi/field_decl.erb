@@ -1,0 +1,1 @@
+:<%= cursor.ruby_name.empty? ? "unnamed_#{cursor.semantic_parent.map {|child, parent| child}.index(cursor)}" : cursor.ruby_name %>, <%= ffi_type %>

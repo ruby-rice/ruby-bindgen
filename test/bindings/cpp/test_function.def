@@ -1,0 +1,4 @@
+LIBRARY test_function
+
+EXPORTS
+  Init_test_function

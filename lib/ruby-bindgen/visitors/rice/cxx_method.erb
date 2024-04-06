@@ -1,0 +1,5 @@
+<%- if cursor.static? -%>
+<%= is_template ? "template " : "" %>define_singleton_function<%= signature %>("<%= name %>", &<%= cursor.semantic_parent.qualified_display_name %>::<%= cursor.spelling %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %>
+<%- else -%>
+<%= is_template ? "template " : "" %>define_method<%= signature %>("<%= name %>", &<%= cursor.semantic_parent.qualified_display_name %>::<%= cursor.spelling %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %>
+<%- end -%>
