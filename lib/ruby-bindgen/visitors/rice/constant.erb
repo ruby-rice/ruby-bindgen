@@ -1,0 +1,9 @@
+<%- if cursor.semantic_parent.kind == :cursor_translation_unit ||
+       cursor.semantic_parent.kind == :cursor_namespace ||
+       cursor.semantic_parent.anonymous? -%>
+<%= cursor.semantic_parent.cruby_name %>.define_constant("<%= name %>", <%= qualified_name %>);
+<%- elsif cursor.kind == :cursor_macro_definition -%>
+Class(rb_cObject).define_constant("<%= name %>", <%= qualified_name %>);
+<%- else -%>
+define_constant("<%= name %>", <%= qualified_name %>)
+<%- end -%>

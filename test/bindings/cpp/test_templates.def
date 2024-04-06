@@ -1,0 +1,4 @@
+LIBRARY test_templates
+
+EXPORTS
+  Init_test_templates

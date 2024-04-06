@@ -1,0 +1,7 @@
+template<typename Data_Type_T, <%= template_signature %>>
+inline void <%= cursor.spelling %>_builder(Data_Type_T& klass)
+{
+  <%- unless children.empty? -%>
+  klass.<%= children.lstrip %>
+  <%- end -%>
+};

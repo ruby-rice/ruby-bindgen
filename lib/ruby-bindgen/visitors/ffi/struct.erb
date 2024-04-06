@@ -1,0 +1,6 @@
+
+class <%= cursor.ruby_name %> < FFI::Struct
+<%- if cursor.find_by_kind(false, :cursor_field_decl).count > 0 -%>
+  layout <%= children %>
+<%- end -%>
+end

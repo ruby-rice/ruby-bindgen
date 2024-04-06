@@ -1,0 +1,4 @@
+define_method("[]=", [](<%= cursor.semantic_parent.qualified_display_name %>&self, int index, <%= cursor.result_type.spelling %> value)
+{
+    self[index] = value;
+})

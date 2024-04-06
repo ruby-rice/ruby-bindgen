@@ -1,0 +1,10 @@
+<%- if under && base -%>
+<%= cursor.cruby_name %> = define_class_under<<%= template_specialization %>, <%= base_ref.display_name %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>").
+<%- elsif under -%>
+<%= cursor.cruby_name %> = define_class_under<<%= template_specialization %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>").
+<%- elsif base -%>
+<%= cursor.cruby_name %> = define_class<<%= template_specialization %>, <%= base_ref.display_name %>>("<%= cursor.type.spelling.split("::").last.camelize %>").
+<%- else -%>
+<%= cursor.cruby_name %> = define_class<<%= template_specialization %>>("<%= cursor.type.spelling.split("::").last.camelize %>").
+<%- end -%>
+  define(&<%= cursor_template.spelling %>_builder<Data_Type<<%= template_specialization %>>, <%= template_arguments %>>);

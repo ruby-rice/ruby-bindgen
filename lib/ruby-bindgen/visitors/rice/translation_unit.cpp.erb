@@ -1,0 +1,16 @@
+<%- includes.each do |include| -%>
+<%= include %>
+<%- end -%>
+
+using namespace Rice;
+
+<%- @classes.sort.each do |class_name| -%>
+Rice::Class <%= class_name %>;
+<%- end -%>
+
+<%= class_templates %>
+
+void <%= init_name %>()
+{
+<%= content %>
+}
