@@ -1,0 +1,6 @@
+<%- if under -%>
+Enum<<%= cursor.qualified_display_name %>> <%= cursor.cruby_name %> = define_enum<<%= cursor.qualified_display_name %>>("<%= cursor.ruby_name %>")<%= children.empty? ? ";" : "." %>
+<% else %>
+Enum<<%= cursor.qualified_display_name %>> <%= cursor.cruby_name %> = define_enum<<%= cursor.qualified_display_name %>>("<%= cursor.ruby_name %>", <%= under.cruby_name %>)<%= children.empty? ? ";" : "." %>
+<% end %>
+<%= children %><%= !children.empty? ? ";" : "" %>

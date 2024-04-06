@@ -1,0 +1,12 @@
+#include <sstream>
+#include <<%= include %>>
+#include "<%= File.basename(rice_header) %>"
+
+using namespace Rice;
+
+<%= render_class_templates(cursor) %>
+
+void <%= init_name %>()
+{
+<%= render_children(cursor, :indentation => 2) %>
+}

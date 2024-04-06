@@ -1,0 +1,5 @@
+<%- if under -%>
+Module <%= cursor.cruby_name %> = define_module_under(<%= under.cruby_name %>, "<%= cursor.ruby_name %>");
+<%- else -%>
+Module <%= cursor.cruby_name %> = define_module("<%= cursor.ruby_name %>");
+<%- end -%>

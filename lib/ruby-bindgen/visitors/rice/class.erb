@@ -1,0 +1,13 @@
+<%- line_terminator = children.empty? ? ";" : "." -%>
+<%- if under && base -%>
+Class <%= cursor.cruby_name %> = define_class_under<<%= cursor.class_name_cpp %>, <%= base.type.spelling %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+<%- elsif under -%>
+Class <%= cursor.cruby_name %> = define_class_under<<%= cursor.class_name_cpp %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+<%- elsif base -%>
+Class <%= cursor.cruby_name %> = define_class<<%= cursor.class_name_cpp %>, <%= base.type.spelling %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+<%- else -%>
+Class <%= cursor.cruby_name %> = define_class<<%= cursor.class_name_cpp %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+<%- end -%>
+<%- unless children.empty? -%>
+<%= children %>;
+<%- end -%>

@@ -1,0 +1,4 @@
+LIBRARY test_class
+
+EXPORTS
+  Init_test_class
