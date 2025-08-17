@@ -9,6 +9,8 @@ Rice::Class rb_cOuterInnerContainerClassCallback;
 Rice::Class rb_cOuterInnerContainerClassConfig;
 Rice::Class rb_cOuterMyClass;
 
+
+
 void Init_Class()
 {
   Class(rb_cObject).define_constant("GLOBAL_CONSTANT", GLOBAL_CONSTANT);

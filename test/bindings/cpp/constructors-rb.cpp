@@ -8,6 +8,8 @@ Rice::Class rb_cDeleteConstructor;
 Rice::Class rb_cImplicitConstructor;
 Rice::Class rb_cOverloadedConstructors;
 
+
+
 void Init_Constructors()
 {
   rb_cImplicitConstructor = define_class<ImplicitConstructor>("ImplicitConstructor").

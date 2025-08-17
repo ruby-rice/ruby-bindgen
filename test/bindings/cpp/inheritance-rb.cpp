@@ -7,6 +7,8 @@ Rice::Class rb_cEmailNotification;
 Rice::Class rb_cNotification;
 Rice::Class rb_cPushNotification;
 
+
+
 void Init_Inheritance()
 {
   Enum<NotificationType> rb_cNotificationType = define_enum<NotificationType>("NotificationType").

@@ -27,8 +27,7 @@ Gem::Specification.new do |spec|
                    'ruby-bindgen.gemspec',
                    'bin/ruby-bindgen',
                    'doc/**/*',
-                   'lib/**/*.rb',
-                   'lib/**/*.erb',
+                   'lib/**/*',
 ]
 
   spec.test_files = Dir["test/test_*.rb"]

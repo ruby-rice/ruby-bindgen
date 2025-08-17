@@ -30,6 +30,8 @@ inline void Matrix_builder(Data_Type_T& klass)
       Arg("column")).
     define_attr("data", &Tests::Matrix<T, Rows, Columns>::data);
 };
+
+
 void Init_Templates()
 {
   Module rb_mDetail = define_module("Detail");
