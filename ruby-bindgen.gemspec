@@ -27,7 +27,8 @@ Gem::Specification.new do |spec|
                    'ruby-bindgen.gemspec',
                    'bin/ruby-bindgen',
                    'doc/**/*',
-                   'lib/ruby-bindgen/*.rb',
+                   'lib/**/*.rb',
+                   'lib/**/*.erb',
 ]
 
   spec.test_files = Dir["test/test_*.rb"]
@@ -37,6 +38,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'ffi', '>= 1.16'
   spec.add_dependency 'ffi-clang', '>= 0.10'
+  spec.add_dependency 'ostruct', '>= 0.6.0'
 
   spec.add_development_dependency 'minitest'
   spec.add_development_dependency 'logger'

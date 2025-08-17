@@ -1,15 +1,31 @@
 # ruby-bindgen
-RubyBindgen generates Ruby bindings from C and C++ header files. To do this it uses [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html), via the [ffi-clang](https://github.com/ioquatix/ffi-clang) gem, to parse header files. It then traverses the Clang AST using the visitor patter. 
+RubyBindgen generates Ruby bindings from C and C++ header files. To do this it uses [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html), via the [ffi-clang](https://github.com/ioquatix/ffi-clang) gem, to parse header files. It then traverses the Clang AST using the visitor patter.
 
 Two visitors are implemented - one for C that generates [FFI](https://github.com/ffi/ffi) bindings and one for C++ that generates [Rice](https://github.com/ruby-rice/rice) bindings.
 
-If a library provides both a C and C++ API, use the C API! It will likely be much easier to develop a Ruby extension using the C API and will also likely be more stable between releases. 
- 
+If a library provides both a C and C++ API, use the C API! It will likely be much easier to develop a Ruby extension using the C API and will also likely be more stable between releases.
+
 ## C Bindings
 C bindings are created using [FFI](https://github.com/ffi/ffi). For more information see the [C bindings](c_bindings.md) documentation.
 
 ## C++ Bindings
 C++ bindings are created using [Rice](https://github.com/ruby-rice/rice). For more information see the [C++ bindings](cpp_bindings.md) documentation.
+
+## Installation
+
+Install ffi-clang
+
+```console
+$ git clone https://github.com/ioquatix/ffi-clang && cd ffi-clang
+$ bundle config set --local with maintenance && bundle exec bake gem:install
+```
+
+Install ruby-bingen
+
+```console
+$ git clone https://github.com/ruby-rice/ruby-bindgen.git && cd ruby-bindgen
+$ rake install
+```
 
 ## Usage
 ruby-bindgent includes a command line tool called `ruby-bidgen` which is used to create new bindings. Its usage is:
@@ -94,5 +110,3 @@ Finally, we want to set a bunch of Clang compiler options so it can find the cor
 [ffi_gen](https://github.com/ffi/ffi_gen). Unmaintained bindings generator for C.
 [rbing](https://github.com/D-Alex/rbind). Gem with custom C++ parser
 [Magnus](https://github.com/matsadler/magnus). Bindings generator for Rust.
-
-

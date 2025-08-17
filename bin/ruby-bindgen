@@ -126,7 +126,7 @@ module RubyBindGen
       parser = RubyBindgen::Parser.new(inputter, self.options.clang_args)
       outputter = RubyBindgen::Outputter.new(self.options.output)
 
-      format_klass = RubyBindgen::formats.const_get(self.options.format)
+      format_klass = RubyBindgen::Visitors.const_get(self.options.format)
       format = format_klass.new(self.options.extension, outputter)
       parser.generate(format)
     end
