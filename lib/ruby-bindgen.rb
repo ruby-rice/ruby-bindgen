@@ -13,3 +13,5 @@ require 'ruby-bindgen/namer'
 require 'ruby-bindgen/visitors/cmake/cmake'
 require 'ruby-bindgen/visitors/ffi/ffi'
 require 'ruby-bindgen/visitors/rice/rice'
+
+require 'ruby-bindgen/version'

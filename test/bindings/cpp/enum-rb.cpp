@@ -5,6 +5,8 @@ using namespace Rice;
 
 Rice::Class rb_cMyNamespaceMyClass;
 
+
+
 void Init_Enum()
 {
   Enum<Color> rb_cColor = define_enum<Color>("Color").

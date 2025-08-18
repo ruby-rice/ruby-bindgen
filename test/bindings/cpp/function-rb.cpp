@@ -4,6 +4,8 @@
 using namespace Rice;
 
 
+
+
 void Init_Function()
 {
   define_global_function("some_function", &someFunction,

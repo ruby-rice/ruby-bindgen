@@ -64,6 +64,9 @@ module RubyBindgen
 				#create_project(pathname)
 				create_directories(pathname)
 			end
+
+			def visit_end
+      end
 		end
 	end
 end

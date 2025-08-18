@@ -1,3 +1,12 @@
 /.idea
 /.vs
 Gemfile.lock
+
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/tmp/
+mkmf.log
