@@ -1,0 +1,23 @@
+site_name: ruby-bindgen
+site_description: Generate Ruby bindings from C and C++ header files
+site_url: https://ruby-bindgen.github.io/ruby-bindgen/
+
+repo_name: ruby-bindgen/ruby-bindgen
+repo_url: https://github.com/ruby-bindgen/ruby-bindgen
+
+theme:
+  name: material
+  palette:
+    primary: red
+    accent: red
+
+nav:
+  - Home: index.md
+  - C Bindings: c_bindings.md
+  - C++ Bindings: cpp_bindings.md
+  - Operators: operators.md
+
+markdown_extensions:
+  - tables
+  - fenced_code
+  - codehilite
