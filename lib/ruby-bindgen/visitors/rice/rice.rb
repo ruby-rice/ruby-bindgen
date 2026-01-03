@@ -13,8 +13,8 @@ module RubyBindgen
 
       attr_reader :project, :outputter
 
-      def initialize(project, outputter)
-        @project = project.gsub(/-/, '_')
+      def initialize(outputter, project = nil)
+        @project = project&.gsub(/-/, '_')
         @outputter = outputter
         @init_names = Hash.new
         @namespaces = Set.new
@@ -25,7 +25,7 @@ module RubyBindgen
       def overloads
         @overloads_stack.last || Hash.new
       end
-      
+
       def visit_start
       end
 
@@ -669,6 +669,8 @@ module RubyBindgen
       end
 
       def create_project_files
+        return unless @project
+
         # Create master hpp/cpp files to include all the files we generated
         basename = "#{project}-rb"
         rice_header = "#{basename}.hpp"
@@ -685,6 +687,8 @@ module RubyBindgen
       end
 
       def create_def_file
+        return unless @project
+
         # Create def file to export Init function
         def_name = "#{project}.def"
         init_function = "Init_#{project}"

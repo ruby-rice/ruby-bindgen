@@ -5,8 +5,8 @@ module RubyBindgen
     class FFI
       attr_reader :library_names, :library_versions, :project, :outputter
 
-      def initialize(project, outputter, library_names: [], library_versions: [])
-        @project = project.gsub(/-/, '_')
+      def initialize(outputter, project = nil, library_names: [], library_versions: [])
+        @project = project&.gsub(/-/, '_')
         @outputter = outputter
         @library_names = library_names
         @library_versions = library_versions

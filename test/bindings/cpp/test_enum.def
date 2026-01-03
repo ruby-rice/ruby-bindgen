@@ -1,4 +1,0 @@
-LIBRARY test_enum
-
-EXPORTS
-  Init_test_enum

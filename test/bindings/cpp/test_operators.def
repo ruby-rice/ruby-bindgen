@@ -1,4 +1,0 @@
-LIBRARY test_operators
-
-EXPORTS
-  Init_test_operators

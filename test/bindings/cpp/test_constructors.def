@@ -1,4 +1,0 @@
-LIBRARY test_constructors
-
-EXPORTS
-  Init_test_constructors

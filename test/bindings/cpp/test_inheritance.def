@@ -1,4 +1,0 @@
-LIBRARY test_inheritance
-
-EXPORTS
-  Init_test_inheritance

@@ -25,8 +25,8 @@ class AbstractTest < Minitest::Test
     RubyBindgen::Parser.new(self.create_inputter(header), args)
   end
 
-  def create_visitor(klass, project, header, **options)
-    klass.new(project, self.create_outputter(header), **options)
+  def create_visitor(klass, header, project: nil, **options)
+    klass.new(self.create_outputter(header), project, **options)
   end
 
   def validate_result(outputter)

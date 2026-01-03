@@ -16,7 +16,7 @@ module RubyBindGen
   # Generates Ruby bindings for C and C++ libraries
   #
   # == Usage
-  # ruby-bindgen [options] input -- [clang options (see clang documnetation)]
+  # ruby-bindgen [options] input -- [clang options (see clang documentation)]
   #
   # Options match:
   #   -e, --extension Name of the generated Ruby extension (C++ only). Must be a valid C++ identifier
@@ -128,7 +128,7 @@ module RubyBindGen
       outputter = RubyBindgen::Outputter.new(self.options.output)
 
       format_klass = RubyBindgen::Visitors.const_get(self.options.format)
-      format = format_klass.new(self.options.extension, outputter)
+      format = format_klass.new(outputter, self.options.extension)
       parser.generate(format)
     end
   end
