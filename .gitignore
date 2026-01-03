@@ -2,6 +2,7 @@
 /.vs
 /.claude
 Gemfile.lock
+/test/bindings/cpp/build
 
 /.bundle/
 /.yardoc
