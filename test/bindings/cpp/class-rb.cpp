@@ -29,7 +29,7 @@ void Init_Class()
   rb_cOuterMyClass = define_class_under<Outer::MyClass, Outer::BaseClass>(rb_mOuter, "MyClass").
     define_constant("SOME_CONSTANT", Outer::MyClass::SOME_CONSTANT).
     define_singleton_attr("StaticFieldOne", &MyClass::static_field_one).
-    define_singleton_function("", &Outer::MyClass::staticMethodOne).
+    define_singleton_function("static_method_one?", &Outer::MyClass::staticMethodOne).
     define_constructor(Constructor<Outer::MyClass>()).
     define_constructor(Constructor<Outer::MyClass, int>(),
       Arg("a")).
@@ -53,7 +53,7 @@ void Init_Class()
   
   rb_cOuterInnerContainerClassCallback = define_class_under<Outer::Inner::ContainerClass::Callback>(rb_cOuterInnerContainerClass, "Callback").
     define_constructor(Constructor<Outer::Inner::ContainerClass::Callback>()).
-    define_method("", &Outer::Inner::ContainerClass::Callback::compute);
+    define_method("compute?", &Outer::Inner::ContainerClass::Callback::compute);
   
   rb_cOuterInnerContainerClassConfig = define_class_under<Outer::Inner::ContainerClass::Config>(rb_cOuterInnerContainerClass, "Config").
     define_constructor(Constructor<Outer::Inner::ContainerClass::Config>()).
