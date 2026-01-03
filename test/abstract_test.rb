@@ -31,11 +31,14 @@ class AbstractTest < Minitest::Test
 
   def validate_result(outputter)
     outputter.output_paths.each do |path, content|
-      File.open(path, 'wb') do |file|
-        file << content
+      if ENV["UPDATE_EXPECTED"]
+        File.open(path, 'wb') do |file|
+          file << content
+        end
+      else
+        expected = File.read(path, mode: "rb")
+        assert_equal(expected, content, "Mismatch in #{path}")
       end
-      actual = File.read(path, mode: "rb")
-      assert_equal(content, actual)
     end
   end
 end
