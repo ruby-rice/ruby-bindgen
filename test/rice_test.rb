@@ -50,4 +50,12 @@ class RiceTest < AbstractTest
     parser.generate(visitor)
     validate_result(visitor.outputter)
   end
+
+  def test_operators
+    header = "cpp/operators.hpp"
+    parser = create_parser(header)
+    visitor = create_visitor(RubyBindgen::Visitors::Rice, "test-operators", header)
+    parser.generate(visitor)
+    validate_result(visitor.outputter)
+  end
 end

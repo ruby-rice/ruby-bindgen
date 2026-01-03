@@ -437,10 +437,8 @@ module RubyBindgen
         return unless CURSOR_CLASSES.include?(cursor.lexical_parent.kind)
 
         return unless cursor.type.args_size == 0
-        match = cursor.spelling.match(/ ([^<]+)/)
-        return unless match
 
-        ruby_name = "to_#{match[1].underscore}"
+        ruby_name = cursor.ruby_name
         result_type = type_spelling(cursor.type.result_type)
         self.render_cursor(cursor, "conversion_function",
                            :ruby_name => ruby_name, :result_type => result_type)
