@@ -1,0 +1,40 @@
+# Set default behavior to automatically normalize line endings
+* text=auto eol=lf
+
+# Ruby source files
+*.rb text eol=lf
+*.erb text eol=lf
+*.gemspec text eol=lf
+Gemfile text eol=lf
+Rakefile text eol=lf
+
+# C/C++ files
+*.h text eol=lf
+*.hpp text eol=lf
+*.c text eol=lf
+*.cpp text eol=lf
+*.def text eol=lf
+
+# Documentation
+*.md text eol=lf
+*.txt text eol=lf
+
+# Config files
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+
+# Windows batch files (keep CRLF)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
