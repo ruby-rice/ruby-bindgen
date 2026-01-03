@@ -25,7 +25,7 @@ module RubyBindgen
               "assign"
             elsif cursor.spelling.match(/^operator/)
               cursor.spelling.gsub(/^operator/, "")
-            elsif cursor.type.result_type.spelling == "bool"
+            elsif cursor.type.result_type.spelling == "bool" &&
               "#{cursor.spelling.underscore.sub(/^is_/, "")}?"
             else
               cursor.spelling.underscore

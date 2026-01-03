@@ -376,9 +376,6 @@ module RubyBindgen
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
 
-        # Can't return arrays in C++
-        return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
-
         # Is this an iterator?
         if ["begin", "end", "rbegin", "rend"].include?(cursor.spelling)
           return visit_cxx_iterator_method(cursor)
@@ -756,11 +753,17 @@ module RubyBindgen
         cursor.each(false) do |child_cursor, parent_cursor|
           if child_cursor.location.in_system_header?
             next :continue
-          end
+					end
 
-          unless child_cursor.location.from_main_file?
-            next :continue
-          end
+					path = child_cursor.location
+
+					# This sometimes does not work - for example OpenCV defines the macros
+					# CV__DNN_INLINE_NS_BEGIN/CV__DNN_INLINE_NS_END in a separate header file
+					# which causes from_main_file? to be false. So manually check.
+					# unless child_cursor.location.from_main_file?
+					unless child_cursor.file_location.file == child_cursor.translation_unit.file.name
+					  next :continue
+					end
 
           # For some reason child.cursor.public? filters out way too much
           if child_cursor.private? || child_cursor.protected?

@@ -1,6 +1,7 @@
 #! /usr/bin/env ruby
 
 # To make testing/debugging easier test within this source tree versus an installed gem
+require 'bundler/setup'
 
 # First require ruby-prof
 require 'ruby-bindgen'

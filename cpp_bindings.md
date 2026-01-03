@@ -35,6 +35,8 @@ So for a C++ library with 5 header files, `ruby-bindgen` will generate 13 wrappe
 ## Naming Conventions
 `ruby-bindgen` follow Ruby naming conventions. Thus, it will convert C++ names to their appropriate Ruby names. That means UpperCase for class names, CAPITALIZED for constants, under_score for functions, etc.
 
+In addition, functions that return boolean values have `?` appended to their names and `is_` removed if present. So `is_open` becomes `open?`.
+
 ## C++ Classes and Structs
 C++ classes and structs are mapped to Ruby classes. `ruby-bindgen` supports:
 
