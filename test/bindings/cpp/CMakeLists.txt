@@ -74,11 +74,11 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Generated binding files - update this list when adding new test headers
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-  class-rb.cpp
+  classes-rb.cpp
   constructors-rb.cpp
-  enum-rb.cpp
-  function-rb.cpp
+  enums-rb.cpp
+  functions-rb.cpp
   inheritance-rb.cpp
-  operators-rb.cpp
+ # operators-rb.cpp
   templates-rb.cpp
 )

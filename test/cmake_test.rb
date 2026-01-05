@@ -4,9 +4,9 @@ require_relative './abstract_test'
 
 class CMakeTest < AbstractTest
   def test_cmake
-    header = "cpp/class.hpp"
+    header = "cpp/classes.hpp"
     parser = create_parser(header)
-    visitor = create_visitor(RubyBindgen::Visitors::CMake, "test-class", header)
+    visitor = create_visitor(RubyBindgen::Visitors::CMake, "test-classes", header)
     parser.generate(visitor)
   end
 end

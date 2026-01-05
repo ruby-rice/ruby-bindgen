@@ -1,4 +1,4 @@
-namespace detail
+namespace Internal
 {
     template<int Rows, int Columns>
     class Data
@@ -12,7 +12,7 @@ namespace detail
         int getColumns();
     };
 
-    typedef detail::Data<2, 2> Data22;
+    typedef Internal::Data<2, 2> Data22;
 }
 
 namespace Tests
@@ -25,7 +25,15 @@ namespace Tests
         Matrix(const Matrix<T, Rows, Columns>& other);
         Matrix<T, Rows, 1> column(int column) const;
         Matrix<T, 1, Columns> row(int column) const;
-        detail::Data<Rows, Columns> data;
+        Internal::Data<Rows, Columns> data;
+
+        // Overloaded instance methods require explicit signature disambiguation
+        void create(int rows, int cols);
+        void create(int ndims, const int* sizes);
+
+        // Overloaded static methods require explicit signature disambiguation
+        static Matrix zeros(int rows, int cols);
+        static Matrix zeros(int ndims, const int* sizes);
     };
 
     typedef Matrix<int, 2, 2> MatrixInt22;
