@@ -25,7 +25,7 @@ namespace MyNamespace
     Winter = 7
   };
 
-  class MyClass : public BaseClass
+  class MyClass
   {
     public:
       static const int SOME_CONSTANT = 42;

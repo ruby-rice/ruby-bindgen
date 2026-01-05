@@ -11,8 +11,8 @@ class RiceTest < AbstractTest
     validate_result(visitor.outputter)
   end
 
-  def test_enum
-    header = "cpp/enum.hpp"
+  def test_enums
+    header = "cpp/enums.hpp"
     parser = create_parser(header)
     visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
     parser.generate(visitor)
