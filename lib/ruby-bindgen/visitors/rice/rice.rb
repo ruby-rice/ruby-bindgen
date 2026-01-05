@@ -399,12 +399,14 @@ module RubyBindgen
         end
       end
 
+      ITERATOR_METHODS = ["begin", "end", "cbegin", "cend", "rbegin", "rend", "crbegin", "crend"].freeze
+
       def visit_cxx_method(cursor)
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
 
         # Is this an iterator?
-        if ["begin", "end", "rbegin", "rend"].include?(cursor.spelling)
+        if ITERATOR_METHODS.include?(cursor.spelling)
           return visit_cxx_iterator_method(cursor)
         end
 
@@ -435,14 +437,23 @@ module RubyBindgen
         result
       end
 
+      # Generates Rice define_iterator calls for C++ iterator methods.
+      # In C++, cbegin/crbegin can be called on non-const objects but return const iterators,
+      # while begin/rbegin const can only be called on const objects. In Ruby this distinction
+      # doesn't exist, so we skip cbegin/crbegin to avoid generating duplicate "each_const"
+      # and "each_reverse_const" methods.
       def visit_cxx_iterator_method(cursor)
         iterator_name = case cursor.spelling
                           when "begin"
                             cursor.const? ? "each_const" : "each"
+                          when "cbegin"
+                            return
                           when "rbegin"
                             cursor.const? ? "each_reverse_const" : "each_reverse"
+                          when "crbegin"
+                            return
                           else
-                            # We don't care about end methods
+                            # We don't care about end methods (end, cend, rend, crend)
                             return
                         end
 

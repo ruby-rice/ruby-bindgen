@@ -80,6 +80,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   enums-rb.cpp
   functions-rb.cpp
   inheritance-rb.cpp
+  iterators-rb.cpp
  # operators-rb.cpp
   templates-rb.cpp
 )

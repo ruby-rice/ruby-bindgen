@@ -66,4 +66,19 @@ class RiceTest < AbstractTest
     parser.generate(visitor)
     validate_result(visitor.outputter)
   end
+
+  def test_iterators
+    header = "cpp/iterators.hpp"
+    # Need system includes to parse std::vector
+    args = [
+      "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.44.35207/include",
+      "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt",
+      "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/lib/clang/20/include",
+      "-xc++"
+    ]
+    parser = create_parser(header, args)
+    visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
+    parser.generate(visitor)
+    validate_result(visitor.outputter)
+  end
 end
