@@ -3,12 +3,11 @@
 
 using namespace Rice;
 
+Rice::Class rb_cCopyMoveConstructors;
 Rice::Class rb_cDefaultConstructor;
 Rice::Class rb_cDeleteConstructor;
 Rice::Class rb_cImplicitConstructor;
 Rice::Class rb_cOverloadedConstructors;
-
-
 
 void Init_Constructors()
 {
@@ -24,5 +23,10 @@ void Init_Constructors()
     define_constructor(Constructor<OverloadedConstructors>()).
     define_constructor(Constructor<OverloadedConstructors, int>(),
       Arg("a"));
+  
+  rb_cCopyMoveConstructors = define_class<CopyMoveConstructors>("CopyMoveConstructors").
+    define_constructor(Constructor<CopyMoveConstructors>()).
+    define_constructor(Constructor<CopyMoveConstructors, const CopyMoveConstructors&>(),
+      Arg("other"));
 
 }

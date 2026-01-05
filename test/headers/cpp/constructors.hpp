@@ -20,3 +20,11 @@ public:
     OverloadedConstructors();
     OverloadedConstructors(int a);
 };
+
+class CopyMoveConstructors
+{
+public:
+    CopyMoveConstructors() = default;
+    CopyMoveConstructors(const CopyMoveConstructors& other);
+    CopyMoveConstructors(CopyMoveConstructors&& other);
+};
