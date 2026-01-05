@@ -3,8 +3,8 @@
 require_relative './abstract_test'
 
 class RiceTest < AbstractTest
-  def test_class
-    header = "cpp/class.hpp"
+  def test_classes
+    header = "cpp/classes.hpp"
     parser = create_parser(header)
     visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
     parser.generate(visitor)

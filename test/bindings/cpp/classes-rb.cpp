@@ -1,5 +1,5 @@
-#include <class.hpp>
-#include "class-rb.hpp"
+#include <classes.hpp>
+#include "classes-rb.hpp"
 
 using namespace Rice;
 
@@ -9,26 +9,24 @@ Rice::Class rb_cOuterInnerContainerClassCallback;
 Rice::Class rb_cOuterInnerContainerClassConfig;
 Rice::Class rb_cOuterMyClass;
 
-
-
-void Init_Class()
+void Init_Classes()
 {
   Class(rb_cObject).define_constant("GLOBAL_CONSTANT", GLOBAL_CONSTANT);
   
-  Class(rb_cObject).define_singleton_attr("GlobalVariable", &globalVariable);
+  Class(rb_cObject).define_constant("GlobalVariable", globalVariable);
   
   Module rb_mOuter = define_module("Outer");
   
   rb_mOuter.define_constant("NAMESPACE_CONSTANT", Outer::NAMESPACE_CONSTANT);
   
-  rb_mOuter.define_singleton_attr("NamespaceVariable", &Outer::namespaceVariable);
+  rb_mOuter.define_constant("NamespaceVariable", Outer::namespaceVariable);
   
   rb_cOuterBaseClass = define_class_under<Outer::BaseClass>(rb_mOuter, "BaseClass").
     define_constructor(Constructor<Outer::BaseClass>());
   
   rb_cOuterMyClass = define_class_under<Outer::MyClass, Outer::BaseClass>(rb_mOuter, "MyClass").
     define_constant("SOME_CONSTANT", Outer::MyClass::SOME_CONSTANT).
-    define_singleton_attr("StaticFieldOne", &MyClass::static_field_one).
+    define_singleton_attr("StaticFieldOne", &Outer::MyClass::static_field_one).
     define_singleton_function("static_method_one?", &Outer::MyClass::staticMethodOne).
     define_constructor(Constructor<Outer::MyClass>()).
     define_constructor(Constructor<Outer::MyClass, int>(),

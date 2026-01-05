@@ -1,5 +1,5 @@
 <%- if cursor.semantic_parent.kind == :cursor_translation_unit || cursor.semantic_parent.kind == :cursor_namespace -%>
 <%= cursor.semantic_parent.cruby_name %>.define_singleton_attr("<%= cursor.ruby_name %>", &<%= cursor.qualified_name %>);
 <%- else -%>
-define_singleton_attr("<%= cursor.ruby_name %>", &<%= cursor.semantic_parent.spelling %>::<%= cursor.spelling %>)
+define_singleton_attr("<%= cursor.ruby_name %>", &<%= cursor.semantic_parent.qualified_display_name %>::<%= cursor.spelling %>)
 <%- end -%>

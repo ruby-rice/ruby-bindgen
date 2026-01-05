@@ -655,10 +655,19 @@ module RubyBindgen
         # Skip compiler/cuda keywords like __device__ __forceinline__
         return if cursor.spelling.match(/^__.*__$/)
 
+        # Const variables become Ruby constants
         if cursor.type.const_qualified?
           visit_variable_constant(cursor)
         else
-          self.render_cursor(cursor, "variable")
+          parent_kind = cursor.semantic_parent.kind
+          if parent_kind == :cursor_translation_unit || parent_kind == :cursor_namespace
+            # Non-const variables at global/namespace scope become Ruby constants
+            # Rice's define_singleton_attr only works on Data_Type<T>, not Class or Module
+            visit_variable_constant(cursor)
+          else
+            # Static class fields use define_singleton_attr on Data_Type<T>
+            self.render_cursor(cursor, "variable")
+          end
         end
       end
 
