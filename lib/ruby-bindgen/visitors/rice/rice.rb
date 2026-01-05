@@ -135,8 +135,19 @@ module RubyBindgen
 
         # Push overloads
         @overloads_stack.push(cursor.overloads)
+
+        # Visit non-static methods first, then static methods.
+        # Static methods must come last because Rice uses Ruby's Forwardable module
+        # to forward method calls from smart pointers to the wrapped object. To build
+        # the list of methods to forward, Rice inspects its native registry which is
+        # populated by define_method/define_attr calls. Static factory methods that
+        # return smart pointers must therefore be defined after instance methods.
         children += visit_children(cursor,
-                                  :exclude_kinds => [:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl])
+                                  :exclude_kinds => [:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl],
+                                  :only_static => false)
+        children += visit_children(cursor,
+                                  :exclude_kinds => [:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl],
+                                  :only_static => true)
         @overloads_stack.pop
 
         children_content = merge_children(children, :indentation => 2, :separator => ".\n", terminator: ";\n", :strip => true)
@@ -184,8 +195,19 @@ module RubyBindgen
 
         # Visit children
         @overloads_stack.push(cursor.overloads)
+
+        # Visit non-static methods first, then static methods.
+        # Static methods must come last because Rice uses Ruby's Forwardable module
+        # to forward method calls from smart pointers to the wrapped object. To build
+        # the list of methods to forward, Rice inspects its native registry which is
+        # populated by define_method/define_attr calls. Static factory methods that
+        # return smart pointers must therefore be defined after instance methods.
         children = visit_children(cursor,
-                                  :exclude_kinds => [:cursor_typedef_decl, :cursor_alias_decl])
+                                  :exclude_kinds => [:cursor_typedef_decl, :cursor_alias_decl],
+                                  :only_static => false)
+        children += visit_children(cursor,
+                                  :exclude_kinds => [:cursor_typedef_decl, :cursor_alias_decl],
+                                  :only_static => true)
         @overloads_stack.pop
 
         children_content = merge_children(children, :indentation => 4, :separator => ".\n",
@@ -759,7 +781,7 @@ module RubyBindgen
         result = merge_children(results, :indentation => indentation, :separator => separator, :strip => strip)
       end
 
-      def visit_children(cursor, exclude_kinds: Set.new)
+      def visit_children(cursor, exclude_kinds: Set.new, only_static: nil)
         results = Array.new
         cursor.each(false) do |child_cursor, parent_cursor|
           if child_cursor.location.in_system_header?
@@ -800,6 +822,18 @@ module RubyBindgen
 
           if exclude_kinds.include?(child_cursor.kind)
             next :continue
+          end
+
+          # Filter by static if requested
+          # Non-methods are only visited when only_static is false (first pass)
+          # Methods are filtered by their static status
+          if !only_static.nil?
+            if child_cursor.kind == :cursor_cxx_method
+              next :continue if only_static != child_cursor.static?
+            else
+              # Non-methods only in the non-static pass
+              next :continue if only_static
+            end
           end
 
           visit_method = self.figure_method(child_cursor)

@@ -34,6 +34,9 @@ namespace Tests
         // Overloaded static methods require explicit signature disambiguation
         static Matrix zeros(int rows, int cols);
         static Matrix zeros(int ndims, const int* sizes);
+
+        // Static factory - must come after instance methods for smart pointer forwarding
+        static Matrix* create();
     };
 
     typedef Matrix<int, 2, 2> MatrixInt22;

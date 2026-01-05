@@ -36,7 +36,8 @@ inline void Matrix_builder(Data_Type_T& klass)
     template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, int)>("zeros", &Tests::Matrix<T, Rows, Columns>::zeros,
       Arg("rows"), Arg("cols")).
     template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, const int*)>("zeros", &Tests::Matrix<T, Rows, Columns>::zeros,
-      Arg("ndims"), Arg("sizes"));
+      Arg("ndims"), Arg("sizes")).
+    template define_singleton_function<Tests::Matrix<T, Rows, Columns>*(*)()>("create", &Tests::Matrix<T, Rows, Columns>::create);
 };
 void Init_Templates()
 {
