@@ -19,8 +19,8 @@ class RiceTest < AbstractTest
     validate_result(visitor.outputter)
   end
 
-  def test_function
-    header = "cpp/function.hpp"
+  def test_functions
+    header = "cpp/functions.hpp"
     parser = create_parser(header)
     visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
     parser.generate(visitor)
