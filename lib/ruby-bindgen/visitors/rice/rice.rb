@@ -246,6 +246,10 @@ module RubyBindgen
                                 elsif type.declaration.kind == :cursor_typedef_decl
                                   #type.declaration.underlying_type.spelling
                                   "#{type.const_qualified? ? "const " : ""}#{type.declaration.qualified_name}"
+                               elsif type.declaration.kind == :cursor_type_alias_decl
+                                  # C++11 using declarations (e.g., std::vector<T>::iterator)
+                                  # type.spelling preserves template arguments, qualified_name does not
+                                  type.spelling
                                 elsif type.canonical.kind == :type_unexposed
                                   spelling = type.spelling
                                   if spelling.match(/\w+::/)
