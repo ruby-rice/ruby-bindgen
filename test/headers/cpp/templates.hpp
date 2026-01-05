@@ -41,4 +41,30 @@ namespace Tests
 
     typedef Matrix<int, 2, 2> MatrixInt22;
     using MatrixFloat33 = Matrix<float, 3, 3>;
+
+    // Test template class with static const member
+    // Similar to OpenCV's ParamType<T>::type pattern
+    template<typename T>
+    struct TypeTraits
+    {
+        static const int type = 0;
+    };
+
+    template<>
+    struct TypeTraits<int>
+    {
+        static const int type = 1;
+    };
+
+    template<>
+    struct TypeTraits<float>
+    {
+        static const int type = 2;
+    };
+
+    template<>
+    struct TypeTraits<double>
+    {
+        static const int type = 3;
+    };
 }
