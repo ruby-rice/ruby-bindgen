@@ -320,50 +320,55 @@ module RubyBindgen
         params.map do |param|
           result = "Arg(\"#{param.spelling.underscore}\")"
 
-          # Check if there is a default value
-          match = param.extent.text.match(/^.*=\s*(.*)/)
-          if match
-            result << " = static_cast<#{param.type.spelling}>(#{match[1]})"
+          # Check if there is a default value by looking for expression children.
+          # The default value is an expression child (cursor_unexposed_expr) of the parameter.
+          default_value = find_default_value(param)
+          if default_value
+            # Use type_spelling to get fully qualified type name
+            qualified_type = type_spelling(param.type)
+            result << " = static_cast<#{qualified_type}>(#{default_value})"
           end
           result
         end
       end
 
-      def parameter_type(param_children)
-        result = ""
-        cursor = param_children.shift
-        if cursor.nil?
-          return result
+      # Finds the default value expression for a parameter and returns it with qualified type names.
+      # For example, transforms "Range::all()" to "cv::Range::all()".
+      # Returns nil if no default value.
+      def find_default_value(param)
+        # Default value kinds: complex expressions use cursor_unexposed_expr,
+        # simple literals use cursor_integer_literal, etc.
+        default_value_kinds = [:cursor_unexposed_expr] + CURSOR_LITERALS
+
+        # Find the first expression child - this is the default value
+        default_expr = param.find_by_kind(false, *default_value_kinds).first
+        return nil unless default_expr
+
+        # Get the raw expression text
+        default_text = default_expr.extent.text
+
+        # Find all type_ref cursors within the default expression to qualify type names.
+        # Note: We search from default_expr, not param, to avoid the parameter type's type_ref.
+        default_expr.find_by_kind(true, :cursor_type_ref).each do |type_ref|
+          ref = type_ref.referenced
+          next unless ref && ref.kind != :cursor_invalid_file
+
+          begin
+            qualified_name = ref.qualified_name
+            extent_text = type_ref.extent.text
+
+            # Only replace if the qualified name is different (has namespace)
+            next if extent_text == qualified_name
+
+            # Replace the unqualified type name with the qualified one.
+            # Use word boundary to avoid partial matches.
+            default_text = default_text.gsub(/\b#{Regexp.escape(extent_text)}\b/, qualified_name)
+          rescue ArgumentError
+            # Skip if we can't get qualified name
+          end
         end
 
-        case cursor.kind
-          when :cursor_template_ref
-            result << cursor.referenced.qualified_name
-            result << "<"
-            result << parameter_type(param_children)
-            result << ">"
-          when :cursor_ref_type
-            result << cursor.spelling
-          when :cursor_type_ref
-            # Horrible hack
-            result << if cursor.spelling.match(/</)
-                        "#{cursor.referenced.qualified_namespace}::#{cursor.spelling}"
-                      else
-                        cursor.type.spelling
-                      end
-          when :cursor_cxx_typeid_expr
-            result << cursor.type.spelling
-          when :cursor_namespace_ref
-            #result << cursor.spelling << "::"
-            result << parameter_type(param_children)
-          when :cursor_unexposed_expr
-            result << cursor.type.spelling
-          when :cursor_integer_literal, :cursor_unary_operator
-            # Default value, do nothing
-          else
-            raise "Unsupported cursor kind: #{cursor.kind}"
-        end
-        result
+        default_text
       end
 
       def method_signature(cursor)

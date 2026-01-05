@@ -76,6 +76,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   classes-rb.cpp
   constructors-rb.cpp
+  default_values-rb.cpp
   enums-rb.cpp
   functions-rb.cpp
   inheritance-rb.cpp

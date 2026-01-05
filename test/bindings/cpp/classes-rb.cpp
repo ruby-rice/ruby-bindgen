@@ -27,7 +27,6 @@ void Init_Classes()
   rb_cOuterMyClass = define_class_under<Outer::MyClass, Outer::BaseClass>(rb_mOuter, "MyClass").
     define_constant("SOME_CONSTANT", Outer::MyClass::SOME_CONSTANT).
     define_singleton_attr("StaticFieldOne", &Outer::MyClass::static_field_one).
-    define_singleton_function("static_method_one?", &Outer::MyClass::staticMethodOne).
     define_constructor(Constructor<Outer::MyClass>()).
     define_constructor(Constructor<Outer::MyClass, int>(),
       Arg("a")).
@@ -39,7 +38,8 @@ void Init_Classes()
       Arg("a")).
     define_method<void(Outer::MyClass::*)(bool)>("overloaded", &Outer::MyClass::overloaded,
       Arg("a")).
-    define_attr("field_one", &Outer::MyClass::field_one);
+    define_attr("field_one", &Outer::MyClass::field_one).
+    define_singleton_function("static_method_one?", &Outer::MyClass::staticMethodOne);
   
   Module rb_mOuterInner = define_module_under(rb_mOuter, "Inner");
   

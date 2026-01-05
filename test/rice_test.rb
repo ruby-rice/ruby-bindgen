@@ -58,4 +58,12 @@ class RiceTest < AbstractTest
     parser.generate(visitor)
     validate_result(visitor.outputter)
   end
+
+  def test_default_values
+    header = "cpp/default_values.hpp"
+    parser = create_parser(header)
+    visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
+    parser.generate(visitor)
+    validate_result(visitor.outputter)
+  end
 end
