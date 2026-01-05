@@ -27,6 +27,9 @@ module RubyBindgen
       # Function call operator
       '()' => 'call',
 
+      # Member access through pointer (arrow operator)
+      '->' => 'arrow',
+
       # Increment/decrement - arity-dependent (prefix=0 args, postfix=1 arg)
       '++' => ->(cursor) { cursor.type.args_size == 0 ? 'increment_pre' : 'increment' },
       '--' => ->(cursor) { cursor.type.args_size == 0 ? 'decrement_pre' : 'decrement' },

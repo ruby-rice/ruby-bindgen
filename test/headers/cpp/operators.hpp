@@ -68,6 +68,10 @@ public:
     // Dereference operator - maps to dereference
     int operator*() const;
 
+    // Arrow operator - maps to arrow
+    Operators* operator->();
+    const Operators* operator->() const;
+
     // Conversion operators - map to to_* methods
     operator int() const;
     operator float() const;

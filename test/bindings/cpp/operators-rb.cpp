@@ -89,6 +89,8 @@ void Init_Operators()
     define_method("call", &Operators::operator(),
       Arg("a"), Arg("b")).
     define_method<int(Operators::*)() const>("dereference", &Operators::operator*).
+    define_method<Operators*(Operators::*)()>("arrow", &Operators::operator->).
+    define_method<const Operators*(Operators::*)() const>("arrow", &Operators::operator->).
     define_method("to_i", [](const Operators& self) -> int
     {
       return self;

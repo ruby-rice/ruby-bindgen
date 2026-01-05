@@ -106,6 +106,7 @@ C++ and Ruby support overriding an additional set of operators. The comma operat
 |     | []= (if reference)|             |
 | ()  | Not Overridable   | call        |
 | *   | Not Overridable   | dereference |
+| ->  | Not Overridable   | arrow       |
 | <<  | <<                |             |
 | >>  | >>                |             |
 | ,   | Not overridable   |             |

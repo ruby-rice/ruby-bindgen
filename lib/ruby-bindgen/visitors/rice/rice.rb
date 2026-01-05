@@ -336,8 +336,8 @@ module RubyBindgen
         end
       end
 
-      # Finds the default value expression for a parameter and returns it with qualified type names.
-      # For example, transforms "Range::all()" to "cv::Range::all()".
+      # Finds the default value expression for a parameter and returns it with qualified type/function names.
+      # For example, transforms "Range::all()" to "cv::Range::all()" and "noArray()" to "cv::noArray()".
       # Returns nil if no default value.
       def find_default_value(param)
         # Default value kinds: complex expressions use cursor_unexposed_expr,
@@ -365,6 +365,32 @@ module RubyBindgen
             next if extent_text == qualified_name
 
             # Replace the unqualified type name with the qualified one.
+            # Use word boundary to avoid partial matches.
+            default_text = default_text.gsub(/\b#{Regexp.escape(extent_text)}\b/, qualified_name)
+          rescue ArgumentError
+            # Skip if we can't get qualified name
+          end
+        end
+
+        # Find all decl_ref_expr cursors to qualify function calls and enum values.
+        # For example, transforms "noArray()" to "cv::noArray()" and "NORM_L2" to "cv::NORM_L2".
+        default_expr.find_by_kind(true, :cursor_decl_ref_expr).each do |decl_ref|
+          ref = decl_ref.referenced
+          next unless ref && ref.kind != :cursor_invalid_file
+
+          # Skip class methods - they're already qualified by the class name in source.
+          # For example, Range::all() has extent "all" but qualified_name "cv::Range::all".
+          # We only want to qualify free functions in namespaces, not member functions.
+          next if ref.kind == :cursor_cxx_method
+
+          begin
+            qualified_name = ref.qualified_name
+            extent_text = decl_ref.extent.text
+
+            # Only replace if the qualified name is different (has namespace)
+            next if extent_text == qualified_name
+
+            # Replace the unqualified name with the qualified one.
             # Use word boundary to avoid partial matches.
             default_text = default_text.gsub(/\b#{Regexp.escape(extent_text)}\b/, qualified_name)
           rescue ArgumentError
