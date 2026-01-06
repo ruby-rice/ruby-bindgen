@@ -8,7 +8,15 @@ Rice::Class rb_cDefaultConstructor;
 Rice::Class rb_cDeleteConstructor;
 Rice::Class rb_cImplicitConstructor;
 Rice::Class rb_cOverloadedConstructors;
+Rice::Class rb_cTemplateConstructorInt;
 
+template<typename Data_Type_T, typename T>
+inline void TemplateConstructor_builder(Data_Type_T& klass)
+{
+  klass.define_constructor(Constructor<TemplateConstructor<T>>()).
+    define_constructor(Constructor<TemplateConstructor<T>, T>(),
+      Arg("value"));
+};
 void Init_Constructors()
 {
   rb_cImplicitConstructor = define_class<ImplicitConstructor>("ImplicitConstructor").
@@ -28,5 +36,8 @@ void Init_Constructors()
     define_constructor(Constructor<CopyMoveConstructors>()).
     define_constructor(Constructor<CopyMoveConstructors, const CopyMoveConstructors&>(),
       Arg("other"));
+  
+  rb_cTemplateConstructorInt = define_class<TemplateConstructor<int>>("TemplateConstructorInt").
+    define(&TemplateConstructor_builder<Data_Type<TemplateConstructor<int>>, int>);
 
 }
