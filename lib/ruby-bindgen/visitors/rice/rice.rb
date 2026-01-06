@@ -245,10 +245,15 @@ module RubyBindgen
                                   # Template instantiations (e.g., TemplateConstructor<int>) return cursor_class_decl
                                   # Need to preserve template args from type.spelling
                                   spelling = type.spelling
-                                  if type.spelling.match(/\w+::/)
+                                  qualified = type.declaration.qualified_name
+                                  # If qualified_name ends with spelling, it's more complete (has namespace prefix)
+                                  # e.g., spelling="GpuMat::Allocator" qualified="cv::cuda::GpuMat::Allocator"
+                                  if qualified.end_with?(spelling)
+                                    qualified
+                                  elsif type.spelling.match(/\w+::/)
                                     spelling
                                   else
-                                    spelling.sub(type.declaration.spelling, type.declaration.qualified_name)
+                                    spelling.sub(type.declaration.spelling, qualified)
                                   end
                                 elsif type.declaration.kind == :cursor_typedef_decl && type.declaration.semantic_parent.kind == :cursor_class_template
                                   # Dependent types in templates need 'typename' keyword
@@ -649,6 +654,8 @@ module RubyBindgen
 
         # This can happen when the first operator is a fundamental type like double
         return if class_cursor.kind == :cursor_no_decl_found
+        # Rice already provides bitwise operators (&, |, ^, ~, <<, >>) for enums automatically
+        return if class_cursor.kind == :cursor_enum_decl
 
         # Make sure we have seen the cursor class, it could be in a different translation unit!
         #return unless class_cursor.location.file == cursor.translation_unit.spelling

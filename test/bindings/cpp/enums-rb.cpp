@@ -48,5 +48,10 @@ void Init_Enums()
     define_constructor(Constructor<MyNamespace::Solver>()).
     define_method("solve", &MyNamespace::Solver::solve,
       Arg("method") = static_cast<int>(MyNamespace::DECOMP_SVD));
+  
+  Enum<MyNamespace::Flags> rb_cMyNamespaceFlags = define_enum_under<MyNamespace::Flags>("Flags", rb_mMyNamespace).
+    define_value("FLAG_NONE", MyNamespace::Flags::FLAG_NONE).
+    define_value("FLAG_READ", MyNamespace::Flags::FLAG_READ).
+    define_value("FLAG_WRITE", MyNamespace::Flags::FLAG_WRITE);
 
 }
