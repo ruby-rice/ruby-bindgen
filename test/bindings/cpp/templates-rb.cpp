@@ -3,6 +3,7 @@
 
 using namespace Rice;
 
+Rice::Class matrix_float33;
 Rice::Class rb_cData22;
 Rice::Class rb_cMatrixInt22;
 Rice::Class rb_cTestsTypeTraitsDouble;
@@ -72,6 +73,9 @@ void Init_Templates()
   
   rb_cMatrixInt22 = define_class_under<Tests::Matrix<int, 2, 2>>(rb_mTests, "MatrixInt22").
     define(&Matrix_builder<Data_Type<Tests::Matrix<int, 2, 2>>, int, 2, 2>);
+  
+  matrix_float33 = define_class_under<Tests::Matrix<float, 3, 3>>(rb_mTests, "MatrixFloat33").
+    define(&Matrix_builder<Data_Type<Tests::Matrix<float, 3, 3>>, float, 3, 3>);
   
   rb_cTestsTypeTraitsInt = define_class_under<Tests::TypeTraits<int>>(rb_mTests, "TypeTraitsInt").
     define_constructor(Constructor<Tests::TypeTraits<int>>()).

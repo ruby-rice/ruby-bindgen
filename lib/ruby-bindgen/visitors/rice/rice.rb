@@ -20,6 +20,8 @@ module RubyBindgen
         @namespaces = Set.new
         @overloads_stack = Array.new
         @classes = Array.new
+        @typedef_map = Hash.new
+        @auto_generated_bases = Set.new
       end
 
       def overloads
@@ -37,9 +39,14 @@ module RubyBindgen
       def visit_translation_unit(translation_unit, path, relative_path)
         @namespaces.clear
         @classes.clear
+        @typedef_map.clear
+        @auto_generated_bases.clear
 
         cursor = translation_unit.cursor
         @overloads_stack.push(cursor.overloads)
+
+        # Build a map from canonical type spellings to typedef/using declarations
+        build_typedef_map(cursor)
 
         # Figure out relative paths for generated header and cpp file
         basename = "#{File.basename(relative_path, ".*")}-rb"
@@ -742,29 +749,93 @@ module RubyBindgen
         end
       end
 
+      # Handle C++11 'using' type alias declarations the same as typedef
+      def visit_type_alias_decl(cursor)
+        visit_typedef_decl(cursor)
+      end
+
       def visit_template_specialization(cursor, cursor_template, underlying_type)
         under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
+        template_arguments = underlying_type.canonical.spelling.match(/\<(.*)\>/)[1]
+
+        result = ""
 
         # Is there a base class?
         base_ref = cursor_template.find_by_kind(false, :cursor_cxx_base_specifier).first
+        base_spelling = nil
         if base_ref
           # Base class children can be a :cursor_type_ref or :cursor_template_ref
           type_ref = base_ref.find_by_kind(false, :cursor_type_ref, :cursor_template_ref).first
           base = type_ref.definition
-        end
 
-        template_arguments = underlying_type.canonical.spelling.match(/\<(.*)\>/)[1]
+          # Resolve the base class to its instantiated form (e.g., PtrStep<unsigned char>)
+          base_spelling = resolve_base_instantiation(cursor, underlying_type)
+
+          # If the base class has no typedef, auto-generate it first
+          if base_spelling && !@typedef_map[base_spelling] && !@auto_generated_bases.include?(base_spelling)
+            result = auto_generate_base_class(base_ref, base_spelling, template_arguments, under)
+          end
+        end
 
         template_specialization = type_spelling(underlying_type)
 
         @classes << cursor.cruby_name
-        self.render_cursor(cursor, "class_template_specialization",
+        result + self.render_cursor(cursor, "class_template_specialization",
                            :cursor_template => cursor_template,
                            :template_specialization => template_specialization,
                            :template_arguments => template_arguments,
                            :base_ref => base_ref,
                            :base => base,
+                           :base_spelling => base_spelling,
                            :under => under)
+      end
+
+      # Auto-generate a base class definition when no typedef exists for it
+      def auto_generate_base_class(base_ref, base_spelling, template_arguments, under)
+        # Get the base template cursor
+        base_template_ref = base_ref.find_by_kind(false, :cursor_template_ref).first
+        return "" unless base_template_ref
+
+        base_template = base_template_ref.referenced
+
+        result = ""
+
+        # Check if this base class has its own base that needs auto-generation (recursive)
+        base_base_ref = base_template.find_by_kind(false, :cursor_cxx_base_specifier).first
+        base_base_spelling = nil
+        if base_base_ref
+          base_base_template_ref = base_base_ref.find_by_kind(false, :cursor_template_ref).first
+          if base_base_template_ref
+            # Get namespace from base_spelling
+            namespace = base_spelling.split("<").first.split("::")[0..-2].join("::")
+            base_base_name = base_base_template_ref.referenced.spelling
+            base_base_spelling = namespace.empty? ? "#{base_base_name}<#{template_arguments}>" : "#{namespace}::#{base_base_name}<#{template_arguments}>"
+
+            # Recursively auto-generate if needed
+            if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
+              result = auto_generate_base_class(base_base_ref, base_base_spelling, template_arguments, under)
+            end
+          end
+        end
+
+        # Mark as generated to avoid duplicates
+        @auto_generated_bases << base_spelling
+
+        # Generate a Ruby class name from the base spelling
+        ruby_name = base_spelling.split("::").last.gsub(/<.*>/, "").camelize +
+                    template_arguments.split(",").map(&:strip).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join
+
+        cruby_name = "rb_c#{ruby_name}"
+
+        @classes << cruby_name
+        result + render_template("auto_generated_base_class",
+                        :cruby_name => cruby_name,
+                        :ruby_name => ruby_name,
+                        :base_spelling => base_spelling,
+                        :base_base_spelling => base_base_spelling,
+                        :base_template => base_template,
+                        :template_arguments => template_arguments,
+                        :under => under)
       end
 
       def visit_union(cursor)
@@ -996,6 +1067,52 @@ module RubyBindgen
       def render_children(cursor, indentation: 0, separator: "\n", terminator: "", strip: false, exclude_kinds: Set.new)
         children = visit_children(cursor)
         merge_children(children, indentation: indentation, separator: separator, terminator: terminator, strip: strip)
+      end
+
+      # Build a map from canonical type spellings to typedef/using declarations.
+      # This allows us to look up if a typedef exists for a given template instantiation.
+      def build_typedef_map(cursor)
+        cursor.each(true) do |child, parent|
+          # Handle both typedef and using statements
+          next unless [:cursor_typedef_decl, :cursor_type_alias_decl].include?(child.kind)
+          next unless child.location.from_main_file?
+
+          canonical = child.underlying_type.canonical.spelling
+          @typedef_map[canonical] = child
+        end
+      end
+
+      # Given a typedef cursor and its underlying type, resolve the base class
+      # to an actual instantiated type (e.g., PtrStep<unsigned char> instead of PtrStep<T>).
+      # Returns the resolved base class spelling or nil if no base class exists.
+      def resolve_base_instantiation(cursor, underlying_type)
+        # Get template reference from the typedef
+        template_ref = cursor.find_by_kind(false, :cursor_template_ref).first
+        return nil unless template_ref
+
+        # Get base specifier from the template
+        base_spec = template_ref.referenced.find_by_kind(false, :cursor_cxx_base_specifier).first
+        return nil unless base_spec
+
+        # Get the template reference in the base specifier
+        base_template_ref = base_spec.find_by_kind(false, :cursor_template_ref).first
+        return nil unless base_template_ref
+
+        # Extract template arguments from the canonical spelling
+        canonical = underlying_type.canonical.spelling
+        return nil unless canonical =~ /<(.+)>\z/
+
+        template_args = $1
+        # Get namespace from canonical (everything before the last ::Name<args>)
+        namespace = canonical.split('<').first.split('::')[0..-2].join('::')
+
+        # Construct the fully qualified base class instantiation
+        base_name = base_template_ref.referenced.spelling
+        if namespace.empty?
+          "#{base_name}<#{template_args}>"
+        else
+          "#{namespace}::#{base_name}<#{template_args}>"
+        end
       end
     end
   end
