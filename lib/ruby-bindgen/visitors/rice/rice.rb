@@ -279,7 +279,9 @@ module RubyBindgen
                    when :type_rvalue_ref
                      "#{type_spelling(type.non_reference_type)}&&"
                    when :type_pointer
-                     "#{type_spelling(type.pointee)}*"
+                     # Check if the pointer itself is const (e.g., const char * const)
+                     ptr_const = type.const_qualified? ? " const" : ""
+                     "#{type_spelling(type.pointee)}*#{ptr_const}"
                    when :type_incomplete_array
                      # This is a parameter like T[]
                      type.canonical.spelling
@@ -360,8 +362,8 @@ module RubyBindgen
         default_expr = param.find_by_kind(false, *default_value_kinds).first
         return nil unless default_expr
 
-        # Get the raw expression text
-        default_text = default_expr.extent.text
+        # Get the raw expression text, stripping any leading "= " from the extent
+        default_text = default_expr.extent.text.sub(/\A\s*=\s*/, '')
 
         # Find all type_ref cursors within the default expression to qualify type names.
         # Note: We search from default_expr, not param, to avoid the parameter type's type_ref.
@@ -383,8 +385,8 @@ module RubyBindgen
             next if extent_text == qualified_name
 
             # Replace the unqualified type name with the qualified one.
-            # Use word boundary to avoid partial matches.
-            default_text = default_text.gsub(/\b#{Regexp.escape(extent_text)}\b/, qualified_name)
+            # Use negative lookbehind to avoid replacing already-qualified names (preceded by ::)
+            default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(extent_text)}\b/, qualified_name)
           rescue ArgumentError
             # Skip if we can't get qualified name
           end
@@ -424,8 +426,8 @@ module RubyBindgen
             next if extent_text == qualified_name
 
             # Replace the unqualified name with the qualified one.
-            # Use word boundary to avoid partial matches.
-            default_text = default_text.gsub(/\b#{Regexp.escape(extent_text)}\b/, qualified_name)
+            # Use negative lookbehind to avoid replacing already-qualified names (preceded by ::)
+            default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(extent_text)}\b/, qualified_name)
           rescue ArgumentError
             # Skip if we can't get qualified name
           end
