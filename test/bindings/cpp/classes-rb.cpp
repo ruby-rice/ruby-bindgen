@@ -7,6 +7,8 @@ Rice::Class rb_cOuterBaseClass;
 Rice::Class rb_cOuterInnerContainerClass;
 Rice::Class rb_cOuterInnerContainerClassCallback;
 Rice::Class rb_cOuterInnerContainerClassConfig;
+Rice::Class rb_cOuterInnerGpuMat;
+Rice::Class rb_cOuterInnerGpuMatAllocator;
 Rice::Class rb_cOuterMyClass;
 
 void Init_Classes()
@@ -60,5 +62,14 @@ void Init_Classes()
   Enum<Outer::Inner::ContainerClass::GridType> rb_cOuterInnerContainerClassGridType = define_enum_under<Outer::Inner::ContainerClass::GridType>("GridType", rb_cOuterInnerContainerClass).
     define_value("SYMMETRIC_GRID", Outer::Inner::ContainerClass::GridType::SYMMETRIC_GRID).
     define_value("ASYMMETRIC_GRID", Outer::Inner::ContainerClass::GridType::ASYMMETRIC_GRID);
+  
+  rb_cOuterInnerGpuMat = define_class_under<Outer::Inner::GpuMat>(rb_mOuterInner, "GpuMat").
+    define_constructor(Constructor<Outer::Inner::GpuMat>()).
+    define_constructor(Constructor<Outer::Inner::GpuMat, int, int, Outer::Inner::GpuMat::Allocator*>(),
+      Arg("rows"), Arg("cols"), Arg("allocator") = static_cast<Outer::Inner::GpuMat::Allocator*>(Outer::Inner::GpuMat::defaultAllocator())).
+    define_singleton_function("default_allocator", &Outer::Inner::GpuMat::defaultAllocator);
+  
+  rb_cOuterInnerGpuMatAllocator = define_class_under<Outer::Inner::GpuMat::Allocator>(rb_cOuterInnerGpuMat, "Allocator").
+    define_constructor(Constructor<Outer::Inner::GpuMat::Allocator>());
 
 }

@@ -60,5 +60,23 @@ namespace Outer
         };
         GridType gridType;
     };
+
+    // Test nested class type qualification in default parameters
+    // Similar to cv::cuda::GpuMat::Allocator pattern
+    class GpuMat
+    {
+    public:
+        class Allocator
+        {
+        public:
+            virtual ~Allocator();
+        };
+
+        static Allocator* defaultAllocator();
+
+        GpuMat();
+        // Test that GpuMat::Allocator* is fully qualified as Outer::Inner::GpuMat::Allocator*
+        GpuMat(int rows, int cols, GpuMat::Allocator* allocator = GpuMat::defaultAllocator());
+    };
   }
 }
