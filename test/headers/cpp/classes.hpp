@@ -3,6 +3,23 @@ int globalVariable = 2;
 
 namespace Outer
 {
+  // Simple class to use in template argument qualification test
+  class Range
+  {
+  public:
+    int start;
+    int end;
+  };
+
+  // Simple template to test template argument qualification (avoids std::vector)
+  template<typename T>
+  class SimpleVector
+  {
+  public:
+    T* data;
+    int size;
+  };
+
   const int NAMESPACE_CONSTANT = 3;
   int namespaceVariable = 4;
 
@@ -93,6 +110,10 @@ namespace Outer
         // Test that SizeArray is fully qualified as Outer::Inner::GpuMatND::SizeArray
         GpuMatND(SizeArray size, int type);
         GpuMatND(SizeArray size, int type, void* data, StepArray step = GpuMatND::defaultStepArray());
+
+        // Test template argument qualification
+        // SimpleVector<Range> should become Outer::SimpleVector<Outer::Range>
+        GpuMatND(const SimpleVector<Range>& ranges);
     };
   }
 }

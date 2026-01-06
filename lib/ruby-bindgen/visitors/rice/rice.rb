@@ -305,10 +305,26 @@ module RubyBindgen
         # Horrible hack
         namespace = type.declaration.ancestors_by_kind(:cursor_namespace).first
         if !result.match("::") && namespace
-          "#{namespace.qualified_name}::#{result}"
-        else
-          result
+          result = "#{namespace.qualified_name}::#{result}"
         end
+
+        # For template types, check if canonical has better qualified template args
+        # e.g., std::vector<Range> vs std::vector<cv::Range>
+        # But avoid internal implementation types (those with _ prefixes like std::_Vector_iterator)
+        if result.include?('<') && type.canonical.spelling.include?('<')
+          canonical = type.canonical.spelling
+          # Skip if canonical contains internal implementation types (MSVC uses _Prefixed names)
+          unless canonical.match?(/\b_[A-Z]/)
+            # If canonical has more :: qualifiers inside template args, prefer it
+            result_template_args = result[/(?<=<).*(?=>)/] || ""
+            canonical_template_args = canonical[/(?<=<).*(?=>)/] || ""
+            if canonical_template_args.count(':') > result_template_args.count(':')
+              result = canonical
+            end
+          end
+        end
+
+        result
       end
 
       def constructor_signature(cursor)
