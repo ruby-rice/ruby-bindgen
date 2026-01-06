@@ -570,10 +570,26 @@ module RubyBindgen
 
         return unless cursor.type.args_size == 0
 
+        result_type = cursor.type.result_type
+
+        # Skip "safe bool idiom" conversion operators from pre-C++11.
+        # These are typedefs to member function pointers used before explicit operator bool().
+        # Pattern: typedef void (Class::*bool_type)() const; operator bool_type() const;
+        if result_type.declaration.kind == :cursor_typedef_decl
+          canonical = result_type.canonical
+          if canonical.kind == :type_member_pointer
+            # Check if the pointee is a function type
+            pointee = canonical.pointee
+            if pointee.kind == :type_function_proto || pointee.kind == :type_function_no_proto
+              return
+            end
+          end
+        end
+
         ruby_name = cursor.ruby_name
-        result_type = type_spelling(cursor.type.result_type)
+        result_type_spelling = type_spelling(result_type)
         self.render_cursor(cursor, "conversion_function",
-                           :ruby_name => ruby_name, :result_type => result_type)
+                           :ruby_name => ruby_name, :result_type => result_type_spelling)
       end
 
       def visit_enum_decl(cursor)

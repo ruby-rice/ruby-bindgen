@@ -115,5 +115,20 @@ namespace Outer
         // SimpleVector<Range> should become Outer::SimpleVector<Outer::Range>
         GpuMatND(const SimpleVector<Range>& ranges);
     };
+
+    // Test "safe bool idiom" from pre-C++11 - should be skipped
+    // This pattern was used before explicit operator bool() was available
+    class Stream
+    {
+    public:
+        typedef void (Stream::*bool_type)() const;
+        void this_type_does_not_support_comparisons() const {}
+
+        // This conversion operator should be SKIPPED (safe bool idiom)
+        operator bool_type() const;
+
+        // Regular conversion operators should still work
+        operator int() const;
+    };
   }
 }

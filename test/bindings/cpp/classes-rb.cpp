@@ -10,6 +10,7 @@ Rice::Class rb_cOuterInnerContainerClassConfig;
 Rice::Class rb_cOuterInnerGpuMat;
 Rice::Class rb_cOuterInnerGpuMatAllocator;
 Rice::Class rb_cOuterInnerGpuMatND;
+Rice::Class rb_cOuterInnerStream;
 Rice::Class rb_cOuterMyClass;
 Rice::Class rb_cOuterRange;
 
@@ -94,5 +95,13 @@ void Init_Classes()
     define_constructor(Constructor<Outer::Inner::GpuMatND, const Outer::SimpleVector<Outer::Range>&>(),
       Arg("ranges")).
     define_singleton_function("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray);
+  
+  rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream").
+    define_constructor(Constructor<Outer::Inner::Stream>()).
+    define_method("this_type_does_not_support_comparisons", &Outer::Inner::Stream::this_type_does_not_support_comparisons).
+    define_method("to_i", [](const Outer::Inner::Stream& self) -> int
+    {
+      return self;
+    });
 
 }
