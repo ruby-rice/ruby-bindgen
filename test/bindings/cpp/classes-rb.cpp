@@ -9,6 +9,7 @@ Rice::Class rb_cOuterInnerContainerClassCallback;
 Rice::Class rb_cOuterInnerContainerClassConfig;
 Rice::Class rb_cOuterInnerGpuMat;
 Rice::Class rb_cOuterInnerGpuMatAllocator;
+Rice::Class rb_cOuterInnerGpuMatND;
 Rice::Class rb_cOuterMyClass;
 
 void Init_Classes()
@@ -71,5 +72,13 @@ void Init_Classes()
   
   rb_cOuterInnerGpuMatAllocator = define_class_under<Outer::Inner::GpuMat::Allocator>(rb_cOuterInnerGpuMat, "Allocator").
     define_constructor(Constructor<Outer::Inner::GpuMat::Allocator>());
+  
+  rb_cOuterInnerGpuMatND = define_class_under<Outer::Inner::GpuMatND>(rb_mOuterInner, "GpuMatND").
+    define_constructor(Constructor<Outer::Inner::GpuMatND>()).
+    define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int>(),
+      Arg("size"), Arg("type")).
+    define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int, void*, Outer::Inner::GpuMatND::StepArray>(),
+      Arg("size"), Arg("type"), Arg("data"), Arg("step") = static_cast<Outer::Inner::GpuMatND::StepArray>(Outer::Inner::GpuMatND::defaultStepArray())).
+    define_singleton_function("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray);
 
 }

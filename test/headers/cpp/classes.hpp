@@ -78,5 +78,21 @@ namespace Outer
         // Test that GpuMat::Allocator* is fully qualified as Outer::Inner::GpuMat::Allocator*
         GpuMat(int rows, int cols, GpuMat::Allocator* allocator = GpuMat::defaultAllocator());
     };
+
+    // Test C++11 using type alias qualification in parameters
+    // Similar to cv::cuda::GpuMatND::SizeArray pattern
+    class GpuMatND
+    {
+    public:
+        using SizeArray = int[3];
+        using StepArray = int[3];
+
+        static StepArray& defaultStepArray();
+
+        GpuMatND();
+        // Test that SizeArray is fully qualified as Outer::Inner::GpuMatND::SizeArray
+        GpuMatND(SizeArray size, int type);
+        GpuMatND(SizeArray size, int type, void* data, StepArray step = GpuMatND::defaultStepArray());
+    };
   }
 }
