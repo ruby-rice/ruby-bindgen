@@ -8,12 +8,14 @@ Rice::Class rb_cMatrixInt22;
 Rice::Class rb_cTestsTypeTraitsDouble;
 Rice::Class rb_cTestsTypeTraitsFloat;
 Rice::Class rb_cTestsTypeTraitsInt;
+Rice::Class rb_cTransformd;
+Rice::Class rb_cTransformf;
 
 template<typename Data_Type_T, int Rows, int Columns>
 inline void Data_builder(Data_Type_T& klass)
 {
-  klass.define_constructor(Constructor<Internal::Data::Data<Rows, Columns>>()).
-    define_constructor(Constructor<Internal::Data::Data<Rows, Columns>, char*>(),
+  klass.define_constructor(Constructor<Internal::Data<Rows, Columns>>()).
+    define_constructor(Constructor<Internal::Data<Rows, Columns>, char*>(),
       Arg("type")).
     define_attr("rows", &Internal::Data<Rows, Columns>::Rows).
     define_attr("columns", &Internal::Data<Rows, Columns>::Columns).
@@ -24,8 +26,8 @@ inline void Data_builder(Data_Type_T& klass)
 template<typename Data_Type_T, typename T, int Rows, int Columns>
 inline void Matrix_builder(Data_Type_T& klass)
 {
-  klass.define_constructor(Constructor<Tests::Matrix::Matrix<T, Rows, Columns>>()).
-    define_constructor(Constructor<Tests::Matrix::Matrix<T, Rows, Columns>, const Tests::Matrix<T, Rows, Columns>&>(),
+  klass.define_constructor(Constructor<Tests::Matrix<T, Rows, Columns>>()).
+    define_constructor(Constructor<Tests::Matrix<T, Rows, Columns>, const Tests::Matrix<T, Rows, Columns>&>(),
       Arg("other")).
     define_method("column", &Tests::Matrix<T, Rows, Columns>::column,
       Arg("column")).
@@ -47,6 +49,17 @@ template<typename Data_Type_T, typename T>
 inline void TypeTraits_builder(Data_Type_T& klass)
 {
   klass.define_constant("Type", Tests::TypeTraits<T>::type);
+};
+
+template<typename Data_Type_T, typename T>
+inline void Transform_builder(Data_Type_T& klass)
+{
+  klass.define_constructor(Constructor<Tests::Transform<T>>()).
+    define_constructor(Constructor<Tests::Transform<T>, const typename Tests::Transform<T>::Vec3&>(),
+      Arg("translation")).
+    define_method("set_rotation", &Tests::Transform<T>::setRotation,
+      Arg("rotation")).
+    define_method("get_translation", &Tests::Transform<T>::getTranslation);
 };
 void Init_Templates()
 {
@@ -71,5 +84,11 @@ void Init_Templates()
   rb_cTestsTypeTraitsDouble = define_class_under<Tests::TypeTraits<double>>(rb_mTests, "TypeTraitsDouble").
     define_constructor(Constructor<Tests::TypeTraits<double>>()).
     define_constant("Type", Tests::TypeTraits<double>::type);
+  
+  rb_cTransformf = define_class_under<Tests::Transform<float>>(rb_mTests, "Transformf").
+    define(&Transform_builder<Data_Type<Tests::Transform<float>>, float>);
+  
+  rb_cTransformd = define_class_under<Tests::Transform<double>>(rb_mTests, "Transformd").
+    define(&Transform_builder<Data_Type<Tests::Transform<double>>, double>);
 
 }

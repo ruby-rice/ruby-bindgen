@@ -241,8 +241,18 @@ module RubyBindgen
                                   else
                                     spelling.sub(type.declaration.spelling, type.declaration.qualified_name)
                                   end
+                                elsif type.declaration.kind == :cursor_class_decl
+                                  # Template instantiations (e.g., TemplateConstructor<int>) return cursor_class_decl
+                                  # Need to preserve template args from type.spelling
+                                  spelling = type.spelling
+                                  if type.spelling.match(/\w+::/)
+                                    spelling
+                                  else
+                                    spelling.sub(type.declaration.spelling, type.declaration.qualified_name)
+                                  end
                                 elsif type.declaration.kind == :cursor_typedef_decl && type.declaration.semantic_parent.kind == :cursor_class_template
-                                 "#{type.const_qualified? ? "const " : ""}#{type.declaration.semantic_parent.qualified_display_name}::#{type.spelling.sub("const ", "")}"
+                                  # Dependent types in templates need 'typename' keyword
+                                 "#{type.const_qualified? ? "const " : ""}typename #{type.declaration.semantic_parent.qualified_display_name}::#{type.spelling.sub("const ", "")}"
                                 elsif type.declaration.kind == :cursor_typedef_decl
                                   #type.declaration.underlying_type.spelling
                                   "#{type.const_qualified? ? "const " : ""}#{type.declaration.qualified_name}"
@@ -291,14 +301,16 @@ module RubyBindgen
 
         case cursor.kind
           when :cursor_constructor
-            # Constructors have qualified names like MyClass::MyClass so remove the
-            # last part. Unless this is a specialization of a template like
-            # MyClass::MyClass<T>
-            parts = cursor.qualified_name.split("::")
-            if parts[-2] == parts[-1]
-              parts.pop
+            # Use the parent class's qualified_display_name which includes template
+            # arguments for template classes (e.g., "cv::Affine3<T>").
+            # For non-namespaced templates, qualified_display_name falls back to
+            # spelling which loses template args, so use display_name instead.
+            parent = cursor.semantic_parent
+            class_name = parent.qualified_display_name
+            if parent.semantic_parent.kind == :cursor_translation_unit
+              class_name = parent.display_name
             end
-            signature << parts.join("::")
+            signature << class_name
             params = type_spellings(cursor)
             signature += params
 
@@ -340,9 +352,9 @@ module RubyBindgen
       # For example, transforms "Range::all()" to "cv::Range::all()" and "noArray()" to "cv::noArray()".
       # Returns nil if no default value.
       def find_default_value(param)
-        # Default value kinds: complex expressions use cursor_unexposed_expr,
+        # Default value kinds: complex expressions use cursor_unexposed_expr or cursor_call_expr,
         # simple literals use cursor_integer_literal, etc.
-        default_value_kinds = [:cursor_unexposed_expr] + CURSOR_LITERALS
+        default_value_kinds = [:cursor_unexposed_expr, :cursor_call_expr] + CURSOR_LITERALS
 
         # Find the first expression child - this is the default value
         default_expr = param.find_by_kind(false, *default_value_kinds).first
@@ -358,7 +370,13 @@ module RubyBindgen
           next unless ref && ref.kind != :cursor_invalid_file
 
           begin
-            qualified_name = ref.qualified_name
+            # For typedefs inside class templates, use qualified_display_name to preserve
+            # template parameters (e.g., cv::Affine3<T>::Vec3 instead of cv::Affine3::Vec3)
+            qualified_name = if ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
+                               "#{ref.semantic_parent.qualified_display_name}::#{ref.spelling}"
+                             else
+                               ref.qualified_name
+                             end
             extent_text = type_ref.extent.text
 
             # Only replace if the qualified name is different (has namespace)
@@ -384,7 +402,22 @@ module RubyBindgen
           next if ref.kind == :cursor_cxx_method
 
           begin
-            qualified_name = ref.qualified_name
+            # For enum constants in unscoped (C-style) enums, the values are in the
+            # enclosing namespace, not under the enum type name. So cv::DECOMP_SVD is
+            # correct, not cv::DecompTypes::DECOMP_SVD.
+            qualified_name = if ref.kind == :cursor_enum_constant_decl &&
+                                ref.semantic_parent.kind == :cursor_enum_decl &&
+                                !ref.semantic_parent.enum_scoped?
+                               # Get the namespace of the enum, then append the constant name
+                               enum_namespace = ref.semantic_parent.semantic_parent
+                               if enum_namespace && enum_namespace.kind == :cursor_namespace
+                                 "#{enum_namespace.qualified_name}::#{ref.spelling}"
+                               else
+                                 ref.spelling
+                               end
+                             else
+                               ref.qualified_name
+                             end
             extent_text = decl_ref.extent.text
 
             # Only replace if the qualified name is different (has namespace)

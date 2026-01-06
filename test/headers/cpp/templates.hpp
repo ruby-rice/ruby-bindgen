@@ -67,4 +67,29 @@ namespace Tests
     {
         static const int type = 3;
     };
+
+    // Test typename keyword for dependent types in class templates
+    // Similar to cv::Affine3<T> with nested Vec3/Mat3 typedefs
+    template<typename T>
+    class Transform
+    {
+    public:
+        // Nested type that requires 'typename' when used as parameter type
+        typedef Matrix<T, 3, 1> Vec3;
+        typedef Matrix<T, 3, 3> Mat3;
+
+        Transform() = default;
+
+        // Constructor using dependent type - needs 'typename Tests::Transform<T>::Vec3'
+        Transform(const Vec3& translation);
+
+        // Method using dependent type - needs 'typename Tests::Transform<T>::Mat3'
+        void setRotation(const Mat3& rotation);
+
+        // Method returning dependent type - needs 'typename Tests::Transform<T>::Vec3'
+        Vec3 getTranslation() const;
+    };
+
+    typedef Transform<float> Transformf;
+    typedef Transform<double> Transformd;
 }

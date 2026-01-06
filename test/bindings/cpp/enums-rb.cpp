@@ -4,6 +4,7 @@
 using namespace Rice;
 
 Rice::Class rb_cMyNamespaceMyClass;
+Rice::Class rb_cMyNamespaceSolver;
 
 void Init_Enums()
 {
@@ -37,5 +38,15 @@ void Init_Enums()
   
   rb_cMyNamespaceMyClass.define_constant("HACKED_CLASS_CONSTANT_1", (int)MyNamespace::MyClass::HACKED_CLASS_CONSTANT_1);
   rb_cMyNamespaceMyClass.define_constant("HACKED_CLASS_CONSTANT_2", (int)MyNamespace::MyClass::HACKED_CLASS_CONSTANT_2);
+  
+  Enum<MyNamespace::DecompTypes> rb_cMyNamespaceDecompTypes = define_enum_under<MyNamespace::DecompTypes>("DecompTypes", rb_mMyNamespace).
+    define_value("DECOMP_LU", MyNamespace::DecompTypes::DECOMP_LU).
+    define_value("DECOMP_SVD", MyNamespace::DecompTypes::DECOMP_SVD).
+    define_value("DECOMP_CHOLESKY", MyNamespace::DecompTypes::DECOMP_CHOLESKY);
+  
+  rb_cMyNamespaceSolver = define_class_under<MyNamespace::Solver>(rb_mMyNamespace, "Solver").
+    define_constructor(Constructor<MyNamespace::Solver>()).
+    define_method("solve", &MyNamespace::Solver::solve,
+      Arg("method") = static_cast<int>(MyNamespace::DECOMP_SVD));
 
 }
