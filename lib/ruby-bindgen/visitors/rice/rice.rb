@@ -768,6 +768,9 @@ module RubyBindgen
         # Skip internal functions (underscore suffix naming convention)
         return if cursor.spelling.end_with?('_')
 
+        # Skip variadic functions - they can't be wrapped directly
+        return if cursor.type.variadic?
+
         if cursor.spelling.match(/operator/)
           return self.visit_operator_non_member(cursor)
         end

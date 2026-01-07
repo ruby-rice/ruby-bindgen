@@ -34,6 +34,14 @@ namespace Outer
   // Another function to skip by name - should be SKIPPED
   MY_EXPORT void alsoSkippedByName();
 
+  // --- Variadic Function Tests ---
+
+  // Variadic function - should be SKIPPED (can't be wrapped directly)
+  MY_EXPORT void printFormatted(const char* fmt, ...);
+
+  // Non-variadic overload - should be INCLUDED
+  MY_EXPORT void printFormatted(const char* msg);
+
   // --- Class with mixed methods ---
 
   class MY_EXPORT MyClass

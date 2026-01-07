@@ -13,6 +13,9 @@ void Init_Filtering()
   
   rb_mOuter.define_module_function("normal_function", &Outer::normalFunction);
   
+  rb_mOuter.define_module_function<void(*)(const char*)>("print_formatted", &Outer::printFormatted,
+    Arg("msg"));
+  
   rb_cOuterMyClass = define_class_under<Outer::MyClass>(rb_mOuter, "MyClass").
     define_constructor(Constructor<Outer::MyClass>()).
     define_method("new_method", &Outer::MyClass::newMethod);
