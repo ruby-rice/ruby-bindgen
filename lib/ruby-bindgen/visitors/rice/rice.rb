@@ -593,10 +593,27 @@ module RubyBindgen
           end
         end
 
-        ruby_name = cursor.ruby_name
         result_type_spelling = type_spelling(result_type)
+        is_const = cursor.const?
+
+        # For class templates, the result type may contain "type-parameter-X_Y" which
+        # generates invalid Ruby method names. Use generic names instead.
+        if cursor.semantic_parent.kind == :cursor_class_template &&
+           result_type.canonical.spelling.include?("type-parameter-")
+          # Determine if this is a pointer conversion
+          if result_type.kind == :type_pointer
+            ruby_name = is_const ? "to_const_ptr" : "to_ptr"
+          else
+            # Skip other template parameter conversions for now
+            return
+          end
+        else
+          ruby_name = cursor.ruby_name
+        end
+
         self.render_cursor(cursor, "conversion_function",
-                           :ruby_name => ruby_name, :result_type => result_type_spelling)
+                           :ruby_name => ruby_name, :result_type => result_type_spelling,
+                           :is_const => is_const)
       end
 
       def visit_enum_decl(cursor)
@@ -730,6 +747,13 @@ module RubyBindgen
       def visit_typedef_decl(cursor)
         return if cursor.semantic_parent.kind == :cursor_class_decl || cursor.semantic_parent.kind == :cursor_struct
 
+        # Skip if already processed (can happen when force-generating base classes)
+        return if @classes.include?(cursor.cruby_name)
+
+        # Skip typedefs to std:: types - Rice handles these automatically
+        canonical = cursor.underlying_type.canonical.spelling
+        return if canonical.start_with?("std::")
+
         cursor_template_ref = cursor.find_by_kind(false, :cursor_template_ref).first
 
         # Handle template case. For example:
@@ -771,9 +795,19 @@ module RubyBindgen
           # Resolve the base class to its instantiated form (e.g., PtrStep<unsigned char>)
           base_spelling = resolve_base_instantiation(cursor, underlying_type)
 
-          # If the base class has no typedef, auto-generate it first
-          if base_spelling && !@typedef_map[base_spelling] && !@auto_generated_bases.include?(base_spelling)
-            result = auto_generate_base_class(base_ref, base_spelling, template_arguments, under)
+          # Ensure the base class is generated before this class
+          if base_spelling
+            base_typedef = @typedef_map[base_spelling]
+            if base_typedef
+              # Base has a typedef - check if it has been generated yet
+              unless @classes.include?(base_typedef.cruby_name)
+                # Force generate the typedef first (recursively handles its bases)
+                result = visit_typedef_decl(base_typedef)
+              end
+            elsif !@auto_generated_bases.include?(base_spelling)
+              # No typedef - auto-generate
+              result = auto_generate_base_class(base_ref, base_spelling, template_arguments, under)
+            end
           end
         end
 

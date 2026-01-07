@@ -80,3 +80,24 @@ public:
 private:
     int data[10];
 };
+
+// Template class with pointer conversion operators
+// Tests that operator T*() maps to to_ptr and operator const T*() const maps to to_const_ptr
+template <typename T>
+class DataPtr
+{
+public:
+    T* data;
+
+    DataPtr() : data(nullptr) {}
+    DataPtr(T* ptr) : data(ptr) {}
+
+    // Conversion to pointer - should generate to_ptr method
+    operator T*() { return data; }
+
+    // Conversion to const pointer - should generate to_const_ptr method  
+    operator const T*() const { return data; }
+};
+
+typedef DataPtr<int> DataPtrInt;
+typedef DataPtr<float> DataPtrFloat;

@@ -3,8 +3,26 @@
 
 using namespace Rice;
 
+Rice::Class rb_cDataPtrFloat;
+Rice::Class rb_cDataPtrInt;
 Rice::Class rb_cOperators;
 
+template<typename Data_Type_T, typename T>
+inline void DataPtr_builder(Data_Type_T& klass)
+{
+  klass.define_attr("data", &DataPtr::data).
+    define_constructor(Constructor<DataPtr<T>>()).
+    define_constructor(Constructor<DataPtr<T>, T*>(),
+      Arg("ptr")).
+    define_method("to_ptr", [](DataPtr& self) -> T*
+    {
+      return self;
+    }).
+    define_method("to_const_ptr", [](const DataPtr& self) -> const T*
+    {
+      return self;
+    });
+};
 void Init_Operators()
 {
   rb_cOperators = define_class<Operators>("Operators").
@@ -103,5 +121,11 @@ void Init_Operators()
     {
       return self;
     });
+  
+  rb_cDataPtrInt = define_class<DataPtr<int>>("DataPtrInt").
+    define(&DataPtr_builder<Data_Type<DataPtr<int>>, int>);
+  
+  rb_cDataPtrFloat = define_class<DataPtr<float>>("DataPtrFloat").
+    define(&DataPtr_builder<Data_Type<DataPtr<float>>, float>);
 
 }
