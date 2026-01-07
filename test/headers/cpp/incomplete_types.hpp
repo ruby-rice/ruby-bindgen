@@ -18,7 +18,6 @@ namespace Outer
       // This method should be included (returns complete type)
       bool empty() const { return !p; }
 
-    // Make p protected so it's not generated as a public attribute
     protected:
       Impl* p;
     };
