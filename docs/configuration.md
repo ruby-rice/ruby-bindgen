@@ -11,8 +11,9 @@ ruby-bindgen config.yaml
 ## Configuration File Format
 
 ```yaml
-# Name of the generated Ruby extension
+# Name of the generated Ruby extension (optional)
 # Must be a valid C/C++ identifier (letters, numbers, underscores)
+# If omitted, only per-file bindings are generated without project wrapper files
 extension: my_extension
 
 # Path to the directory containing header files
@@ -55,7 +56,6 @@ clang_args:
 
 | Option | Description |
 |--------|-------------|
-| `extension` | Name of the Ruby extension. Used for the `Init_` function name. Must be a valid C/C++ identifier. |
 | `input` | Directory containing the header files to parse. |
 | `output` | Directory where generated binding files will be written. |
 | `format` | Type of bindings to generate: `Rice` for C++ or `FFI` for C. |
@@ -64,6 +64,7 @@ clang_args:
 
 | Option | Default | Description |
 |--------|---------|-------------|
+| `extension` | none | Name of the Ruby extension. Used for the `Init_` function name. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{extension}-rb.cpp`, `{extension}-rb.hpp`, `{extension}.def`). When omitted, only per-file bindings are generated. |
 | `match` | `["**/*.{h,hpp}"]` | Glob patterns specifying which header files to process. |
 | `skip` | `[]` | Glob patterns specifying which header files to skip. |
 | `export_macros` | `[]` | List of macros that indicate a symbol is exported. Only functions/classes with these macros will be included. |

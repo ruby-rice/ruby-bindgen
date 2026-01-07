@@ -59,7 +59,6 @@ module RubyBindGen
     end
 
     def validate_config
-      raise "Config must specify 'extension'" unless @config[:extension]
       raise "Config must specify 'input'" unless @config[:input]
       raise "Config must specify 'output'" unless @config[:output]
       raise "Config must specify 'format'" unless @config[:format]
@@ -76,8 +75,8 @@ module RubyBindGen
         raise "Format must be 'FFI' or 'Rice', got: #{@config[:format]}"
       end
 
-      # Validate extension name is a valid C/C++ identifier
-      unless @config[:extension].match?(/\A[A-Za-z_][A-Za-z0-9_]*\z/)
+      # Validate extension name is a valid C/C++ identifier (if provided)
+      if @config[:extension] && !@config[:extension].match?(/\A[A-Za-z_][A-Za-z0-9_]*\z/)
         raise "Extension name must be a valid C/C++ identifier: #{@config[:extension]}"
       end
     end
