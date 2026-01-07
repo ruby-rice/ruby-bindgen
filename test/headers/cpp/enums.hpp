@@ -44,6 +44,28 @@ namespace MyNamespace
       };
   };
 
+  // Test unscoped enum inside a class (like cv::ogl::Buffer::Target)
+  // Values should be qualified as MyNamespace::Buffer::Target::ARRAY_BUFFER
+  class Buffer
+  {
+  public:
+    // Unscoped enum inside class - values are scoped to the class
+    enum Target
+    {
+      ARRAY_BUFFER = 0x8892,
+      ELEMENT_ARRAY_BUFFER = 0x8893
+    };
+
+    Buffer();
+
+    // Method with unscoped class enum as default value
+    // Should generate: Arg("target") = static_cast<MyNamespace::Buffer::Target>(MyNamespace::Buffer::Target::ARRAY_BUFFER)
+    void create(int rows, int cols, Target target = ARRAY_BUFFER);
+
+    // Method with bare enum constant as the only default value (tests cursor_decl_ref_expr as default_expr itself)
+    void bind(Target target = ARRAY_BUFFER);
+  };
+
   // Unscoped enum - values are in enclosing namespace (MyNamespace::DECOMP_LU, not MyNamespace::DecompTypes::DECOMP_LU)
   enum DecompTypes
   {

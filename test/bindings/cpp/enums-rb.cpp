@@ -3,6 +3,7 @@
 
 using namespace Rice;
 
+Rice::Class rb_cMyNamespaceBuffer;
 Rice::Class rb_cMyNamespaceMyClass;
 Rice::Class rb_cMyNamespaceSolver;
 
@@ -38,6 +39,17 @@ void Init_Enums()
   
   rb_cMyNamespaceMyClass.define_constant("HACKED_CLASS_CONSTANT_1", (int)MyNamespace::MyClass::HACKED_CLASS_CONSTANT_1);
   rb_cMyNamespaceMyClass.define_constant("HACKED_CLASS_CONSTANT_2", (int)MyNamespace::MyClass::HACKED_CLASS_CONSTANT_2);
+  
+  rb_cMyNamespaceBuffer = define_class_under<MyNamespace::Buffer>(rb_mMyNamespace, "Buffer").
+    define_constructor(Constructor<MyNamespace::Buffer>()).
+    define_method("create", &MyNamespace::Buffer::create,
+      Arg("rows"), Arg("cols"), Arg("target") = static_cast<MyNamespace::Buffer::Target>(MyNamespace::Buffer::Target::ARRAY_BUFFER)).
+    define_method("bind", &MyNamespace::Buffer::bind,
+      Arg("target") = static_cast<MyNamespace::Buffer::Target>(MyNamespace::Buffer::Target::ARRAY_BUFFER));
+  
+  Enum<MyNamespace::Buffer::Target> rb_cMyNamespaceBufferTarget = define_enum_under<MyNamespace::Buffer::Target>("Target", rb_cMyNamespaceBuffer).
+    define_value("ARRAY_BUFFER", MyNamespace::Buffer::Target::ARRAY_BUFFER).
+    define_value("ELEMENT_ARRAY_BUFFER", MyNamespace::Buffer::Target::ELEMENT_ARRAY_BUFFER);
   
   Enum<MyNamespace::DecompTypes> rb_cMyNamespaceDecompTypes = define_enum_under<MyNamespace::DecompTypes>("DecompTypes", rb_mMyNamespace).
     define_value("DECOMP_LU", MyNamespace::DecompTypes::DECOMP_LU).

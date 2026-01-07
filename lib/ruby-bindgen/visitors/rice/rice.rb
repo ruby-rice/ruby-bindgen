@@ -264,15 +264,19 @@ module RubyBindgen
         end
       end
 
-      # Check if a type is a pointer to an incomplete type (forward declaration)
-      # This is common with the pimpl pattern (e.g., Impl* p member or getImpl() method)
-      def incomplete_pointer_type?(type)
-        return false unless type.kind == :type_pointer
+      # Check if a type is incomplete (forward declaration)
+      # This handles both direct types and pointers to incomplete types
+      def incomplete_type?(type)
+        check_type = type
 
-        pointee = type.pointee
-        # Check if pointee is an elaborated type pointing to a forward declaration
-        if pointee.kind == :type_elaborated || pointee.kind == :type_record
-          decl = pointee.declaration
+        # For pointers, check the pointee
+        if type.kind == :type_pointer
+          check_type = type.pointee
+        end
+
+        # Check if type is an elaborated type pointing to a forward declaration
+        if check_type.kind == :type_elaborated || check_type.kind == :type_record
+          decl = check_type.declaration
           # Check for opaque declaration (forward declared with no definition in TU)
           return true if decl.respond_to?(:opaque_declaration?) && decl.opaque_declaration?
           # Also check if definition returns an invalid cursor
@@ -282,6 +286,11 @@ module RubyBindgen
           end
         end
         false
+      end
+
+      # Alias for backwards compatibility
+      def incomplete_pointer_type?(type)
+        type.kind == :type_pointer && incomplete_type?(type)
       end
 
       def type_spellings(cursor)
@@ -463,10 +472,18 @@ module RubyBindgen
       def find_default_value(param)
         # Default value kinds: complex expressions use cursor_unexposed_expr or cursor_call_expr,
         # simple literals use cursor_integer_literal, etc.
-        default_value_kinds = [:cursor_unexposed_expr, :cursor_call_expr] + CURSOR_LITERALS
+        default_value_kinds = [:cursor_unexposed_expr, :cursor_call_expr, :cursor_decl_ref_expr, :cursor_cxx_typeid_expr] + CURSOR_LITERALS
 
         # Find the first expression child - this is the default value
-        default_expr = param.find_by_kind(false, *default_value_kinds).first
+        # Filter out decl_ref_expr that reference template parameters (these are part of the type, not default values)
+        default_expr = param.find_by_kind(false, *default_value_kinds).find do |expr|
+          if expr.kind == :cursor_decl_ref_expr
+            ref = expr.referenced
+            ref && ref.kind != :cursor_non_type_template_parameter && ref.kind != :cursor_template_type_parameter
+          else
+            true
+          end
+        end
         return nil unless default_expr
 
         # Get the raw expression text, stripping any leading "= " from the extent
@@ -501,7 +518,10 @@ module RubyBindgen
 
         # Find all decl_ref_expr cursors to qualify function calls and enum values.
         # For example, transforms "noArray()" to "cv::noArray()" and "NORM_L2" to "cv::NORM_L2".
-        default_expr.find_by_kind(true, :cursor_decl_ref_expr).each do |decl_ref|
+        # Include default_expr itself if it's a decl_ref_expr (e.g., bare enum constant like ARRAY_BUFFER)
+        decl_refs = default_expr.find_by_kind(true, :cursor_decl_ref_expr)
+        decl_refs = [default_expr] + decl_refs if default_expr.kind == :cursor_decl_ref_expr
+        decl_refs.each do |decl_ref|
           ref = decl_ref.referenced
           next unless ref && ref.kind != :cursor_invalid_file
 
@@ -517,12 +537,15 @@ module RubyBindgen
             qualified_name = if ref.kind == :cursor_enum_constant_decl &&
                                 ref.semantic_parent.kind == :cursor_enum_decl &&
                                 !ref.semantic_parent.enum_scoped?
-                               # Get the namespace of the enum, then append the constant name
-                               enum_namespace = ref.semantic_parent.semantic_parent
-                               if enum_namespace && enum_namespace.kind == :cursor_namespace
-                                 "#{enum_namespace.qualified_name}::#{ref.spelling}"
+                               # For unscoped enums directly in a namespace (not inside a class),
+                               # the enum values are in the namespace, not under the enum type.
+                               # So cv::DECOMP_SVD is correct, not cv::DecompTypes::DECOMP_SVD.
+                               enum_parent = ref.semantic_parent.semantic_parent
+                               if enum_parent && enum_parent.kind == :cursor_namespace
+                                 "#{enum_parent.qualified_name}::#{ref.spelling}"
                                else
-                                 ref.spelling
+                                 # Unscoped enum inside a class/struct - use full qualified name
+                                 ref.qualified_name
                                end
                              else
                                ref.qualified_name
@@ -586,9 +609,9 @@ module RubyBindgen
         # Skip internal methods (underscore suffix naming convention)
         return if cursor.spelling.end_with?('_')
 
-        # Skip methods that return pointers to incomplete types (pimpl pattern)
-        # e.g., getImpl() returning Impl* where Impl is forward-declared
-        return if incomplete_pointer_type?(cursor.result_type)
+        # Skip methods that return incomplete types (forward declarations)
+        # e.g., getImpl() returning Impl* or mapGpuMat() returning GpuMat
+        return if incomplete_type?(cursor.result_type)
 
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
