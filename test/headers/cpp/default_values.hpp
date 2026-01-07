@@ -60,3 +60,15 @@ namespace cv
   // Function with template type default value - should generate cv::Rect_<double>(...) not Rect_<double>(...)
   void render(const Rect_<double>& wndRect = Rect_<double>(0.0, 0.0, 1.0, 1.0));
 }
+
+// Test global namespace items - should NOT be prefixed with ::
+// Global variables like stdout are often macros that break with :: prefix
+#include <cstdio>
+
+namespace io
+{
+  // Function with global namespace default value
+  // Should generate: static_cast<FILE*>(stdout)
+  // NOT: static_cast<FILE*>(::stdout)
+  void print_to(FILE* stream = stdout);
+}

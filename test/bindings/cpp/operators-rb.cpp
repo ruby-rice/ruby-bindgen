@@ -6,6 +6,7 @@ using namespace Rice;
 Rice::Class rb_cConvTarget;
 Rice::Class rb_cDataPtrFloat;
 Rice::Class rb_cDataPtrInt;
+Rice::Class rb_cMatrix;
 Rice::Class rb_cNamespacedConversion;
 Rice::Class rb_cOperators;
 
@@ -151,5 +152,27 @@ void Init_Operators()
   
   rb_cDataPtrFloat = define_class<DataPtr<float>>("DataPtrFloat").
     define(&DataPtr_builder<Data_Type<DataPtr<float>>, float>);
+  
+  rb_cMatrix = define_class<Matrix>("Matrix").
+    define_attr("rows", &Matrix::rows).
+    define_attr("cols", &Matrix::cols).
+    define_constructor(Constructor<Matrix>()).
+    define_constructor(Constructor<Matrix, int, int>(),
+      Arg("r"), Arg("c"));
+  
+  rb_cMatrix.define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
+  {
+    return self += other;
+  });
+  
+  rb_cMatrix.define_method("assign_minus", [](Matrix& self, const Matrix& other) -> Matrix&
+  {
+    return self -= other;
+  });
+  
+  rb_cMatrix.define_method("assign_multiply", [](Matrix& self, double other) -> Matrix&
+  {
+    return self *= other;
+  });
 
 }

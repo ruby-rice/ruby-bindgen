@@ -555,6 +555,10 @@ module RubyBindgen
             # Only replace if the qualified name is different (has namespace)
             next if extent_text == qualified_name
 
+            # Skip global namespace items (like ::stdout) - they're often macros that
+            # break when prefixed with ::, and the original code works fine without it
+            next if qualified_name.start_with?('::')
+
             # Replace the unqualified name with the qualified one.
             # Use negative lookbehind to avoid replacing already-qualified names (preceded by ::)
             default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(extent_text)}\b/, qualified_name)

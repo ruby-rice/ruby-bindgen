@@ -127,3 +127,19 @@ public:
 
 typedef DataPtr<int> DataPtrInt;
 typedef DataPtr<float> DataPtrFloat;
+
+// Test non-member operators - these are wrapped in lambdas
+// The lambda body should use the C++ operator (+=), not the Ruby name (assign_plus)
+class Matrix
+{
+public:
+    int rows, cols;
+    Matrix() : rows(0), cols(0) {}
+    Matrix(int r, int c) : rows(r), cols(c) {}
+};
+
+// Non-member compound assignment operator
+// Should generate: return self += other; (NOT: return self assign_plus other;)
+Matrix& operator+=(Matrix& a, const Matrix& b);
+Matrix& operator-=(Matrix& a, const Matrix& b);
+Matrix& operator*=(Matrix& a, double scalar);

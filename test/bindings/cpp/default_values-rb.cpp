@@ -70,5 +70,10 @@ void Init_DefaultValues()
   
   rb_mCv.define_module_function("render", &cv::render,
     Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(cv::Rect_<double>(0.0, 0.0, 1.0, 1.0)));
+  
+  Module rb_mIo = define_module("Io");
+  
+  rb_mIo.define_module_function("print_to", &io::print_to,
+    Arg("stream") = static_cast<::FILE*>(stdout));
 
 }
