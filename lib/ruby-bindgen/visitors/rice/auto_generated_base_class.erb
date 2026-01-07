@@ -1,0 +1,10 @@
+<%- if under && base_base_spelling -%>
+<%= cruby_name %> = define_class_under<<%= base_spelling %>, <%= base_base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_name %>").
+<%- elsif under -%>
+<%= cruby_name %> = define_class_under<<%= base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_name %>").
+<%- elsif base_base_spelling -%>
+<%= cruby_name %> = define_class<<%= base_spelling %>, <%= base_base_spelling %>>("<%= ruby_name %>").
+<%- else -%>
+<%= cruby_name %> = define_class<<%= base_spelling %>>("<%= ruby_name %>").
+<%- end -%>
+  define(&<%= base_template.spelling %>_builder<Data_Type<<%= base_spelling %>>, <%= template_arguments %>>);
