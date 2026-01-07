@@ -66,7 +66,9 @@ module FFI
       end
 
       def overloads
-        result = self.find_by_kind(false, :cursor_cxx_method, :cursor_function).
+        # Include function templates - if a regular function has a template overload,
+        # we need explicit type cast (e.g., KernelArg::Constant has both const Mat& and template versions)
+        result = self.find_by_kind(false, :cursor_cxx_method, :cursor_function, :cursor_function_template).
              group_by do |cursor|
                cursor.spelling
              end.

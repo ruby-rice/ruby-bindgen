@@ -231,6 +231,26 @@ module RubyBindgen
         merge_children(result, indentation: 0, separator: ".\n", strip: false)
       end
 
+      # Check if a type is a pointer to an incomplete type (forward declaration)
+      # This is common with the pimpl pattern (e.g., Impl* p member or getImpl() method)
+      def incomplete_pointer_type?(type)
+        return false unless type.kind == :type_pointer
+
+        pointee = type.pointee
+        # Check if pointee is an elaborated type pointing to a forward declaration
+        if pointee.kind == :type_elaborated || pointee.kind == :type_record
+          decl = pointee.declaration
+          # Check for opaque declaration (forward declared with no definition in TU)
+          return true if decl.respond_to?(:opaque_declaration?) && decl.opaque_declaration?
+          # Also check if definition returns an invalid cursor
+          if decl.respond_to?(:definition)
+            definition = decl.definition
+            return true if definition.respond_to?(:invalid?) && definition.invalid?
+          end
+        end
+        false
+      end
+
       def type_spellings(cursor)
         cursor.type.arg_types.map do |arg_type|
           type_spelling(arg_type)
@@ -253,14 +273,23 @@ module RubyBindgen
                                   # Need to preserve template args from type.spelling
                                   spelling = type.spelling
                                   qualified = type.declaration.qualified_name
-                                  # If qualified_name ends with spelling, it's more complete (has namespace prefix)
-                                  # e.g., spelling="GpuMat::Allocator" qualified="cv::cuda::GpuMat::Allocator"
-                                  if qualified.end_with?(spelling)
-                                    qualified
-                                  elsif type.spelling.match(/\w+::/)
-                                    spelling
+                                  # Strip const prefix for comparison, re-add if needed
+                                  # e.g., "const ocl::Queue" -> "ocl::Queue" for comparison with "cv::ocl::Queue"
+                                  const_prefix = type.const_qualified? ? "const " : ""
+                                  bare_spelling = spelling.sub(/^const\s+/, '')
+                                  # Strip template args for comparison
+                                  # e.g., "Internal::Data<2, 2>" -> "Internal::Data"
+                                  bare_spelling_no_template = bare_spelling.sub(/<.*/, '')
+                                  # If qualified_name ends with bare spelling (sans template), it's more complete
+                                  # e.g., spelling="ocl::Queue" qualified="cv::ocl::Queue" -> use qualified
+                                  # e.g., spelling="const ocl::Queue" qualified="cv::ocl::Queue" -> use qualified
+                                  if qualified.end_with?(bare_spelling_no_template)
+                                    # Preserve template args from original spelling
+                                    template_args = bare_spelling[/<.*/] || ''
+                                    "#{const_prefix}#{qualified}#{template_args}"
                                   else
-                                    spelling.sub(type.declaration.spelling, qualified)
+                                    # Spelling already has full namespace, return as-is
+                                    "#{const_prefix}#{bare_spelling}"
                                   end
                                 elsif type.declaration.kind == :cursor_typedef_decl && type.declaration.semantic_parent.kind == :cursor_class_template
                                   # Dependent types in templates need 'typename' keyword
@@ -506,6 +535,16 @@ module RubyBindgen
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
 
+        # Skip deprecated methods (they may not be exported from library)
+        return if cursor.availability == :deprecated
+
+        # Skip internal methods (underscore suffix naming convention)
+        return if cursor.spelling.end_with?('_')
+
+        # Skip methods that return pointers to incomplete types (pimpl pattern)
+        # e.g., getImpl() returning Impl* where Impl is forward-declared
+        return if incomplete_pointer_type?(cursor.result_type)
+
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
           return visit_cxx_iterator_method(cursor)
@@ -645,6 +684,12 @@ module RubyBindgen
         # Can't return arrays in C++
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
 
+        # Skip deprecated functions (they may not be exported from library)
+        return if cursor.availability == :deprecated
+
+        # Skip internal functions (underscore suffix naming convention)
+        return if cursor.spelling.end_with?('_')
+
         if cursor.spelling.match(/operator/)
           return self.visit_operator_non_member(cursor)
         end
@@ -701,8 +746,12 @@ module RubyBindgen
       def visit_field_decl(cursor)
         return unless cursor.public?
 
-          # Can't return arrays in C++
+        # Can't return arrays in C++
         return if cursor.type.is_a?(::FFI::Clang::Types::Array)
+
+        # Skip fields that are pointers to incomplete types (pimpl pattern)
+        # e.g., Impl* p member where Impl is forward-declared
+        return if incomplete_pointer_type?(cursor.type)
 
         self.render_cursor(cursor, "field_decl")
       end
