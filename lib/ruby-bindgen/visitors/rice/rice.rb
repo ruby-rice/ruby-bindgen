@@ -472,9 +472,9 @@ module RubyBindgen
         # Get the raw expression text, stripping any leading "= " from the extent
         default_text = default_expr.extent.text.sub(/\A\s*=\s*/, '')
 
-        # Find all type_ref cursors within the default expression to qualify type names.
+        # Find all type_ref and template_ref cursors within the default expression to qualify type names.
         # Note: We search from default_expr, not param, to avoid the parameter type's type_ref.
-        default_expr.find_by_kind(true, :cursor_type_ref).each do |type_ref|
+        default_expr.find_by_kind(true, :cursor_type_ref, :cursor_template_ref).each do |type_ref|
           ref = type_ref.referenced
           next unless ref && ref.kind != :cursor_invalid_file
 

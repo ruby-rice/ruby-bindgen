@@ -3,8 +3,10 @@
 
 using namespace Rice;
 
+Rice::Class rb_cConvTarget;
 Rice::Class rb_cDataPtrFloat;
 Rice::Class rb_cDataPtrInt;
+Rice::Class rb_cNamespacedConversion;
 Rice::Class rb_cOperators;
 
 template<typename Data_Type_T, typename T>
@@ -118,6 +120,28 @@ void Init_Operators()
       return self;
     }).
     define_method("to_bool", [](const Operators& self) -> bool
+    {
+      return self;
+    });
+  
+  Module rb_mConv = define_module("Conv");
+  
+  rb_cConvTarget = define_class_under<conv::Target>(rb_mConv, "Target").
+    define_attr("value", &conv::Target::value).
+    define_constructor(Constructor<conv::Target>()).
+    define_constructor(Constructor<conv::Target, int>(),
+      Arg("v"));
+  
+  rb_cNamespacedConversion = define_class<NamespacedConversion>("NamespacedConversion").
+    define_attr("value", &NamespacedConversion::value).
+    define_constructor(Constructor<NamespacedConversion>()).
+    define_constructor(Constructor<NamespacedConversion, int>(),
+      Arg("v")).
+    define_method("to_target", [](const NamespacedConversion& self) -> conv::Target
+    {
+      return self;
+    }).
+    define_method("to_target", [](NamespacedConversion& self) -> conv::Target&
     {
       return self;
     });

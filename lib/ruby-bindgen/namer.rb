@@ -156,8 +156,13 @@ module RubyBindgen
       if suffix
         "to_#{suffix}"
       else
-        # Fallback: underscore the type name
-        "to_#{type_name.underscore}"
+        # Clean up the type name for Ruby method naming:
+        # - Remove reference/pointer markers
+        # - Use only the final type name (after last ::)
+        # - Convert to underscore style
+        clean_name = type_name.gsub(/[&*]/, '').strip
+        clean_name = clean_name.split('::').last || clean_name
+        "to_#{clean_name.underscore}"
       end
     end
 

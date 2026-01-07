@@ -81,6 +81,32 @@ private:
     int data[10];
 };
 
+// Test conversion to namespaced types
+namespace conv
+{
+    class Target
+    {
+    public:
+        int value;
+        Target() : value(0) {}
+        Target(int v) : value(v) {}
+    };
+}
+
+class NamespacedConversion
+{
+public:
+    int value;
+    NamespacedConversion() : value(0) {}
+    NamespacedConversion(int v) : value(v) {}
+
+    // Conversion to namespaced type - should generate to_target method (not to_conv/target)
+    operator conv::Target() const { return conv::Target(value); }
+
+    // Conversion to reference - should generate to_target method (not to_conv/target &)
+    operator conv::Target&();
+};
+
 // Template class with pointer conversion operators
 // Tests that operator T*() maps to to_ptr and operator const T*() const maps to to_const_ptr
 template <typename T>
