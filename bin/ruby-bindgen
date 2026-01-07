@@ -82,13 +82,13 @@ module RubyBindGen
     end
 
     def run
-      match_pattern = @config[:match]&.first || "**/*.{h,hpp}"
+      match_patterns = @config[:match] || ["**/*.{h,hpp}"]
       skip_patterns = @config[:skip] || []
       clang_args = @config[:clang_args] || []
       skip_symbols = @config[:skip_symbols] || []
       export_macros = @config[:export_macros] || []
 
-      inputter = RubyBindgen::Inputter.new(@config[:input], match_pattern, skip_patterns)
+      inputter = RubyBindgen::Inputter.new(@config[:input], match_patterns, skip_patterns)
       parser = RubyBindgen::Parser.new(inputter, clang_args)
       outputter = RubyBindgen::Outputter.new(@config[:output])
 

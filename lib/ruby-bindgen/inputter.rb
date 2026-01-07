@@ -6,18 +6,18 @@ require 'pathname'
 module RubyBindgen
   class Inputter
     include Enumerable
-    attr_reader :base_path, :glob, :exclude_glob
+    attr_reader :base_path, :globs, :exclude_glob
 
-    def initialize(base_path, glob=nil, exclude_glob=[])
+    def initialize(base_path, globs=nil, exclude_glob=[])
       if RUBY_PLATFORM.match?(/mswin/) || RUBY_PLATFORM.match?(/mingw/)
         @base_path = base_path.gsub('\\', '/')
-        @glob = glob.gsub('\\', '/') if glob
+        @globs = Array(globs).map { |g| g.gsub('\\', '/') }
         @exclude_glob = exclude_glob.map do |glob|
           glob.gsub('\\', '/')
         end
       else
         @base_path = base_path
-        @glob = glob || "**/*.{h,hpp}"
+        @globs = Array(globs).empty? ? ["**/*.{h,hpp}"] : Array(globs)
         @exclude_glob = exclude_glob
       end
     end
@@ -25,14 +25,16 @@ module RubyBindgen
     def each
       raise(ArgumentError, "No block given") unless block_given?
 
-      search = File.join(self.base_path, self.glob)
-      Dir.glob(search).each do |path|
-        if exclude.include?(path)
-          next
-        end
+      self.globs.each do |glob|
+        search = File.join(self.base_path, glob)
+        Dir.glob(search).each do |path|
+          if exclude.include?(path)
+            next
+          end
 
-        relative_path = Pathname.new(path).relative_path_from(self.base_path)
-        yield path, relative_path.to_path
+          relative_path = Pathname.new(path).relative_path_from(self.base_path)
+          yield path, relative_path.to_path
+        end
       end
     end
 
