@@ -13,7 +13,7 @@ module RubyBindgen
 
       attr_reader :project, :outputter
 
-      def initialize(outputter, project = nil)
+      def initialize(outputter, project = nil, skip_functions: [], export_macros: [])
         @project = project&.gsub(/-/, '_')
         @outputter = outputter
         @init_names = Hash.new
@@ -22,6 +22,8 @@ module RubyBindgen
         @classes = Array.new
         @typedef_map = Hash.new
         @auto_generated_bases = Set.new
+        @skip_functions = skip_functions
+        @export_macros = export_macros
       end
 
       def overloads
@@ -229,6 +231,20 @@ module RubyBindgen
                                      :template_signature => template_signature, :children => children_content)
 
         merge_children(result, indentation: 0, separator: ".\n", strip: false)
+      end
+
+      # Check if cursor has one of the required export macros in its source text
+      # Used to filter out non-exported functions (e.g., only include CV_EXPORTS functions)
+      def has_export_macro?(cursor)
+        return true if @export_macros.empty?
+
+        begin
+          source_text = cursor.extent.text
+          @export_macros.any? { |macro| source_text.include?(macro) }
+        rescue => e
+          # If we can't read the source, assume it's exported
+          true
+        end
       end
 
       # Check if a type is a pointer to an incomplete type (forward declaration)
@@ -535,6 +551,9 @@ module RubyBindgen
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
 
+        # Skip explicitly listed functions
+        return if @skip_functions.include?(cursor.spelling)
+
         # Skip deprecated methods (they may not be exported from library)
         return if cursor.availability == :deprecated
 
@@ -683,6 +702,12 @@ module RubyBindgen
       def visit_function(cursor)
         # Can't return arrays in C++
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
+
+        # Skip explicitly listed functions
+        return if @skip_functions.include?(cursor.spelling)
+
+        # Skip functions without required export macros (e.g., CV_EXPORTS)
+        return unless has_export_macro?(cursor)
 
         # Skip deprecated functions (they may not be exported from library)
         return if cursor.availability == :deprecated

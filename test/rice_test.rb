@@ -106,10 +106,12 @@ class RiceTest < AbstractTest
     validate_result(visitor.outputter)
   end
 
-  def test_deprecated
-    header = "cpp/deprecated.hpp"
+  def test_filtering
+    header = "cpp/filtering.hpp"
     parser = create_parser(header)
-    visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
+    visitor = create_visitor(RubyBindgen::Visitors::Rice, header,
+                             export_macros: ["MY_EXPORT"],
+                             skip_functions: ["skippedByName", "alsoSkippedByName", "skippedMethod"])
     parser.generate(visitor)
     validate_result(visitor.outputter)
   end

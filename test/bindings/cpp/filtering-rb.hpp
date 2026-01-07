@@ -1,4 +1,4 @@
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
 
-void Init_Deprecated();
+void Init_Filtering();

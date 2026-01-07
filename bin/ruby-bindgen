@@ -3,139 +3,109 @@
 # To make testing/debugging easier test within this source tree versus an installed gem
 require 'bundler/setup'
 
-# First require ruby-prof
 require 'ruby-bindgen'
-
-# Now setup option parser
-require 'ostruct'
-require 'optparse'
+require 'yaml'
 
 module RubyBindGen
-  # == Synopsis
-  #
-  # Generates Ruby bindings for C and C++ libraries
-  #
-  # == Usage
-  # ruby-bindgen [options] input -- [clang options (see clang documentation)]
-  #
-  # Options match:
-  #   -e, --extension Name of the generated Ruby extension (C++ only). Must be a valid C++ identifier
-  #   -i, --input     Path to input directory that matchs header files
-  #   -o, --output    Path to output directory
-  #   -m, --match     Glob pattern to match header files
-  #   -s, --skip      Glob pattern to skip header files. May be specified multiple times
-  #   -f, --format    Type of bindings to generate. Valid values are `FFI` and `Rice`.
-  #   -h, --help      Shows this help message
-
   class Cmd
-    # :enddoc:
-    attr_accessor :options
+    attr_accessor :config
 
     def initialize
-      setup_options
       parse_args
-    end
-
-    def setup_options
-      @options = OpenStruct.new
-      options.extension = nil
-      options.input = nil
-      options.output = nil
-      options.format = nil
-      options.match = "**/*.{h,hpp}"
-      options.skip = []
-      options.clang_args = []
-    end
-
-    def option_parser
-      OptionParser.new do |opts|
-        opts.banner = "ruby-bindgen #{RubyBindgen::VERSION}\n" +
-            "Usage: ruby-bindgen [options] -- [clang options (see clang documentation)]"
-
-        opts.separator ""
-        opts.separator "Options:"
-
-        opts.on('-p extension', '--extension extension', 'Name of extension. Must be a valid C or C++ identifier') do |value|
-          # extension names are used to create init methods in the form Init_<extension>. Thus they
-          # must be valid C++ identifiers
-          unless value.match(/[A-Za-z0-9_]+/)
-            raise(ArgumentError, "extension names must be valid C/C++ identifiers. They can match [A-Za-z0-9_]")
-          end
-
-          options.extension = value
-        end
-
-        opts.on('-i input', '--input input', 'Path to input directory') do |value|
-          if !File.directory?(value)
-            raise("Must specify input path to a directory: #{value}")
-          end
-          options.input = value
-        end
-
-        opts.on('-o output', '--output output', '=output', 'Path to output directory') do |value|
-          if !File.directory?(value)
-            raise("Must specify output path to a directory: #{value}")
-          end
-          options.output = value
-        end
-
-        opts.on('-m match', '--match match', 'Glob pattern to match header files. Defaults to **/*.{h,hpp}') do |value|
-          options.match = value
-        end
-
-        opts.on('-s skip', '--skip skip', 'Glob pattern to skip header files. Can be specified multiple times') do |value|
-          options.skip << value
-        end
-
-        opts.on('-f format', '--format format', ['FFI', 'Rice'], 'Type of bindings to generate') do |value|
-          options.format = value
-        end
-
-        opts.on_tail("-h", "--help", "Show help message") do
-          puts opts
-          exit
-        end
-      end
+      load_config
+      validate_config
     end
 
     def parse_args
-      self.options.clang_args = self.option_parser.parse!
-
-      if self.options.extension.nil?
-        raise("Must specify extension name (--extension)")
+      if ARGV.empty? || ARGV[0] == '-h' || ARGV[0] == '--help'
+        puts usage
+        exit(ARGV.empty? ? 1 : 0)
       end
 
-      if self.options.input.nil?
-        raise("Must specify input path (--input)")
+      @config_path = ARGV[0]
+
+      unless File.exist?(@config_path)
+        raise "Config file not found: #{@config_path}"
+      end
+    end
+
+    def usage
+      <<~USAGE
+        ruby-bindgen #{RubyBindgen::VERSION}
+
+        Usage: ruby-bindgen <config.yaml>
+
+        Generates Ruby bindings for C and C++ libraries using a YAML configuration file.
+
+        See documentation for config file format: https://github.com/user/ruby-bindgen/docs/configuration.md
+
+        Options:
+          -h, --help    Show this help message
+      USAGE
+    end
+
+    def load_config
+      @config = YAML.safe_load(File.read(@config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
+      @config = symbolize_keys(@config)
+    end
+
+    def symbolize_keys(hash)
+      hash.transform_keys(&:to_sym).transform_values do |value|
+        case value
+        when Hash then symbolize_keys(value)
+        else value
+        end
+      end
+    end
+
+    def validate_config
+      raise "Config must specify 'extension'" unless @config[:extension]
+      raise "Config must specify 'input'" unless @config[:input]
+      raise "Config must specify 'output'" unless @config[:output]
+      raise "Config must specify 'format'" unless @config[:format]
+
+      unless File.directory?(@config[:input])
+        raise "Input path must be a directory: #{@config[:input]}"
       end
 
-      if self.options.output.nil?
-        raise("Must specify output path (--output)")
+      unless File.directory?(@config[:output])
+        raise "Output path must be a directory: #{@config[:output]}"
       end
 
-      if self.options.format.nil?
-        raise("Must specify format (--format)")
+      unless %w[FFI Rice].include?(@config[:format])
+        raise "Format must be 'FFI' or 'Rice', got: #{@config[:format]}"
       end
-    rescue OptionParser::InvalidOption, OptionParser::InvalidArgument, OptionParser::MissingArgument => e
-      puts self.option_parser
-      puts e.message
-      exit(-1)
+
+      # Validate extension name is a valid C/C++ identifier
+      unless @config[:extension].match?(/\A[A-Za-z_][A-Za-z0-9_]*\z/)
+        raise "Extension name must be a valid C/C++ identifier: #{@config[:extension]}"
+      end
     end
 
     def run
-      inputter = RubyBindgen::Inputter.new(self.options.input, self.options.match, self.options.skip)
-      parser = RubyBindgen::Parser.new(inputter, self.options.clang_args)
-      outputter = RubyBindgen::Outputter.new(self.options.output)
+      match_pattern = @config[:match]&.first || "**/*.{h,hpp}"
+      skip_patterns = @config[:skip] || []
+      clang_args = @config[:clang_args] || []
+      skip_functions = @config[:skip_functions] || []
+      export_macros = @config[:export_macros] || []
 
-      format_klass = RubyBindgen::Visitors.const_get(self.options.format)
-      format = format_klass.new(outputter, self.options.extension)
+      inputter = RubyBindgen::Inputter.new(@config[:input], match_pattern, skip_patterns)
+      parser = RubyBindgen::Parser.new(inputter, clang_args)
+      outputter = RubyBindgen::Outputter.new(@config[:output])
+
+      format_klass = RubyBindgen::Visitors.const_get(@config[:format])
+      format = format_klass.new(outputter, @config[:extension],
+                                skip_functions: skip_functions,
+                                export_macros: export_macros)
       parser.generate(format)
     end
   end
 end
 
-# Parse command line options
-cmd = RubyBindGen::Cmd.new
-
-# Generate bindings some code
-cmd.run
+begin
+  cmd = RubyBindGen::Cmd.new
+  cmd.run
+rescue => e
+  STDERR.puts "Error: #{e.message}"
+  exit 1
+end
