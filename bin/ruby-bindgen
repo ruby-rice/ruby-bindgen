@@ -86,7 +86,7 @@ module RubyBindGen
       match_pattern = @config[:match]&.first || "**/*.{h,hpp}"
       skip_patterns = @config[:skip] || []
       clang_args = @config[:clang_args] || []
-      skip_functions = @config[:skip_functions] || []
+      skip_symbols = @config[:skip_symbols] || []
       export_macros = @config[:export_macros] || []
 
       inputter = RubyBindgen::Inputter.new(@config[:input], match_pattern, skip_patterns)
@@ -95,7 +95,7 @@ module RubyBindGen
 
       format_klass = RubyBindgen::Visitors.const_get(@config[:format])
       format = format_klass.new(outputter, @config[:extension],
-                                skip_functions: skip_functions,
+                                skip_symbols: skip_symbols,
                                 export_macros: export_macros)
       parser.generate(format)
     end

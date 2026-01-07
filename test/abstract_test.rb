@@ -1,7 +1,9 @@
 require 'bundler/setup'
 require 'minitest/autorun'
 
-ENV["LIBCLANG"]="C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/x64/bin/libclang.dll"
+if Gem.win_platform?
+  ENV["LIBCLANG"]="C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/x64/bin/libclang.dll"
+end
 
 # Add refinements directory to load path to make it easier to test locally built extensions
 ext_path = File.expand_path(File.join(__dir__, '..', 'lib'))

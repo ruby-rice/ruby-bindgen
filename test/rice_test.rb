@@ -70,12 +70,21 @@ class RiceTest < AbstractTest
   def test_iterators
     header = "cpp/iterators.hpp"
     # Need system includes to parse std::vector
-    args = [
-      "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.44.35207/include",
-      "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt",
-      "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/lib/clang/20/include",
-      "-xc++"
-    ]
+    if RUBY_PLATFORM =~ /mingw|mswin|cygwin/
+      args = [
+        "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.44.35207/include",
+        "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt",
+        "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/lib/clang/20/include",
+        "-xc++"
+      ]
+    else
+      # Linux/WSL - need to explicitly set clang resource dir for libclang
+      clang_version = `clang --version`[/clang version (\d+)/, 1]
+      args = [
+        "-I/usr/lib/clang/#{clang_version}/include",
+        "-xc++"
+      ]
+    end
     parser = create_parser(header, args)
     visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
     parser.generate(visitor)
@@ -111,7 +120,7 @@ class RiceTest < AbstractTest
     parser = create_parser(header)
     visitor = create_visitor(RubyBindgen::Visitors::Rice, header,
                              export_macros: ["MY_EXPORT"],
-                             skip_functions: ["skippedByName", "alsoSkippedByName", "skippedMethod"])
+                             skip_symbols: ["skippedByName", "alsoSkippedByName", "skippedMethod"])
     parser.generate(visitor)
     validate_result(visitor.outputter)
   end

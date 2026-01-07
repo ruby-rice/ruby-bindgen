@@ -34,11 +34,11 @@ skip:
   - "**/internal/**"
   - "**/*.inl*"
 
-# Function/method names to skip
-# Use this for functions that are declared but not exported from the library
-skip_functions:
+# Symbol names to skip (functions, methods, classes)
+# Supports simple names or fully qualified names (e.g., "cv::ocl::PlatformInfo::versionMajor")
+skip_symbols:
   - internalFunction
-  - deprecatedHelper
+  - MyNamespace::MyClass::privateMethod
 
 # Clang compiler arguments
 # Include paths, language standard, defines, etc.
@@ -67,7 +67,7 @@ clang_args:
 | `match` | `["**/*.{h,hpp}"]` | Glob patterns specifying which header files to process. |
 | `skip` | `[]` | Glob patterns specifying which header files to skip. |
 | `export_macros` | `[]` | List of macros that indicate a symbol is exported. Only functions/classes with these macros will be included. |
-| `skip_functions` | `[]` | List of function/method names to skip. Useful for internal or non-exported functions. |
+| `skip_symbols` | `[]` | List of symbol names to skip. Supports simple names (`versionMajor`) or fully qualified names (`cv::ocl::PlatformInfo::versionMajor`). |
 | `clang_args` | `[]` | Arguments passed to libclang for parsing. Include paths, language options, etc. |
 
 ## Example: OpenCV Bindings
@@ -140,13 +140,23 @@ When `export_macros` is specified, only functions whose source text contains at 
 | Qt | `Q_DECL_EXPORT`, `Q_CORE_EXPORT` |
 | Boost | `BOOST_*_DECL` |
 
-## Skip Functions
+## Skip Symbols
 
-The `skip_functions` option is useful when:
+The `skip_symbols` option is useful when:
 
 - Functions have export macros but still aren't available (build configuration issues)
 - Functions are internal/private APIs not meant for external use
 - Functions cause linker errors due to missing symbols
+
+You can specify symbols using:
+- **Simple names**: `versionMajor` - skips all symbols with this name
+- **Fully qualified names**: `cv::ocl::PlatformInfo::versionMajor` - skips only that specific symbol
+
+```yaml
+skip_symbols:
+  - versionMajor                           # Skips all symbols named "versionMajor"
+  - cv::ocl::PlatformInfo::versionMinor    # Skips only this specific method
+```
 
 Ruby-bindgen automatically skips:
 - Deprecated functions (marked with `__attribute__((deprecated))`)

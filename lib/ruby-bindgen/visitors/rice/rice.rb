@@ -13,7 +13,7 @@ module RubyBindgen
 
       attr_reader :project, :outputter
 
-      def initialize(outputter, project = nil, skip_functions: [], export_macros: [])
+      def initialize(outputter, project = nil, skip_symbols: [], export_macros: [])
         @project = project&.gsub(/-/, '_')
         @outputter = outputter
         @init_names = Hash.new
@@ -22,8 +22,25 @@ module RubyBindgen
         @classes = Array.new
         @typedef_map = Hash.new
         @auto_generated_bases = Set.new
-        @skip_functions = skip_functions
+        @skip_symbols = skip_symbols
         @export_macros = export_macros
+      end
+
+      # Check if a cursor should be skipped based on skip_symbols config.
+      # Supports both simple names (e.g., "versionMajor") and fully qualified
+      # names (e.g., "cv::ocl::PlatformInfo::versionMajor").
+      def skip_symbol?(cursor)
+        return true if @skip_symbols.include?(cursor.spelling)
+
+        # Build fully qualified name
+        qualified_name = cursor.spelling
+        parent = cursor.semantic_parent
+        while parent && !parent.kind.nil? && parent.kind != :cursor_translation_unit
+          qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty?
+          parent = parent.semantic_parent
+        end
+
+        @skip_symbols.include?(qualified_name)
       end
 
       def overloads
@@ -311,8 +328,15 @@ module RubyBindgen
                                   # Dependent types in templates need 'typename' keyword
                                  "#{type.const_qualified? ? "const " : ""}typename #{type.declaration.semantic_parent.qualified_display_name}::#{type.spelling.sub("const ", "")}"
                                 elsif type.declaration.kind == :cursor_typedef_decl
-                                  #type.declaration.underlying_type.spelling
-                                  "#{type.const_qualified? ? "const " : ""}#{type.declaration.qualified_name}"
+                                  # For typedef inside template instantiation (e.g. std::vector<Pixel>::iterator)
+                                  # use type.spelling which preserves template args
+                                  spelling = type.spelling
+                                  qualified = type.declaration.qualified_name
+                                  if spelling.include?('<') && !qualified.include?('<')
+                                    "#{type.const_qualified? ? "const " : ""}#{spelling}"
+                                  else
+                                    "#{type.const_qualified? ? "const " : ""}#{qualified}"
+                                  end
                                elsif type.declaration.kind == :cursor_type_alias_decl
                                   # C++11 using declarations (e.g., using SizeArray = std::vector<int>)
                                   # Need to qualify nested type aliases like GpuMatND::SizeArray
@@ -362,11 +386,13 @@ module RubyBindgen
 
         # For template types, check if canonical has better qualified template args
         # e.g., std::vector<Range> vs std::vector<cv::Range>
-        # But avoid internal implementation types (those with _ prefixes like std::_Vector_iterator)
+        # But avoid internal implementation types
         if result.include?('<') && type.canonical.spelling.include?('<')
           canonical = type.canonical.spelling
-          # Skip if canonical contains internal implementation types (MSVC uses _Prefixed names)
-          unless canonical.match?(/\b_[A-Z]/)
+          # Skip if canonical contains internal implementation types:
+          # - libstdc++ uses __gnu_cxx and __normal_iterator
+          # - Windows runtime uses _Prefixed names
+          unless canonical.match?(/\b_[A-Z]/) || canonical.include?('__gnu_cxx') || canonical.include?('__normal_iterator')
             # If canonical has more :: qualifiers inside template args, prefer it
             result_template_args = result[/(?<=<).*(?=>)/] || ""
             canonical_template_args = canonical[/(?<=<).*(?=>)/] || ""
@@ -551,8 +577,8 @@ module RubyBindgen
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
 
-        # Skip explicitly listed functions
-        return if @skip_functions.include?(cursor.spelling)
+        # Skip explicitly listed symbols
+        return if skip_symbol?(cursor)
 
         # Skip deprecated methods (they may not be exported from library)
         return if cursor.availability == :deprecated
@@ -703,8 +729,8 @@ module RubyBindgen
         # Can't return arrays in C++
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
 
-        # Skip explicitly listed functions
-        return if @skip_functions.include?(cursor.spelling)
+        # Skip explicitly listed symbols
+        return if skip_symbol?(cursor)
 
         # Skip functions without required export macros (e.g., CV_EXPORTS)
         return unless has_export_macro?(cursor)
