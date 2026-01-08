@@ -120,6 +120,12 @@ module RubyBindgen
         # Do not construct abstract classes
         return if cursor.semantic_parent.abstract?
 
+        # Skip constructors with incomplete pointer type parameters (pimpl pattern)
+        # e.g., FileNode(FileStorage::Impl*, size_t, size_t)
+        cursor.type.arg_types.each do |arg_type|
+          return if incomplete_pointer_type?(arg_type)
+        end
+
         signature = constructor_signature(cursor)
         args = arguments(cursor)
 
@@ -265,7 +271,7 @@ module RubyBindgen
       end
 
       # Check if a type is incomplete (forward declaration)
-      # This handles both direct types and pointers to incomplete types
+      # This handles direct types, pointers, and template types with incomplete arguments
       def incomplete_type?(type)
         check_type = type
 
@@ -284,11 +290,20 @@ module RubyBindgen
             definition = decl.definition
             return true if definition.respond_to?(:invalid?) && definition.invalid?
           end
+
+          # Check template arguments for incomplete types (e.g., cv::Ptr<Impl>)
+          num_args = check_type.num_template_arguments
+          if num_args > 0
+            num_args.times do |i|
+              template_arg = check_type.template_argument_type(i)
+              return true if template_arg && incomplete_type?(template_arg)
+            end
+          end
         end
         false
       end
 
-      # Alias for backwards compatibility
+      # Check if type is a pointer to an incomplete type
       def incomplete_pointer_type?(type)
         type.kind == :type_pointer && incomplete_type?(type)
       end
@@ -474,6 +489,14 @@ module RubyBindgen
         # simple literals use cursor_integer_literal, etc.
         default_value_kinds = [:cursor_unexposed_expr, :cursor_call_expr, :cursor_decl_ref_expr, :cursor_cxx_typeid_expr] + CURSOR_LITERALS
 
+        # First, verify that the parameter has a default value by checking for '=' in its extent.
+        # Template arguments like the '4' in 'Vec<_Tp, 4>' are also integer_literal children,
+        # but they won't have an '=' sign. Example:
+        #   Real default: "QuatAssumeType assumeUnit=QUAT_ASSUME_NOT_UNIT"
+        #   Template arg: "const Vec<_Tp, 4> &coeff" (the '4' is NOT a default value)
+        param_extent = param.extent.text
+        return nil unless param_extent.include?('=')
+
         # Find the first expression child - this is the default value
         # Filter out decl_ref_expr that reference template parameters (these are part of the type, not default values)
         default_expr = param.find_by_kind(false, *default_value_kinds).find do |expr|
@@ -547,6 +570,11 @@ module RubyBindgen
                                  # Unscoped enum inside a class/struct - use full qualified name
                                  ref.qualified_name
                                end
+                             elsif ref.semantic_parent.kind == :cursor_class_template
+                               # For members inside class templates (like cv::Quat<_Tp>::CV_QUAT_EPS),
+                               # we need to use qualified_display_name to preserve template parameters.
+                               # qualified_name returns "cv::Quat::CV_QUAT_EPS" (missing <_Tp>)
+                               "#{ref.semantic_parent.qualified_display_name}::#{ref.spelling}"
                              else
                                ref.qualified_name
                              end
@@ -616,6 +644,11 @@ module RubyBindgen
         # Skip methods that return incomplete types (forward declarations)
         # e.g., getImpl() returning Impl* or mapGpuMat() returning GpuMat
         return if incomplete_type?(cursor.result_type)
+
+        # Skip methods with incomplete pointer type parameters (pimpl pattern)
+        cursor.type.arg_types.each do |arg_type|
+          return if incomplete_pointer_type?(arg_type)
+        end
 
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
@@ -830,9 +863,9 @@ module RubyBindgen
         # Can't return arrays in C++
         return if cursor.type.is_a?(::FFI::Clang::Types::Array)
 
-        # Skip fields that are pointers to incomplete types (pimpl pattern)
-        # e.g., Impl* p member where Impl is forward-declared
-        return if incomplete_pointer_type?(cursor.type)
+        # Skip fields that involve incomplete types (pimpl pattern)
+        # e.g., Impl* p member or cv::Ptr<Impl> p where Impl is forward-declared
+        return if incomplete_type?(cursor.type)
 
         self.render_cursor(cursor, "field_decl")
       end
@@ -1040,6 +1073,9 @@ module RubyBindgen
         # Skip compiler/cuda keywords like __device__ __forceinline__
         return if cursor.spelling.match(/^__.*__$/)
 
+        # Skip variables that involve incomplete types (pimpl pattern)
+        return if incomplete_type?(cursor.type)
+
         # Const variables become Ruby constants
         if cursor.type.const_qualified?
           visit_variable_constant(cursor)
@@ -1133,7 +1169,9 @@ module RubyBindgen
             next :continue
           end
 
-          unless class_template_cursor.location.from_main_file?
+          # Check if class template is from the main file.
+          # Note: from_main_file? doesn't work when -include is used, so manually check.
+          unless class_template_cursor.file_location.file == class_template_cursor.translation_unit.file.name
             next :continue
           end
 

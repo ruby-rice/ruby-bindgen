@@ -74,6 +74,6 @@ void Init_DefaultValues()
   Module rb_mIo = define_module("Io");
   
   rb_mIo.define_module_function("print_to", &io::print_to,
-    Arg("stream") = static_cast<::FILE*>(stdout));
+    Arg("stream") = static_cast<FILE*>(stdout));
 
 }
