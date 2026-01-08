@@ -115,6 +115,75 @@ If a C++ class defines an `[]` operator that returns a reference, then in it sho
 
 C++ classes that support the `()` operator are known as functors. Ruby supports overriding the `.()` operator by defining a `call` function. Note this isn't quite the same as C++ because it is invoked via `.()` and not `()` -- notice the `.` before the `()`.
 
+## Non-Member Operators
+
+C++ allows operators to be defined as non-member (free) functions. This is a common pattern for binary operators where the left operand determines the behavior:
+
+```cpp
+class Matrix {
+public:
+    int rows, cols;
+};
+
+// Non-member operators
+Matrix& operator+=(Matrix& a, const Matrix& b);
+Matrix& operator-=(Matrix& a, const Matrix& b);
+Matrix& operator*=(Matrix& a, double scalar);
+```
+
+Ruby doesn't have the concept of non-member functions - all methods belong to a class. Therefore, ruby-bindgen automatically converts non-member operators to instance methods on the first argument's class:
+
+```ruby
+# Generated Ruby bindings
+matrix1 = Matrix.new
+matrix2 = Matrix.new
+
+matrix1.assign_plus(matrix2)   # Calls operator+=(matrix1, matrix2)
+matrix1.assign_multiply(2.0)   # Calls operator*=(matrix1, 2.0)
+```
+
+### Streaming Operators
+
+The `<<` operator is commonly used for two different purposes in C++:
+
+1. **Output streaming** (`std::ostream& operator<<(std::ostream&, const T&)`) - Used to print objects. Ruby-bindgen converts these to `inspect` methods on the streamed class.
+
+2. **Other streaming** (e.g., `FileStorage& operator<<(FileStorage&, const T&)`) - Used for serialization or other purposes. Ruby-bindgen converts these to `<<` instance methods.
+
+```cpp
+// Output streaming - generates inspect method on Printable
+std::ostream& operator<<(std::ostream& os, const Printable& p);
+
+// FileStorage streaming - generates << method on FileStorage
+FileStorage& operator<<(FileStorage& fs, const std::string& value);
+FileStorage& operator<<(FileStorage& fs, int value);
+FileStorage& operator<<(FileStorage& fs, const cv::Mat& mat);
+```
+
+The generated Ruby code groups all non-member operators by their target class:
+
+```cpp
+rb_cPrintable.
+    define_method("inspect", [](const Printable& self) -> std::string
+    {
+      std::ostringstream stream;
+      stream << self;
+      return stream.str();
+    });
+
+rb_cFileStorage.
+    define_method("<<", [](FileStorage& self, const std::string& other) -> FileStorage&
+    {
+      self << other;
+      return self;
+    }).
+    define_method("<<", [](FileStorage& self, int other) -> FileStorage&
+    {
+      self << other;
+      return self;
+    });
+```
+
 ## Conversion Operators
 
 C++ allows users to define [conversion operators](https://en.cppreference.com/w/cpp/language/cast_operator) (also called cast operators or user-defined conversions). These enable a class instance to be implicitly or explicitly converted to another type. For example:

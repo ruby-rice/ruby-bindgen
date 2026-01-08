@@ -163,21 +163,6 @@ void Init_Operators()
     define_constructor(Constructor<Matrix, int, int>(),
       Arg("r"), Arg("c"));
   
-  rb_cMatrix.define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
-  {
-    return self += other;
-  });
-  
-  rb_cMatrix.define_method("assign_minus", [](Matrix& self, const Matrix& other) -> Matrix&
-  {
-    return self -= other;
-  });
-  
-  rb_cMatrix.define_method("assign_multiply", [](Matrix& self, double other) -> Matrix&
-  {
-    return self *= other;
-  });
-  
   rb_cPrintable = define_class<Printable>("Printable").
     define_attr("name", &Printable::name).
     define_attr("value", &Printable::value).
@@ -185,31 +170,9 @@ void Init_Operators()
     define_constructor(Constructor<Printable, const std::string&, int>(),
       Arg("n"), Arg("v"));
   
-  rb_cPrintable.define_method("inspect", [](const Printable& self) -> std::string
-  {
-    std::ostringstream stream;
-    stream << self;
-    return stream.str();
-  });
-  
   rb_cFileWriter = define_class<FileWriter>("FileWriter").
     define_constructor(Constructor<FileWriter>()).
     define_method("open?", &FileWriter::isOpen);
-  
-  rb_cFileWriter.define_method("<<", [](FileWriter& self, const std::string& other) -> FileWriter&
-  {
-    return self << other;
-  });
-  
-  rb_cFileWriter.define_method("<<", [](FileWriter& self, int other) -> FileWriter&
-  {
-    return self << other;
-  });
-  
-  rb_cFileWriter.define_method("<<", [](FileWriter& self, const Printable& other) -> FileWriter&
-  {
-    return self << other;
-  });
   
   rb_cAllConversions = define_class<AllConversions>("AllConversions").
     define_constructor(Constructor<AllConversions>()).
@@ -266,4 +229,45 @@ void Init_Operators()
       return self;
     });
 
+  rb_cMatrix.
+    define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
+  {
+    self += other;
+    return self;
+  }).
+    define_method("assign_minus", [](Matrix& self, const Matrix& other) -> Matrix&
+  {
+    self -= other;
+    return self;
+  }).
+    define_method("assign_multiply", [](Matrix& self, double other) -> Matrix&
+  {
+    self *= other;
+    return self;
+  });
+  
+  rb_cPrintable.
+    define_method("inspect", [](const Printable& self) -> std::string
+  {
+    std::ostringstream stream;
+    stream << self;
+    return stream.str();
+  });
+  
+  rb_cFileWriter.
+    define_method("<<", [](FileWriter& self, const std::string& other) -> FileWriter&
+  {
+    self << other;
+    return self;
+  }).
+    define_method("<<", [](FileWriter& self, int other) -> FileWriter&
+  {
+    self << other;
+    return self;
+  }).
+    define_method("<<", [](FileWriter& self, const Printable& other) -> FileWriter&
+  {
+    self << other;
+    return self;
+  });
 }

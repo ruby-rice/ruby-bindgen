@@ -24,6 +24,8 @@ module RubyBindgen
         @auto_generated_bases = Set.new
         @skip_symbols = skip_symbols
         @export_macros = export_macros
+        # Non-member operators grouped by target class cruby_name
+        @non_member_operators = Hash.new { |h, k| h[k] = [] }
       end
 
       # Check if a cursor should be skipped based on skip_symbols config.
@@ -60,6 +62,7 @@ module RubyBindgen
         @classes.clear
         @typedef_map.clear
         @auto_generated_bases.clear
+        @non_member_operators.clear
 
         cursor = translation_unit.cursor
         @overloads_stack.push(cursor.overloads)
@@ -86,6 +89,12 @@ module RubyBindgen
 
         class_templates = render_class_templates(cursor)
         content = render_children(cursor, :indentation => 2)
+
+        # Render non-member operators grouped by class
+        non_member_ops = render_non_member_operators
+        unless non_member_ops.empty?
+          content = content + "\n  " + non_member_ops
+        end
 
         @overloads_stack.pop
 
@@ -282,21 +291,32 @@ module RubyBindgen
 
         # Check if type is an elaborated type pointing to a forward declaration
         if check_type.kind == :type_elaborated || check_type.kind == :type_record
-          decl = check_type.declaration
-          # Check for opaque declaration (forward declared with no definition in TU)
-          return true if decl.respond_to?(:opaque_declaration?) && decl.opaque_declaration?
-          # Also check if definition returns an invalid cursor
-          if decl.respond_to?(:definition)
-            definition = decl.definition
-            return true if definition.respond_to?(:invalid?) && definition.invalid?
-          end
-
-          # Check template arguments for incomplete types (e.g., cv::Ptr<Impl>)
           num_args = check_type.num_template_arguments
+
           if num_args > 0
+            # This is a template instantiation (e.g., cv::Ptr<T>, std::vector<T>).
+            # Template instantiations appear "opaque" to clang because the instantiated
+            # struct/class doesn't have a visible definition in the AST, but they ARE
+            # usable as long as the template itself is defined.
+            #
+            # For template instantiations, we only care if the template ARGUMENTS are
+            # incomplete - not the instantiation itself. This handles cases like:
+            # - cv::Ptr<DownhillSolver> → usable (DownhillSolver is complete)
+            # - std::vector<Impl*> → NOT usable if Impl is forward-declared
             num_args.times do |i|
               template_arg = check_type.template_argument_type(i)
               return true if template_arg && incomplete_type?(template_arg)
+            end
+          else
+            # This is a regular (non-template) class/struct.
+            # Check if it's a forward declaration with no definition.
+            decl = check_type.declaration
+            # Check for opaque declaration (forward declared with no definition in TU)
+            return true if decl.respond_to?(:opaque_declaration?) && decl.opaque_declaration?
+            # Also check if definition returns an invalid cursor
+            if decl.respond_to?(:definition)
+              definition = decl.definition
+              return true if definition.respond_to?(:invalid?) && definition.invalid?
             end
           end
         end
@@ -889,7 +909,67 @@ module RubyBindgen
 
         class_cursor.location.file == cursor.translation_unit.spelling
 
-        self.render_cursor(cursor, "operator_non_member", :class_cursor => class_cursor)
+        # Collect non-member operators to render grouped by class later
+        @non_member_operators[class_cursor.cruby_name] << { cursor: cursor, class_cursor: class_cursor }
+        nil
+      end
+
+      def render_non_member_operators
+        # First, separate ostream operators (they go on the second arg's class)
+        # from regular operators (they go on the first arg's class)
+        grouped = Hash.new { |h, k| h[k] = [] }
+
+        @non_member_operators.each do |cruby_name, operators|
+          operators.each do |op|
+            cursor = op[:cursor]
+
+            # Handle ostream << specially - generates inspect method on the second arg's class
+            if cursor.spelling.match(/<</) && cursor.type.arg_type(0).spelling.match(/ostream/)
+              target_class = cursor.type.arg_type(1).non_reference_type.declaration.cruby_name
+              arg_type = type_spelling(cursor.type.arg_type(1))
+              grouped[target_class] << <<~CPP.strip
+                define_method("inspect", [](#{arg_type} self) -> std::string
+                  {
+                    std::ostringstream stream;
+                    stream << self;
+                    return stream.str();
+                  })
+              CPP
+            else
+              arg0_type = type_spelling(cursor.type.arg_type(0))
+              arg1_type = type_spelling(cursor.type.arg_type(1))
+              result_type = type_spelling(cursor.result_type)
+              op_symbol = cursor.spelling.sub(/^operator\s*/, '')
+              ruby_name = cursor.ruby_name
+
+              # Determine the appropriate return statement based on result type
+              if result_type == "void"
+                return_stmt = "self #{op_symbol} other;"
+              elsif result_type.include?("&") && result_type.include?(arg0_type.gsub(/[&\s]/, ''))
+                # Returns reference to self (e.g., FileStorage& operator<<)
+                return_stmt = "self #{op_symbol} other;\n    return self;"
+              else
+                # Returns a value (e.g., bool, ptrdiff_t)
+                return_stmt = "return self #{op_symbol} other;"
+              end
+
+              grouped[cruby_name] << <<~CPP.strip
+                define_method("#{ruby_name}", [](#{arg0_type} self, #{arg1_type} other) -> #{result_type}
+                  {
+                    #{return_stmt}
+                  })
+              CPP
+            end
+          end
+        end
+
+        # Now render each group as a chained method call
+        result = []
+        grouped.each do |cruby_name, lines|
+          next if lines.empty?
+          result << "#{cruby_name}.\n    #{lines.join(".\n    ")};"
+        end
+        result.join("\n  \n  ")
       end
 
       def visit_type_alias_decl(cursor)
