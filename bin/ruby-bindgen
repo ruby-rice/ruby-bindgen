@@ -3,7 +3,6 @@
 # To make testing/debugging easier test within this source tree versus an installed gem
 require 'bundler/setup'
 
-require 'ruby-bindgen'
 require 'yaml'
 
 module RubyBindGen
@@ -13,6 +12,8 @@ module RubyBindGen
     def initialize
       parse_args
       load_config
+      setup_libclang
+      require 'ruby-bindgen'
       validate_config
     end
 
@@ -31,7 +32,7 @@ module RubyBindGen
 
     def usage
       <<~USAGE
-        ruby-bindgen #{RubyBindgen::VERSION}
+        ruby-bindgen
 
         Usage: ruby-bindgen <config.yaml>
 
@@ -47,6 +48,12 @@ module RubyBindGen
     def load_config
       @config = YAML.safe_load(File.read(@config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
       @config = symbolize_keys(@config)
+    end
+
+    def setup_libclang
+      if @config[:libclang]
+        ENV['LIBCLANG'] = @config[:libclang]
+      end
     end
 
     def symbolize_keys(hash)

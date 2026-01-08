@@ -16,6 +16,11 @@ ruby-bindgen config.yaml
 # If omitted, only per-file bindings are generated without project wrapper files
 extension: my_extension
 
+# Path to libclang shared library (optional)
+# If not specified, ffi-clang will attempt to find it automatically
+# Useful when you have multiple LLVM versions or non-standard install locations
+libclang: /usr/lib64/libclang.so
+
 # Path to the directory containing header files
 input: /path/to/headers
 
@@ -65,6 +70,7 @@ clang_args:
 | Option | Default | Description |
 |--------|---------|-------------|
 | `extension` | none | Name of the Ruby extension. Used for the `Init_` function name. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{extension}-rb.cpp`, `{extension}-rb.hpp`, `{extension}.def`). When omitted, only per-file bindings are generated. |
+| `libclang` | auto-detect | Path to the libclang shared library. When specified, sets the `LIBCLANG` environment variable before loading ffi-clang. Useful when you have multiple LLVM versions or non-standard install locations. |
 | `match` | `["**/*.{h,hpp}"]` | Glob patterns specifying which header files to process. |
 | `skip` | `[]` | Glob patterns specifying which header files to skip. |
 | `export_macros` | `[]` | List of macros that indicate a symbol is exported. Only functions/classes with these macros will be included. |
@@ -120,6 +126,59 @@ On Windows with MSVC:
 - Visual Studio include paths (e.g., `C:\Program Files\Microsoft Visual Studio\...\include`)
 - Windows SDK include paths (e.g., `C:\Program Files (x86)\Windows Kits\10\Include\...`)
 - LLVM/Clang include paths if using clang
+
+## Libclang Path
+
+The `libclang` option specifies the path to the libclang shared library. This is useful when:
+
+- You have multiple LLVM/Clang versions installed
+- Clang is installed in a non-standard location
+- ffi-clang fails to auto-detect the library
+
+### Finding Libclang
+
+On Linux:
+```bash
+# Common locations
+/usr/lib64/libclang.so           # Fedora, RHEL
+/usr/lib/x86_64-linux-gnu/libclang-*.so  # Debian, Ubuntu
+/usr/lib/llvm-*/lib/libclang.so  # Multiple LLVM versions
+
+# Find all libclang installations
+find /usr -name "libclang*.so" 2>/dev/null
+```
+
+On macOS:
+```bash
+# Homebrew LLVM
+/opt/homebrew/opt/llvm/lib/libclang.dylib  # Apple Silicon
+/usr/local/opt/llvm/lib/libclang.dylib     # Intel
+
+# Xcode Command Line Tools
+/Library/Developer/CommandLineTools/usr/lib/libclang.dylib
+```
+
+On Windows:
+```
+# Visual Studio bundled LLVM
+C:\Program Files\Microsoft Visual Studio\2022\...\VC\Tools\Llvm\x64\bin\libclang.dll
+
+# Standalone LLVM installation
+C:\Program Files\LLVM\bin\libclang.dll
+```
+
+### Example Configuration
+
+```yaml
+# Linux
+libclang: /usr/lib64/libclang.so
+
+# macOS with Homebrew
+libclang: /opt/homebrew/opt/llvm/lib/libclang.dylib
+
+# Windows with Visual Studio
+libclang: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
+```
 
 ## Export Macros
 
