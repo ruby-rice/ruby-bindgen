@@ -1,5 +1,4 @@
-<% if cursor.spelling.match(/<</) -%>
-<% return nil unless cursor.type.arg_type(0).spelling.match(/ostream/) %>
+<% if cursor.spelling.match(/<</) && cursor.type.arg_type(0).spelling.match(/ostream/) -%>
 <%= cursor.type.arg_type(1).non_reference_type.declaration.cruby_name %>.define_method("inspect", [](<%= type_spelling(cursor.type.arg_type(1)) %> self) -> std::string
 {
   std::ostringstream stream;

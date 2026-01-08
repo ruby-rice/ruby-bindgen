@@ -6,22 +6,24 @@ using namespace Rice;
 Rice::Class rb_cConvTarget;
 Rice::Class rb_cDataPtrFloat;
 Rice::Class rb_cDataPtrInt;
+Rice::Class rb_cFileWriter;
 Rice::Class rb_cMatrix;
 Rice::Class rb_cNamespacedConversion;
 Rice::Class rb_cOperators;
+Rice::Class rb_cPrintable;
 
 template<typename Data_Type_T, typename T>
 inline void DataPtr_builder(Data_Type_T& klass)
 {
-  klass.define_attr("data", &DataPtr::data).
+  klass.define_attr("data", &DataPtr<T>::data).
     define_constructor(Constructor<DataPtr<T>>()).
     define_constructor(Constructor<DataPtr<T>, T*>(),
       Arg("ptr")).
-    define_method("to_ptr", [](DataPtr& self) -> T*
+    define_method("to_ptr", [](DataPtr<T>& self) -> T*
     {
       return self;
     }).
-    define_method("to_const_ptr", [](const DataPtr& self) -> const T*
+    define_method("to_const_ptr", [](const DataPtr<T>& self) -> const T*
     {
       return self;
     });
@@ -173,6 +175,39 @@ void Init_Operators()
   rb_cMatrix.define_method("assign_multiply", [](Matrix& self, double other) -> Matrix&
   {
     return self *= other;
+  });
+  
+  rb_cPrintable = define_class<Printable>("Printable").
+    define_attr("name", &Printable::name).
+    define_attr("value", &Printable::value).
+    define_constructor(Constructor<Printable>()).
+    define_constructor(Constructor<Printable, const std::string&, int>(),
+      Arg("n"), Arg("v"));
+  
+  rb_cPrintable.define_method("inspect", [](const Printable& self) -> std::string
+  {
+    std::ostringstream stream;
+    stream << self;
+    return stream.str();
+  });
+  
+  rb_cFileWriter = define_class<FileWriter>("FileWriter").
+    define_constructor(Constructor<FileWriter>()).
+    define_method("open?", &FileWriter::isOpen);
+  
+  rb_cFileWriter.define_method("<<", [](FileWriter& self, const std::string& other) -> FileWriter&
+  {
+    return self << other;
+  });
+  
+  rb_cFileWriter.define_method("<<", [](FileWriter& self, int other) -> FileWriter&
+  {
+    return self << other;
+  });
+  
+  rb_cFileWriter.define_method("<<", [](FileWriter& self, const Printable& other) -> FileWriter&
+  {
+    return self << other;
   });
 
 }

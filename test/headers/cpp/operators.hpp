@@ -143,3 +143,36 @@ public:
 Matrix& operator+=(Matrix& a, const Matrix& b);
 Matrix& operator-=(Matrix& a, const Matrix& b);
 Matrix& operator*=(Matrix& a, double scalar);
+
+// Test non-member << operators
+#include <ostream>
+#include <string>
+
+// Class that can be printed to ostream (should generate inspect method)
+class Printable
+{
+public:
+    std::string name;
+    int value;
+
+    Printable() : name("default"), value(0) {}
+    Printable(const std::string& n, int v) : name(n), value(v) {}
+};
+
+// ostream << operator - should generate inspect method
+std::ostream& operator<<(std::ostream& os, const Printable& p);
+
+// Class that acts like FileStorage (non-ostream streaming)
+class FileWriter
+{
+public:
+    FileWriter() {}
+
+    // Methods to test the class works
+    bool isOpen() const { return true; }
+};
+
+// Non-ostream << operator - should generate regular << method
+FileWriter& operator<<(FileWriter& fw, const std::string& value);
+FileWriter& operator<<(FileWriter& fw, int value);
+FileWriter& operator<<(FileWriter& fw, const Printable& p);
