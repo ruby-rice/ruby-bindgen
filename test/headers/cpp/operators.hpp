@@ -176,3 +176,32 @@ public:
 FileWriter& operator<<(FileWriter& fw, const std::string& value);
 FileWriter& operator<<(FileWriter& fw, int value);
 FileWriter& operator<<(FileWriter& fw, const Printable& p);
+
+// Test all conversion operator mappings
+// Each C++ type maps to a specific Ruby method name
+class AllConversions
+{
+public:
+    AllConversions() {}
+
+    // Integer types
+    operator int() const { return 1; }                        // to_i
+    operator long() const { return 2L; }                      // to_i
+    operator long long() const { return 3LL; }                // to_i64
+    operator short() const { return 4; }                      // to_i16
+
+    // Unsigned integer types
+    operator unsigned int() const { return 5U; }              // to_u
+    operator unsigned long() const { return 6UL; }            // to_u
+    operator unsigned long long() const { return 7ULL; }      // to_u64
+    operator unsigned short() const { return 8; }             // to_u16
+
+    // Floating point types
+    operator float() const { return 9.0f; }                   // to_f32
+    operator double() const { return 10.0; }                  // to_f
+    operator long double() const { return 11.0L; }            // to_f
+
+    // Other types
+    operator bool() const { return true; }                    // to_bool
+    operator std::string() const { return "hello"; }          // to_s
+};

@@ -117,25 +117,72 @@ C++ classes that support the `()` operator are known as functors. Ruby supports 
 
 ## Conversion Operators
 
-C++ allows users to define explicit and implicit conversion operators or functions. These are used to convert a class to a different types. For example:
+C++ allows users to define [conversion operators](https://en.cppreference.com/w/cpp/language/cast_operator) (also called cast operators or user-defined conversions). These enable a class instance to be implicitly or explicitly converted to another type. For example:
 
 ```cpp
 class Money
 {
 public:
-    Money(float amount);
-    operator float() const;
+    Money(double amount) : amount_(amount) {}
+
+    // Conversion to double - allows: double d = money_instance;
+    operator double() const { return amount_; }
+
+    // Conversion to bool - allows: if (money_instance) { ... }
+    operator bool() const { return amount_ != 0.0; }
+
+    // Conversion to string - allows: std::string s = money_instance;
+    operator std::string() const { return std::to_string(amount_); }
+
+private:
+    double amount_;
 };
 ```
 
-The `operator float() const;` is a user defined conversion function that converts a `Money` instance to a float. Following Ruby conventions, these conversion functions should be exposed as `to_` methods, in this case `to_f`.
+Following Ruby conventions, conversion operators are mapped to `to_*` methods. This allows natural Ruby idioms:
 
-| C++ Type     | Ruby Method |
-|:-------------|:------------|
-| int          | to_i        |
-| long         | to_i        |
-| float        | to_f        |
-| double       | to_f        |
-| bool         | to_bool     |
-| std::string  | to_s        |
-| const char*  | to_s        |
+```ruby
+money = Money.new(42.50)
+money.to_f      # => 42.5
+money.to_bool   # => true
+money.to_s      # => "42.500000"
+```
+
+### Conversion Type Mappings
+
+The following table shows how C++ types map to Ruby method names and their corresponding Ruby classes:
+
+| C++ Type | Ruby Method | Ruby Class |
+|:---------|:------------|:-----------|
+| `int` | `to_i` | `Integer` |
+| `long` | `to_l` | `Integer` |
+| `long long` | `to_i64` | `Integer` |
+| `short` | `to_i16` | `Integer` |
+| `unsigned int` | `to_u` | `Integer` |
+| `unsigned long` | `to_ul` | `Integer` |
+| `unsigned long long` | `to_u64` | `Integer` |
+| `unsigned short` | `to_u16` | `Integer` |
+| `int8_t` | `to_i8` | `Integer` |
+| `int16_t` | `to_i16` | `Integer` |
+| `int32_t` | `to_i32` | `Integer` |
+| `int64_t` | `to_i64` | `Integer` |
+| `uint8_t` | `to_u8` | `Integer` |
+| `uint16_t` | `to_u16` | `Integer` |
+| `uint32_t` | `to_u32` | `Integer` |
+| `uint64_t` | `to_u64` | `Integer` |
+| `float` | `to_f32` | `Float` |
+| `double` | `to_f` | `Float` |
+| `long double` | `to_ld` | `Float` |
+| `bool` | `to_bool` | `TrueClass` / `FalseClass` |
+| `std::string` | `to_s` | `String` |
+| `const char*` | `to_s` | `String` |
+
+### Notes
+
+- **Integer types**: Ruby has a single `Integer` class that handles arbitrary precision. The different method names (`to_i`, `to_l`, `to_i64`, etc.) distinguish which C++ type is being converted, but all return Ruby `Integer` objects.
+
+- **Floating point types**: Ruby's `Float` is a double-precision floating point number. The `to_f32` method converts from C++ `float` (single precision), while `to_f` converts from `double`. Both return Ruby `Float` objects.
+
+- **Custom types**: Conversion operators to custom C++ types (classes, structs) are mapped to `to_<typename>` methods where the type name is converted to snake_case. For example, `operator MyClass()` becomes `to_my_class`.
+
+- **Pointer conversions**: Conversion operators returning pointers (`operator T*()`) are mapped to `to_ptr` or `to_const_ptr` methods.

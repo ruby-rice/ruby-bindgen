@@ -3,6 +3,7 @@
 
 using namespace Rice;
 
+Rice::Class rb_cAllConversions;
 Rice::Class rb_cConvTarget;
 Rice::Class rb_cDataPtrFloat;
 Rice::Class rb_cDataPtrInt;
@@ -118,7 +119,7 @@ void Init_Operators()
     {
       return self;
     }).
-    define_method("to_f", [](const Operators& self) -> float
+    define_method("to_f32", [](const Operators& self) -> float
     {
       return self;
     }).
@@ -209,5 +210,60 @@ void Init_Operators()
   {
     return self << other;
   });
+  
+  rb_cAllConversions = define_class<AllConversions>("AllConversions").
+    define_constructor(Constructor<AllConversions>()).
+    define_method("to_i", [](const AllConversions& self) -> int
+    {
+      return self;
+    }).
+    define_method("to_l", [](const AllConversions& self) -> long
+    {
+      return self;
+    }).
+    define_method("to_i64", [](const AllConversions& self) -> long long
+    {
+      return self;
+    }).
+    define_method("to_i16", [](const AllConversions& self) -> short
+    {
+      return self;
+    }).
+    define_method("to_u", [](const AllConversions& self) -> unsigned int
+    {
+      return self;
+    }).
+    define_method("to_ul", [](const AllConversions& self) -> unsigned long
+    {
+      return self;
+    }).
+    define_method("to_u64", [](const AllConversions& self) -> unsigned long long
+    {
+      return self;
+    }).
+    define_method("to_u16", [](const AllConversions& self) -> unsigned short
+    {
+      return self;
+    }).
+    define_method("to_f32", [](const AllConversions& self) -> float
+    {
+      return self;
+    }).
+    define_method("to_f", [](const AllConversions& self) -> double
+    {
+      return self;
+    }).
+    define_method("to_ld", [](const AllConversions& self) -> long double
+    {
+      return self;
+    }).
+    define_method("to_bool", [](const AllConversions& self) -> bool
+    {
+      return self;
+    }).
+    define_method("to_s", [](const AllConversions& self) -> std::string
+    {
+      return self;
+    });
 
 }

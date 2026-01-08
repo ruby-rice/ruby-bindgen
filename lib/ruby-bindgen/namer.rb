@@ -60,19 +60,34 @@ module RubyBindgen
 
     # Mapping of C++ type names to Ruby conversion method suffixes
     CONVERSION_TYPE_MAPPINGS = {
+      # Standard integer types
       'int' => 'i',
-      'long' => 'i',
-      'long long' => 'i',
-      'short' => 'i',
-      'unsigned int' => 'i',
-      'unsigned long' => 'i',
-      'unsigned long long' => 'i',
-      'unsigned short' => 'i',
-      'float' => 'f',
+      'long' => 'l',
+      'long long' => 'i64',
+      'short' => 'i16',
+      'unsigned int' => 'u',
+      'unsigned long' => 'ul',
+      'unsigned long long' => 'u64',
+      'unsigned short' => 'u16',
+      # Fixed-width integer types
+      'int8_t' => 'i8',
+      'int16_t' => 'i16',
+      'int32_t' => 'i32',
+      'int64_t' => 'i64',
+      'uint8_t' => 'u8',
+      'uint16_t' => 'u16',
+      'uint32_t' => 'u32',
+      'uint64_t' => 'u64',
+      # Floating point types
+      'float' => 'f32',
       'double' => 'f',
-      'long double' => 'f',
+      'long double' => 'ld',
+      # Other types
       'bool' => 'bool',
       'std::string' => 's',
+      'std::__cxx11::basic_string<char>' => 's',
+      'std::basic_string<char>' => 's',
+      'basic_string<char>' => 's',
       'char *' => 's',
       'const char *' => 's',
     }.freeze
@@ -156,12 +171,19 @@ module RubyBindgen
       if suffix
         "to_#{suffix}"
       else
+        # Handle std::basic_string variants (std::string is a typedef)
+        if type_name.include?('basic_string')
+          return "to_s"
+        end
+
         # Clean up the type name for Ruby method naming:
         # - Remove reference/pointer markers
         # - Use only the final type name (after last ::)
         # - Convert to underscore style
         clean_name = type_name.gsub(/[&*]/, '').strip
         clean_name = clean_name.split('::').last || clean_name
+        # Remove template parameters for cleaner method names
+        clean_name = clean_name.sub(/<.*>$/, '')
         "to_#{clean_name.underscore}"
       end
     end
