@@ -3,6 +3,9 @@
 
 using namespace Rice;
 
+Rice::Class rb_cOuterInnerFactoryClass;
+Rice::Class rb_cOuterInnerOuterWithFactory;
+Rice::Class rb_cOuterInnerOuterWithFactoryInnerFactory;
 Rice::Class rb_cOuterInnerPimplClass;
 Rice::Class rb_cOuterInnerPimplClassWithConstructor;
 Rice::Class rb_cOuterInnerPimplClassWithPublicField;
@@ -56,5 +59,22 @@ void Init_IncompleteTypes()
     define_singleton_function("set_value", &Outer::Inner::PimplClassWithStaticMethods::setValue,
       Arg("val"));
   
+  
+  rb_cOuterInnerFactoryClass = define_class_under<Outer::Inner::FactoryClass>(rb_mOuterInner, "FactoryClass").
+    define_constructor(Constructor<Outer::Inner::FactoryClass>()).
+    define_method("clone", &Outer::Inner::FactoryClass::clone).
+    define_attr("parent", &Outer::Inner::FactoryClass::parent).
+    define_method("set_parent", &Outer::Inner::FactoryClass::setParent,
+      Arg("p")).
+    define_method("get_value", &Outer::Inner::FactoryClass::getValue).
+    define_singleton_function("create", &Outer::Inner::FactoryClass::create);
+  
+  rb_cOuterInnerOuterWithFactory = define_class_under<Outer::Inner::OuterWithFactory>(rb_mOuterInner, "OuterWithFactory").
+    define_constructor(Constructor<Outer::Inner::OuterWithFactory>()).
+    define_attr("data", &Outer::Inner::OuterWithFactory::data);
+  
+  rb_cOuterInnerOuterWithFactoryInnerFactory = define_class_under<Outer::Inner::OuterWithFactory::InnerFactory>(rb_cOuterInnerOuterWithFactory, "InnerFactory").
+    define_constructor(Constructor<Outer::Inner::OuterWithFactory::InnerFactory>()).
+    define_singleton_function("create_outer", &Outer::Inner::OuterWithFactory::InnerFactory::createOuter);
 
 }

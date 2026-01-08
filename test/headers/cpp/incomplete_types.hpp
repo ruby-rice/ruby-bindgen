@@ -128,5 +128,46 @@ namespace Outer
       // Static method with complete parameter - should be included
       static void setValue(int val);
     };
+
+    // Test template instantiation with COMPLETE type argument (like cv::Ptr<DownhillSolver>::create())
+    // This is the opposite of the incomplete case - these should be INCLUDED
+    class FactoryClass
+    {
+    public:
+      FactoryClass();
+
+      // Static factory method returning Ptr<FactoryClass> - should be INCLUDED
+      // (template argument FactoryClass is complete, not forward-declared)
+      static Ptr<FactoryClass> create();
+
+      // Instance method returning Ptr<FactoryClass> - should be INCLUDED
+      Ptr<FactoryClass> clone() const;
+
+      // Field with Ptr<FactoryClass> - should be INCLUDED
+      Ptr<FactoryClass> parent;
+
+      // Method taking Ptr<FactoryClass> parameter - should be INCLUDED
+      void setParent(Ptr<FactoryClass> p);
+
+      int getValue() const { return val; }
+
+    private:
+      int val;
+    };
+
+    // Test nested class scenario - Ptr<Outer> from within Outer should work
+    class OuterWithFactory
+    {
+    public:
+      class InnerFactory
+      {
+      public:
+        // Returns Ptr to the outer class - should be INCLUDED
+        static Ptr<OuterWithFactory> createOuter();
+      };
+
+      OuterWithFactory();
+      int data;
+    };
   }
 }
