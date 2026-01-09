@@ -72,3 +72,70 @@ namespace io
   // NOT: static_cast<FILE*>(::stdout)
   void print_to(FILE* stream = stdout);
 }
+
+// Test non-copyable types - default values should be skipped for these
+// because Rice's Arg mechanism needs to copy the default value internally.
+namespace noncopyable
+{
+  // C++03 style: private copy constructor
+  class NonCopyableCpp03
+  {
+  public:
+    NonCopyableCpp03();
+    NonCopyableCpp03(int value);
+    int get_value() const;
+  private:
+    NonCopyableCpp03(const NonCopyableCpp03&);            // copy disabled
+    NonCopyableCpp03& operator=(const NonCopyableCpp03&); // assign disabled
+    int value_;
+  };
+
+  // C++11 style: deleted copy constructor
+  class NonCopyableCpp11
+  {
+  public:
+    NonCopyableCpp11();
+    NonCopyableCpp11(int value);
+    int get_value() const;
+
+    NonCopyableCpp11(const NonCopyableCpp11&) = delete;
+    NonCopyableCpp11& operator=(const NonCopyableCpp11&) = delete;
+  private:
+    int value_;
+  };
+
+  // Functions that use non-copyable types as parameters with default values.
+  // The default values should NOT be generated because the types can't be copied.
+  void use_cpp03(const NonCopyableCpp03& obj = NonCopyableCpp03());
+  void use_cpp11(const NonCopyableCpp11& obj = NonCopyableCpp11());
+
+  // For comparison: a copyable type (default value SHOULD be generated)
+  class Copyable
+  {
+  public:
+    Copyable();
+    Copyable(int value);
+    int value;
+  };
+
+  void use_copyable(const Copyable& obj = Copyable());
+
+  // Test inherited non-copyable: derived class inherits non-copyable base (like cv::flann::SearchParams)
+  class DerivedFromCpp03 : public NonCopyableCpp03
+  {
+  public:
+    DerivedFromCpp03();
+    DerivedFromCpp03(int value, int extra);
+  };
+
+  class DerivedFromCpp11 : public NonCopyableCpp11
+  {
+  public:
+    DerivedFromCpp11();
+    DerivedFromCpp11(int value, int extra);
+  };
+
+  // These should NOT have default values because base class is non-copyable
+  void use_derived_cpp03(const DerivedFromCpp03& obj = DerivedFromCpp03());
+  void use_derived_cpp11(const DerivedFromCpp11& obj = DerivedFromCpp11());
+}

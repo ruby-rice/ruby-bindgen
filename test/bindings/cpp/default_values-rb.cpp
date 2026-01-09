@@ -7,6 +7,11 @@ Rice::Class rb_cAffine3d;
 Rice::Class rb_cAffine3f;
 Rice::Class rb_cCvMat;
 Rice::Class rb_cCvRange;
+Rice::Class rb_cNoncopyableCopyable;
+Rice::Class rb_cNoncopyableDerivedFromCpp03;
+Rice::Class rb_cNoncopyableDerivedFromCpp11;
+Rice::Class rb_cNoncopyableNonCopyableCpp03;
+Rice::Class rb_cNoncopyableNonCopyableCpp11;
 Rice::Class rb_cRect;
 Rice::Class rb_cRect2d;
 
@@ -75,5 +80,50 @@ void Init_DefaultValues()
   
   rb_mIo.define_module_function("print_to", &io::print_to,
     Arg("stream") = static_cast<FILE*>(stdout));
+  
+  Module rb_mNoncopyable = define_module("Noncopyable");
+  
+  rb_cNoncopyableNonCopyableCpp03 = define_class_under<noncopyable::NonCopyableCpp03>(rb_mNoncopyable, "NonCopyableCpp03").
+    define_constructor(Constructor<noncopyable::NonCopyableCpp03>()).
+    define_constructor(Constructor<noncopyable::NonCopyableCpp03, int>(),
+      Arg("value")).
+    define_method("get_value", &noncopyable::NonCopyableCpp03::get_value);
+  
+  rb_cNoncopyableNonCopyableCpp11 = define_class_under<noncopyable::NonCopyableCpp11>(rb_mNoncopyable, "NonCopyableCpp11").
+    define_constructor(Constructor<noncopyable::NonCopyableCpp11>()).
+    define_constructor(Constructor<noncopyable::NonCopyableCpp11, int>(),
+      Arg("value")).
+    define_method("get_value", &noncopyable::NonCopyableCpp11::get_value);
+  
+  rb_mNoncopyable.define_module_function("use_cpp03", &noncopyable::use_cpp03,
+    Arg("obj"));
+  
+  rb_mNoncopyable.define_module_function("use_cpp11", &noncopyable::use_cpp11,
+    Arg("obj"));
+  
+  rb_cNoncopyableCopyable = define_class_under<noncopyable::Copyable>(rb_mNoncopyable, "Copyable").
+    define_constructor(Constructor<noncopyable::Copyable>()).
+    define_constructor(Constructor<noncopyable::Copyable, int>(),
+      Arg("value")).
+    define_attr("value", &noncopyable::Copyable::value);
+  
+  rb_mNoncopyable.define_module_function("use_copyable", &noncopyable::use_copyable,
+    Arg("obj") = static_cast<const noncopyable::Copyable&>(noncopyable::Copyable()));
+  
+  rb_cNoncopyableDerivedFromCpp03 = define_class_under<noncopyable::DerivedFromCpp03, noncopyable::NonCopyableCpp03>(rb_mNoncopyable, "DerivedFromCpp03").
+    define_constructor(Constructor<noncopyable::DerivedFromCpp03>()).
+    define_constructor(Constructor<noncopyable::DerivedFromCpp03, int, int>(),
+      Arg("value"), Arg("extra"));
+  
+  rb_cNoncopyableDerivedFromCpp11 = define_class_under<noncopyable::DerivedFromCpp11, noncopyable::NonCopyableCpp11>(rb_mNoncopyable, "DerivedFromCpp11").
+    define_constructor(Constructor<noncopyable::DerivedFromCpp11>()).
+    define_constructor(Constructor<noncopyable::DerivedFromCpp11, int, int>(),
+      Arg("value"), Arg("extra"));
+  
+  rb_mNoncopyable.define_module_function("use_derived_cpp03", &noncopyable::use_derived_cpp03,
+    Arg("obj"));
+  
+  rb_mNoncopyable.define_module_function("use_derived_cpp11", &noncopyable::use_derived_cpp11,
+    Arg("obj"));
 
 }

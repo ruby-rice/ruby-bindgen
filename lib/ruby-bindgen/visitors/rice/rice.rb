@@ -279,6 +279,53 @@ module RubyBindgen
         end
       end
 
+      # Check if a type is copyable (has an accessible copy constructor).
+      # Returns false if the copy constructor is private (C++03 idiom) or deleted (C++11).
+      # This is used to determine if we can generate default values for parameters -
+      # Rice's Arg mechanism needs to copy the default value internally.
+      def copyable_type?(type)
+        # Strip references to get to the actual type
+        type = type.non_reference_type while type.kind == :type_lvalue_ref || type.kind == :type_rvalue_ref
+
+        # Get the declaration of the type
+        decl = type.declaration
+        return true if decl.kind == :cursor_no_decl_found
+
+        # For classes/structs, check if copy constructor is accessible
+        # Also check base classes since a derived class inherits the copy constructor restriction
+        if decl.kind == :cursor_struct || decl.kind == :cursor_class_decl
+          return false unless copyable_class?(decl)
+        end
+
+        true
+      end
+
+      # Helper method to check if a class/struct has an accessible copy constructor.
+      # Recursively checks base classes since copy restriction is inherited.
+      def copyable_class?(decl)
+        # Find all constructors in this class
+        constructors = decl.find_by_kind(false, :cursor_constructor)
+        copy_constructors = constructors.select(&:copy_constructor?)
+
+        # If there are explicit copy constructors, check their accessibility
+        copy_constructors.each do |ctor|
+          # C++11: deleted copy constructor
+          return false if ctor.deleted?
+          # C++03: private copy constructor
+          return false if ctor.private?
+        end
+
+        # Check base classes - if any base class is non-copyable, this class is too
+        base_specifiers = decl.find_by_kind(false, :cursor_cxx_base_specifier)
+        base_specifiers.each do |base|
+          base_decl = base.type.declaration
+          next if base_decl.kind == :cursor_no_decl_found
+          return false unless copyable_class?(base_decl)
+        end
+
+        true
+      end
+
       # Check if a type is incomplete (forward declaration)
       # This handles direct types, pointers, and template types with incomplete arguments
       def incomplete_type?(type)
@@ -498,9 +545,13 @@ module RubyBindgen
           # The default value is an expression child (cursor_unexposed_expr) of the parameter.
           default_value = find_default_value(param)
           if default_value
-            # Use type_spelling to get fully qualified type name
-            qualified_type = type_spelling(param.type)
-            result << " = static_cast<#{qualified_type}>(#{default_value})"
+            # Skip default value if the type is not copyable (Rice needs to copy default values internally).
+            # This handles types with private (C++03) or deleted (C++11) copy constructors.
+            if copyable_type?(param.type)
+              # Use type_spelling to get fully qualified type name
+              qualified_type = type_spelling(param.type)
+              result << " = static_cast<#{qualified_type}>(#{default_value})"
+            end
           end
           result
         end
