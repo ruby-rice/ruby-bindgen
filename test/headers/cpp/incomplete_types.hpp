@@ -86,6 +86,27 @@ namespace Outer
       int value;
     };
 
+    // Test double-pointer fields with incomplete types (Issue #34 - cv::utils::trace::details)
+    class PimplClassWithDoublePtr
+    {
+    public:
+      struct Impl;
+
+      PimplClassWithDoublePtr();
+
+      // Double-pointer field to incomplete type - should be SKIPPED
+      Impl** ppImpl;
+
+      // Triple-pointer to incomplete type - should be SKIPPED
+      Impl*** pppImpl;
+
+      // Double-pointer to complete type - should be included
+      int** ppValue;
+
+      // Regular complete type - should be included
+      int value;
+    };
+
     // Test static fields with incomplete types
     class PimplClassWithStaticFields
     {

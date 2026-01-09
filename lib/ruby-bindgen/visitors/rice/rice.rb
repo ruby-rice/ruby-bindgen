@@ -284,9 +284,9 @@ module RubyBindgen
       def incomplete_type?(type)
         check_type = type
 
-        # For pointers, check the pointee
-        if type.kind == :type_pointer
-          check_type = type.pointee
+        # For pointers (including double/triple pointers), check the underlying pointee
+        while check_type.kind == :type_pointer
+          check_type = check_type.pointee
         end
 
         # Check if type is an elaborated type pointing to a forward declaration

@@ -8,6 +8,7 @@ Rice::Class rb_cOuterInnerOuterWithFactory;
 Rice::Class rb_cOuterInnerOuterWithFactoryInnerFactory;
 Rice::Class rb_cOuterInnerPimplClass;
 Rice::Class rb_cOuterInnerPimplClassWithConstructor;
+Rice::Class rb_cOuterInnerPimplClassWithDoublePtr;
 Rice::Class rb_cOuterInnerPimplClassWithPublicField;
 Rice::Class rb_cOuterInnerPimplClassWithSmartPtr;
 Rice::Class rb_cOuterInnerPimplClassWithStaticFields;
@@ -46,6 +47,12 @@ void Init_IncompleteTypes()
     define_constructor(Constructor<Outer::Inner::PimplClassWithSmartPtr>()).
     define_attr("data", &Outer::Inner::PimplClassWithSmartPtr::data).
     define_attr("value", &Outer::Inner::PimplClassWithSmartPtr::value);
+  
+  
+  rb_cOuterInnerPimplClassWithDoublePtr = define_class_under<Outer::Inner::PimplClassWithDoublePtr>(rb_mOuterInner, "PimplClassWithDoublePtr").
+    define_constructor(Constructor<Outer::Inner::PimplClassWithDoublePtr>()).
+    define_attr("pp_value", &Outer::Inner::PimplClassWithDoublePtr::ppValue).
+    define_attr("value", &Outer::Inner::PimplClassWithDoublePtr::value);
   
   
   rb_cOuterInnerPimplClassWithStaticFields = define_class_under<Outer::Inner::PimplClassWithStaticFields>(rb_mOuterInner, "PimplClassWithStaticFields").
