@@ -408,7 +408,7 @@ module RubyBindgen
                                 elsif type.canonical.kind == :type_nullptr
                                   type.spelling
                                 elsif type.declaration.semantic_parent.kind != :cursor_invalid_file
-                                  "#{type.const_qualified? ? "const " : ""}#{spelling}#{type.declaration.qualified_display_name}"
+                                  "#{type.const_qualified? ? "const " : ""}#{type.declaration.qualified_display_name}"
                                 else
                                   type.spelling
                                 end

@@ -4,6 +4,8 @@
 using namespace Rice;
 
 Rice::Class rb_cOuterBaseClass;
+Rice::Class rb_cOuterFoo;
+Rice::Class rb_cOuterFoobarWrapperFoo;
 Rice::Class rb_cOuterInnerContainerClass;
 Rice::Class rb_cOuterInnerContainerClassCallback;
 Rice::Class rb_cOuterInnerContainerClassConfig;
@@ -19,6 +21,12 @@ inline void SimpleVector_builder(Data_Type_T& klass)
 {
   klass.define_attr("data", &Outer::SimpleVector<T>::data).
     define_attr("size", &Outer::SimpleVector<T>::size);
+};
+
+template<typename Data_Type_T, typename T>
+inline void wrapper_builder(Data_Type_T& klass)
+{
+  klass.define_attr("item", &Outer::foobar::wrapper<T>::item);
 };
 void Init_Classes()
 {
@@ -103,5 +111,14 @@ void Init_Classes()
     {
       return self;
     });
+  
+  rb_cOuterFoo = define_class_under<Outer::foo>(rb_mOuter, "Foo").
+    define_constructor(Constructor<Outer::foo>()).
+    define_attr("value", &Outer::foo::value);
+  
+  Module rb_mOuterFoobar = define_module_under(rb_mOuter, "Foobar");
+  
+  rb_cOuterFoobarWrapperFoo = define_class_under<Outer::foobar::wrapper<Outer::foobar::foo>>(rb_mOuterFoobar, "WrapperFoo").
+    define_constructor(Constructor<Outer::foobar::wrapper<Outer::foobar::foo>>());
 
 }

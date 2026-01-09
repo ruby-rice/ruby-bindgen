@@ -131,4 +131,34 @@ namespace Outer
         operator int() const;
     };
   }
+
+  // Test word boundary matching in template argument qualification.
+  // The class "foo" should not match "foo" inside "foobar" namespace.
+  // This tests the fix for the cvflann::anyimpl::choose_policy<any> bug
+  // where "any" was being replaced inside "anyimpl", causing duplicate namespaces.
+  class foo
+  {
+  public:
+    int value;
+  };
+
+  namespace foobar
+  {
+    template<typename T>
+    struct wrapper
+    {
+      T item;
+    };
+
+    // Forward declaration of foo inside foobar namespace
+    struct foo;
+
+    // Template specialization using the forward-declared foobar::foo
+    // This should generate: Outer::foobar::wrapper<Outer::foobar::foo>
+    // NOT: Outer::Outer::foobar::foobar::wrapper<Outer::foo>
+    template<>
+    struct wrapper<foo>
+    {
+    };
+  }
 }

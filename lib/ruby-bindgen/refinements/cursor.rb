@@ -24,7 +24,9 @@ module FFI
             self.type.spelling
           when first_child.kind == :cursor_type_ref
             referee = first_child.referenced
-            self.type.spelling.sub(referee.spelling, referee.qualified_name)
+            # Use word boundary to only replace complete type names, not partial matches
+            # e.g., replace "any" but not "any" within "anyimpl"
+            self.type.spelling.sub(/\b#{Regexp.escape(referee.spelling)}\b/, referee.qualified_name)
           else
             self.type.spelling
         end
