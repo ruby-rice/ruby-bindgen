@@ -12,6 +12,7 @@ Rice::Class rb_cOuterInnerPimplClassWithPublicField;
 Rice::Class rb_cOuterInnerPimplClassWithSmartPtr;
 Rice::Class rb_cOuterInnerPimplClassWithStaticFields;
 Rice::Class rb_cOuterInnerPimplClassWithStaticMethods;
+Rice::Class rb_cOuterInnerTypedefReturnClass;
 
 template<typename Data_Type_T, typename T>
 inline void Ptr_builder(Data_Type_T& klass)
@@ -76,5 +77,15 @@ void Init_IncompleteTypes()
   rb_cOuterInnerOuterWithFactoryInnerFactory = define_class_under<Outer::Inner::OuterWithFactory::InnerFactory>(rb_cOuterInnerOuterWithFactory, "InnerFactory").
     define_constructor(Constructor<Outer::Inner::OuterWithFactory::InnerFactory>()).
     define_singleton_function("create_outer", &Outer::Inner::OuterWithFactory::InnerFactory::createOuter);
+  
+  rb_cOuterInnerTypedefReturnClass = define_class_under<Outer::Inner::TypedefReturnClass>(rb_mOuterInner, "TypedefReturnClass").
+    define_constructor(Constructor<Outer::Inner::TypedefReturnClass>()).
+    define_method("get_count", &Outer::Inner::TypedefReturnClass::getCount).
+    define_method("get_signed_count", &Outer::Inner::TypedefReturnClass::getSignedCount).
+    define_method("get_size", &Outer::Inner::TypedefReturnClass::getSize).
+    define_method("reset", &Outer::Inner::TypedefReturnClass::reset).
+    define_attr("count", &Outer::Inner::TypedefReturnClass::count).
+    define_attr("signed_count", &Outer::Inner::TypedefReturnClass::signedCount).
+    define_attr("sz", &Outer::Inner::TypedefReturnClass::sz);
 
 }

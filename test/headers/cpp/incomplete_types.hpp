@@ -1,5 +1,7 @@
 // Test case for pimpl pattern - methods/fields returning incomplete types should be skipped
 
+#include <cstdint>
+
 namespace Outer
 {
   namespace Inner
@@ -168,6 +170,28 @@ namespace Outer
 
       OuterWithFactory();
       int data;
+    };
+
+    // Test methods returning built-in typedefs (like uint64_t)
+    // These should NOT be flagged as incomplete types (Issue #33)
+    class TypedefReturnClass
+    {
+    public:
+      TypedefReturnClass();
+
+      // Methods returning built-in typedefs - should be INCLUDED
+      // (uint64_t is a typedef to unsigned long long, not an incomplete type)
+      uint64_t getCount() const { return count; }
+      int64_t getSignedCount() const { return signedCount; }
+      std::size_t getSize() const { return sz; }
+
+      // Method returning void - should be INCLUDED
+      void reset() { count = 0; }
+
+      // Field with typedef type - should be INCLUDED
+      uint64_t count;
+      int64_t signedCount;
+      std::size_t sz;
     };
   }
 }

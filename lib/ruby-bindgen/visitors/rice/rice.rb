@@ -311,6 +311,11 @@ module RubyBindgen
             # This is a regular (non-template) class/struct.
             # Check if it's a forward declaration with no definition.
             decl = check_type.declaration
+
+            # Skip check for typedefs to built-in types (like uint64_t -> unsigned long long).
+            # These have cursor_no_decl_found but are not incomplete.
+            return false if decl.kind == :cursor_no_decl_found
+
             # Check for opaque declaration (forward declared with no definition in TU)
             return true if decl.respond_to?(:opaque_declaration?) && decl.opaque_declaration?
             # Also check if definition returns an invalid cursor
