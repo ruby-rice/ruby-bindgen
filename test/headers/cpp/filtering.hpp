@@ -61,4 +61,18 @@ namespace Outer
     // Internal method (underscore suffix) - should be SKIPPED
     void internal_();
   };
+
+  // --- Class with deprecated constructor ---
+
+  class MY_EXPORT ClassWithDeprecatedConstructor
+  {
+  public:
+    // Deprecated constructor - should be SKIPPED
+    __attribute__((deprecated)) ClassWithDeprecatedConstructor(int old_param);
+
+    // Non-deprecated constructor - should be INCLUDED
+    ClassWithDeprecatedConstructor(int param1, int param2);
+
+    void doSomething();
+  };
 }

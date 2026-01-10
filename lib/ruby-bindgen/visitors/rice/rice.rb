@@ -21,6 +21,7 @@ module RubyBindgen
         @overloads_stack = Array.new
         @classes = Array.new
         @typedef_map = Hash.new
+        @type_name_map = Hash.new  # Maps simple type names to qualified names
         @auto_generated_bases = Set.new
         @skip_symbols = skip_symbols
         @export_macros = export_macros
@@ -61,14 +62,16 @@ module RubyBindgen
         @namespaces.clear
         @classes.clear
         @typedef_map.clear
+        @type_name_map.clear
         @auto_generated_bases.clear
         @non_member_operators.clear
 
         cursor = translation_unit.cursor
         @overloads_stack.push(cursor.overloads)
 
-        # Build a map from canonical type spellings to typedef/using declarations
+        # Build maps for type lookups
         build_typedef_map(cursor)
+        build_type_name_map(cursor)
 
         # Figure out relative paths for generated header and cpp file
         basename = "#{File.basename(relative_path, ".*")}-rb"
@@ -106,7 +109,7 @@ module RubyBindgen
                                 :includes => includes,
                                 :init_name => init_name,
                                 :rice_header => rice_header)
-        content.gsub!(/\n\n\n/, "\n")
+        content = cleanup_whitespace(content)
         self.outputter.write(rice_cpp, content)
 
         # Render header file
@@ -122,6 +125,9 @@ module RubyBindgen
 
         # Do not process deleted constructors
         return if cursor.deleted?
+
+        # Skip deprecated constructors (they may not be exported from library)
+        return if cursor.availability == :deprecated
 
         # Do not process move constructors
         return if cursor.move_constructor?
@@ -156,9 +162,8 @@ module RubyBindgen
         base = nil
         base_class = cursor.find_by_kind(false, :cursor_cxx_base_specifier).first
         if base_class
-          # Base class children can be a :cursor_type_ref or :cursor_template_ref
-          type_ref = base_class.find_by_kind(false, :cursor_type_ref, :cursor_template_ref).first
-          base = type_ref.definition
+          # Use canonical spelling for fully qualified type name with namespaces
+          base = base_class.type.canonical.spelling
         end
 
         # Visit children
@@ -331,6 +336,11 @@ module RubyBindgen
       def incomplete_type?(type)
         check_type = type
 
+        # For references, check the underlying non-reference type
+        if check_type.kind == :type_lvalue_ref || check_type.kind == :type_rvalue_ref
+          check_type = check_type.non_reference_type
+        end
+
         # For pointers (including double/triple pointers), check the underlying pointee
         while check_type.kind == :type_pointer
           check_type = check_type.pointee
@@ -380,6 +390,32 @@ module RubyBindgen
         type.kind == :type_pointer && incomplete_type?(type)
       end
 
+      # Qualify template arguments in a type spelling by looking up unqualified identifiers
+      # e.g., std::map<String, DictValue> -> std::map<cv::String, cv::dnn::DictValue>
+      def qualify_template_args(spelling, type)
+        return spelling unless spelling.include?('<')
+
+        result = spelling.dup
+
+        # Find all unqualified type names (uppercase identifiers not preceded by ::)
+        # Pattern: word boundary, not preceded by ::, uppercase letter, rest of identifier
+        unqualified_names = spelling.scan(/(?<!:)\b([A-Z][a-zA-Z0-9_]*)\b/).flatten.uniq
+
+        unqualified_names.each do |name|
+          # Skip if already qualified in the spelling
+          next if spelling.match?(/\w+::#{Regexp.escape(name)}\b/)
+
+          # Look up the type in the type name map
+          if @type_name_map && @type_name_map[name]
+            qualified = @type_name_map[name]
+            # Replace unqualified name with qualified name (word boundaries)
+            result = result.gsub(/(?<![:\w])#{Regexp.escape(name)}(?![:\w])/, qualified)
+          end
+        end
+
+        result
+      end
+
       def type_spellings(cursor)
         cursor.type.arg_types.map do |arg_type|
           type_spelling(arg_type)
@@ -425,11 +461,13 @@ module RubyBindgen
                                  "#{type.const_qualified? ? "const " : ""}typename #{type.declaration.semantic_parent.qualified_display_name}::#{type.spelling.sub("const ", "")}"
                                 elsif type.declaration.kind == :cursor_typedef_decl
                                   # For typedef inside template instantiation (e.g. std::vector<Pixel>::iterator)
-                                  # use type.spelling which preserves template args
+                                  # use type.spelling which preserves template args, but qualify them
                                   spelling = type.spelling
                                   qualified = type.declaration.qualified_name
                                   if spelling.include?('<') && !qualified.include?('<')
-                                    "#{type.const_qualified? ? "const " : ""}#{spelling}"
+                                    # Qualify template arguments (e.g., std::map<String, DictValue> -> std::map<cv::String, cv::dnn::DictValue>)
+                                    qualified_spelling = qualify_template_args(spelling, type)
+                                    "#{type.const_qualified? ? "const " : ""}#{qualified_spelling}"
                                   else
                                     "#{type.const_qualified? ? "const " : ""}#{qualified}"
                                   end
@@ -538,8 +576,10 @@ module RubyBindgen
 
       def arguments(cursor)
         params = cursor.find_by_kind(false, :cursor_parm_decl)
-        params.map do |param|
-          result = "Arg(\"#{param.spelling.underscore}\")"
+        params.each_with_index.map do |param, index|
+          # Use parameter name if available, otherwise generate a default name (matches Rice convention)
+          param_name = param.spelling.empty? ? "arg_#{index}" : param.spelling.underscore
+          result = "Arg(\"#{param_name}\")"
 
           # Check if there is a default value by looking for expression children.
           # The default value is an expression child (cursor_unexposed_expr) of the parameter.
@@ -913,6 +953,9 @@ module RubyBindgen
       end
 
       def visit_namespace(cursor)
+        # Skip anonymous namespaces - they're internal implementation details
+        return if cursor.anonymous?
+
         result = Array.new
 
         # Don't redefine a namespace twice. It doesn't matter to Ruby, but C++ wrapper
@@ -1270,8 +1313,20 @@ module RubyBindgen
 
       def add_indentation(content, indentation)
         content.lines.map do |line|
-          " " * indentation + line
+          # Don't add indentation to blank lines
+          line.strip.empty? ? line : " " * indentation + line
         end.join
+      end
+
+      # Clean up whitespace issues in generated content:
+      # - Collapse multiple consecutive blank lines to single blank line
+      # - Remove blank lines before closing braces
+      def cleanup_whitespace(content)
+        # Collapse 2+ consecutive blank lines to single blank line
+        content = content.gsub(/\n{3,}/, "\n\n")
+        # Remove blank line before closing brace
+        content = content.gsub(/\n\n(\s*\})/, "\n\\1")
+        content
       end
 
       def render_cursor(cursor, template, local_variables = {})
@@ -1417,6 +1472,25 @@ module RubyBindgen
 
           canonical = child.underlying_type.canonical.spelling
           @typedef_map[canonical] = child
+        end
+      end
+
+      # Build a map from simple type names to qualified names.
+      # This helps qualify unqualified type names in template arguments.
+      # We include types from all files (not just main file) because template
+      # arguments often reference types from included headers.
+      def build_type_name_map(cursor)
+        cursor.each(true) do |child, parent|
+          case child.kind
+          when :cursor_typedef_decl, :cursor_type_alias_decl
+            # Map simple name to qualified name (e.g., "String" -> "cv::String")
+            next if child.spelling.empty?
+            @type_name_map[child.spelling] ||= child.qualified_name
+          when :cursor_class_decl, :cursor_struct, :cursor_enum_decl
+            # Also include class/struct/enum declarations
+            next if child.spelling.empty?
+            @type_name_map[child.spelling] ||= child.qualified_name
+          end
         end
       end
 

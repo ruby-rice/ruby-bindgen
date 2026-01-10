@@ -29,6 +29,7 @@ inline void DataPtr_builder(Data_Type_T& klass)
       return self;
     });
 };
+
 void Init_Operators()
 {
   rb_cOperators = define_class<Operators>("Operators").
@@ -98,10 +99,10 @@ void Init_Operators()
       Arg("other")).
     define_method<Operators&(Operators::*)()>("increment_pre", &Operators::operator++).
     define_method<Operators(Operators::*)(int)>("increment", &Operators::operator++,
-      Arg("")).
+      Arg("arg_0")).
     define_method<Operators&(Operators::*)()>("decrement_pre", &Operators::operator--).
     define_method<Operators(Operators::*)(int)>("decrement", &Operators::operator--,
-      Arg("")).
+      Arg("arg_0")).
     define_method<int&(Operators::*)(int)>("[]", &Operators::operator[],
       Arg("index")).
     define_method("[]=", [](Operators&self, int index, int & value)
@@ -127,15 +128,15 @@ void Init_Operators()
     {
       return self;
     });
-  
+
   Module rb_mConv = define_module("Conv");
-  
+
   rb_cConvTarget = define_class_under<conv::Target>(rb_mConv, "Target").
     define_attr("value", &conv::Target::value).
     define_constructor(Constructor<conv::Target>()).
     define_constructor(Constructor<conv::Target, int>(),
       Arg("v"));
-  
+
   rb_cNamespacedConversion = define_class<NamespacedConversion>("NamespacedConversion").
     define_attr("value", &NamespacedConversion::value).
     define_constructor(Constructor<NamespacedConversion>()).
@@ -149,31 +150,31 @@ void Init_Operators()
     {
       return self;
     });
-  
+
   rb_cDataPtrInt = define_class<DataPtr<int>>("DataPtrInt").
     define(&DataPtr_builder<Data_Type<DataPtr<int>>, int>);
-  
+
   rb_cDataPtrFloat = define_class<DataPtr<float>>("DataPtrFloat").
     define(&DataPtr_builder<Data_Type<DataPtr<float>>, float>);
-  
+
   rb_cMatrix = define_class<Matrix>("Matrix").
     define_attr("rows", &Matrix::rows).
     define_attr("cols", &Matrix::cols).
     define_constructor(Constructor<Matrix>()).
     define_constructor(Constructor<Matrix, int, int>(),
       Arg("r"), Arg("c"));
-  
+
   rb_cPrintable = define_class<Printable>("Printable").
     define_attr("name", &Printable::name).
     define_attr("value", &Printable::value).
     define_constructor(Constructor<Printable>()).
     define_constructor(Constructor<Printable, const std::string&, int>(),
       Arg("n"), Arg("v"));
-  
+
   rb_cFileWriter = define_class<FileWriter>("FileWriter").
     define_constructor(Constructor<FileWriter>()).
     define_method("open?", &FileWriter::isOpen);
-  
+
   rb_cAllConversions = define_class<AllConversions>("AllConversions").
     define_constructor(Constructor<AllConversions>()).
     define_method("to_i", [](const AllConversions& self) -> int

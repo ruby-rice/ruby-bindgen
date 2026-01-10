@@ -214,5 +214,37 @@ namespace Outer
       int64_t signedCount;
       std::size_t sz;
     };
+
+    // Test methods returning references to incomplete types (Issue #35)
+    // Like cv::dnn::Net::getImplRef() returning Impl&
+    class PimplClassWithRefReturn
+    {
+    public:
+      struct Impl;
+
+      PimplClassWithRefReturn();
+
+      // Method returning lvalue reference to incomplete type - should be SKIPPED
+      Impl& getImplRef();
+
+      // Method returning const lvalue reference to incomplete type - should be SKIPPED
+      const Impl& getImplConstRef() const;
+
+      // Method returning rvalue reference to incomplete type - should be SKIPPED
+      Impl&& getImplRvalueRef();
+
+      // Method returning reference to complete type - should be INCLUDED
+      int& getValueRef() { return val; }
+
+      // Method returning const reference to complete type - should be INCLUDED
+      const int& getValueConstRef() const { return val; }
+
+      // Regular method - should be INCLUDED
+      int getValue() const { return val; }
+
+    private:
+      Impl* p;
+      int val;
+    };
   }
 }

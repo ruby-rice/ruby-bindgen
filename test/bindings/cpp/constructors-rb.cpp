@@ -17,27 +17,27 @@ inline void TemplateConstructor_builder(Data_Type_T& klass)
     define_constructor(Constructor<TemplateConstructor<T>, T>(),
       Arg("value"));
 };
+
 void Init_Constructors()
 {
   rb_cImplicitConstructor = define_class<ImplicitConstructor>("ImplicitConstructor").
     define_constructor(Constructor<ImplicitConstructor>());
-  
+
   rb_cDefaultConstructor = define_class<DefaultConstructor>("DefaultConstructor").
     define_constructor(Constructor<DefaultConstructor>());
-  
+
   rb_cDeleteConstructor = define_class<DeleteConstructor>("DeleteConstructor");
-  
+
   rb_cOverloadedConstructors = define_class<OverloadedConstructors>("OverloadedConstructors").
     define_constructor(Constructor<OverloadedConstructors>()).
     define_constructor(Constructor<OverloadedConstructors, int>(),
       Arg("a"));
-  
+
   rb_cCopyMoveConstructors = define_class<CopyMoveConstructors>("CopyMoveConstructors").
     define_constructor(Constructor<CopyMoveConstructors>()).
     define_constructor(Constructor<CopyMoveConstructors, const CopyMoveConstructors&>(),
       Arg("other"));
-  
+
   rb_cTemplateConstructorInt = define_class<TemplateConstructor<int>>("TemplateConstructorInt").
     define(&TemplateConstructor_builder<Data_Type<TemplateConstructor<int>>, int>);
-
 }

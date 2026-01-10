@@ -13,14 +13,7 @@ void Init_Enum()
     define_value("RED", Color::RED).
     define_value("BLACK", Color::BLACK).
     define_value("GREEN", Color::GREEN);
-  
-  Module rb_mAnonymous = define_module("Anonymous");
-  
-  Enum<::Language> rb_cAnonymousLanguage = define_enum_under<::Language>("Language", rb_mAnonymous).
-    define_value("Ruby", ::Language::Ruby).
-    define_value("CPP", ::Language::CPP).
-    define_value("JavaScript", ::Language::JavaScript);
-  
+
   Module rb_mMyNamespace = define_module("MyNamespace");
   
   Enum<MyNamespace::Season> rb_cMyNamespaceSeason = define_enum_under<MyNamespace::Season>("Season", rb_mMyNamespace).
