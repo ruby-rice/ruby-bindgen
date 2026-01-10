@@ -14,3 +14,22 @@ void processString(const char * const str, int len);
 // Test unnamed parameters (Issue #36) - should generate arg_0, arg_1, etc.
 void unnamedParams(int, float, double);
 void mixedParams(int named, float, double alsoNamed, int);
+
+// Test bool return type naming (Issue #37)
+// Predicate functions (no params) should get ? suffix
+// Action functions (with params) should NOT get ? suffix
+bool isEmpty();           // -> empty?
+bool isValid();           // -> valid?
+bool hasData();           // -> has_data?
+bool checkValue(int x);   // -> check_value (NOT check_value?)
+bool validate(int x);     // -> validate (NOT validate?)
+bool process(int a, int b); // -> process (NOT process?)
+
+class Widget
+{
+public:
+  bool empty();             // -> empty?
+  bool isEnabled();         // -> enabled?
+  bool contains(int x);     // -> contains (NOT contains?)
+  bool trySet(int value);   // -> try_set (NOT try_set?)
+};

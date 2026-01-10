@@ -3,6 +3,8 @@
 
 using namespace Rice;
 
+Rice::Class rb_cWidget;
+
 void Init_Functions()
 {
   define_global_function("some_function", &someFunction,
@@ -30,4 +32,28 @@ void Init_Functions()
 
   define_global_function("mixed_params", &mixedParams,
     Arg("named"), Arg("arg_1"), Arg("also_named"), Arg("arg_3"));
+
+  define_global_function("empty?", &isEmpty);
+
+  define_global_function("valid?", &isValid);
+
+  define_global_function("has_data?", &hasData);
+
+  define_global_function("check_value", &checkValue,
+    Arg("x"));
+
+  define_global_function("validate", &validate,
+    Arg("x"));
+
+  define_global_function("process", &process,
+    Arg("a"), Arg("b"));
+
+  rb_cWidget = define_class<Widget>("Widget").
+    define_constructor(Constructor<Widget>()).
+    define_method("empty?", &Widget::empty).
+    define_method("enabled?", &Widget::isEnabled).
+    define_method("contains", &Widget::contains,
+      Arg("x")).
+    define_method("try_set", &Widget::trySet,
+      Arg("value"));
 }

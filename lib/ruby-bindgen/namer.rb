@@ -194,7 +194,9 @@ module RubyBindgen
 
       # Regular method (not an operator)
       unless spelling.start_with?('operator')
-        if cursor.type.result_type.spelling == "bool"
+        # Only add ? suffix for predicate methods (bool return, no parameters)
+        # Methods with parameters that return bool are typically actions returning success/failure
+        if cursor.type.result_type.spelling == "bool" && cursor.type.args_size == 0
           return "#{spelling.underscore.sub(/^is_/, "")}?"
         else
           return spelling.underscore

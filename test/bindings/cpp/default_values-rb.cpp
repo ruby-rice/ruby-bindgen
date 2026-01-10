@@ -96,7 +96,7 @@ void Init_DefaultValues()
 
   rb_cMlSVM = define_class_under<ml::SVM>(rb_mMl, "SVM").
     define_constructor(Constructor<ml::SVM>()).
-    define_method("train_auto?", &ml::SVM::trainAuto,
+    define_method("train_auto", &ml::SVM::trainAuto,
       Arg("k_fold") = static_cast<int>(10), Arg("cgrid") = static_cast<ml::ParamGrid>(ml::SVM::getDefaultGrid(ml::SVM::ParamTypes::C))).
     define_singleton_function("get_default_grid", &ml::SVM::getDefaultGrid,
       Arg("param_id"));
