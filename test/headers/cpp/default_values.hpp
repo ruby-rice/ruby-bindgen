@@ -73,6 +73,33 @@ namespace io
   void print_to(FILE* stream = stdout);
 }
 
+// Test unqualified static method calls in default values
+// The generator must qualify them with the full namespace path
+namespace ml
+{
+  class ParamGrid
+  {
+  public:
+    ParamGrid();
+    ParamGrid(double minVal, double maxVal, double logStep);
+    double minVal, maxVal, logStep;
+  };
+
+  class SVM
+  {
+  public:
+    enum ParamTypes { C = 0, GAMMA = 1 };
+
+    // Static method that returns ParamGrid
+    static ParamGrid getDefaultGrid(int param_id);
+
+    // Method with UNQUALIFIED static method call in default value
+    // Source says: getDefaultGrid(C)
+    // Output must say: cv::ml::SVM::getDefaultGrid(cv::ml::SVM::ParamTypes::C)
+    bool trainAuto(int kFold = 10, ParamGrid cgrid = getDefaultGrid(C));
+  };
+}
+
 // Test non-copyable types - default values should be skipped for these
 // because Rice's Arg mechanism needs to copy the default value internally.
 namespace noncopyable

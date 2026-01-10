@@ -7,6 +7,8 @@ Rice::Class rb_cAffine3d;
 Rice::Class rb_cAffine3f;
 Rice::Class rb_cCvMat;
 Rice::Class rb_cCvRange;
+Rice::Class rb_cMlParamGrid;
+Rice::Class rb_cMlSVM;
 Rice::Class rb_cNoncopyableCopyable;
 Rice::Class rb_cNoncopyableDerivedFromCpp03;
 Rice::Class rb_cNoncopyableDerivedFromCpp11;
@@ -81,6 +83,27 @@ void Init_DefaultValues()
 
   rb_mIo.define_module_function("print_to", &io::print_to,
     Arg("stream") = static_cast<FILE*>(stdout));
+
+  Module rb_mMl = define_module("Ml");
+
+  rb_cMlParamGrid = define_class_under<ml::ParamGrid>(rb_mMl, "ParamGrid").
+    define_constructor(Constructor<ml::ParamGrid>()).
+    define_constructor(Constructor<ml::ParamGrid, double, double, double>(),
+      Arg("min_val"), Arg("max_val"), Arg("log_step")).
+    define_attr("min_val", &ml::ParamGrid::minVal).
+    define_attr("max_val", &ml::ParamGrid::maxVal).
+    define_attr("log_step", &ml::ParamGrid::logStep);
+
+  rb_cMlSVM = define_class_under<ml::SVM>(rb_mMl, "SVM").
+    define_constructor(Constructor<ml::SVM>()).
+    define_method("train_auto?", &ml::SVM::trainAuto,
+      Arg("k_fold") = static_cast<int>(10), Arg("cgrid") = static_cast<ml::ParamGrid>(ml::SVM::getDefaultGrid(ml::SVM::ParamTypes::C))).
+    define_singleton_function("get_default_grid", &ml::SVM::getDefaultGrid,
+      Arg("param_id"));
+
+  Enum<ml::SVM::ParamTypes> rb_cMlSVMParamTypes = define_enum_under<ml::SVM::ParamTypes>("ParamTypes", rb_cMlSVM).
+    define_value("C", ml::SVM::ParamTypes::C).
+    define_value("GAMMA", ml::SVM::ParamTypes::GAMMA);
 
   Module rb_mNoncopyable = define_module("Noncopyable");
 

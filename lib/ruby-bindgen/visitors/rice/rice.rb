@@ -664,10 +664,15 @@ module RubyBindgen
           ref = decl_ref.referenced
           next unless ref && ref.kind != :cursor_invalid_file
 
-          # Skip class methods - they're already qualified by the class name in source.
-          # For example, Range::all() has extent "all" but qualified_name "cv::Range::all".
-          # We only want to qualify free functions in namespaces, not member functions.
-          next if ref.kind == :cursor_cxx_method
+          # For class methods, check if already qualified in source.
+          # For example, Range::all() - the extent is "all" but it's already qualified by Range::.
+          # But for unqualified static method calls like getDefaultGrid(...), we need to qualify them.
+          # Check if the decl_ref extent appears after a :: in default_text to see if already qualified.
+          if ref.kind == :cursor_cxx_method
+            extent_text = decl_ref.extent.text
+            # If already qualified in source (preceded by ::), skip
+            next if default_text.match?(/::#{Regexp.escape(extent_text)}\s*\(/)
+          end
 
           begin
             # For enum constants in unscoped (C-style) enums, the values are in the
