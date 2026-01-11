@@ -1,4 +1,5 @@
 <%- line_terminator = children.empty? ? ";" : "." -%>
+<%= auto_generated_base -%>
 <%- if under && base -%>
 <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
 <%- elsif under -%>

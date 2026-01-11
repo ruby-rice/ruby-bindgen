@@ -4,7 +4,9 @@
 using namespace Rice;
 
 Rice::Class rb_cOuterClassWithDeprecatedConstructor;
+Rice::Class rb_cOuterClassWithDeprecatedConversion;
 Rice::Class rb_cOuterMyClass;
+Rice::Class rb_cOuterOtherClass;
 
 void Init_Filtering()
 {
@@ -25,4 +27,14 @@ void Init_Filtering()
     define_constructor(Constructor<Outer::ClassWithDeprecatedConstructor, int, int>(),
       Arg("param1"), Arg("param2")).
     define_method("do_something", &Outer::ClassWithDeprecatedConstructor::doSomething);
+
+  rb_cOuterOtherClass = define_class_under<Outer::OtherClass>(rb_mOuter, "OtherClass").
+    define_constructor(Constructor<Outer::OtherClass>());
+
+  rb_cOuterClassWithDeprecatedConversion = define_class_under<Outer::ClassWithDeprecatedConversion>(rb_mOuter, "ClassWithDeprecatedConversion").
+    define_constructor(Constructor<Outer::ClassWithDeprecatedConversion>()).
+    define_method("to_i", [](const Outer::ClassWithDeprecatedConversion& self) -> int
+    {
+      return self;
+    });
 }

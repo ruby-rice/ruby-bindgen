@@ -75,4 +75,20 @@ namespace Outer
 
     void doSomething();
   };
+
+  // --- Class with deprecated conversion operator ---
+
+  class OtherClass {};
+
+  class MY_EXPORT ClassWithDeprecatedConversion
+  {
+  public:
+    ClassWithDeprecatedConversion();
+
+    // Deprecated conversion operator - should be SKIPPED
+    __attribute__((deprecated)) operator OtherClass&();
+
+    // Non-deprecated conversion operator - should be INCLUDED
+    operator int() const;
+  };
 }
