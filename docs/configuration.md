@@ -74,7 +74,7 @@ clang_args:
 | `match` | `["**/*.{h,hpp}"]` | Glob patterns specifying which header files to process. |
 | `skip` | `[]` | Glob patterns specifying which header files to skip. |
 | `export_macros` | `[]` | List of macros that indicate a symbol is exported. Only functions/classes with these macros will be included. |
-| `skip_symbols` | `[]` | List of symbol names to skip. Supports simple names (`versionMajor`) or fully qualified names (`cv::ocl::PlatformInfo::versionMajor`). |
+| `skip_symbols` | `[]` | List of symbol names to skip. Supports simple names (`versionMajor`), fully qualified names (`cv::ocl::PlatformInfo::versionMajor`), or regex patterns (`/pattern/`). |
 | `clang_args` | `[]` | Arguments passed to libclang for parsing. Include paths, language options, etc. |
 
 ## Example: OpenCV Bindings
@@ -211,11 +211,31 @@ The `skip_symbols` option is useful when:
 You can specify symbols using:
 - **Simple names**: `versionMajor` - skips all symbols with this name
 - **Fully qualified names**: `cv::ocl::PlatformInfo::versionMajor` - skips only that specific symbol
+- **Regex patterns**: `/pattern/` - skips symbols matching the regex
 
 ```yaml
 skip_symbols:
   - versionMajor                           # Skips all symbols named "versionMajor"
   - cv::ocl::PlatformInfo::versionMinor    # Skips only this specific method
+  - /cv::dnn::.*Layer::init.*/             # Regex: skips all init* methods on any Layer class
+```
+
+### Regex Patterns
+
+Regex patterns are enclosed in forward slashes (`/pattern/`) and are matched against both the simple symbol name and the fully qualified name. This is particularly useful for:
+
+- Matching across versioned inline namespaces (e.g., `cv::dnn::dnn4_v20241223::Layer`)
+- Skipping families of related methods
+- Handling template specializations
+
+```yaml
+skip_symbols:
+  # Skip all backend initialization methods on Layer classes
+  # Matches cv::dnn::Layer::initCUDA, cv::dnn::dnn4_v20241223::Layer::initHalide, etc.
+  - /cv::dnn::.*Layer::(init|applyHalideScheduler|tryAttach)/
+
+  # Skip all operator() methods on DefaultDeleter templates
+  - /cv::DefaultDeleter<.*>::operator\(\)/
 ```
 
 Ruby-bindgen automatically skips:
