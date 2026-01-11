@@ -1,3 +1,25 @@
+<%- has_incomplete_classes = !incomplete_classes.to_s.empty? -%>
+<%- if has_incomplete_classes -%>
+<%# Split: define class, define incomplete inner classes, then add methods -%>
+<%= auto_generated_base -%>
+<%- if under && base -%>
+<%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
+<%- elsif under -%>
+<%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
+<%- elsif base -%>
+<%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
+<%- else -%>
+<%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
+<%- end -%>
+
+<%= incomplete_classes -%>
+<%- unless children.empty? -%>
+
+<%= cursor.cruby_name %>.
+<%= children -%>
+<%- end -%>
+<%- else -%>
+<%# No incomplete classes - single statement -%>
 <%- line_terminator = children.empty? ? ";" : "." -%>
 <%= auto_generated_base -%>
 <%- if under && base -%>
@@ -9,4 +31,5 @@
 <%- else -%>
 <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
 <%- end -%>
-<%= children %>
+<%= children -%>
+<%- end -%>

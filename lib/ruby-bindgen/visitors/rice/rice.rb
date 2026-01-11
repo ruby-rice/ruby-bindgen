@@ -215,21 +215,28 @@ module RubyBindgen
 
         children_content = merge_children(children, :indentation => 2, :separator => ".\n", terminator: ";\n", :strip => true)
 
+        # Collect forward-declared (incomplete) inner classes
+        # They must be registered with Rice before the parent class methods use them
+        incomplete_classes = []
+        cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct).each do |child_cursor|
+          next if child_cursor.private? || child_cursor.protected?
+          next unless child_cursor.opaque_declaration?
+          incomplete_classes << visit_incomplete_class(child_cursor, cursor)
+        end
+        incomplete_classes_content = merge_children(incomplete_classes, :separator => "\n")
+
         # Render class
         @classes << cursor.cruby_name
         result << self.render_cursor(cursor, "class", :under => under, :base => base,
                                      :auto_generated_base => auto_generated_base,
+                                     :incomplete_classes => incomplete_classes_content,
                                      :children => children_content)
 
-        # Define any embedded classes and structs
-        # For forward-declared (incomplete) types, register them with Rice so types like Ptr<Impl> work
+        # Define any complete embedded classes and structs
         cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct).each do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
-          if child_cursor.opaque_declaration?
-            result << visit_incomplete_class(child_cursor, cursor)
-          else
-            result << visit_class_decl(child_cursor)
-          end
+          next if child_cursor.opaque_declaration?
+          result << visit_class_decl(child_cursor)
         end
 
         # Define any embedded enums
@@ -244,6 +251,7 @@ module RubyBindgen
 
       # Visit a forward-declared (incomplete) inner class.
       # These need to be registered with Rice so that types like Ptr<Impl> work.
+      # Must be registered BEFORE the parent class methods that use them (smart pointer issue).
       def visit_incomplete_class(cursor, parent_cursor)
         # Skip if already defined
         return "" if @classes.include?(cursor.cruby_name)

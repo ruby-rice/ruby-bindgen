@@ -36,21 +36,29 @@ void Init_IncompleteTypes()
 
   Module rb_mOuterInner = define_module_under(rb_mOuter, "Inner");
 
-  rb_cOuterInnerPimplClass = define_class_under<Outer::Inner::PimplClass>(rb_mOuterInner, "PimplClass").
+  rb_cOuterInnerPimplClass = define_class_under<Outer::Inner::PimplClass>(rb_mOuterInner, "PimplClass");
+
+  rb_cOuterInnerPimplClassImpl = define_class_under<Outer::Inner::PimplClass::Impl>(rb_cOuterInnerPimplClass, "Impl");
+
+  rb_cOuterInnerPimplClass.
     define_constructor(Constructor<Outer::Inner::PimplClass>()).
     define_method("get_impl", &Outer::Inner::PimplClass::getImpl).
     define_method("empty?", &Outer::Inner::PimplClass::empty);
 
-  rb_cOuterInnerPimplClassImpl = define_class_under<Outer::Inner::PimplClass::Impl>(rb_cOuterInnerPimplClass, "Impl");
+  rb_cOuterInnerPimplClassWithPublicField = define_class_under<Outer::Inner::PimplClassWithPublicField>(rb_mOuterInner, "PimplClassWithPublicField");
 
-  rb_cOuterInnerPimplClassWithPublicField = define_class_under<Outer::Inner::PimplClassWithPublicField>(rb_mOuterInner, "PimplClassWithPublicField").
+  rb_cOuterInnerPimplClassWithPublicFieldImpl = define_class_under<Outer::Inner::PimplClassWithPublicField::Impl>(rb_cOuterInnerPimplClassWithPublicField, "Impl");
+
+  rb_cOuterInnerPimplClassWithPublicField.
     define_constructor(Constructor<Outer::Inner::PimplClassWithPublicField>()).
     define_attr("impl", &Outer::Inner::PimplClassWithPublicField::impl).
     define_attr("value", &Outer::Inner::PimplClassWithPublicField::value);
 
-  rb_cOuterInnerPimplClassWithPublicFieldImpl = define_class_under<Outer::Inner::PimplClassWithPublicField::Impl>(rb_cOuterInnerPimplClassWithPublicField, "Impl");
+  rb_cOuterInnerPimplClassWithConstructor = define_class_under<Outer::Inner::PimplClassWithConstructor>(rb_mOuterInner, "PimplClassWithConstructor");
 
-  rb_cOuterInnerPimplClassWithConstructor = define_class_under<Outer::Inner::PimplClassWithConstructor>(rb_mOuterInner, "PimplClassWithConstructor").
+  rb_cOuterInnerPimplClassWithConstructorImpl = define_class_under<Outer::Inner::PimplClassWithConstructor::Impl>(rb_cOuterInnerPimplClassWithConstructor, "Impl");
+
+  rb_cOuterInnerPimplClassWithConstructor.
     define_constructor(Constructor<Outer::Inner::PimplClassWithConstructor, Outer::Inner::PimplClassWithConstructor::Impl*, int>(),
       Arg("impl"), Arg("offset")).
     define_constructor(Constructor<Outer::Inner::PimplClassWithConstructor, int>(),
@@ -58,35 +66,43 @@ void Init_IncompleteTypes()
     define_constructor(Constructor<Outer::Inner::PimplClassWithConstructor>()).
     define_method("get_value", &Outer::Inner::PimplClassWithConstructor::getValue);
 
-  rb_cOuterInnerPimplClassWithConstructorImpl = define_class_under<Outer::Inner::PimplClassWithConstructor::Impl>(rb_cOuterInnerPimplClassWithConstructor, "Impl");
+  rb_cOuterInnerPimplClassWithSmartPtr = define_class_under<Outer::Inner::PimplClassWithSmartPtr>(rb_mOuterInner, "PimplClassWithSmartPtr");
 
-  rb_cOuterInnerPimplClassWithSmartPtr = define_class_under<Outer::Inner::PimplClassWithSmartPtr>(rb_mOuterInner, "PimplClassWithSmartPtr").
+  rb_cOuterInnerPimplClassWithSmartPtrImpl = define_class_under<Outer::Inner::PimplClassWithSmartPtr::Impl>(rb_cOuterInnerPimplClassWithSmartPtr, "Impl");
+
+  rb_cOuterInnerPimplClassWithSmartPtr.
     define_constructor(Constructor<Outer::Inner::PimplClassWithSmartPtr>()).
     define_attr("impl", &Outer::Inner::PimplClassWithSmartPtr::impl).
     define_attr("data", &Outer::Inner::PimplClassWithSmartPtr::data).
     define_attr("value", &Outer::Inner::PimplClassWithSmartPtr::value);
 
-  rb_cOuterInnerPimplClassWithSmartPtrImpl = define_class_under<Outer::Inner::PimplClassWithSmartPtr::Impl>(rb_cOuterInnerPimplClassWithSmartPtr, "Impl");
+  rb_cOuterInnerPimplClassWithDoublePtr = define_class_under<Outer::Inner::PimplClassWithDoublePtr>(rb_mOuterInner, "PimplClassWithDoublePtr");
 
-  rb_cOuterInnerPimplClassWithDoublePtr = define_class_under<Outer::Inner::PimplClassWithDoublePtr>(rb_mOuterInner, "PimplClassWithDoublePtr").
+  rb_cOuterInnerPimplClassWithDoublePtrImpl = define_class_under<Outer::Inner::PimplClassWithDoublePtr::Impl>(rb_cOuterInnerPimplClassWithDoublePtr, "Impl");
+
+  rb_cOuterInnerPimplClassWithDoublePtr.
     define_constructor(Constructor<Outer::Inner::PimplClassWithDoublePtr>()).
     define_attr("pp_impl", &Outer::Inner::PimplClassWithDoublePtr::ppImpl).
     define_attr("ppp_impl", &Outer::Inner::PimplClassWithDoublePtr::pppImpl).
     define_attr("pp_value", &Outer::Inner::PimplClassWithDoublePtr::ppValue).
     define_attr("value", &Outer::Inner::PimplClassWithDoublePtr::value);
 
-  rb_cOuterInnerPimplClassWithDoublePtrImpl = define_class_under<Outer::Inner::PimplClassWithDoublePtr::Impl>(rb_cOuterInnerPimplClassWithDoublePtr, "Impl");
+  rb_cOuterInnerPimplClassWithStaticFields = define_class_under<Outer::Inner::PimplClassWithStaticFields>(rb_mOuterInner, "PimplClassWithStaticFields");
 
-  rb_cOuterInnerPimplClassWithStaticFields = define_class_under<Outer::Inner::PimplClassWithStaticFields>(rb_mOuterInner, "PimplClassWithStaticFields").
+  rb_cOuterInnerPimplClassWithStaticFieldsImpl = define_class_under<Outer::Inner::PimplClassWithStaticFields::Impl>(rb_cOuterInnerPimplClassWithStaticFields, "Impl");
+
+  rb_cOuterInnerPimplClassWithStaticFields.
     define_constructor(Constructor<Outer::Inner::PimplClassWithStaticFields>()).
     define_singleton_attr("StaticImplPtr", &Outer::Inner::PimplClassWithStaticFields::staticImplPtr).
     define_singleton_attr("StaticSmartPtr", &Outer::Inner::PimplClassWithStaticFields::staticSmartPtr).
     define_singleton_attr("StaticValue", &Outer::Inner::PimplClassWithStaticFields::staticValue).
     define_singleton_attr("StaticData", &Outer::Inner::PimplClassWithStaticFields::staticData);
 
-  rb_cOuterInnerPimplClassWithStaticFieldsImpl = define_class_under<Outer::Inner::PimplClassWithStaticFields::Impl>(rb_cOuterInnerPimplClassWithStaticFields, "Impl");
+  rb_cOuterInnerPimplClassWithStaticMethods = define_class_under<Outer::Inner::PimplClassWithStaticMethods>(rb_mOuterInner, "PimplClassWithStaticMethods");
 
-  rb_cOuterInnerPimplClassWithStaticMethods = define_class_under<Outer::Inner::PimplClassWithStaticMethods>(rb_mOuterInner, "PimplClassWithStaticMethods").
+  rb_cOuterInnerPimplClassWithStaticMethodsImpl = define_class_under<Outer::Inner::PimplClassWithStaticMethods::Impl>(rb_cOuterInnerPimplClassWithStaticMethods, "Impl");
+
+  rb_cOuterInnerPimplClassWithStaticMethods.
     define_constructor(Constructor<Outer::Inner::PimplClassWithStaticMethods>()).
     define_singleton_function("create_impl", &Outer::Inner::PimplClassWithStaticMethods::createImpl).
     define_singleton_function("init_from_impl", &Outer::Inner::PimplClassWithStaticMethods::initFromImpl,
@@ -95,8 +111,6 @@ void Init_IncompleteTypes()
     define_singleton_function("get_value", &Outer::Inner::PimplClassWithStaticMethods::getValue).
     define_singleton_function("set_value", &Outer::Inner::PimplClassWithStaticMethods::setValue,
       Arg("val"));
-
-  rb_cOuterInnerPimplClassWithStaticMethodsImpl = define_class_under<Outer::Inner::PimplClassWithStaticMethods::Impl>(rb_cOuterInnerPimplClassWithStaticMethods, "Impl");
 
   rb_cOuterInnerFactoryClass = define_class_under<Outer::Inner::FactoryClass>(rb_mOuterInner, "FactoryClass").
     define_constructor(Constructor<Outer::Inner::FactoryClass>()).
@@ -125,7 +139,11 @@ void Init_IncompleteTypes()
     define_attr("signed_count", &Outer::Inner::TypedefReturnClass::signedCount).
     define_attr("sz", &Outer::Inner::TypedefReturnClass::sz);
 
-  rb_cOuterInnerPimplClassWithRefReturn = define_class_under<Outer::Inner::PimplClassWithRefReturn>(rb_mOuterInner, "PimplClassWithRefReturn").
+  rb_cOuterInnerPimplClassWithRefReturn = define_class_under<Outer::Inner::PimplClassWithRefReturn>(rb_mOuterInner, "PimplClassWithRefReturn");
+
+  rb_cOuterInnerPimplClassWithRefReturnImpl = define_class_under<Outer::Inner::PimplClassWithRefReturn::Impl>(rb_cOuterInnerPimplClassWithRefReturn, "Impl");
+
+  rb_cOuterInnerPimplClassWithRefReturn.
     define_constructor(Constructor<Outer::Inner::PimplClassWithRefReturn>()).
     define_method("get_impl_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRef).
     define_method("get_impl_const_ref", &Outer::Inner::PimplClassWithRefReturn::getImplConstRef).
@@ -133,6 +151,4 @@ void Init_IncompleteTypes()
     define_method("get_value_ref", &Outer::Inner::PimplClassWithRefReturn::getValueRef).
     define_method("get_value_const_ref", &Outer::Inner::PimplClassWithRefReturn::getValueConstRef).
     define_method("get_value", &Outer::Inner::PimplClassWithRefReturn::getValue);
-
-  rb_cOuterInnerPimplClassWithRefReturnImpl = define_class_under<Outer::Inner::PimplClassWithRefReturn::Impl>(rb_cOuterInnerPimplClassWithRefReturn, "Impl");
 }
