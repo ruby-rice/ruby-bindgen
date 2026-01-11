@@ -1,11 +1,27 @@
 #include <iterators.hpp>
 #include "iterators-rb.hpp"
 
+// Iterator traits specializations for iterators missing std::iterator_traits
+namespace std
+{
+  template<>
+  struct iterator_traits<iter::IncompleteIterator>
+  {
+    using iterator_category = forward_iterator_tag;
+    using value_type = iter::Pixel;
+    using difference_type = ptrdiff_t;
+    using pointer = iter::Pixel*;
+    using reference = iter::Pixel&;
+  };
+}
+
 using namespace Rice;
 
 Rice::Class rb_cIterBitmap;
 Rice::Class rb_cIterConstPixelIterator;
 Rice::Class rb_cIterConstReversePixelIterator;
+Rice::Class rb_cIterIncompleteBitmap;
+Rice::Class rb_cIterIncompleteIterator;
 Rice::Class rb_cIterPixel;
 Rice::Class rb_cIterPixelIterator;
 Rice::Class rb_cIterReversePixelIterator;
@@ -65,6 +81,20 @@ void Init_Iterators()
     define_iterator<iter::ConstPixelIterator(iter::Bitmap::*)() const noexcept>(&iter::Bitmap::begin, &iter::Bitmap::end, "each_const").
     define_iterator<iter::ReversePixelIterator(iter::Bitmap::*)() noexcept>(&iter::Bitmap::rbegin, &iter::Bitmap::rend, "each_reverse").
     define_iterator<iter::ConstReversePixelIterator(iter::Bitmap::*)() const noexcept>(&iter::Bitmap::rbegin, &iter::Bitmap::rend, "each_reverse_const");
+
+  rb_cIterIncompleteIterator = define_class_under<iter::IncompleteIterator>(rb_mIter, "IncompleteIterator").
+    define_constructor(Constructor<iter::IncompleteIterator>()).
+    define_constructor(Constructor<iter::IncompleteIterator, iter::Pixel*>(),
+      Arg("p")).
+    define_method("dereference", &iter::IncompleteIterator::operator*).
+    define_method("arrow", &iter::IncompleteIterator::operator->).
+    define_method<iter::IncompleteIterator&(iter::IncompleteIterator::*)()>("increment_pre", &iter::IncompleteIterator::operator++).
+    define_method<iter::IncompleteIterator(iter::IncompleteIterator::*)(int)>("increment", &iter::IncompleteIterator::operator++,
+      Arg("arg_0"));
+
+  rb_cIterIncompleteBitmap = define_class_under<iter::IncompleteBitmap>(rb_mIter, "IncompleteBitmap").
+    define_constructor(Constructor<iter::IncompleteBitmap>()).
+    define_iterator<iter::IncompleteIterator(iter::IncompleteBitmap::*)()>(&iter::IncompleteBitmap::begin, &iter::IncompleteBitmap::end, "each");
 
   rb_cIterVectorBitmap = define_class_under<iter::VectorBitmap>(rb_mIter, "VectorBitmap").
     define_constructor(Constructor<iter::VectorBitmap>()).

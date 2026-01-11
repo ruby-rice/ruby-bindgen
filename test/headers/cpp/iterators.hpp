@@ -115,6 +115,32 @@ namespace iter
     ConstReversePixelIterator crend() const noexcept;
   };
 
+  // Iterator WITHOUT proper std::iterator_traits - like cv::ImageCollection::iterator
+  // This will cause compile errors with Rice unless std::iterator_traits is specialized
+  class IncompleteIterator {
+  public:
+    IncompleteIterator() : ptr_(nullptr) {}
+    explicit IncompleteIterator(Pixel* p) : ptr_(p) {}
+    Pixel& operator*() const { return *ptr_; }
+    Pixel* operator->() const { return ptr_; }
+    IncompleteIterator& operator++() { ++ptr_; return *this; }
+    IncompleteIterator operator++(int) { IncompleteIterator tmp = *this; ++ptr_; return tmp; }
+    friend bool operator==(const IncompleteIterator& a, const IncompleteIterator& b) { return a.ptr_ == b.ptr_; }
+    friend bool operator!=(const IncompleteIterator& a, const IncompleteIterator& b) { return a.ptr_ != b.ptr_; }
+  private:
+    Pixel* ptr_;
+    // NOTE: Missing value_type, reference, pointer, difference_type, iterator_category
+  };
+
+  // Container using the incomplete iterator
+  class IncompleteBitmap
+  {
+  public:
+    IncompleteBitmap();
+    IncompleteIterator begin();
+    IncompleteIterator end();
+  };
+
   // Test with std::vector iterator types (like BitmapPlusPlus)
   class VectorBitmap
   {
