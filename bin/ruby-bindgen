@@ -102,7 +102,8 @@ module RubyBindGen
       format_klass = RubyBindgen::Visitors.const_get(@config[:format])
       format = format_klass.new(outputter, @config[:extension],
                                 skip_symbols: skip_symbols,
-                                export_macros: export_macros)
+                                export_macros: export_macros,
+                                include_header: @config[:include])
       parser.generate(format)
     end
   end

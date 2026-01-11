@@ -13,9 +13,10 @@ module RubyBindgen
 
       attr_reader :project, :outputter
 
-      def initialize(outputter, project = nil, skip_symbols: [], export_macros: [])
+      def initialize(outputter, project = nil, skip_symbols: [], export_macros: [], include_header: nil)
         @project = project&.gsub(/-/, '_')
         @outputter = outputter
+        @include_header = include_header
         @init_names = Hash.new
         @namespaces = Set.new
         @overloads_stack = Array.new
@@ -69,8 +70,24 @@ module RubyBindgen
       end
 
       def visit_end
+        create_rice_include_header
         create_project_files
         create_def_file
+      end
+
+      # Returns the path to the Rice include header (user-specified or auto-generated)
+      def rice_include_header
+        @include_header || "#{@project || 'rice'}_include.hpp"
+      end
+
+      # Generate default Rice include header if user didn't specify one
+      def create_rice_include_header
+        return if @include_header  # User specified their own header
+
+        header_path = rice_include_header
+        STDOUT << "  Writing: " << header_path << "\n"
+        content = render_template("rice_include.hpp")
+        self.outputter.write(header_path, content)
       end
 
       def visit_translation_unit(translation_unit, path, relative_path)
@@ -131,8 +148,13 @@ module RubyBindgen
 
         # Render header file
         STDOUT << "  Writing: " << rice_header << "\n"
+        # Compute relative path from translation unit directory to the include header
+        tu_dir = Pathname.new(File.dirname(rice_header))
+        include_path = Pathname.new(rice_include_header)
+        relative_include = include_path.relative_path_from(tu_dir).to_s
         content = render_cursor(cursor, "translation_unit.hpp",
-                                :init_name => init_name)
+                                :init_name => init_name,
+                                :rice_include_header => relative_include)
         self.outputter.write(rice_header, content)
       end
 
