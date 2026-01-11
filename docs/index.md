@@ -1,96 +1,93 @@
 # ruby-bindgen
-RubyBindgen generates Ruby bindings from C and C++ header files. To do this it uses [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html), via the [ffi-clang](https://github.com/ioquatix/ffi-clang) gem, to parse header files. It then traverses the Clang AST using the visitor patter.
 
-Two visitors are implemented - one for C that generates [FFI](https://github.com/ffi/ffi) bindings and one for C++ that generates [Rice](https://github.com/ruby-rice/rice) bindings.
+RubyBindgen generates Ruby bindings from C and C++ header files. It uses [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html), via the [ffi-clang](https://github.com/ioquatix/ffi-clang) gem, to parse header files and traverse the Clang AST using the visitor pattern.
+
+Two visitors are implemented:
+- **FFI** - For C libraries, generates [FFI](https://github.com/ffi/ffi) bindings
+- **Rice** - For C++ libraries, generates [Rice](https://github.com/ruby-rice/rice) bindings
 
 If a library provides both a C and C++ API, use the C API! It will likely be much easier to develop a Ruby extension using the C API and will also likely be more stable between releases.
 
-## C Bindings
-C bindings are created using [FFI](https://github.com/ffi/ffi). For more information see the [C bindings](c_bindings.md) documentation.
+## Documentation
 
-## C++ Bindings
-C++ bindings are created using [Rice](https://github.com/ruby-rice/rice). For more information see the [C++ bindings](cpp_bindings.md) documentation.
+- [Configuration](configuration.md) - YAML configuration file format and options
+- [Features](features.md) - Comprehensive list of supported C++ features
+- [C Bindings](c_bindings.md) - FFI bindings for C libraries
+- [C++ Bindings](cpp_bindings.md) - Rice bindings for C++ libraries
+- [Iterators](iterators.md) - Iterator support details
+- [Operators](operators.md) - Operator overloading support
 
-## Usage
-ruby-bindgen includes a command line tool called `ruby-bindgen` which is used to create new bindings. Its usage is:
+## Quick Start
 
-```
-ruby-bindgen [options] input -- [clang options (see clang documentation)]
-```
+1. Create a YAML configuration file:
 
-```
-Options include:
-  -e, --extension Name of the generated Ruby extension (C++ only). Must be a valid C++ identifier
-  -i, --input     Path to input directory that includes header files
-  -o, --output    Path to output directory
-  -m, --match     Glob pattern to match header files
-  -s, --skip      Glob pattern to skip header files. May be specified multiple times
-  -f, --format    Type of bindings to generate. Valid values are `FFI` and `Rice`.
-  -h, --help      Shows this help message
-```
+```yaml
+extension: my_extension
+input: /path/to/headers
+output: /path/to/output
+format: Rice
 
-## Example
-Ruby Bindgen was used to create C++ bindings for the [OpenCV](https://github.com/opencv/opencv) library. OpenCV is a big library, so it provides a good example of using `ruby-bindgen`. The bindings were originally generated on Windows using [vcpkg](https://vcpkg.io/en/) and [Visual Studio](https://visualstudio.microsoft.com/), but the below command works just as well on MacOS and Linux (requires changing path of course).
+match:
+  - "**/*.hpp"
 
-The command line is:
-
-```
-./ruby-bindgen --extens ruby-opencv \
-               --input C:\Source\vcpkg\installed\x64-windows\include\opencv4 \
-               --match opencv2/**/*.{h,hpp} \
-               --skip opencv2/core/opencl/**/* \
-               --skip opencv2/cudalegacy/**/*.hpp \
-               --skip opencv2/**/*.inl* \
-               --output C:\Source\ruby-opencv\ext\opencv \
-               --format Rice \
-               -- \
-               "-IC:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433\include" \
-               "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt" \
-               "-IC:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\Llvm\lib\clang\17\include" \
-               "-IC:\Source\vcpkg\installed\x64-windows\include\opencv4" \
-               -xc++
-```
-The command line creates a new C++ Ruby extension called `ruby-opencv`. `OpenCV` has a complicated headers layout, with the root directory located at `https://github.com/opencv/opencv/tree/4.x/include`. This is what the `--input` parameter points to.
-
-Next, process all *.hpp and *.hpp header files in any subdirectories under the input directory:
-
-```
---match opencv2/**/*.{h,hpp} \
+clang_args:
+  - -I/path/to/includes
+  - -std=c++17
+  - -xc++
 ```
 
-Then we want to skip various header files that should not be processed:
+2. Run ruby-bindgen:
 
-```
---skip opencv2/core/opencl/**/* \
---skip opencv2/cudalegacy/**/*.hpp \
---skip opencv2/**/*.inl* \
+```bash
+ruby-bindgen config.yaml
 ```
 
-Output should be written the following directory:
+See [Configuration](configuration.md) for full documentation of all options.
 
-```
---output C:\Source\ruby-opencv\ext\opencv \
+## Example: OpenCV Bindings
+
+Ruby-bindgen was used to create C++ bindings for the [OpenCV](https://github.com/opencv/opencv) library. OpenCV is a large library with complex C++ patterns, making it a good test case.
+
+```yaml
+extension: opencv_ruby
+
+input: /path/to/opencv/include/opencv4
+output: /path/to/opencv-ruby/ext
+format: Rice
+
+# Custom header with cv::Ptr<T> type support
+include: opencv_ruby_include.hpp
+
+match:
+  - opencv2/**/*.hpp
+
+skip:
+  - opencv2/core/opencl/**/*
+  - opencv2/cudalegacy/**/*.hpp
+  - opencv2/**/*.inl*
+
+# Only wrap exported functions
+export_macros:
+  - CV_EXPORTS
+  - CV_EXPORTS_W
+
+# Skip problematic symbols
+skip_symbols:
+  - cv::ocl::PlatformInfo::versionMajor
+  - cv::ocl::PlatformInfo::versionMinor
+  - /cv::dnn::.*Layer::init.*/
+
+clang_args:
+  - -I/usr/include/c++/11
+  - -I/path/to/opencv/include/opencv4
+  - -std=c++17
+  - -xc++
 ```
 
-Note the output folder directory structure will match the input directory structure - `ruby-bindgen` will automatically create the necessary sub directories.
-
-Next, we want to generate C++ bindings using Rice:
-
-```
---format Rice
-```
-
-Finally, we want to set a bunch of Clang compiler options so it can find the correct header files to process:
-
-```
-   "-IC:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433\include" \
-   "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt" \
-   "-IC:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\Llvm\lib\clang\17\include" \
-   "-IC:\Source\vcpkg\installed\x64-windows\include\opencv4" \
-   -xc++
-```
+The output directory structure matches the input - ruby-bindgen automatically creates necessary subdirectories.
 
 ## Similar Work
-* [ffi_gen](https://github.com/ffi/ffi_gen) - Unmaintained bindings generator for C.
+
+* [ffi_gen](https://github.com/ffi/ffi_gen) - Unmaintained bindings generator for C
 * [rbind](https://github.com/D-Alex/rbind) - Gem with custom C++ parser
-* [Magnus](https://github.com/matsadler/magnus) - Bindings generator for Rust.
+* [Magnus](https://github.com/matsadler/magnus) - Bindings generator for Rust
