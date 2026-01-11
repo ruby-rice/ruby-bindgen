@@ -135,12 +135,6 @@ module RubyBindgen
         # Do not construct abstract classes
         return if cursor.semantic_parent.abstract?
 
-        # Skip constructors with incomplete pointer type parameters (pimpl pattern)
-        # e.g., FileNode(FileStorage::Impl*, size_t, size_t)
-        cursor.type.arg_types.each do |arg_type|
-          return if incomplete_pointer_type?(arg_type)
-        end
-
         signature = constructor_signature(cursor)
         args = arguments(cursor)
 
@@ -329,65 +323,6 @@ module RubyBindgen
         end
 
         true
-      end
-
-      # Check if a type is incomplete (forward declaration)
-      # This handles direct types, pointers, and template types with incomplete arguments
-      def incomplete_type?(type)
-        check_type = type
-
-        # For references, check the underlying non-reference type
-        if check_type.kind == :type_lvalue_ref || check_type.kind == :type_rvalue_ref
-          check_type = check_type.non_reference_type
-        end
-
-        # For pointers (including double/triple pointers), check the underlying pointee
-        while check_type.kind == :type_pointer
-          check_type = check_type.pointee
-        end
-
-        # Check if type is an elaborated type pointing to a forward declaration
-        if check_type.kind == :type_elaborated || check_type.kind == :type_record
-          num_args = check_type.num_template_arguments
-
-          if num_args > 0
-            # This is a template instantiation (e.g., cv::Ptr<T>, std::vector<T>).
-            # Template instantiations appear "opaque" to clang because the instantiated
-            # struct/class doesn't have a visible definition in the AST, but they ARE
-            # usable as long as the template itself is defined.
-            #
-            # For template instantiations, we only care if the template ARGUMENTS are
-            # incomplete - not the instantiation itself. This handles cases like:
-            # - cv::Ptr<DownhillSolver> → usable (DownhillSolver is complete)
-            # - std::vector<Impl*> → NOT usable if Impl is forward-declared
-            num_args.times do |i|
-              template_arg = check_type.template_argument_type(i)
-              return true if template_arg && incomplete_type?(template_arg)
-            end
-          else
-            # This is a regular (non-template) class/struct.
-            # Check if it's a forward declaration with no definition.
-            decl = check_type.declaration
-
-            # Skip check for typedefs to built-in types (like uint64_t -> unsigned long long).
-            # These have cursor_no_decl_found but are not incomplete.
-            return false if decl.kind == :cursor_no_decl_found
-
-            # Check for opaque declaration (forward declared with no definition in TU)
-            return true if decl.respond_to?(:opaque_declaration?) && decl.opaque_declaration?
-            # Also check if definition returns an invalid cursor
-            if decl.respond_to?(:definition)
-              definition = decl.definition
-              return true if definition.respond_to?(:invalid?) && definition.invalid?
-            end
-          end
-        end
-        false
-      end
-
-      # Check if type is a pointer to an incomplete type
-      def incomplete_pointer_type?(type)
-        type.kind == :type_pointer && incomplete_type?(type)
       end
 
       # Qualify template arguments in a type spelling by looking up unqualified identifiers
@@ -768,15 +703,6 @@ module RubyBindgen
         # Skip internal methods (underscore suffix naming convention)
         return if cursor.spelling.end_with?('_')
 
-        # Skip methods that return incomplete types (forward declarations)
-        # e.g., getImpl() returning Impl* or mapGpuMat() returning GpuMat
-        return if incomplete_type?(cursor.result_type)
-
-        # Skip methods with incomplete pointer type parameters (pimpl pattern)
-        cursor.type.arg_types.each do |arg_type|
-          return if incomplete_pointer_type?(arg_type)
-        end
-
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
           return visit_cxx_iterator_method(cursor)
@@ -992,10 +918,6 @@ module RubyBindgen
 
         # Can't return arrays in C++
         return if cursor.type.is_a?(::FFI::Clang::Types::Array)
-
-        # Skip fields that involve incomplete types (pimpl pattern)
-        # e.g., Impl* p member or cv::Ptr<Impl> p where Impl is forward-declared
-        return if incomplete_type?(cursor.type)
 
         self.render_cursor(cursor, "field_decl")
       end
@@ -1262,9 +1184,6 @@ module RubyBindgen
 
         # Skip compiler/cuda keywords like __device__ __forceinline__
         return if cursor.spelling.match(/^__.*__$/)
-
-        # Skip variables that involve incomplete types (pimpl pattern)
-        return if incomplete_type?(cursor.type)
 
         # Const variables become Ruby constants
         if cursor.type.const_qualified?
