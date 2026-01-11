@@ -5,6 +5,7 @@ using namespace Rice;
 
 Rice::Data_Type<Outer::BaseClass> rb_cOuterBaseClass;
 Rice::Data_Type<Outer::foo> rb_cOuterFoo;
+Rice::Data_Type<Outer::foobar::foo> rb_cOuterFoobarFoo;
 Rice::Data_Type<Outer::foobar::wrapper<Outer::foobar::foo>> rb_cOuterFoobarWrapperFoo;
 Rice::Data_Type<Outer::Inner::ContainerClass> rb_cOuterInnerContainerClass;
 Rice::Data_Type<Outer::Inner::ContainerClass::Callback> rb_cOuterInnerContainerClassCallback;
@@ -118,6 +119,8 @@ void Init_Classes()
     define_attr("value", &Outer::foo::value);
 
   Module rb_mOuterFoobar = define_module_under(rb_mOuter, "Foobar");
+
+  rb_cOuterFoobarFoo = define_class_under<Outer::foobar::foo>(rb_mOuterFoobar, "Foo");
 
   rb_cOuterFoobarWrapperFoo = define_class_under<Outer::foobar::wrapper<Outer::foobar::foo>>(rb_mOuterFoobar, "WrapperFoo").
     define_constructor(Constructor<Outer::foobar::wrapper<Outer::foobar::foo>>());

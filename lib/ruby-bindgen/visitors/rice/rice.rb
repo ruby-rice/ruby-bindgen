@@ -184,8 +184,6 @@ module RubyBindgen
       end
 
       def visit_class_decl(cursor)
-        return if cursor.opaque_declaration?
-
         # Skip explicitly listed symbols
         return if skip_symbol?(cursor)
 
@@ -212,8 +210,9 @@ module RubyBindgen
         children = Array.new
 
         # Are there any constructors? If not, C++ will define one implicitly
+        # (but not for incomplete/opaque types which can't be instantiated)
         constructors = cursor.find_by_kind(false, :cursor_constructor)
-        if !cursor.abstract? && constructors.empty?
+        if !cursor.abstract? && !cursor.opaque_declaration? && constructors.empty?
           children << self.render_template("constructor",
                                          :cursor => cursor,
                                          :signature => self.constructor_signature(cursor),
