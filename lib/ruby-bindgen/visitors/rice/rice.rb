@@ -32,11 +32,12 @@ module RubyBindgen
       end
 
       # Check if a cursor should be skipped based on skip_symbols config.
-      # Supports both simple names (e.g., "versionMajor") and fully qualified
-      # names (e.g., "cv::ocl::PlatformInfo::versionMajor").
+      # Supports simple names, fully qualified names, and regex patterns (strings starting with /).
+      # Examples:
+      #   - "versionMajor" - matches method name
+      #   - "cv::ocl::PlatformInfo::versionMajor" - matches fully qualified name
+      #   - "/cv::dnn::.*::Layer::init.*/" - regex pattern
       def skip_symbol?(cursor)
-        return true if @skip_symbols.include?(cursor.spelling)
-
         # Build fully qualified name
         qualified_name = cursor.spelling
         parent = cursor.semantic_parent
@@ -45,12 +46,18 @@ module RubyBindgen
           parent = parent.semantic_parent
         end
 
-        return true if @skip_symbols.include?(qualified_name)
-
-        # Check for prefix matches (for template classes like cv::DefaultDeleter)
-        # This allows cv::DefaultDeleter to match cv::DefaultDeleter<CvHaarClassifierCascade>::operator()
         @skip_symbols.any? do |skip|
-          qualified_name.start_with?("#{skip}<") || qualified_name.start_with?("#{skip}::")
+          if skip.start_with?('/') && skip.end_with?('/')
+            # Regex pattern
+            pattern = Regexp.new(skip[1..-2])
+            pattern.match?(cursor.spelling) || pattern.match?(qualified_name)
+          else
+            # Exact match or prefix match
+            cursor.spelling == skip ||
+            qualified_name == skip ||
+            qualified_name.start_with?("#{skip}<") ||
+            qualified_name.start_with?("#{skip}::")
+          end
         end
       end
 
@@ -214,16 +221,15 @@ module RubyBindgen
                                      :auto_generated_base => auto_generated_base,
                                      :children => children_content)
 
-        # Define any embedded classes
-        cursor.find_by_kind(false, :cursor_class_decl).each do |child_cursor|
+        # Define any embedded classes and structs
+        # For forward-declared (incomplete) types, register them with Rice so types like Ptr<Impl> work
+        cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct).each do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
-          result << visit_class_decl(child_cursor)
-        end
-
-        # Define any embedded structs
-        cursor.find_by_kind(false, :cursor_struct).each do |child_cursor|
-          next if child_cursor.private? || child_cursor.protected?
-          result << visit_struct(child_cursor)
+          if child_cursor.opaque_declaration?
+            result << visit_incomplete_class(child_cursor, cursor)
+          else
+            result << visit_class_decl(child_cursor)
+          end
         end
 
         # Define any embedded enums
@@ -235,6 +241,16 @@ module RubyBindgen
         merge_children(result)
       end
       alias :visit_struct :visit_class_decl
+
+      # Visit a forward-declared (incomplete) inner class.
+      # These need to be registered with Rice so that types like Ptr<Impl> work.
+      def visit_incomplete_class(cursor, parent_cursor)
+        # Skip if already defined
+        return "" if @classes.include?(cursor.cruby_name)
+
+        @classes << cursor.cruby_name
+        render_cursor(cursor, "incomplete_class", :under => parent_cursor)
+      end
 
       def visit_class_template_builder(cursor)
         template_parameter_kinds = [:cursor_template_type_parameter,
