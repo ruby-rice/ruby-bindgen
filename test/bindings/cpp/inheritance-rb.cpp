@@ -3,9 +3,9 @@
 
 using namespace Rice;
 
-Rice::Class rb_cEmailNotification;
-Rice::Class rb_cNotification;
-Rice::Class rb_cPushNotification;
+Rice::Data_Type<EmailNotification> rb_cEmailNotification;
+Rice::Data_Type<Notification> rb_cNotification;
+Rice::Data_Type<PushNotification> rb_cPushNotification;
 
 void Init_Inheritance()
 {

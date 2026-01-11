@@ -23,8 +23,8 @@ namespace std
 
 using namespace Rice;
 
-<%- @classes.sort.each do |class_name| -%>
-Rice::Class <%= class_name %>;
+<%- @classes.sort.each do |class_name, cpp_type| -%>
+Rice::Data_Type<<%= cpp_type %>> <%= class_name %>;
 <%- end -%>
 
 <%= class_templates %>

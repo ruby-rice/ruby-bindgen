@@ -3,18 +3,18 @@
 
 using namespace Rice;
 
-Rice::Class rb_cOuterBaseClass;
-Rice::Class rb_cOuterFoo;
-Rice::Class rb_cOuterFoobarWrapperFoo;
-Rice::Class rb_cOuterInnerContainerClass;
-Rice::Class rb_cOuterInnerContainerClassCallback;
-Rice::Class rb_cOuterInnerContainerClassConfig;
-Rice::Class rb_cOuterInnerGpuMat;
-Rice::Class rb_cOuterInnerGpuMatAllocator;
-Rice::Class rb_cOuterInnerGpuMatND;
-Rice::Class rb_cOuterInnerStream;
-Rice::Class rb_cOuterMyClass;
-Rice::Class rb_cOuterRange;
+Rice::Data_Type<Outer::BaseClass> rb_cOuterBaseClass;
+Rice::Data_Type<Outer::foo> rb_cOuterFoo;
+Rice::Data_Type<Outer::foobar::wrapper<Outer::foobar::foo>> rb_cOuterFoobarWrapperFoo;
+Rice::Data_Type<Outer::Inner::ContainerClass> rb_cOuterInnerContainerClass;
+Rice::Data_Type<Outer::Inner::ContainerClass::Callback> rb_cOuterInnerContainerClassCallback;
+Rice::Data_Type<Outer::Inner::ContainerClass::Config> rb_cOuterInnerContainerClassConfig;
+Rice::Data_Type<Outer::Inner::GpuMat> rb_cOuterInnerGpuMat;
+Rice::Data_Type<Outer::Inner::GpuMat::Allocator> rb_cOuterInnerGpuMatAllocator;
+Rice::Data_Type<Outer::Inner::GpuMatND> rb_cOuterInnerGpuMatND;
+Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream;
+Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass;
+Rice::Data_Type<Outer::Range> rb_cOuterRange;
 
 template<typename Data_Type_T, typename T>
 inline void SimpleVector_builder(Data_Type_T& klass)

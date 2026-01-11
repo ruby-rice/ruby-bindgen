@@ -3,9 +3,9 @@
 
 using namespace Rice;
 
-Rice::Class rb_cMyNamespaceBuffer;
-Rice::Class rb_cMyNamespaceMyClass;
-Rice::Class rb_cMyNamespaceSolver;
+Rice::Data_Type<MyNamespace::Buffer> rb_cMyNamespaceBuffer;
+Rice::Data_Type<MyNamespace::MyClass> rb_cMyNamespaceMyClass;
+Rice::Data_Type<MyNamespace::Solver> rb_cMyNamespaceSolver;
 
 void Init_Enums()
 {

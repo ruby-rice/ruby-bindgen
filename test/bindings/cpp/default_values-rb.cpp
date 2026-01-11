@@ -3,19 +3,19 @@
 
 using namespace Rice;
 
-Rice::Class rb_cAffine3d;
-Rice::Class rb_cAffine3f;
-Rice::Class rb_cCvMat;
-Rice::Class rb_cCvRange;
-Rice::Class rb_cMlParamGrid;
-Rice::Class rb_cMlSVM;
-Rice::Class rb_cNoncopyableCopyable;
-Rice::Class rb_cNoncopyableDerivedFromCpp03;
-Rice::Class rb_cNoncopyableDerivedFromCpp11;
-Rice::Class rb_cNoncopyableNonCopyableCpp03;
-Rice::Class rb_cNoncopyableNonCopyableCpp11;
-Rice::Class rb_cRect;
-Rice::Class rb_cRect2d;
+Rice::Data_Type<cv::Affine3<double>> rb_cAffine3d;
+Rice::Data_Type<cv::Affine3<float>> rb_cAffine3f;
+Rice::Data_Type<cv::Mat> rb_cCvMat;
+Rice::Data_Type<cv::Range> rb_cCvRange;
+Rice::Data_Type<ml::ParamGrid> rb_cMlParamGrid;
+Rice::Data_Type<ml::SVM> rb_cMlSVM;
+Rice::Data_Type<noncopyable::Copyable> rb_cNoncopyableCopyable;
+Rice::Data_Type<noncopyable::DerivedFromCpp03> rb_cNoncopyableDerivedFromCpp03;
+Rice::Data_Type<noncopyable::DerivedFromCpp11> rb_cNoncopyableDerivedFromCpp11;
+Rice::Data_Type<noncopyable::NonCopyableCpp03> rb_cNoncopyableNonCopyableCpp03;
+Rice::Data_Type<noncopyable::NonCopyableCpp11> rb_cNoncopyableNonCopyableCpp11;
+Rice::Data_Type<cv::Rect_<int>> rb_cRect;
+Rice::Data_Type<cv::Rect_<double>> rb_cRect2d;
 
 template<typename Data_Type_T, typename T>
 inline void Vec3_builder(Data_Type_T& klass)

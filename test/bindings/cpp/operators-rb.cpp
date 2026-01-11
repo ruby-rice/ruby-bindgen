@@ -3,15 +3,15 @@
 
 using namespace Rice;
 
-Rice::Class rb_cAllConversions;
-Rice::Class rb_cConvTarget;
-Rice::Class rb_cDataPtrFloat;
-Rice::Class rb_cDataPtrInt;
-Rice::Class rb_cFileWriter;
-Rice::Class rb_cMatrix;
-Rice::Class rb_cNamespacedConversion;
-Rice::Class rb_cOperators;
-Rice::Class rb_cPrintable;
+Rice::Data_Type<AllConversions> rb_cAllConversions;
+Rice::Data_Type<conv::Target> rb_cConvTarget;
+Rice::Data_Type<DataPtr<float>> rb_cDataPtrFloat;
+Rice::Data_Type<DataPtr<int>> rb_cDataPtrInt;
+Rice::Data_Type<FileWriter> rb_cFileWriter;
+Rice::Data_Type<Matrix> rb_cMatrix;
+Rice::Data_Type<NamespacedConversion> rb_cNamespacedConversion;
+Rice::Data_Type<Operators> rb_cOperators;
+Rice::Data_Type<Printable> rb_cPrintable;
 
 template<typename Data_Type_T, typename T>
 inline void DataPtr_builder(Data_Type_T& klass)

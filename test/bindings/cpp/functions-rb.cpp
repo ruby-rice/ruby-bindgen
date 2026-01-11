@@ -3,7 +3,7 @@
 
 using namespace Rice;
 
-Rice::Class rb_cWidget;
+Rice::Data_Type<Widget> rb_cWidget;
 
 void Init_Functions()
 {

@@ -3,10 +3,10 @@
 
 using namespace Rice;
 
-Rice::Class rb_cOuterInnerDevice;
-Rice::Class rb_cOuterInnerExecutionContext;
-Rice::Class rb_cOuterInnerKernelArg;
-Rice::Class rb_cOuterInnerQueue;
+Rice::Data_Type<Outer::Inner::Device> rb_cOuterInnerDevice;
+Rice::Data_Type<Outer::Inner::ExecutionContext> rb_cOuterInnerExecutionContext;
+Rice::Data_Type<Outer::Inner::KernelArg> rb_cOuterInnerKernelArg;
+Rice::Data_Type<Outer::Inner::Queue> rb_cOuterInnerQueue;
 
 void Init_Overloads()
 {

@@ -17,15 +17,15 @@ namespace std
 
 using namespace Rice;
 
-Rice::Class rb_cIterBitmap;
-Rice::Class rb_cIterConstPixelIterator;
-Rice::Class rb_cIterConstReversePixelIterator;
-Rice::Class rb_cIterIncompleteBitmap;
-Rice::Class rb_cIterIncompleteIterator;
-Rice::Class rb_cIterPixel;
-Rice::Class rb_cIterPixelIterator;
-Rice::Class rb_cIterReversePixelIterator;
-Rice::Class rb_cIterVectorBitmap;
+Rice::Data_Type<iter::Bitmap> rb_cIterBitmap;
+Rice::Data_Type<iter::ConstPixelIterator> rb_cIterConstPixelIterator;
+Rice::Data_Type<iter::ConstReversePixelIterator> rb_cIterConstReversePixelIterator;
+Rice::Data_Type<iter::IncompleteBitmap> rb_cIterIncompleteBitmap;
+Rice::Data_Type<iter::IncompleteIterator> rb_cIterIncompleteIterator;
+Rice::Data_Type<iter::Pixel> rb_cIterPixel;
+Rice::Data_Type<iter::PixelIterator> rb_cIterPixelIterator;
+Rice::Data_Type<iter::ReversePixelIterator> rb_cIterReversePixelIterator;
+Rice::Data_Type<iter::VectorBitmap> rb_cIterVectorBitmap;
 
 void Init_Iterators()
 {

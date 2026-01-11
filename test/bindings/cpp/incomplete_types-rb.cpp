@@ -3,26 +3,26 @@
 
 using namespace Rice;
 
-Rice::Class rb_cOuterInnerFactoryClass;
-Rice::Class rb_cOuterInnerOuterWithFactory;
-Rice::Class rb_cOuterInnerOuterWithFactoryInnerFactory;
-Rice::Class rb_cOuterInnerPimplClass;
-Rice::Class rb_cOuterInnerPimplClassImpl;
-Rice::Class rb_cOuterInnerPimplClassWithConstructor;
-Rice::Class rb_cOuterInnerPimplClassWithConstructorImpl;
-Rice::Class rb_cOuterInnerPimplClassWithDoublePtr;
-Rice::Class rb_cOuterInnerPimplClassWithDoublePtrImpl;
-Rice::Class rb_cOuterInnerPimplClassWithPublicField;
-Rice::Class rb_cOuterInnerPimplClassWithPublicFieldImpl;
-Rice::Class rb_cOuterInnerPimplClassWithRefReturn;
-Rice::Class rb_cOuterInnerPimplClassWithRefReturnImpl;
-Rice::Class rb_cOuterInnerPimplClassWithSmartPtr;
-Rice::Class rb_cOuterInnerPimplClassWithSmartPtrImpl;
-Rice::Class rb_cOuterInnerPimplClassWithStaticFields;
-Rice::Class rb_cOuterInnerPimplClassWithStaticFieldsImpl;
-Rice::Class rb_cOuterInnerPimplClassWithStaticMethods;
-Rice::Class rb_cOuterInnerPimplClassWithStaticMethodsImpl;
-Rice::Class rb_cOuterInnerTypedefReturnClass;
+Rice::Data_Type<Outer::Inner::FactoryClass> rb_cOuterInnerFactoryClass;
+Rice::Data_Type<Outer::Inner::OuterWithFactory> rb_cOuterInnerOuterWithFactory;
+Rice::Data_Type<Outer::Inner::OuterWithFactory::InnerFactory> rb_cOuterInnerOuterWithFactoryInnerFactory;
+Rice::Data_Type<Outer::Inner::PimplClass> rb_cOuterInnerPimplClass;
+Rice::Data_Type<Outer::Inner::PimplClass::Impl> rb_cOuterInnerPimplClassImpl;
+Rice::Data_Type<Outer::Inner::PimplClassWithConstructor> rb_cOuterInnerPimplClassWithConstructor;
+Rice::Data_Type<Outer::Inner::PimplClassWithConstructor::Impl> rb_cOuterInnerPimplClassWithConstructorImpl;
+Rice::Data_Type<Outer::Inner::PimplClassWithDoublePtr> rb_cOuterInnerPimplClassWithDoublePtr;
+Rice::Data_Type<Outer::Inner::PimplClassWithDoublePtr::Impl> rb_cOuterInnerPimplClassWithDoublePtrImpl;
+Rice::Data_Type<Outer::Inner::PimplClassWithPublicField> rb_cOuterInnerPimplClassWithPublicField;
+Rice::Data_Type<Outer::Inner::PimplClassWithPublicField::Impl> rb_cOuterInnerPimplClassWithPublicFieldImpl;
+Rice::Data_Type<Outer::Inner::PimplClassWithRefReturn> rb_cOuterInnerPimplClassWithRefReturn;
+Rice::Data_Type<Outer::Inner::PimplClassWithRefReturn::Impl> rb_cOuterInnerPimplClassWithRefReturnImpl;
+Rice::Data_Type<Outer::Inner::PimplClassWithSmartPtr> rb_cOuterInnerPimplClassWithSmartPtr;
+Rice::Data_Type<Outer::Inner::PimplClassWithSmartPtr::Impl> rb_cOuterInnerPimplClassWithSmartPtrImpl;
+Rice::Data_Type<Outer::Inner::PimplClassWithStaticFields> rb_cOuterInnerPimplClassWithStaticFields;
+Rice::Data_Type<Outer::Inner::PimplClassWithStaticFields::Impl> rb_cOuterInnerPimplClassWithStaticFieldsImpl;
+Rice::Data_Type<Outer::Inner::PimplClassWithStaticMethods> rb_cOuterInnerPimplClassWithStaticMethods;
+Rice::Data_Type<Outer::Inner::PimplClassWithStaticMethods::Impl> rb_cOuterInnerPimplClassWithStaticMethodsImpl;
+Rice::Data_Type<Outer::Inner::TypedefReturnClass> rb_cOuterInnerTypedefReturnClass;
 
 template<typename Data_Type_T, typename T>
 inline void Ptr_builder(Data_Type_T& klass)

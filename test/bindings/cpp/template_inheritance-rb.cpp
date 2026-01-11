@@ -3,13 +3,13 @@
 
 using namespace Rice;
 
-Rice::Class derived_ptrf;
-Rice::Class rb_cBasePtrFloat;
-Rice::Class rb_cBasePtrUnsignedChar;
-Rice::Class rb_cDerivedPtrb;
-Rice::Class rb_cTestsPlaneProjector;
-Rice::Class rb_cTestsPlaneWarper;
-Rice::Class rb_cWarperBasePlaneProjector;
+Rice::Data_Type<Tests::DerivedPtr<float>> derived_ptrf;
+Rice::Data_Type<Tests::BasePtr<float>> rb_cBasePtrFloat;
+Rice::Data_Type<Tests::BasePtr<unsigned char>> rb_cBasePtrUnsignedChar;
+Rice::Data_Type<Tests::DerivedPtr<unsigned char>> rb_cDerivedPtrb;
+Rice::Data_Type<Tests::PlaneProjector> rb_cTestsPlaneProjector;
+Rice::Data_Type<Tests::PlaneWarper> rb_cTestsPlaneWarper;
+Rice::Data_Type<Tests::WarperBase<Tests::PlaneProjector>> rb_cWarperBasePlaneProjector;
 
 template<typename Data_Type_T, typename T>
 inline void BasePtr_builder(Data_Type_T& klass)

@@ -3,10 +3,10 @@
 
 using namespace Rice;
 
-Rice::Class rb_cOuterClassWithDeprecatedConstructor;
-Rice::Class rb_cOuterClassWithDeprecatedConversion;
-Rice::Class rb_cOuterMyClass;
-Rice::Class rb_cOuterOtherClass;
+Rice::Data_Type<Outer::ClassWithDeprecatedConstructor> rb_cOuterClassWithDeprecatedConstructor;
+Rice::Data_Type<Outer::ClassWithDeprecatedConversion> rb_cOuterClassWithDeprecatedConversion;
+Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass;
+Rice::Data_Type<Outer::OtherClass> rb_cOuterOtherClass;
 
 void Init_Filtering()
 {

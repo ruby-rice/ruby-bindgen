@@ -3,12 +3,12 @@
 
 using namespace Rice;
 
-Rice::Class rb_cCopyMoveConstructors;
-Rice::Class rb_cDefaultConstructor;
-Rice::Class rb_cDeleteConstructor;
-Rice::Class rb_cImplicitConstructor;
-Rice::Class rb_cOverloadedConstructors;
-Rice::Class rb_cTemplateConstructorInt;
+Rice::Data_Type<CopyMoveConstructors> rb_cCopyMoveConstructors;
+Rice::Data_Type<DefaultConstructor> rb_cDefaultConstructor;
+Rice::Data_Type<DeleteConstructor> rb_cDeleteConstructor;
+Rice::Data_Type<ImplicitConstructor> rb_cImplicitConstructor;
+Rice::Data_Type<OverloadedConstructors> rb_cOverloadedConstructors;
+Rice::Data_Type<TemplateConstructor<int>> rb_cTemplateConstructorInt;
 
 template<typename Data_Type_T, typename T>
 inline void TemplateConstructor_builder(Data_Type_T& klass)

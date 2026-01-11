@@ -19,7 +19,7 @@ module RubyBindgen
         @init_names = Hash.new
         @namespaces = Set.new
         @overloads_stack = Array.new
-        @classes = Array.new
+        @classes = Hash.new  # Maps cruby_name -> C++ type for Data_Type<T> declarations
         @typedef_map = Hash.new
         @type_name_map = Hash.new  # Maps simple type names to qualified names
         @auto_generated_bases = Set.new
@@ -226,7 +226,7 @@ module RubyBindgen
         incomplete_classes_content = merge_children(incomplete_classes, :separator => "\n")
 
         # Render class
-        @classes << cursor.cruby_name
+        @classes[cursor.cruby_name] = qualified_class_name_cpp(cursor)
         result << self.render_cursor(cursor, "class", :under => under, :base => base,
                                      :auto_generated_base => auto_generated_base,
                                      :incomplete_classes => incomplete_classes_content,
@@ -254,9 +254,9 @@ module RubyBindgen
       # Must be registered BEFORE the parent class methods that use them (smart pointer issue).
       def visit_incomplete_class(cursor, parent_cursor)
         # Skip if already defined
-        return "" if @classes.include?(cursor.cruby_name)
+        return "" if @classes.key?(cursor.cruby_name)
 
-        @classes << cursor.cruby_name
+        @classes[cursor.cruby_name] = cursor.qualified_name
         render_cursor(cursor, "incomplete_class", :under => parent_cursor)
       end
 
@@ -1141,7 +1141,7 @@ module RubyBindgen
         return if cursor.semantic_parent.kind == :cursor_class_decl || cursor.semantic_parent.kind == :cursor_struct
 
         # Skip if already processed (can happen when force-generating base classes)
-        return if @classes.include?(cursor.cruby_name)
+        return if @classes.key?(cursor.cruby_name)
 
         # Skip typedefs to std:: types - Rice handles these automatically
         canonical = cursor.underlying_type.canonical.spelling
@@ -1193,7 +1193,7 @@ module RubyBindgen
             base_typedef = @typedef_map[base_spelling]
             if base_typedef
               # Base has a typedef - check if it has been generated yet
-              unless @classes.include?(base_typedef.cruby_name)
+              unless @classes.key?(base_typedef.cruby_name)
                 # Force generate the typedef first (recursively handles its bases)
                 result = visit_typedef_decl(base_typedef)
               end
@@ -1206,7 +1206,7 @@ module RubyBindgen
 
         template_specialization = type_spelling(underlying_type)
 
-        @classes << cursor.cruby_name
+        @classes[cursor.cruby_name] = template_specialization
         result + self.render_cursor(cursor, "class_template_specialization",
                            :cursor_template => cursor_template,
                            :template_specialization => template_specialization,
@@ -1254,7 +1254,7 @@ module RubyBindgen
 
         cruby_name = "rb_c#{ruby_name}"
 
-        @classes << cruby_name
+        @classes[cruby_name] = base_spelling
         result + render_template("auto_generated_base_class",
                         :cruby_name => cruby_name,
                         :ruby_name => ruby_name,
@@ -1295,7 +1295,7 @@ module RubyBindgen
         ruby_name = base_name + args_name
         cruby_name = "rb_c#{ruby_name}"
 
-        @classes << cruby_name
+        @classes[cruby_name] = base_spelling
         render_template("auto_generated_base_class",
                         :cruby_name => cruby_name,
                         :ruby_name => ruby_name,
