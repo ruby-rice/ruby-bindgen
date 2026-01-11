@@ -9,6 +9,7 @@ Rice::Class rb_cBasePtrUnsignedChar;
 Rice::Class rb_cDerivedPtrb;
 Rice::Class rb_cTestsPlaneProjector;
 Rice::Class rb_cTestsPlaneWarper;
+Rice::Class rb_cWarperBasePlaneProjector;
 
 template<typename Data_Type_T, typename T>
 inline void BasePtr_builder(Data_Type_T& klass)
@@ -54,6 +55,8 @@ void Init_TemplateInheritance()
     define_attr("scale", &Tests::PlaneProjector::scale).
     define_constructor(Constructor<Tests::PlaneProjector>());
 
+  rb_cWarperBasePlaneProjector = define_class_under<Tests::WarperBase<Tests::PlaneProjector>>(rb_mTests, "WarperBasePlaneProjector").
+    define(&WarperBase_builder<Data_Type<Tests::WarperBase<Tests::PlaneProjector>>, Tests::PlaneProjector>);
   rb_cTestsPlaneWarper = define_class_under<Tests::PlaneWarper, Tests::WarperBase<Tests::PlaneProjector>>(rb_mTests, "PlaneWarper").
     define_constructor(Constructor<Tests::PlaneWarper, float>(),
       Arg("scale") = static_cast<float>(1.0f)).

@@ -27,6 +27,8 @@ module RubyBindgen
         @export_macros = export_macros
         # Non-member operators grouped by target class cruby_name
         @non_member_operators = Hash.new { |h, k| h[k] = [] }
+        # Iterators that need std::iterator_traits specialization
+        @incomplete_iterators = Hash.new
       end
 
       # Check if a cursor should be skipped based on skip_symbols config.
@@ -43,7 +45,13 @@ module RubyBindgen
           parent = parent.semantic_parent
         end
 
-        @skip_symbols.include?(qualified_name)
+        return true if @skip_symbols.include?(qualified_name)
+
+        # Check for prefix matches (for template classes like cv::DefaultDeleter)
+        # This allows cv::DefaultDeleter to match cv::DefaultDeleter<CvHaarClassifierCascade>::operator()
+        @skip_symbols.any? do |skip|
+          qualified_name.start_with?("#{skip}<") || qualified_name.start_with?("#{skip}::")
+        end
       end
 
       def overloads
@@ -65,6 +73,7 @@ module RubyBindgen
         @type_name_map.clear
         @auto_generated_bases.clear
         @non_member_operators.clear
+        @incomplete_iterators.clear
 
         cursor = translation_unit.cursor
         @overloads_stack.push(cursor.overloads)
@@ -108,7 +117,8 @@ module RubyBindgen
                                 :content => content,
                                 :includes => includes,
                                 :init_name => init_name,
-                                :rice_header => rice_header)
+                                :rice_header => rice_header,
+                                :incomplete_iterators => @incomplete_iterators)
         content = cleanup_whitespace(content)
         self.outputter.write(rice_cpp, content)
 
@@ -154,10 +164,16 @@ module RubyBindgen
 
         # Is there a base class?
         base = nil
-        base_class = cursor.find_by_kind(false, :cursor_cxx_base_specifier).first
-        if base_class
+        auto_generated_base = ""
+        base_specifier = cursor.find_by_kind(false, :cursor_cxx_base_specifier).first
+        if base_specifier
           # Use canonical spelling for fully qualified type name with namespaces
-          base = base_class.type.canonical.spelling
+          base = base_specifier.type.canonical.spelling
+
+          # Check if base is a template instantiation that needs to be auto-generated
+          if base.include?('<') && !@auto_generated_bases.include?(base)
+            auto_generated_base = auto_generate_template_base_for_class(base_specifier, base, under)
+          end
         end
 
         # Visit children
@@ -195,6 +211,7 @@ module RubyBindgen
         # Render class
         @classes << cursor.cruby_name
         result << self.render_cursor(cursor, "class", :under => under, :base => base,
+                                     :auto_generated_base => auto_generated_base,
                                      :children => children_content)
 
         # Define any embedded classes
@@ -735,6 +752,72 @@ module RubyBindgen
         result
       end
 
+      # Check if an iterator type has proper std::iterator_traits.
+      # Returns nil if traits are complete, or a hash with inferred traits if incomplete.
+      def check_iterator_traits(iterator_type)
+        # Get the declaration of the iterator type
+        decl = iterator_type.declaration
+        return nil if decl.kind == :cursor_no_decl_found
+
+        # Check for required typedefs: value_type, reference, pointer, difference_type, iterator_category
+        has_value_type = false
+        has_reference = false
+        has_pointer = false
+        has_difference_type = false
+        has_iterator_category = false
+
+        decl.each(false) do |child, _|
+          if child.kind == :cursor_type_alias_decl || child.kind == :cursor_typedef_decl
+            case child.spelling
+            when "value_type" then has_value_type = true
+            when "reference" then has_reference = true
+            when "pointer" then has_pointer = true
+            when "difference_type" then has_difference_type = true
+            when "iterator_category" then has_iterator_category = true
+            end
+          end
+        end
+
+        # If all traits are present, return nil (no specialization needed)
+        return nil if has_value_type && has_reference && has_pointer && has_difference_type && has_iterator_category
+
+        # Infer traits from operator* return type
+        value_type = nil
+        decl.each(false) do |child, _|
+          if child.kind == :cursor_cxx_method && child.spelling == "operator*"
+            result_type = child.result_type
+            # Remove reference to get the value type
+            if result_type.kind == :type_lvalue_ref
+              value_type = result_type.non_reference_type.spelling
+            else
+              value_type = result_type.spelling
+            end
+            break
+          end
+        end
+
+        return nil unless value_type  # Can't infer traits without operator*
+
+        # Get fully qualified iterator type name
+        qualified_iterator = decl.qualified_name
+
+        # Qualify the value type if needed
+        qualified_value_type = value_type.sub(/\s*const\s*$/, '')  # Remove trailing const
+        # If value_type isn't already qualified, try to qualify it using type_name_map
+        unless qualified_value_type.include?('::')
+          if @type_name_map && @type_name_map[qualified_value_type]
+            qualified_value_type = @type_name_map[qualified_value_type]
+          end
+        end
+
+        # Return inferred traits
+        {
+          iterator_type: qualified_iterator,
+          value_type: qualified_value_type,
+          is_const: value_type.include?('const')
+        }
+      end
+
       # Generates Rice define_iterator calls for C++ iterator methods.
       # In C++, cbegin/crbegin can be called on non-const objects but return const iterators,
       # while begin/rbegin const can only be called on const objects. In Ruby this distinction
@@ -762,6 +845,14 @@ module RubyBindgen
 
         return unless signature
 
+        # Check if iterator needs std::iterator_traits specialization
+        iterator_type = cursor.result_type
+        traits = check_iterator_traits(iterator_type)
+        if traits
+          # Record this iterator for traits generation (use type as key to avoid duplicates)
+          @incomplete_iterators[traits[:iterator_type]] = traits
+        end
+
         self.render_cursor(cursor, "cxx_iterator_method", :name => iterator_name,
                            :begin_method => begin_method, :end_method => end_method,
                            :signature => signature,
@@ -771,6 +862,9 @@ module RubyBindgen
       def visit_conversion_function(cursor)
         # For now only deal with member functions
         return unless CURSOR_CLASSES.include?(cursor.lexical_parent.kind)
+
+        # Skip deprecated conversion operators
+        return if cursor.availability == :deprecated
 
         return unless cursor.type.args_size == 0
 
@@ -1142,6 +1236,47 @@ module RubyBindgen
                         :ruby_name => ruby_name,
                         :base_spelling => base_spelling,
                         :base_base_spelling => base_base_spelling,
+                        :base_template => base_template,
+                        :template_arguments => template_arguments,
+                        :under => under)
+      end
+
+      # Auto-generate a template base class for a non-template derived class.
+      # This is called when a regular class (not a typedef) inherits from a template instantiation.
+      # For example: class PlaneWarper : public WarperBase<PlaneProjector>
+      def auto_generate_template_base_for_class(base_specifier, base_spelling, under)
+        # Get the template reference from the base specifier
+        base_template_ref = base_specifier.find_by_kind(false, :cursor_template_ref).first
+        return "" unless base_template_ref
+
+        base_template = base_template_ref.referenced
+
+        # Extract template arguments from base_spelling (e.g., "Tests::WarperBase<Tests::PlaneProjector>" -> "Tests::PlaneProjector")
+        template_arguments = base_spelling.match(/<(.+)>\z/)&.[](1)
+        return "" unless template_arguments
+
+        # Mark as generated to avoid duplicates
+        @auto_generated_bases << base_spelling
+
+        # Generate a Ruby class name from the base spelling
+        # e.g., "Tests::WarperBase<Tests::PlaneProjector>" -> "WarperBasePlaneProjector"
+        # First remove the template part to get "Tests::WarperBase", then get the last component
+        base_without_template = base_spelling.sub(/<.*>\z/, "")
+        base_name = base_without_template.split("::").last.camelize
+        args_name = template_arguments.split(",").map(&:strip).map { |t|
+          # Get the last component and camelize it (handles underscores properly)
+          t.split("::").last.camelize
+        }.join
+
+        ruby_name = base_name + args_name
+        cruby_name = "rb_c#{ruby_name}"
+
+        @classes << cruby_name
+        render_template("auto_generated_base_class",
+                        :cruby_name => cruby_name,
+                        :ruby_name => ruby_name,
+                        :base_spelling => base_spelling,
+                        :base_base_spelling => nil,
                         :base_template => base_template,
                         :template_arguments => template_arguments,
                         :under => under)
