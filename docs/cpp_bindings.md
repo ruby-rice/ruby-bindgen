@@ -99,6 +99,9 @@ C++ styles enums, called enum classes, are mapped to Rice Enums. C style enums a
 ## Callbacks
 `ruby-bindgen` understands C style callbacks, and will generate the appropriate Rice [callback code](https://ruby-rice.github.io/4.x/bindings/callbacks.html).
 
+## Iterators
+`ruby-bindgen` automatically generates Rice `define_iterator` calls for C++ classes with `begin()`/`end()` methods. It also handles incomplete iterators that lack `std::iterator_traits` by generating the necessary traits specializations. See the [iterators](iterators.md) documentation for details.
+
 ## C++ Operators
 C++ and Ruby both support operator overriding. `ruby-bindgen` maps C++ operators to Ruby operators as described in the [operators](operators.md) documentation.
 
