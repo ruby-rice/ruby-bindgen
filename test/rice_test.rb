@@ -120,7 +120,7 @@ class RiceTest < AbstractTest
     parser = create_parser(header)
     visitor = create_visitor(RubyBindgen::Visitors::Rice, header,
                              export_macros: ["MY_EXPORT"],
-                             skip_symbols: ["skippedByName", "alsoSkippedByName", "skippedMethod"])
+                             skip_symbols: ["skippedByName", "alsoSkippedByName", "skippedMethod", "SkippedClass"])
     parser.generate(visitor)
     validate_result(visitor.outputter)
   end

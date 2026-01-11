@@ -76,6 +76,16 @@ namespace Outer
     void doSomething();
   };
 
+  // --- Skipped Class Tests ---
+
+  // This class will be in skip_symbols list - should be SKIPPED entirely
+  class MY_EXPORT SkippedClass
+  {
+  public:
+    SkippedClass();
+    void method();
+  };
+
   // --- Class with deprecated conversion operator ---
 
   class OtherClass {};

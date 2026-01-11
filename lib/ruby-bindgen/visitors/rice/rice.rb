@@ -186,6 +186,9 @@ module RubyBindgen
       def visit_class_decl(cursor)
         return if cursor.opaque_declaration?
 
+        # Skip explicitly listed symbols
+        return if skip_symbol?(cursor)
+
         result = Array.new
 
         # Determine containing module
