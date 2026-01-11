@@ -416,6 +416,12 @@ module RubyBindgen
         result
       end
 
+      # Get qualified C++ class name for use in templates
+      # Qualifies any template arguments that need namespace prefixes
+      def qualified_class_name_cpp(cursor)
+        qualify_template_args(cursor.class_name_cpp, cursor.type)
+      end
+
       def type_spellings(cursor)
         cursor.type.arg_types.map do |arg_type|
           type_spelling(arg_type)

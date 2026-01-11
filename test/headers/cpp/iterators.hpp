@@ -1,4 +1,6 @@
 #include <vector>
+#include <iterator>
+#include <cstddef>
 
 namespace iter
 {
@@ -13,11 +15,74 @@ namespace iter
     int b;
   };
 
-  // Simple iterator types for testing
-  class PixelIterator {};
-  class ConstPixelIterator {};
-  class ReversePixelIterator {};
-  class ConstReversePixelIterator {};
+  // Simple iterator types for testing - must be fully functional for Rice
+  class PixelIterator {
+  public:
+    using value_type = Pixel;
+    using reference = Pixel&;
+    using pointer = Pixel*;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+
+    PixelIterator() : ptr_(nullptr) {}
+    explicit PixelIterator(pointer p) : ptr_(p) {}
+    reference operator*() const { return *ptr_; }
+    PixelIterator& operator++() { ++ptr_; return *this; }
+    bool operator!=(const PixelIterator& other) const { return ptr_ != other.ptr_; }
+  private:
+    pointer ptr_;
+  };
+
+  class ConstPixelIterator {
+  public:
+    using value_type = Pixel;
+    using reference = const Pixel&;
+    using pointer = const Pixel*;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+
+    ConstPixelIterator() : ptr_(nullptr) {}
+    explicit ConstPixelIterator(pointer p) : ptr_(p) {}
+    reference operator*() const { return *ptr_; }
+    ConstPixelIterator& operator++() { ++ptr_; return *this; }
+    bool operator!=(const ConstPixelIterator& other) const { return ptr_ != other.ptr_; }
+  private:
+    pointer ptr_;
+  };
+
+  class ReversePixelIterator {
+  public:
+    using value_type = Pixel;
+    using reference = Pixel&;
+    using pointer = Pixel*;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+
+    ReversePixelIterator() : ptr_(nullptr) {}
+    explicit ReversePixelIterator(pointer p) : ptr_(p) {}
+    reference operator*() const { return *ptr_; }
+    ReversePixelIterator& operator++() { --ptr_; return *this; }
+    bool operator!=(const ReversePixelIterator& other) const { return ptr_ != other.ptr_; }
+  private:
+    pointer ptr_;
+  };
+
+  class ConstReversePixelIterator {
+  public:
+    using value_type = Pixel;
+    using reference = const Pixel&;
+    using pointer = const Pixel*;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+
+    ConstReversePixelIterator() : ptr_(nullptr) {}
+    explicit ConstReversePixelIterator(pointer p) : ptr_(p) {}
+    reference operator*() const { return *ptr_; }
+    ConstReversePixelIterator& operator++() { --ptr_; return *this; }
+    bool operator!=(const ConstReversePixelIterator& other) const { return ptr_ != other.ptr_; }
+  private:
+    pointer ptr_;
+  };
 
   // Test with simple custom iterator types
   class Bitmap
