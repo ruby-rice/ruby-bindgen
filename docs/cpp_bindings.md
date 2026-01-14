@@ -1,7 +1,33 @@
 # C++ Bindings
-`ruby-bindgen` creates C++ bindings using [Rice](https://github.com/ruby-rice/rice). This is necessary for creating bindings for libraries that only provide a C++ API, such as [OpenCV](https://github.com/opencv/opencv). In fact, `ruby-bindgen` was specifically developed to help create bindings for OpenCV since it such a large project.
 
-C++ is a complex language, so do not expect the generated bindings to work as-is - they will undoubtedly require significant work after being generated to get compiling and working. However, for large libraries, generating the bindings can save weeks, if not months, worth of work.
+`ruby-bindgen` creates C++ bindings using [Rice](https://github.com/ruby-rice/rice). This is necessary for creating bindings for libraries that only provide a C++ API, such as [OpenCV](https://github.com/opencv/opencv). In fact, `ruby-bindgen` was specifically developed to help create bindings for OpenCV since it is such a large project.
+
+## What to Expect
+
+ruby-bindgen aims to generate compilable Rice code that handles 90-95% of the work for you. For many libraries, the generated bindings will compile and work with minimal changes.
+
+That said, C++ is a complex language, and some manual adjustments are occasionally needed:
+
+- **Adding includes** - A generated file may need an additional `#include` for a type used in a method signature
+- **Renaming methods** - You might want to change a Ruby method name to better fit Ruby conventions
+- **Skipping problematic symbols** - Some functions may need to be added to `skip_symbols` in your config
+- **Custom type handling** - Complex template types may need manual `Type<T>` specializations
+
+For large libraries like OpenCV, generating the bindings saves weeks or months of work compared to writing them by hand.
+
+## After Generation
+
+Once you've generated your bindings, Rice provides tools for building and packaging:
+
+**Building:**
+- [CMake](https://ruby-rice.github.io/4.x/packaging/cmake/) - Build your extension with CMake (recommended for C++ projects)
+- [extconf.rb](https://ruby-rice.github.io/4.x/packaging/extconf/) - Alternative build using Ruby's mkmf
+
+**Type Signatures and Documentation:**
+- [RBS](https://ruby-rice.github.io/4.x/packaging/rbs/) - Generate RBS type signatures for your bindings
+- [Documentation](https://ruby-rice.github.io/4.x/packaging/documentation/) - Generate API documentation from wrapped classes
+
+These features use Rice's [introspection API](https://ruby-rice.github.io/4.x/ruby_api/registries/) which tracks every class, method, and attribute that Rice wraps.
 
 ## Features
 `ruby-bindgen` has almost complete support for C++, including:

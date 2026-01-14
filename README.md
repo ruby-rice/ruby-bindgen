@@ -1,15 +1,75 @@
 # ruby-bindgen
-RubyBindgen generates Ruby bindings from C and C++ header files. To do this it uses [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html), via the [ffi-clang](https://github.com/ioquatix/ffi-clang) gem, to parse header files. It then traverses the Clang AST using the visitor patter.
 
-Two visitors are implemented - one for C that generates [FFI](https://github.com/ffi/ffi) bindings and one for C++ that generates [Rice](https://github.com/ruby-rice/rice) bindings.
+Automatically generate Ruby bindings from C and C++ header files.
 
-If a library provides both a C and C++ API, use the C API! It will likely be much easier to develop a Ruby extension using the C API and will also likely be more stable between releases.
+Writing Ruby bindings for C++ libraries by hand is tedious and error-prone. A library like OpenCV has thousands of classes, methods, and functions. Creating bindings manually would take months of work and be difficult to maintain as the library evolves. ruby-bindgen automates this process, turning weeks of work into hours.
 
-## C Bindings
-C bindings are created using [FFI](https://github.com/ffi/ffi). For more information see the [C bindings](c_bindings.md) documentation.
+## Ecosystem
 
-## C++ Bindings
-C++ bindings are created using [Rice](https://github.com/ruby-rice/rice). For more information see the [C++ bindings](cpp_bindings.md) documentation.
+ruby-bindgen is part of a toolchain for wrapping C++ libraries for Ruby:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            C++ Library                                  │
+│                         (headers + source)                              │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Clang / ffi-clang                               │
+│                        (parse C++ headers)                              │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           ruby-bindgen                                  │
+│                    (generate Rice binding code)                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              Rice                                       │
+│            (type conversion, memory management, introspection)          │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         CMake / Build System                            │
+│                        (compile the extension)                          │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Ruby Gem                                     │
+│                    (compiled extension + RBS types)                     │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### How It Works
+
+1. **[Clang](https://clang.llvm.org/)** provides libclang, a library for parsing C++ code
+2. **[ffi-clang](https://github.com/ioquatix/ffi-clang)** exposes libclang to Ruby, enabling AST traversal
+3. **ruby-bindgen** walks the AST and generates [Rice](https://github.com/ruby-rice/rice) binding code
+4. **[Rice](https://github.com/ruby-rice/rice)** handles type conversion, memory management, and Ruby integration
+5. **CMake** compiles the extension into a loadable Ruby gem
+
+## Binding Formats
+
+ruby-bindgen supports two output formats:
+
+| Format | Library | Use Case |
+|--------|---------|----------|
+| **Rice** | [Rice](https://github.com/ruby-rice/rice) | C++ libraries |
+| **FFI** | [FFI](https://github.com/ffi/ffi) | C libraries |
+
+If a library provides both C and C++ APIs, prefer the C API. It's simpler to wrap and more stable across releases.
+
+- [C++ Bindings Documentation](docs/cpp_bindings.md)
+- [C Bindings Documentation](docs/c_bindings.md)
+
+For complete documentation, see the [docs](docs/index.md) folder.
+
+After generating bindings, see Rice's [CMake guide](https://ruby-rice.github.io/4.x/packaging/cmake/) for building your extension.
 
 ## Installation
 
@@ -20,7 +80,7 @@ $ git clone https://github.com/ioquatix/ffi-clang && cd ffi-clang
 $ bundle config set --local with maintenance && bundle exec bake gem:install
 ```
 
-Install ruby-bingen
+Install ruby-bindgen
 
 ```console
 $ git clone https://github.com/ruby-rice/ruby-bindgen.git && cd ruby-bindgen
@@ -28,10 +88,11 @@ $ rake install
 ```
 
 ## Usage
-ruby-bindgent includes a command line tool called `ruby-bidgen` which is used to create new bindings. Its usage is:
+
+ruby-bindgen includes a command line tool called `ruby-bindgen` which is used to create new bindings. Its usage is:
 
 ```
-ruby-bindgen [options] input -- [clang options (see clang documnetation)]
+ruby-bindgen [options] input -- [clang options (see clang documentation)]
 ```
 
 ```
@@ -51,7 +112,7 @@ Ruby Bindgen was used to create C++ bindings for the [OpenCV](https://github.com
 The command line is:
 
 ```
-./ruby-bindgen --extens ruby-opencv \
+./ruby-bindgen --extension ruby-opencv \
                --input C:\Source\vcpkg\installed\x64-windows\include\opencv4 \
                --match opencv2/**/*.{h,hpp} \
                --skip opencv2/core/opencl/**/* \
@@ -68,7 +129,7 @@ The command line is:
 ```
 The command line creates a new C++ Ruby extension called `ruby-opencv`. `OpenCV` has a complicated headers layout, with the root directory located at `https://github.com/opencv/opencv/tree/4.x/include`. This is what the `--input` parameter points to.
 
-Next, process all *.hpp and *.hpp header files in any subdirectories under the input directory:
+Next, process all *.h and *.hpp header files in any subdirectories under the input directory:
 
 ```
 --match opencv2/**/*.{h,hpp} \
@@ -107,6 +168,7 @@ Finally, we want to set a bunch of Clang compiler options so it can find the cor
 ```
 
 ## Similar Work
-[ffi_gen](https://github.com/ffi/ffi_gen). Unmaintained bindings generator for C.
-[rbing](https://github.com/D-Alex/rbind). Gem with custom C++ parser
-[Magnus](https://github.com/matsadler/magnus). Bindings generator for Rust.
+
+- [ffi_gen](https://github.com/ffi/ffi_gen) - Unmaintained bindings generator for C
+- [rbind](https://github.com/D-Alex/rbind) - Gem with custom C++ parser
+- [Magnus](https://github.com/matsadler/magnus) - Bindings generator for Rust
