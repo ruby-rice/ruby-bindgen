@@ -343,4 +343,4 @@ Each generated file has an `Init_` function. To avoid conflicts when multiple fi
 | `dnn/version.hpp` | `Init_Dnn_Version` |
 | `core/hal/interface.hpp` | `Init_Core_Hal_Interface` |
 
-For paths with more than two levels, the top-level directory is removed to avoid overly long names (e.g., `opencv2/core/version.hpp` becomes `Init_Core_Version`, not `Init_Opencv2_Core_Version`).
+The top-level directory is always removed to avoid overly long names (e.g., `opencv2/calib3d.hpp` becomes `Init_Calib3d`, and `opencv2/core/version.hpp` becomes `Init_Core_Version`).

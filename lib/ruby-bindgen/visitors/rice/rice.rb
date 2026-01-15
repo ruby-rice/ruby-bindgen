@@ -113,7 +113,7 @@ module RubyBindgen
 
         # Track init names - use relative path to avoid conflicts (e.g., core/version vs dnn/version)
         path_parts = Pathname.new(relative_path).each_filename.to_a
-        path_parts.shift if path_parts.length > 2  # Remove top-level directory if deep enough
+        path_parts.shift if path_parts.length >= 2  # Remove top-level directory (e.g., opencv2)
         filename = Pathname.new(path_parts.pop).sub_ext('').to_s.camelize
         dir_part = path_parts.map(&:camelize).join('_')
         init_name = dir_part.empty? ? "Init_#{filename}" : "Init_#{dir_part}_#{filename}"
@@ -857,6 +857,10 @@ module RubyBindgen
         decl = iterator_type.declaration
         return nil if decl.kind == :cursor_no_decl_found
 
+        # Skip std:: types - they already have iterator_traits
+        qualified_name = decl.qualified_name
+        return nil if qualified_name&.start_with?('std::')
+
         # Check for required typedefs: value_type, reference, pointer, difference_type, iterator_category
         has_value_type = false
         has_reference = false
@@ -896,8 +900,9 @@ module RubyBindgen
 
         return nil unless value_type  # Can't infer traits without operator*
 
-        # Get fully qualified iterator type name
-        qualified_iterator = decl.qualified_name
+        # Get fully qualified iterator type name from declaration
+        # This works for non-std types since we skip std:: types above
+        qualified_iterator = qualified_name
 
         # Qualify the value type if needed
         qualified_value_type = value_type.sub(/\s*const\s*$/, '')  # Remove trailing const
