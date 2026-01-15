@@ -92,4 +92,26 @@ namespace Tests
 
     typedef Transform<float> Transformf;
     typedef Transform<double> Transformd;
+
+    // Test auto-instantiation of class templates used as parameter types without typedefs
+    template<typename T>
+    class Container
+    {
+    public:
+        T* data;
+        int size;
+    };
+
+    class Item
+    {
+    public:
+        int value;
+    };
+
+    // Uses Container<Item> as parameter - should auto-instantiate Container<Item>
+    class Consumer
+    {
+    public:
+        Consumer(const Container<Item>& items);
+    };
 }

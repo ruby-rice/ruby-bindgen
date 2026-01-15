@@ -35,12 +35,12 @@ void Init_TemplateInheritance()
 
   Rice::Data_Type<Tests::BasePtr<unsigned char>> rb_cBasePtrUnsignedChar = define_class_under<Tests::BasePtr<unsigned char>>(rb_mTests, "BasePtrUnsignedChar").
     define(&BasePtr_builder<Data_Type<Tests::BasePtr<unsigned char>>, unsigned char>);
-  rb_cDerivedPtrb = define_class_under<Tests::DerivedPtr<unsigned char>, Tests::BasePtr<unsigned char>>(rb_mTests, "DerivedPtrb").
+  Rice::Data_Type<Tests::DerivedPtr<unsigned char>> rb_cDerivedPtrb = define_class_under<Tests::DerivedPtr<unsigned char>, Tests::BasePtr<unsigned char>>(rb_mTests, "DerivedPtrUnsignedChar").
     define(&DerivedPtr_builder<Data_Type<Tests::DerivedPtr<unsigned char>>, unsigned char>);
 
   Rice::Data_Type<Tests::BasePtr<float>> rb_cBasePtrFloat = define_class_under<Tests::BasePtr<float>>(rb_mTests, "BasePtrFloat").
     define(&BasePtr_builder<Data_Type<Tests::BasePtr<float>>, float>);
-  derived_ptrf = define_class_under<Tests::DerivedPtr<float>, Tests::BasePtr<float>>(rb_mTests, "DerivedPtrf").
+  Rice::Data_Type<Tests::DerivedPtr<float>> derived_ptrf = define_class_under<Tests::DerivedPtr<float>, Tests::BasePtr<float>>(rb_mTests, "DerivedPtrFloat").
     define(&DerivedPtr_builder<Data_Type<Tests::DerivedPtr<float>>, float>);
 
   Rice::Data_Type<Tests::PlaneProjector> rb_cTestsPlaneProjector = define_class_under<Tests::PlaneProjector>(rb_mTests, "PlaneProjector").

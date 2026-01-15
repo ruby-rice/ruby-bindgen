@@ -249,6 +249,10 @@ module RubyBindgen
         end
         incomplete_classes_content = merge_children(incomplete_classes, :separator => "\n")
 
+        # Auto-instantiate any class templates used as parameter types
+        auto_instantiated = auto_instantiate_parameter_templates(cursor, under)
+        result << auto_instantiated unless auto_instantiated.empty?
+
         # Render class
         @classes[cursor.cruby_name] = qualified_class_name_cpp(cursor)
         result << self.render_cursor(cursor, "class", :under => under, :base => base,
@@ -272,6 +276,43 @@ module RubyBindgen
         merge_children(result)
       end
       alias :visit_struct :visit_class_decl
+
+      # Scan a class's methods for class template parameters that need auto-instantiation.
+      def auto_instantiate_parameter_templates(cursor, under)
+        result = []
+
+        cursor.each(false) do |child, _|
+          next unless [:cursor_cxx_method, :cursor_constructor].include?(child.kind)
+          next if child.private? || child.protected?
+
+          child.find_by_kind(false, :cursor_parm_decl).each do |param|
+            # Unwrap reference and pointer types
+            type = param.type
+            type = type.non_reference_type while type.kind == :type_lvalue_ref || type.kind == :type_rvalue_ref
+            type = type.pointee while type.kind == :type_pointer
+
+            # Skip if not a template instantiation or is std::
+            next unless type.num_template_arguments > 0
+            next if type.canonical.spelling.start_with?("std::")
+
+            # Find class template declaration
+            template_ref = param.find_by_kind(true, :cursor_template_ref).first
+            next unless template_ref
+            decl = template_ref.referenced
+            next unless decl.kind == :cursor_class_template
+            next unless (decl.location.file == cursor.location.file rescue false)
+
+            # Auto-instantiate if no typedef exists
+            instantiated_type = type_spelling(type).sub(/^const\s+/, '')
+            next if @typedef_map[instantiated_type]
+
+            code = auto_instantiate_template(decl, instantiated_type, under)
+            result << code unless code.empty?
+          end
+        end
+
+        merge_children(result, :separator => "\n")
+      end
 
       # Visit a forward-declared (incomplete) inner class.
       # These need to be registered with Rice so that types like Ptr<Impl> work.
@@ -1244,6 +1285,23 @@ module RubyBindgen
                            :base => base,
                            :base_spelling => base_spelling,
                            :under => under)
+      end
+
+      # Auto-instantiate a class template used as a parameter type without a typedef.
+      def auto_instantiate_template(cursor_template, instantiated_type, under)
+        return "" unless cursor_template
+        match = instantiated_type.match(/\<(.*)\>/)
+        return "" unless match
+
+        cruby_name = "rb_c#{instantiated_type.gsub(/::|<|>|,|\s+/, ' ').split.map(&:capitalize).join}"
+        return "" if @classes.key?(cruby_name)
+
+        @classes[cruby_name] = instantiated_type
+        render_template("class_template_specialization",
+                        :cursor => cursor_template, :cursor_template => cursor_template,
+                        :template_specialization => instantiated_type, :template_arguments => match[1],
+                        :cruby_name => cruby_name, :base_ref => nil, :base => nil,
+                        :base_spelling => nil, :under => under)
       end
 
       # Auto-generate a base class definition when no typedef exists for it

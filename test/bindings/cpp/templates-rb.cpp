@@ -54,19 +54,26 @@ inline void Transform_builder(Data_Type_T& klass)
     define_method("get_translation", &Tests::Transform<T>::getTranslation);
 };
 
+template<typename Data_Type_T, typename T>
+inline void Container_builder(Data_Type_T& klass)
+{
+  klass.define_attr("data", &Tests::Container<T>::data).
+    define_attr("size", &Tests::Container<T>::size);
+};
+
 void Init_Templates()
 {
   Module rb_mInternal = define_module("Internal");
 
-  rb_cData22 = define_class_under<Internal::Data<2, 2>>(rb_mInternal, "Data22").
+  Rice::Data_Type<Internal::Data<2, 2>> rb_cData22 = define_class_under<Internal::Data<2, 2>>(rb_mInternal, "Data22").
     define(&Data_builder<Data_Type<Internal::Data<2, 2>>, 2, 2>);
 
   Module rb_mTests = define_module("Tests");
 
-  rb_cMatrixInt22 = define_class_under<Tests::Matrix<int, 2, 2>>(rb_mTests, "MatrixInt22").
+  Rice::Data_Type<Tests::Matrix<int, 2, 2>> rb_cMatrixInt22 = define_class_under<Tests::Matrix<int, 2, 2>>(rb_mTests, "MatrixInt22").
     define(&Matrix_builder<Data_Type<Tests::Matrix<int, 2, 2>>, int, 2, 2>);
 
-  matrix_float33 = define_class_under<Tests::Matrix<float, 3, 3>>(rb_mTests, "MatrixFloat33").
+  Rice::Data_Type<Tests::Matrix<float, 3, 3>> matrix_float33 = define_class_under<Tests::Matrix<float, 3, 3>>(rb_mTests, "MatrixFloat33").
     define(&Matrix_builder<Data_Type<Tests::Matrix<float, 3, 3>>, float, 3, 3>);
 
   Rice::Data_Type<Tests::TypeTraits<int>> rb_cTestsTypeTraitsInt = define_class_under<Tests::TypeTraits<int>>(rb_mTests, "TypeTraitsInt").
@@ -81,9 +88,20 @@ void Init_Templates()
     define_constructor(Constructor<Tests::TypeTraits<double>>()).
     define_constant("Type", Tests::TypeTraits<double>::type);
 
-  rb_cTransformf = define_class_under<Tests::Transform<float>>(rb_mTests, "Transformf").
+  Rice::Data_Type<Tests::Transform<float>> rb_cTransformf = define_class_under<Tests::Transform<float>>(rb_mTests, "TransformFloat").
     define(&Transform_builder<Data_Type<Tests::Transform<float>>, float>);
 
-  rb_cTransformd = define_class_under<Tests::Transform<double>>(rb_mTests, "Transformd").
+  Rice::Data_Type<Tests::Transform<double>> rb_cTransformd = define_class_under<Tests::Transform<double>>(rb_mTests, "TransformDouble").
     define(&Transform_builder<Data_Type<Tests::Transform<double>>, double>);
+
+  Rice::Data_Type<Tests::Item> rb_cTestsItem = define_class_under<Tests::Item>(rb_mTests, "Item").
+    define_constructor(Constructor<Tests::Item>()).
+    define_attr("value", &Tests::Item::value);
+
+  Rice::Data_Type<Tests::Container<Tests::Item>> rb_cTestsContainerTestsItem = define_class_under<Tests::Container<Tests::Item>>(rb_mTests, "ContainerTestsItem").
+    define(&Container_builder<Data_Type<Tests::Container<Tests::Item>>, Tests::Item>);
+
+  Rice::Data_Type<Tests::Consumer> rb_cTestsConsumer = define_class_under<Tests::Consumer>(rb_mTests, "Consumer").
+    define_constructor(Constructor<Tests::Consumer, const Tests::Container<Tests::Item>&>(),
+      Arg("items"));
 }

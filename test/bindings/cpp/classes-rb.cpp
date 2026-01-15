@@ -4,13 +4,6 @@
 using namespace Rice;
 
 template<typename Data_Type_T, typename T>
-inline void SimpleVector_builder(Data_Type_T& klass)
-{
-  klass.define_attr("data", &Outer::SimpleVector<T>::data).
-    define_attr("size", &Outer::SimpleVector<T>::size);
-};
-
-template<typename Data_Type_T, typename T>
 inline void wrapper_builder(Data_Type_T& klass)
 {
   klass.define_attr("item", &Outer::foobar::wrapper<T>::item);
@@ -23,11 +16,6 @@ void Init_Classes()
   Class(rb_cObject).define_constant("GlobalVariable", globalVariable);
 
   Module rb_mOuter = define_module("Outer");
-
-  Rice::Data_Type<Outer::Range> rb_cOuterRange = define_class_under<Outer::Range>(rb_mOuter, "Range").
-    define_constructor(Constructor<Outer::Range>()).
-    define_attr("start", &Outer::Range::start).
-    define_attr("end", &Outer::Range::end);
 
   rb_mOuter.define_constant("NAMESPACE_CONSTANT", Outer::NAMESPACE_CONSTANT);
 
@@ -88,8 +76,6 @@ void Init_Classes()
       Arg("size"), Arg("type")).
     define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int, void*, Outer::Inner::GpuMatND::StepArray>(),
       Arg("size"), Arg("type"), Arg("data"), Arg("step") = static_cast<Outer::Inner::GpuMatND::StepArray>(Outer::Inner::GpuMatND::defaultStepArray())).
-    define_constructor(Constructor<Outer::Inner::GpuMatND, const Outer::SimpleVector<Outer::Range>&>(),
-      Arg("ranges")).
     define_singleton_function("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray);
 
   Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream").

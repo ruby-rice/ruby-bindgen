@@ -1,10 +1,12 @@
+<%- var_name = defined?(cruby_name) ? cruby_name : cursor.cruby_name -%>
+<%- ruby_class_name = template_specialization.gsub(/<.*>/, "").split("::").last.camelize + template_arguments.split(",").map(&:strip).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join -%>
 <%- if under && base_spelling -%>
-<%= cursor.cruby_name %> = define_class_under<<%= template_specialization %>, <%= base_spelling %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>").
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>, <%= base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>").
 <%- elsif under -%>
-<%= cursor.cruby_name %> = define_class_under<<%= template_specialization %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>").
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>").
 <%- elsif base_spelling -%>
-<%= cursor.cruby_name %> = define_class<<%= template_specialization %>, <%= base_spelling %>>("<%= cursor.type.spelling.split("::").last.camelize %>").
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>, <%= base_spelling %>>("<%= ruby_class_name %>").
 <%- else -%>
-<%= cursor.cruby_name %> = define_class<<%= template_specialization %>>("<%= cursor.type.spelling.split("::").last.camelize %>").
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>>("<%= ruby_class_name %>").
 <%- end -%>
   define(&<%= cursor_template.spelling %>_builder<Data_Type<<%= template_specialization %>>, <%= template_arguments %>>);

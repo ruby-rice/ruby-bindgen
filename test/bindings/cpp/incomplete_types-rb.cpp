@@ -91,6 +91,9 @@ void Init_IncompleteTypes()
     define_singleton_function("set_value", &Outer::Inner::PimplClassWithStaticMethods::setValue,
       Arg("val"));
 
+  Rice::Data_Type<Outer::Inner::Ptr<Outer::Inner::FactoryClass>> rb_cOuterInnerPtrOuterInnerFactoryclass = define_class_under<Outer::Inner::Ptr<Outer::Inner::FactoryClass>>(rb_mOuterInner, "PtrOuterInnerFactoryclass").
+    define(&Ptr_builder<Data_Type<Outer::Inner::Ptr<Outer::Inner::FactoryClass>>, Outer::Inner::FactoryClass>);
+
   Rice::Data_Type<Outer::Inner::FactoryClass> rb_cOuterInnerFactoryClass = define_class_under<Outer::Inner::FactoryClass>(rb_mOuterInner, "FactoryClass").
     define_constructor(Constructor<Outer::Inner::FactoryClass>()).
     define_method("clone", &Outer::Inner::FactoryClass::clone).

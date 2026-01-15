@@ -31,6 +31,6 @@ void Init_Constructors()
     define_constructor(Constructor<CopyMoveConstructors, const CopyMoveConstructors&>(),
       Arg("other"));
 
-  rb_cTemplateConstructorInt = define_class<TemplateConstructor<int>>("TemplateConstructorInt").
+  Rice::Data_Type<TemplateConstructor<int>> rb_cTemplateConstructorInt = define_class<TemplateConstructor<int>>("TemplateConstructorInt").
     define(&TemplateConstructor_builder<Data_Type<TemplateConstructor<int>>, int>);
 }

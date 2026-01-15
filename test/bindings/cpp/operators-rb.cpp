@@ -141,10 +141,10 @@ void Init_Operators()
       return self;
     });
 
-  rb_cDataPtrInt = define_class<DataPtr<int>>("DataPtrInt").
+  Rice::Data_Type<DataPtr<int>> rb_cDataPtrInt = define_class<DataPtr<int>>("DataPtrInt").
     define(&DataPtr_builder<Data_Type<DataPtr<int>>, int>);
 
-  rb_cDataPtrFloat = define_class<DataPtr<float>>("DataPtrFloat").
+  Rice::Data_Type<DataPtr<float>> rb_cDataPtrFloat = define_class<DataPtr<float>>("DataPtrFloat").
     define(&DataPtr_builder<Data_Type<DataPtr<float>>, float>);
 
   Rice::Data_Type<Matrix> rb_cMatrix = define_class<Matrix>("Matrix").
