@@ -111,8 +111,12 @@ module RubyBindgen
         rice_header = File.join(File.dirname(relative_path), "#{basename}.hpp")
         rice_cpp = File.join(File.dirname(relative_path), "#{basename}.cpp")
 
-        # Track init names
-        init_name = "Init_#{File.basename(cursor.spelling, ".*").camelize}"
+        # Track init names - use relative path to avoid conflicts (e.g., core/version vs dnn/version)
+        path_parts = Pathname.new(relative_path).each_filename.to_a
+        path_parts.shift if path_parts.length > 2  # Remove top-level directory if deep enough
+        filename = Pathname.new(path_parts.pop).sub_ext('').to_s.camelize
+        dir_part = path_parts.map(&:camelize).join('_')
+        init_name = dir_part.empty? ? "Init_#{filename}" : "Init_#{dir_part}_#{filename}"
         @init_names[rice_header] = init_name
 
         includes = Array.new
