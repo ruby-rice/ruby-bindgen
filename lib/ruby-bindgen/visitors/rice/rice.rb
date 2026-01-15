@@ -336,6 +336,7 @@ module RubyBindgen
 
         begin
           source_text = cursor.extent.text
+          return true if source_text.nil?
           @export_macros.any? { |macro| source_text.include?(macro) }
         rescue => e
           # If we can't read the source, assume it's exported
@@ -617,7 +618,7 @@ module RubyBindgen
         #   Real default: "QuatAssumeType assumeUnit=QUAT_ASSUME_NOT_UNIT"
         #   Template arg: "const Vec<_Tp, 4> &coeff" (the '4' is NOT a default value)
         param_extent = param.extent.text
-        return nil unless param_extent.include?('=')
+        return nil unless param_extent&.include?('=')
 
         # Find the first expression child - this is the default value
         # Filter out decl_ref_expr that reference template parameters (these are part of the type, not default values)
@@ -632,7 +633,9 @@ module RubyBindgen
         return nil unless default_expr
 
         # Get the raw expression text, stripping any leading "= " from the extent
-        default_text = default_expr.extent.text.sub(/\A\s*=\s*/, '')
+        extent_text = default_expr.extent.text
+        return nil if extent_text.nil?
+        default_text = extent_text.sub(/\A\s*=\s*/, '')
 
         # Find all type_ref and template_ref cursors within the default expression to qualify type names.
         # Note: We search from default_expr, not param, to avoid the parameter type's type_ref.
@@ -649,6 +652,7 @@ module RubyBindgen
                                ref.qualified_name
                              end
             extent_text = type_ref.extent.text
+            next if extent_text.nil?
 
             # Only replace if the qualified name is different (has namespace)
             next if extent_text == qualified_name
@@ -677,7 +681,7 @@ module RubyBindgen
           if ref.kind == :cursor_cxx_method
             extent_text = decl_ref.extent.text
             # If already qualified in source (preceded by ::), skip
-            next if default_text.match?(/::#{Regexp.escape(extent_text)}\s*\(/)
+            next if extent_text.nil? || default_text.match?(/::#{Regexp.escape(extent_text)}\s*\(/)
           end
 
           begin
@@ -706,6 +710,7 @@ module RubyBindgen
                                ref.qualified_name
                              end
             extent_text = decl_ref.extent.text
+            next if extent_text.nil?
 
             # Only replace if the qualified name is different (has namespace)
             next if extent_text == qualified_name

@@ -9,7 +9,8 @@ module FFI
 						location = SpellingLocation.new(Lib::CXSourceLocation.new(cur_ptr))
 						if location.from_main_file?
 							cursor = self.cursor(location)
-							result << cursor.extent.text
+							text = cursor.extent.text
+							result << text if text
 						end
 						cur_ptr += Lib::CXSourceLocation.size
  				  end

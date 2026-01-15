@@ -17,8 +17,6 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::PimplClass> rb_cOuterInnerPimplClass = define_class_under<Outer::Inner::PimplClass>(rb_mOuterInner, "PimplClass");
 
- 
-
   Rice::Data_Type<Outer::Inner::PimplClass::Impl> rb_cOuterInnerPimplClassImpl = define_class_under<Outer::Inner::PimplClass::Impl>(rb_cOuterInnerPimplClass, "Impl");
 
   rb_cOuterInnerPimplClass.
@@ -28,8 +26,6 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::PimplClassWithPublicField> rb_cOuterInnerPimplClassWithPublicField = define_class_under<Outer::Inner::PimplClassWithPublicField>(rb_mOuterInner, "PimplClassWithPublicField");
 
- 
-
   Rice::Data_Type<Outer::Inner::PimplClassWithPublicField::Impl> rb_cOuterInnerPimplClassWithPublicFieldImpl = define_class_under<Outer::Inner::PimplClassWithPublicField::Impl>(rb_cOuterInnerPimplClassWithPublicField, "Impl");
 
   rb_cOuterInnerPimplClassWithPublicField.
@@ -38,8 +34,6 @@ void Init_IncompleteTypes()
     define_attr("value", &Outer::Inner::PimplClassWithPublicField::value);
 
   Rice::Data_Type<Outer::Inner::PimplClassWithConstructor> rb_cOuterInnerPimplClassWithConstructor = define_class_under<Outer::Inner::PimplClassWithConstructor>(rb_mOuterInner, "PimplClassWithConstructor");
-
- 
 
   Rice::Data_Type<Outer::Inner::PimplClassWithConstructor::Impl> rb_cOuterInnerPimplClassWithConstructorImpl = define_class_under<Outer::Inner::PimplClassWithConstructor::Impl>(rb_cOuterInnerPimplClassWithConstructor, "Impl");
 
@@ -53,8 +47,6 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::PimplClassWithSmartPtr> rb_cOuterInnerPimplClassWithSmartPtr = define_class_under<Outer::Inner::PimplClassWithSmartPtr>(rb_mOuterInner, "PimplClassWithSmartPtr");
 
- 
-
   Rice::Data_Type<Outer::Inner::PimplClassWithSmartPtr::Impl> rb_cOuterInnerPimplClassWithSmartPtrImpl = define_class_under<Outer::Inner::PimplClassWithSmartPtr::Impl>(rb_cOuterInnerPimplClassWithSmartPtr, "Impl");
 
   rb_cOuterInnerPimplClassWithSmartPtr.
@@ -64,8 +56,6 @@ void Init_IncompleteTypes()
     define_attr("value", &Outer::Inner::PimplClassWithSmartPtr::value);
 
   Rice::Data_Type<Outer::Inner::PimplClassWithDoublePtr> rb_cOuterInnerPimplClassWithDoublePtr = define_class_under<Outer::Inner::PimplClassWithDoublePtr>(rb_mOuterInner, "PimplClassWithDoublePtr");
-
- 
 
   Rice::Data_Type<Outer::Inner::PimplClassWithDoublePtr::Impl> rb_cOuterInnerPimplClassWithDoublePtrImpl = define_class_under<Outer::Inner::PimplClassWithDoublePtr::Impl>(rb_cOuterInnerPimplClassWithDoublePtr, "Impl");
 
@@ -78,8 +68,6 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::PimplClassWithStaticFields> rb_cOuterInnerPimplClassWithStaticFields = define_class_under<Outer::Inner::PimplClassWithStaticFields>(rb_mOuterInner, "PimplClassWithStaticFields");
 
- 
-
   Rice::Data_Type<Outer::Inner::PimplClassWithStaticFields::Impl> rb_cOuterInnerPimplClassWithStaticFieldsImpl = define_class_under<Outer::Inner::PimplClassWithStaticFields::Impl>(rb_cOuterInnerPimplClassWithStaticFields, "Impl");
 
   rb_cOuterInnerPimplClassWithStaticFields.
@@ -90,8 +78,6 @@ void Init_IncompleteTypes()
     define_singleton_attr("StaticData", &Outer::Inner::PimplClassWithStaticFields::staticData);
 
   Rice::Data_Type<Outer::Inner::PimplClassWithStaticMethods> rb_cOuterInnerPimplClassWithStaticMethods = define_class_under<Outer::Inner::PimplClassWithStaticMethods>(rb_mOuterInner, "PimplClassWithStaticMethods");
-
- 
 
   Rice::Data_Type<Outer::Inner::PimplClassWithStaticMethods::Impl> rb_cOuterInnerPimplClassWithStaticMethodsImpl = define_class_under<Outer::Inner::PimplClassWithStaticMethods::Impl>(rb_cOuterInnerPimplClassWithStaticMethods, "Impl");
 
@@ -133,8 +119,6 @@ void Init_IncompleteTypes()
     define_attr("sz", &Outer::Inner::TypedefReturnClass::sz);
 
   Rice::Data_Type<Outer::Inner::PimplClassWithRefReturn> rb_cOuterInnerPimplClassWithRefReturn = define_class_under<Outer::Inner::PimplClassWithRefReturn>(rb_mOuterInner, "PimplClassWithRefReturn");
-
- 
 
   Rice::Data_Type<Outer::Inner::PimplClassWithRefReturn::Impl> rb_cOuterInnerPimplClassWithRefReturnImpl = define_class_under<Outer::Inner::PimplClassWithRefReturn::Impl>(rb_cOuterInnerPimplClassWithRefReturn, "Impl");
 
