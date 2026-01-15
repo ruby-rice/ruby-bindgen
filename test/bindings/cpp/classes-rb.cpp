@@ -3,20 +3,6 @@
 
 using namespace Rice;
 
-Rice::Data_Type<Outer::BaseClass> rb_cOuterBaseClass;
-Rice::Data_Type<Outer::foo> rb_cOuterFoo;
-Rice::Data_Type<Outer::foobar::foo> rb_cOuterFoobarFoo;
-Rice::Data_Type<Outer::foobar::wrapper<Outer::foobar::foo>> rb_cOuterFoobarWrapperFoo;
-Rice::Data_Type<Outer::Inner::ContainerClass> rb_cOuterInnerContainerClass;
-Rice::Data_Type<Outer::Inner::ContainerClass::Callback> rb_cOuterInnerContainerClassCallback;
-Rice::Data_Type<Outer::Inner::ContainerClass::Config> rb_cOuterInnerContainerClassConfig;
-Rice::Data_Type<Outer::Inner::GpuMat> rb_cOuterInnerGpuMat;
-Rice::Data_Type<Outer::Inner::GpuMat::Allocator> rb_cOuterInnerGpuMatAllocator;
-Rice::Data_Type<Outer::Inner::GpuMatND> rb_cOuterInnerGpuMatND;
-Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream;
-Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass;
-Rice::Data_Type<Outer::Range> rb_cOuterRange;
-
 template<typename Data_Type_T, typename T>
 inline void SimpleVector_builder(Data_Type_T& klass)
 {
@@ -38,7 +24,7 @@ void Init_Classes()
 
   Module rb_mOuter = define_module("Outer");
 
-  rb_cOuterRange = define_class_under<Outer::Range>(rb_mOuter, "Range").
+  Rice::Data_Type<Outer::Range> rb_cOuterRange = define_class_under<Outer::Range>(rb_mOuter, "Range").
     define_constructor(Constructor<Outer::Range>()).
     define_attr("start", &Outer::Range::start).
     define_attr("end", &Outer::Range::end);
@@ -47,10 +33,10 @@ void Init_Classes()
 
   rb_mOuter.define_constant("NamespaceVariable", Outer::namespaceVariable);
 
-  rb_cOuterBaseClass = define_class_under<Outer::BaseClass>(rb_mOuter, "BaseClass").
+  Rice::Data_Type<Outer::BaseClass> rb_cOuterBaseClass = define_class_under<Outer::BaseClass>(rb_mOuter, "BaseClass").
     define_constructor(Constructor<Outer::BaseClass>());
 
-  rb_cOuterMyClass = define_class_under<Outer::MyClass, Outer::BaseClass>(rb_mOuter, "MyClass").
+  Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass = define_class_under<Outer::MyClass, Outer::BaseClass>(rb_mOuter, "MyClass").
     define_constant("SOME_CONSTANT", Outer::MyClass::SOME_CONSTANT).
     define_singleton_attr("StaticFieldOne", &Outer::MyClass::static_field_one).
     define_constructor(Constructor<Outer::MyClass>()).
@@ -69,17 +55,17 @@ void Init_Classes()
 
   Module rb_mOuterInner = define_module_under(rb_mOuter, "Inner");
 
-  rb_cOuterInnerContainerClass = define_class_under<Outer::Inner::ContainerClass>(rb_mOuterInner, "ContainerClass").
+  Rice::Data_Type<Outer::Inner::ContainerClass> rb_cOuterInnerContainerClass = define_class_under<Outer::Inner::ContainerClass>(rb_mOuterInner, "ContainerClass").
     define_constructor(Constructor<Outer::Inner::ContainerClass>()).
     define_attr("callback", &Outer::Inner::ContainerClass::callback).
     define_attr("config", &Outer::Inner::ContainerClass::config).
     define_attr("grid_type", &Outer::Inner::ContainerClass::gridType);
 
-  rb_cOuterInnerContainerClassCallback = define_class_under<Outer::Inner::ContainerClass::Callback>(rb_cOuterInnerContainerClass, "Callback").
+  Rice::Data_Type<Outer::Inner::ContainerClass::Callback> rb_cOuterInnerContainerClassCallback = define_class_under<Outer::Inner::ContainerClass::Callback>(rb_cOuterInnerContainerClass, "Callback").
     define_constructor(Constructor<Outer::Inner::ContainerClass::Callback>()).
     define_method("compute?", &Outer::Inner::ContainerClass::Callback::compute);
 
-  rb_cOuterInnerContainerClassConfig = define_class_under<Outer::Inner::ContainerClass::Config>(rb_cOuterInnerContainerClass, "Config").
+  Rice::Data_Type<Outer::Inner::ContainerClass::Config> rb_cOuterInnerContainerClassConfig = define_class_under<Outer::Inner::ContainerClass::Config>(rb_cOuterInnerContainerClass, "Config").
     define_constructor(Constructor<Outer::Inner::ContainerClass::Config>()).
     define_attr("enable", &Outer::Inner::ContainerClass::Config::enable);
 
@@ -87,16 +73,16 @@ void Init_Classes()
     define_value("SYMMETRIC_GRID", Outer::Inner::ContainerClass::GridType::SYMMETRIC_GRID).
     define_value("ASYMMETRIC_GRID", Outer::Inner::ContainerClass::GridType::ASYMMETRIC_GRID);
 
-  rb_cOuterInnerGpuMat = define_class_under<Outer::Inner::GpuMat>(rb_mOuterInner, "GpuMat").
+  Rice::Data_Type<Outer::Inner::GpuMat> rb_cOuterInnerGpuMat = define_class_under<Outer::Inner::GpuMat>(rb_mOuterInner, "GpuMat").
     define_constructor(Constructor<Outer::Inner::GpuMat>()).
     define_constructor(Constructor<Outer::Inner::GpuMat, int, int, Outer::Inner::GpuMat::Allocator*>(),
       Arg("rows"), Arg("cols"), Arg("allocator") = static_cast<Outer::Inner::GpuMat::Allocator*>(Outer::Inner::GpuMat::defaultAllocator())).
     define_singleton_function("default_allocator", &Outer::Inner::GpuMat::defaultAllocator);
 
-  rb_cOuterInnerGpuMatAllocator = define_class_under<Outer::Inner::GpuMat::Allocator>(rb_cOuterInnerGpuMat, "Allocator").
+  Rice::Data_Type<Outer::Inner::GpuMat::Allocator> rb_cOuterInnerGpuMatAllocator = define_class_under<Outer::Inner::GpuMat::Allocator>(rb_cOuterInnerGpuMat, "Allocator").
     define_constructor(Constructor<Outer::Inner::GpuMat::Allocator>());
 
-  rb_cOuterInnerGpuMatND = define_class_under<Outer::Inner::GpuMatND>(rb_mOuterInner, "GpuMatND").
+  Rice::Data_Type<Outer::Inner::GpuMatND> rb_cOuterInnerGpuMatND = define_class_under<Outer::Inner::GpuMatND>(rb_mOuterInner, "GpuMatND").
     define_constructor(Constructor<Outer::Inner::GpuMatND>()).
     define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int>(),
       Arg("size"), Arg("type")).
@@ -106,7 +92,7 @@ void Init_Classes()
       Arg("ranges")).
     define_singleton_function("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray);
 
-  rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream").
+  Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream").
     define_constructor(Constructor<Outer::Inner::Stream>()).
     define_method("this_type_does_not_support_comparisons", &Outer::Inner::Stream::this_type_does_not_support_comparisons).
     define_method("to_i", [](const Outer::Inner::Stream& self) -> int
@@ -114,14 +100,14 @@ void Init_Classes()
       return self;
     });
 
-  rb_cOuterFoo = define_class_under<Outer::foo>(rb_mOuter, "Foo").
+  Rice::Data_Type<Outer::foo> rb_cOuterFoo = define_class_under<Outer::foo>(rb_mOuter, "Foo").
     define_constructor(Constructor<Outer::foo>()).
     define_attr("value", &Outer::foo::value);
 
   Module rb_mOuterFoobar = define_module_under(rb_mOuter, "Foobar");
 
-  rb_cOuterFoobarFoo = define_class_under<Outer::foobar::foo>(rb_mOuterFoobar, "Foo");
+  Rice::Data_Type<Outer::foobar::foo> rb_cOuterFoobarFoo = define_class_under<Outer::foobar::foo>(rb_mOuterFoobar, "Foo");
 
-  rb_cOuterFoobarWrapperFoo = define_class_under<Outer::foobar::wrapper<Outer::foobar::foo>>(rb_mOuterFoobar, "WrapperFoo").
+  Rice::Data_Type<Outer::foobar::wrapper<Outer::foobar::foo>> rb_cOuterFoobarWrapperFoo = define_class_under<Outer::foobar::wrapper<Outer::foobar::foo>>(rb_mOuterFoobar, "WrapperFoo").
     define_constructor(Constructor<Outer::foobar::wrapper<Outer::foobar::foo>>());
 }

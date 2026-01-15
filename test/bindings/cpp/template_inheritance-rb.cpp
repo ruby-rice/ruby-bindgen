@@ -3,14 +3,6 @@
 
 using namespace Rice;
 
-Rice::Data_Type<Tests::DerivedPtr<float>> derived_ptrf;
-Rice::Data_Type<Tests::BasePtr<float>> rb_cBasePtrFloat;
-Rice::Data_Type<Tests::BasePtr<unsigned char>> rb_cBasePtrUnsignedChar;
-Rice::Data_Type<Tests::DerivedPtr<unsigned char>> rb_cDerivedPtrb;
-Rice::Data_Type<Tests::PlaneProjector> rb_cTestsPlaneProjector;
-Rice::Data_Type<Tests::PlaneWarper> rb_cTestsPlaneWarper;
-Rice::Data_Type<Tests::WarperBase<Tests::PlaneProjector>> rb_cWarperBasePlaneProjector;
-
 template<typename Data_Type_T, typename T>
 inline void BasePtr_builder(Data_Type_T& klass)
 {
@@ -41,23 +33,23 @@ void Init_TemplateInheritance()
 {
   Module rb_mTests = define_module("Tests");
 
-  rb_cBasePtrUnsignedChar = define_class_under<Tests::BasePtr<unsigned char>>(rb_mTests, "BasePtrUnsignedChar").
+  Rice::Data_Type<Tests::BasePtr<unsigned char>> rb_cBasePtrUnsignedChar = define_class_under<Tests::BasePtr<unsigned char>>(rb_mTests, "BasePtrUnsignedChar").
     define(&BasePtr_builder<Data_Type<Tests::BasePtr<unsigned char>>, unsigned char>);
   rb_cDerivedPtrb = define_class_under<Tests::DerivedPtr<unsigned char>, Tests::BasePtr<unsigned char>>(rb_mTests, "DerivedPtrb").
     define(&DerivedPtr_builder<Data_Type<Tests::DerivedPtr<unsigned char>>, unsigned char>);
 
-  rb_cBasePtrFloat = define_class_under<Tests::BasePtr<float>>(rb_mTests, "BasePtrFloat").
+  Rice::Data_Type<Tests::BasePtr<float>> rb_cBasePtrFloat = define_class_under<Tests::BasePtr<float>>(rb_mTests, "BasePtrFloat").
     define(&BasePtr_builder<Data_Type<Tests::BasePtr<float>>, float>);
   derived_ptrf = define_class_under<Tests::DerivedPtr<float>, Tests::BasePtr<float>>(rb_mTests, "DerivedPtrf").
     define(&DerivedPtr_builder<Data_Type<Tests::DerivedPtr<float>>, float>);
 
-  rb_cTestsPlaneProjector = define_class_under<Tests::PlaneProjector>(rb_mTests, "PlaneProjector").
+  Rice::Data_Type<Tests::PlaneProjector> rb_cTestsPlaneProjector = define_class_under<Tests::PlaneProjector>(rb_mTests, "PlaneProjector").
     define_attr("scale", &Tests::PlaneProjector::scale).
     define_constructor(Constructor<Tests::PlaneProjector>());
 
-  rb_cWarperBasePlaneProjector = define_class_under<Tests::WarperBase<Tests::PlaneProjector>>(rb_mTests, "WarperBasePlaneProjector").
+  Rice::Data_Type<Tests::WarperBase<Tests::PlaneProjector>> rb_cWarperBasePlaneProjector = define_class_under<Tests::WarperBase<Tests::PlaneProjector>>(rb_mTests, "WarperBasePlaneProjector").
     define(&WarperBase_builder<Data_Type<Tests::WarperBase<Tests::PlaneProjector>>, Tests::PlaneProjector>);
-  rb_cTestsPlaneWarper = define_class_under<Tests::PlaneWarper, Tests::WarperBase<Tests::PlaneProjector>>(rb_mTests, "PlaneWarper").
+  Rice::Data_Type<Tests::PlaneWarper> rb_cTestsPlaneWarper = define_class_under<Tests::PlaneWarper, Tests::WarperBase<Tests::PlaneProjector>>(rb_mTests, "PlaneWarper").
     define_constructor(Constructor<Tests::PlaneWarper, float>(),
       Arg("scale") = static_cast<float>(1.0f)).
     define_method("get_scale", &Tests::PlaneWarper::getScale);

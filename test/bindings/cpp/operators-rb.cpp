@@ -3,16 +3,6 @@
 
 using namespace Rice;
 
-Rice::Data_Type<AllConversions> rb_cAllConversions;
-Rice::Data_Type<conv::Target> rb_cConvTarget;
-Rice::Data_Type<DataPtr<float>> rb_cDataPtrFloat;
-Rice::Data_Type<DataPtr<int>> rb_cDataPtrInt;
-Rice::Data_Type<FileWriter> rb_cFileWriter;
-Rice::Data_Type<Matrix> rb_cMatrix;
-Rice::Data_Type<NamespacedConversion> rb_cNamespacedConversion;
-Rice::Data_Type<Operators> rb_cOperators;
-Rice::Data_Type<Printable> rb_cPrintable;
-
 template<typename Data_Type_T, typename T>
 inline void DataPtr_builder(Data_Type_T& klass)
 {
@@ -32,7 +22,7 @@ inline void DataPtr_builder(Data_Type_T& klass)
 
 void Init_Operators()
 {
-  rb_cOperators = define_class<Operators>("Operators").
+  Rice::Data_Type<Operators> rb_cOperators = define_class<Operators>("Operators").
     define_attr("value", &Operators::value).
     define_constructor(Constructor<Operators>()).
     define_constructor(Constructor<Operators, int>(),
@@ -131,13 +121,13 @@ void Init_Operators()
 
   Module rb_mConv = define_module("Conv");
 
-  rb_cConvTarget = define_class_under<conv::Target>(rb_mConv, "Target").
+  Rice::Data_Type<conv::Target> rb_cConvTarget = define_class_under<conv::Target>(rb_mConv, "Target").
     define_attr("value", &conv::Target::value).
     define_constructor(Constructor<conv::Target>()).
     define_constructor(Constructor<conv::Target, int>(),
       Arg("v"));
 
-  rb_cNamespacedConversion = define_class<NamespacedConversion>("NamespacedConversion").
+  Rice::Data_Type<NamespacedConversion> rb_cNamespacedConversion = define_class<NamespacedConversion>("NamespacedConversion").
     define_attr("value", &NamespacedConversion::value).
     define_constructor(Constructor<NamespacedConversion>()).
     define_constructor(Constructor<NamespacedConversion, int>(),
@@ -157,25 +147,25 @@ void Init_Operators()
   rb_cDataPtrFloat = define_class<DataPtr<float>>("DataPtrFloat").
     define(&DataPtr_builder<Data_Type<DataPtr<float>>, float>);
 
-  rb_cMatrix = define_class<Matrix>("Matrix").
+  Rice::Data_Type<Matrix> rb_cMatrix = define_class<Matrix>("Matrix").
     define_attr("rows", &Matrix::rows).
     define_attr("cols", &Matrix::cols).
     define_constructor(Constructor<Matrix>()).
     define_constructor(Constructor<Matrix, int, int>(),
       Arg("r"), Arg("c"));
 
-  rb_cPrintable = define_class<Printable>("Printable").
+  Rice::Data_Type<Printable> rb_cPrintable = define_class<Printable>("Printable").
     define_attr("name", &Printable::name).
     define_attr("value", &Printable::value).
     define_constructor(Constructor<Printable>()).
     define_constructor(Constructor<Printable, const std::string&, int>(),
       Arg("n"), Arg("v"));
 
-  rb_cFileWriter = define_class<FileWriter>("FileWriter").
+  Rice::Data_Type<FileWriter> rb_cFileWriter = define_class<FileWriter>("FileWriter").
     define_constructor(Constructor<FileWriter>()).
     define_method("open?", &FileWriter::isOpen);
 
-  rb_cAllConversions = define_class<AllConversions>("AllConversions").
+  Rice::Data_Type<AllConversions> rb_cAllConversions = define_class<AllConversions>("AllConversions").
     define_constructor(Constructor<AllConversions>()).
     define_method("to_i", [](const AllConversions& self) -> int
     {

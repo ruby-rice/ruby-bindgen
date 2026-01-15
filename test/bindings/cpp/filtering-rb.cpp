@@ -3,11 +3,6 @@
 
 using namespace Rice;
 
-Rice::Data_Type<Outer::ClassWithDeprecatedConstructor> rb_cOuterClassWithDeprecatedConstructor;
-Rice::Data_Type<Outer::ClassWithDeprecatedConversion> rb_cOuterClassWithDeprecatedConversion;
-Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass;
-Rice::Data_Type<Outer::OtherClass> rb_cOuterOtherClass;
-
 void Init_Filtering()
 {
   Module rb_mOuter = define_module("Outer");
@@ -19,19 +14,19 @@ void Init_Filtering()
   rb_mOuter.define_module_function<void(*)(const char*)>("print_formatted", &Outer::printFormatted,
     Arg("msg"));
 
-  rb_cOuterMyClass = define_class_under<Outer::MyClass>(rb_mOuter, "MyClass").
+  Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass = define_class_under<Outer::MyClass>(rb_mOuter, "MyClass").
     define_constructor(Constructor<Outer::MyClass>()).
     define_method("new_method", &Outer::MyClass::newMethod);
 
-  rb_cOuterClassWithDeprecatedConstructor = define_class_under<Outer::ClassWithDeprecatedConstructor>(rb_mOuter, "ClassWithDeprecatedConstructor").
+  Rice::Data_Type<Outer::ClassWithDeprecatedConstructor> rb_cOuterClassWithDeprecatedConstructor = define_class_under<Outer::ClassWithDeprecatedConstructor>(rb_mOuter, "ClassWithDeprecatedConstructor").
     define_constructor(Constructor<Outer::ClassWithDeprecatedConstructor, int, int>(),
       Arg("param1"), Arg("param2")).
     define_method("do_something", &Outer::ClassWithDeprecatedConstructor::doSomething);
 
-  rb_cOuterOtherClass = define_class_under<Outer::OtherClass>(rb_mOuter, "OtherClass").
+  Rice::Data_Type<Outer::OtherClass> rb_cOuterOtherClass = define_class_under<Outer::OtherClass>(rb_mOuter, "OtherClass").
     define_constructor(Constructor<Outer::OtherClass>());
 
-  rb_cOuterClassWithDeprecatedConversion = define_class_under<Outer::ClassWithDeprecatedConversion>(rb_mOuter, "ClassWithDeprecatedConversion").
+  Rice::Data_Type<Outer::ClassWithDeprecatedConversion> rb_cOuterClassWithDeprecatedConversion = define_class_under<Outer::ClassWithDeprecatedConversion>(rb_mOuter, "ClassWithDeprecatedConversion").
     define_constructor(Constructor<Outer::ClassWithDeprecatedConversion>()).
     define_method("to_i", [](const Outer::ClassWithDeprecatedConversion& self) -> int
     {

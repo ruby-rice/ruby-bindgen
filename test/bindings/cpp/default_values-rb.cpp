@@ -3,20 +3,6 @@
 
 using namespace Rice;
 
-Rice::Data_Type<cv::Affine3<double>> rb_cAffine3d;
-Rice::Data_Type<cv::Affine3<float>> rb_cAffine3f;
-Rice::Data_Type<cv::Mat> rb_cCvMat;
-Rice::Data_Type<cv::Range> rb_cCvRange;
-Rice::Data_Type<ml::ParamGrid> rb_cMlParamGrid;
-Rice::Data_Type<ml::SVM> rb_cMlSVM;
-Rice::Data_Type<noncopyable::Copyable> rb_cNoncopyableCopyable;
-Rice::Data_Type<noncopyable::DerivedFromCpp03> rb_cNoncopyableDerivedFromCpp03;
-Rice::Data_Type<noncopyable::DerivedFromCpp11> rb_cNoncopyableDerivedFromCpp11;
-Rice::Data_Type<noncopyable::NonCopyableCpp03> rb_cNoncopyableNonCopyableCpp03;
-Rice::Data_Type<noncopyable::NonCopyableCpp11> rb_cNoncopyableNonCopyableCpp11;
-Rice::Data_Type<cv::Rect_<int>> rb_cRect;
-Rice::Data_Type<cv::Rect_<double>> rb_cRect2d;
-
 template<typename Data_Type_T, typename T>
 inline void Vec3_builder(Data_Type_T& klass)
 {
@@ -51,7 +37,7 @@ void Init_DefaultValues()
 {
   Module rb_mCv = define_module("Cv");
 
-  rb_cCvRange = define_class_under<cv::Range>(rb_mCv, "Range").
+  Rice::Data_Type<cv::Range> rb_cCvRange = define_class_under<cv::Range>(rb_mCv, "Range").
     define_constructor(Constructor<cv::Range>()).
     define_constructor(Constructor<cv::Range, int, int>(),
       Arg("start"), Arg("end")).
@@ -59,7 +45,7 @@ void Init_DefaultValues()
     define_attr("end", &cv::Range::end).
     define_singleton_function("all", &cv::Range::all);
 
-  rb_cCvMat = define_class_under<cv::Mat>(rb_mCv, "Mat").
+  Rice::Data_Type<cv::Mat> rb_cCvMat = define_class_under<cv::Mat>(rb_mCv, "Mat").
     define_constructor(Constructor<cv::Mat>()).
     define_constructor(Constructor<cv::Mat, const cv::Mat&, const cv::Range&, const cv::Range&>(),
       Arg("m"), Arg("row_range"), Arg("col_range") = static_cast<const cv::Range&>(cv::Range::all()));
@@ -86,7 +72,7 @@ void Init_DefaultValues()
 
   Module rb_mMl = define_module("Ml");
 
-  rb_cMlParamGrid = define_class_under<ml::ParamGrid>(rb_mMl, "ParamGrid").
+  Rice::Data_Type<ml::ParamGrid> rb_cMlParamGrid = define_class_under<ml::ParamGrid>(rb_mMl, "ParamGrid").
     define_constructor(Constructor<ml::ParamGrid>()).
     define_constructor(Constructor<ml::ParamGrid, double, double, double>(),
       Arg("min_val"), Arg("max_val"), Arg("log_step")).
@@ -94,7 +80,7 @@ void Init_DefaultValues()
     define_attr("max_val", &ml::ParamGrid::maxVal).
     define_attr("log_step", &ml::ParamGrid::logStep);
 
-  rb_cMlSVM = define_class_under<ml::SVM>(rb_mMl, "SVM").
+  Rice::Data_Type<ml::SVM> rb_cMlSVM = define_class_under<ml::SVM>(rb_mMl, "SVM").
     define_constructor(Constructor<ml::SVM>()).
     define_method("train_auto", &ml::SVM::trainAuto,
       Arg("k_fold") = static_cast<int>(10), Arg("cgrid") = static_cast<ml::ParamGrid>(ml::SVM::getDefaultGrid(ml::SVM::ParamTypes::C))).
@@ -107,13 +93,13 @@ void Init_DefaultValues()
 
   Module rb_mNoncopyable = define_module("Noncopyable");
 
-  rb_cNoncopyableNonCopyableCpp03 = define_class_under<noncopyable::NonCopyableCpp03>(rb_mNoncopyable, "NonCopyableCpp03").
+  Rice::Data_Type<noncopyable::NonCopyableCpp03> rb_cNoncopyableNonCopyableCpp03 = define_class_under<noncopyable::NonCopyableCpp03>(rb_mNoncopyable, "NonCopyableCpp03").
     define_constructor(Constructor<noncopyable::NonCopyableCpp03>()).
     define_constructor(Constructor<noncopyable::NonCopyableCpp03, int>(),
       Arg("value")).
     define_method("get_value", &noncopyable::NonCopyableCpp03::get_value);
 
-  rb_cNoncopyableNonCopyableCpp11 = define_class_under<noncopyable::NonCopyableCpp11>(rb_mNoncopyable, "NonCopyableCpp11").
+  Rice::Data_Type<noncopyable::NonCopyableCpp11> rb_cNoncopyableNonCopyableCpp11 = define_class_under<noncopyable::NonCopyableCpp11>(rb_mNoncopyable, "NonCopyableCpp11").
     define_constructor(Constructor<noncopyable::NonCopyableCpp11>()).
     define_constructor(Constructor<noncopyable::NonCopyableCpp11, int>(),
       Arg("value")).
@@ -125,7 +111,7 @@ void Init_DefaultValues()
   rb_mNoncopyable.define_module_function("use_cpp11", &noncopyable::use_cpp11,
     Arg("obj"));
 
-  rb_cNoncopyableCopyable = define_class_under<noncopyable::Copyable>(rb_mNoncopyable, "Copyable").
+  Rice::Data_Type<noncopyable::Copyable> rb_cNoncopyableCopyable = define_class_under<noncopyable::Copyable>(rb_mNoncopyable, "Copyable").
     define_constructor(Constructor<noncopyable::Copyable>()).
     define_constructor(Constructor<noncopyable::Copyable, int>(),
       Arg("value")).
@@ -134,12 +120,12 @@ void Init_DefaultValues()
   rb_mNoncopyable.define_module_function("use_copyable", &noncopyable::use_copyable,
     Arg("obj") = static_cast<const noncopyable::Copyable&>(noncopyable::Copyable()));
 
-  rb_cNoncopyableDerivedFromCpp03 = define_class_under<noncopyable::DerivedFromCpp03, noncopyable::NonCopyableCpp03>(rb_mNoncopyable, "DerivedFromCpp03").
+  Rice::Data_Type<noncopyable::DerivedFromCpp03> rb_cNoncopyableDerivedFromCpp03 = define_class_under<noncopyable::DerivedFromCpp03, noncopyable::NonCopyableCpp03>(rb_mNoncopyable, "DerivedFromCpp03").
     define_constructor(Constructor<noncopyable::DerivedFromCpp03>()).
     define_constructor(Constructor<noncopyable::DerivedFromCpp03, int, int>(),
       Arg("value"), Arg("extra"));
 
-  rb_cNoncopyableDerivedFromCpp11 = define_class_under<noncopyable::DerivedFromCpp11, noncopyable::NonCopyableCpp11>(rb_mNoncopyable, "DerivedFromCpp11").
+  Rice::Data_Type<noncopyable::DerivedFromCpp11> rb_cNoncopyableDerivedFromCpp11 = define_class_under<noncopyable::DerivedFromCpp11, noncopyable::NonCopyableCpp11>(rb_mNoncopyable, "DerivedFromCpp11").
     define_constructor(Constructor<noncopyable::DerivedFromCpp11>()).
     define_constructor(Constructor<noncopyable::DerivedFromCpp11, int, int>(),
       Arg("value"), Arg("extra"));

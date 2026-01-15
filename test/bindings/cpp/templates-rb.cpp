@@ -3,15 +3,6 @@
 
 using namespace Rice;
 
-Rice::Data_Type<Tests::Matrix<float, 3, 3>> matrix_float33;
-Rice::Data_Type<Internal::Data<2, 2>> rb_cData22;
-Rice::Data_Type<Tests::Matrix<int, 2, 2>> rb_cMatrixInt22;
-Rice::Data_Type<Tests::TypeTraits<double>> rb_cTestsTypeTraitsDouble;
-Rice::Data_Type<Tests::TypeTraits<float>> rb_cTestsTypeTraitsFloat;
-Rice::Data_Type<Tests::TypeTraits<int>> rb_cTestsTypeTraitsInt;
-Rice::Data_Type<Tests::Transform<double>> rb_cTransformd;
-Rice::Data_Type<Tests::Transform<float>> rb_cTransformf;
-
 template<typename Data_Type_T, int Rows, int Columns>
 inline void Data_builder(Data_Type_T& klass)
 {
@@ -78,15 +69,15 @@ void Init_Templates()
   matrix_float33 = define_class_under<Tests::Matrix<float, 3, 3>>(rb_mTests, "MatrixFloat33").
     define(&Matrix_builder<Data_Type<Tests::Matrix<float, 3, 3>>, float, 3, 3>);
 
-  rb_cTestsTypeTraitsInt = define_class_under<Tests::TypeTraits<int>>(rb_mTests, "TypeTraitsInt").
+  Rice::Data_Type<Tests::TypeTraits<int>> rb_cTestsTypeTraitsInt = define_class_under<Tests::TypeTraits<int>>(rb_mTests, "TypeTraitsInt").
     define_constructor(Constructor<Tests::TypeTraits<int>>()).
     define_constant("Type", Tests::TypeTraits<int>::type);
 
-  rb_cTestsTypeTraitsFloat = define_class_under<Tests::TypeTraits<float>>(rb_mTests, "TypeTraitsFloat").
+  Rice::Data_Type<Tests::TypeTraits<float>> rb_cTestsTypeTraitsFloat = define_class_under<Tests::TypeTraits<float>>(rb_mTests, "TypeTraitsFloat").
     define_constructor(Constructor<Tests::TypeTraits<float>>()).
     define_constant("Type", Tests::TypeTraits<float>::type);
 
-  rb_cTestsTypeTraitsDouble = define_class_under<Tests::TypeTraits<double>>(rb_mTests, "TypeTraitsDouble").
+  Rice::Data_Type<Tests::TypeTraits<double>> rb_cTestsTypeTraitsDouble = define_class_under<Tests::TypeTraits<double>>(rb_mTests, "TypeTraitsDouble").
     define_constructor(Constructor<Tests::TypeTraits<double>>()).
     define_constant("Type", Tests::TypeTraits<double>::type);
 

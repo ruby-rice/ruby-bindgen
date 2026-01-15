@@ -3,8 +3,6 @@
 
 using namespace Rice;
 
-Rice::Data_Type<Widget> rb_cWidget;
-
 void Init_Functions()
 {
   define_global_function("some_function", &someFunction,
@@ -48,7 +46,7 @@ void Init_Functions()
   define_global_function("process", &process,
     Arg("a"), Arg("b"));
 
-  rb_cWidget = define_class<Widget>("Widget").
+  Rice::Data_Type<Widget> rb_cWidget = define_class<Widget>("Widget").
     define_constructor(Constructor<Widget>()).
     define_method("empty?", &Widget::empty).
     define_method("enabled?", &Widget::isEnabled).

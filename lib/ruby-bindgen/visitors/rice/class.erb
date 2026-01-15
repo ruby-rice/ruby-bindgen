@@ -3,13 +3,13 @@
 <%# Split: define class, define incomplete inner classes, then add methods -%>
 <%= auto_generated_base -%>
 <%- if under && base -%>
-<%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
 <%- elsif under -%>
-<%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
 <%- elsif base -%>
-<%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
 <%- else -%>
-<%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
 <%- end -%>
 
 <%= incomplete_classes -%>
@@ -23,13 +23,13 @@
 <%- line_terminator = children.empty? ? ";" : "." -%>
 <%= auto_generated_base -%>
 <%- if under && base -%>
-<%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
 <%- elsif under -%>
-<%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
 <%- elsif base -%>
-<%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
 <%- else -%>
-<%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
 <%- end -%>
 <%= children -%>
 <%- end -%>

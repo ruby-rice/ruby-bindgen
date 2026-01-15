@@ -3,10 +3,6 @@
 
 using namespace Rice;
 
-Rice::Data_Type<MyNamespace::Buffer> rb_cMyNamespaceBuffer;
-Rice::Data_Type<MyNamespace::MyClass> rb_cMyNamespaceMyClass;
-Rice::Data_Type<MyNamespace::Solver> rb_cMyNamespaceSolver;
-
 void Init_Enums()
 {
   Enum<Color> rb_cColor = define_enum<Color>("Color").
@@ -22,7 +18,7 @@ void Init_Enums()
     define_value("Fall", MyNamespace::Season::Fall).
     define_value("Winter", MyNamespace::Season::Winter);
 
-  rb_cMyNamespaceMyClass = define_class_under<MyNamespace::MyClass>(rb_mMyNamespace, "MyClass").
+  Rice::Data_Type<MyNamespace::MyClass> rb_cMyNamespaceMyClass = define_class_under<MyNamespace::MyClass>(rb_mMyNamespace, "MyClass").
     define_constructor(Constructor<MyNamespace::MyClass>()).
     define_constant("SOME_CONSTANT", MyNamespace::MyClass::SOME_CONSTANT);
 
@@ -33,7 +29,7 @@ void Init_Enums()
   rb_cMyNamespaceMyClass.define_constant("HACKED_CLASS_CONSTANT_1", (int)MyNamespace::MyClass::HACKED_CLASS_CONSTANT_1);
   rb_cMyNamespaceMyClass.define_constant("HACKED_CLASS_CONSTANT_2", (int)MyNamespace::MyClass::HACKED_CLASS_CONSTANT_2);
 
-  rb_cMyNamespaceBuffer = define_class_under<MyNamespace::Buffer>(rb_mMyNamespace, "Buffer").
+  Rice::Data_Type<MyNamespace::Buffer> rb_cMyNamespaceBuffer = define_class_under<MyNamespace::Buffer>(rb_mMyNamespace, "Buffer").
     define_constructor(Constructor<MyNamespace::Buffer>()).
     define_method("create", &MyNamespace::Buffer::create,
       Arg("rows"), Arg("cols"), Arg("target") = static_cast<MyNamespace::Buffer::Target>(MyNamespace::Buffer::Target::ARRAY_BUFFER)).
@@ -49,7 +45,7 @@ void Init_Enums()
     define_value("DECOMP_SVD", MyNamespace::DecompTypes::DECOMP_SVD).
     define_value("DECOMP_CHOLESKY", MyNamespace::DecompTypes::DECOMP_CHOLESKY);
 
-  rb_cMyNamespaceSolver = define_class_under<MyNamespace::Solver>(rb_mMyNamespace, "Solver").
+  Rice::Data_Type<MyNamespace::Solver> rb_cMyNamespaceSolver = define_class_under<MyNamespace::Solver>(rb_mMyNamespace, "Solver").
     define_constructor(Constructor<MyNamespace::Solver>()).
     define_method("solve", &MyNamespace::Solver::solve,
       Arg("method") = static_cast<int>(MyNamespace::DECOMP_SVD));
