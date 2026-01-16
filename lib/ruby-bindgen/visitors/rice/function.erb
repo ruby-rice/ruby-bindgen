@@ -1,5 +1,5 @@
 <%- if under -%>
-<%= under.cruby_name %>.define_module_function<%= signature %>("<%= name %>", &<%= cursor.qualified_name %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %>;
+<%= under.cruby_name %>.define_module_function<%= signature %>("<%= name %>", &<%= cursor.qualified_name %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %><%= return_buffer ? ".\n  define_return(ReturnBuffer())" : "" %>;
 <%- else -%>
-define_global_function<%= signature %>("<%= name %>", &<%= cursor.qualified_name %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %>;
+define_global_function<%= signature %>("<%= name %>", &<%= cursor.qualified_name %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %><%= return_buffer ? ".\n  define_return(ReturnBuffer())" : "" %>;
 <%- end -%>

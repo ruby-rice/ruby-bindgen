@@ -30,7 +30,7 @@ void Init_Overloads()
     define_constructor(Constructor<Outer::Inner::KernelArg>()).
     define_attr("flags", &Outer::Inner::KernelArg::flags).
     define_singleton_function<Outer::Inner::KernelArg(*)(const char*)>("constant", &Outer::Inner::KernelArg::Constant,
-      Arg("data")).
+      ArgBuffer("data")).
     define_singleton_function<Outer::Inner::KernelArg(*)(int)>("read_only", &Outer::Inner::KernelArg::ReadOnly,
       Arg("m")).
     define_singleton_function<Outer::Inner::KernelArg(*)(int, int)>("read_only", &Outer::Inner::KernelArg::ReadOnly,

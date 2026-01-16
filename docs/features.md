@@ -28,6 +28,24 @@ Unqualified type names in template arguments are automatically qualified:
 // Output: std::map<cv::String, cv::dnn::DictValue>::iterator
 ```
 
+### Buffers and Pointers
+
+Pointers to fundamental types (`int*`, `double*`, `char*`, `void*`, etc.) and double pointers (`T**`) are automatically wrapped using Rice's `ArgBuffer` and `ReturnBuffer` classes:
+
+```cpp
+void processData(int* data, int size);           // ArgBuffer("data")
+void getMinMax(double* min, double* max);        // Out parameters via ArgBuffer
+int* createBuffer(int size);                     // ReturnBuffer
+void processArrays(float** matrices, int count); // Double pointer via ArgBuffer
+```
+
+This enables Ruby code to:
+- Pass buffers of data to C++ functions
+- Use out parameters for returning values
+- Work with arrays of pointers
+
+For detailed information on using buffers from Ruby, see the [Rice Buffers documentation](https://ruby-rice.github.io/4.x/bindings/buffers.html) and [Rice Pointers documentation](https://ruby-rice.github.io/4.x/bindings/pointers.html).
+
 ### Smart Pointers
 
 Custom smart pointer types (like `cv::Ptr<T>`) can be supported via the `include:` configuration option. Create a header with a `Rice::detail::Type<T>` specialization and all translation units will see it, preventing ODR violations.

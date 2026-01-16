@@ -11,6 +11,21 @@ module RubyBindgen
 
       CURSOR_CLASSES = [:cursor_class_decl, :cursor_class_template, :cursor_struct]
 
+      # Fundamental types that should use ArgBuffer/ReturnBuffer when passed/returned as pointers
+      FUNDAMENTAL_TYPES = [
+        :type_void, :type_bool,
+        :type_char_u, :type_uchar, :type_char16, :type_char32, :type_char_s,
+        :type_schar, :type_wchar,
+        :type_short, :type_ushort,
+        :type_int, :type_uint,
+        :type_long, :type_ulong,
+        :type_longlong, :type_ulonglong,
+        :type_int128, :type_uint128,
+        :type_float, :type_double, :type_longdouble,
+        :type_float128, :type_float16,
+        :type_nullptr
+      ].freeze
+
       attr_reader :project, :outputter
 
       def initialize(outputter, project = nil, skip_symbols: [], export_macros: [], include_header: nil)
@@ -436,6 +451,26 @@ module RubyBindgen
         true
       end
 
+      # Check if a type should use ArgBuffer (for parameters) or ReturnBuffer (for return types).
+      # Returns true if the type is:
+      #   - A pointer to a fundamental type (int*, double*, char*, etc.)
+      #   - A double pointer (T**) - pointer to any pointer type
+      def buffer_type?(type)
+        return false unless type.kind == :type_pointer
+
+        pointee = type.pointee
+        # Strip const qualifier to check underlying type
+        pointee_kind = pointee.kind
+
+        # Case 1: Pointer to fundamental type (int*, double*, etc.)
+        return true if FUNDAMENTAL_TYPES.include?(pointee_kind)
+
+        # Case 2: Double pointer (T**) - pointer to any pointer
+        return true if pointee_kind == :type_pointer
+
+        false
+      end
+
       # Qualify template arguments in a type spelling by looking up unqualified identifiers
       # e.g., std::map<String, DictValue> -> std::map<cv::String, cv::dnn::DictValue>
       def qualify_template_args(spelling, type)
@@ -631,7 +666,10 @@ module RubyBindgen
         params.each_with_index.map do |param, index|
           # Use parameter name if available, otherwise generate a default name (matches Rice convention)
           param_name = param.spelling.empty? ? "arg_#{index}" : param.spelling.underscore
-          result = "Arg(\"#{param_name}\")"
+
+          # Use ArgBuffer for pointers to fundamental types or double pointers (T**)
+          arg_class = buffer_type?(param.type) ? "ArgBuffer" : "Arg"
+          result = "#{arg_class}(\"#{param_name}\")"
 
           # Check if there is a default value by looking for expression children.
           # The default value is an expression child (cursor_unexposed_expr) of the parameter.
@@ -834,12 +872,16 @@ module RubyBindgen
         name = cursor.ruby_name
         args = arguments(cursor)
 
+        # Check if return type should use ReturnBuffer
+        return_buffer = buffer_type?(cursor.result_type)
+
         is_template = cursor.semantic_parent.kind == :cursor_class_template
         result << self.render_cursor(cursor, "cxx_method",
                                      :name => name,
                                      :is_template => is_template,
                                      :signature => signature,
-                                     :args => args)
+                                     :args => args,
+                                     :return_buffer => return_buffer)
 
         # Special handling for implementing #[](index, value)
         if cursor.spelling == "operator[]" && cursor.result_type.kind == :type_lvalue_ref &&
@@ -1067,12 +1109,16 @@ module RubyBindgen
                       nil
                     end
 
+        # Check if return type should use ReturnBuffer
+        return_buffer = buffer_type?(cursor.type.result_type)
+
         under = cursor.ancestors_by_kind(:cursor_namespace).first
         self.render_cursor(cursor, "function",
                            :under => under,
                            :name => name,
                            :signature => signature,
-                           :args => args)
+                           :args => args,
+                           :return_buffer => return_buffer)
       end
 
       def visit_macro_definition(cursor)
