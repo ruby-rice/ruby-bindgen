@@ -1,5 +1,6 @@
+<%- all_args = return_buffer ? (args + ["ReturnBuffer()"]) : args -%>
 <%- if under -%>
-<%= under.cruby_name %>.define_module_function<%= signature %>("<%= name %>", &<%= cursor.qualified_name %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %><%= return_buffer ? ".\n  define_return(ReturnBuffer())" : "" %>;
+<%= under.cruby_name %>.define_module_function<%= signature %>("<%= name %>", &<%= cursor.qualified_name %><%= all_args.empty? ? ")" : ",\n  #{all_args.join(", ")})" %>;
 <%- else -%>
-define_global_function<%= signature %>("<%= name %>", &<%= cursor.qualified_name %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %><%= return_buffer ? ".\n  define_return(ReturnBuffer())" : "" %>;
+define_global_function<%= signature %>("<%= name %>", &<%= cursor.qualified_name %><%= all_args.empty? ? ")" : ",\n  #{all_args.join(", ")})" %>;
 <%- end -%>

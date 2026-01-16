@@ -1,5 +1,6 @@
+<%- all_args = return_buffer ? (args + ["ReturnBuffer()"]) : args -%>
 <%- if cursor.static? -%>
-<%= is_template && signature && !signature.empty? ? "template " : "" %>define_singleton_function<%= signature %>("<%= name %>", &<%= cursor.semantic_parent.qualified_display_name %>::<%= cursor.spelling %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %><%= return_buffer ? ".\n  define_return(ReturnBuffer())" : "" %>
+<%= is_template && signature && !signature.empty? ? "template " : "" %>define_singleton_function<%= signature %>("<%= name %>", &<%= cursor.semantic_parent.qualified_display_name %>::<%= cursor.spelling %><%= all_args.empty? ? ")" : ",\n  #{all_args.join(", ")})" %>
 <%- else -%>
-<%= is_template && signature && !signature.empty? ? "template " : "" %>define_method<%= signature %>("<%= name %>", &<%= cursor.semantic_parent.qualified_display_name %>::<%= cursor.spelling %><%= args.empty? ? ")" : ",\n  #{args.join(", ")})" %><%= return_buffer ? ".\n  define_return(ReturnBuffer())" : "" %>
+<%= is_template && signature && !signature.empty? ? "template " : "" %>define_method<%= signature %>("<%= name %>", &<%= cursor.semantic_parent.qualified_display_name %>::<%= cursor.spelling %><%= all_args.empty? ? ")" : ",\n  #{all_args.join(", ")})" %>
 <%- end -%>
