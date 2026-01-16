@@ -471,6 +471,81 @@ module RubyBindgen
         false
       end
 
+      # Get full template arguments including default values.
+      # When a typedef uses a template with default arguments, the canonical spelling
+      # may omit those defaults (e.g., Matx<uchar, 2> instead of Matx<uchar, 2, 1>).
+      # This method compares the actual arguments with the template parameters and
+      # appends any missing default values.
+      def get_full_template_arguments(underlying_type, cursor_template)
+        # Extract template arguments from canonical spelling
+        canonical_spelling = underlying_type.canonical.spelling
+        match = canonical_spelling.match(/\<(.*)\>/)
+        return "" unless match
+
+        extracted_args = match[1]
+
+        # Get template parameters from class template
+        template_parameter_kinds = [:cursor_template_type_parameter,
+                                    :cursor_non_type_template_parameter,
+                                    :cursor_template_template_parameter]
+        template_params = cursor_template.find_by_kind(false, *template_parameter_kinds)
+        expected_count = template_params.length
+
+        # Count extracted arguments (handle nested templates by counting only top-level commas)
+        extracted_count = count_template_args(extracted_args)
+
+        return extracted_args if extracted_count >= expected_count
+
+        # Need to fill in defaults for missing parameters
+        missing_params = template_params.last(expected_count - extracted_count)
+        default_values = missing_params.map do |param|
+          get_template_param_default(param)
+        end.compact
+
+        # If we couldn't get all defaults, return what we have
+        return extracted_args if default_values.length != missing_params.length
+
+        extracted_args + ", " + default_values.join(", ")
+      end
+
+      # Count template arguments at the top level (not inside nested <>)
+      def count_template_args(args_string)
+        return 0 if args_string.nil? || args_string.empty?
+
+        count = 1
+        depth = 0
+        args_string.each_char do |c|
+          case c
+          when '<' then depth += 1
+          when '>' then depth -= 1
+          when ','
+            count += 1 if depth == 0
+          end
+        end
+        count
+      end
+
+      # Extract default value from a template parameter
+      def get_template_param_default(param)
+        if param.kind == :cursor_non_type_template_parameter
+          # For non-type params (int, etc.), look for literal child
+          default_child = nil
+          param.each(false) do |child, _|
+            default_child = child
+          end
+          return default_child.extent.text if default_child
+        elsif param.kind == :cursor_template_type_parameter
+          # For type params, parse extent text (e.g., "typename U = int")
+          extent_text = param.extent.text rescue nil
+          if extent_text && extent_text.include?('=')
+            # Extract type after '=' and clean up
+            default_type = extent_text.split('=', 2).last.strip
+            return default_type unless default_type.empty?
+          end
+        end
+        nil
+      end
+
       # Qualify template arguments in a type spelling by looking up unqualified identifiers
       # e.g., std::map<String, DictValue> -> std::map<cv::String, cv::dnn::DictValue>
       def qualify_template_args(spelling, type)
@@ -1298,7 +1373,8 @@ module RubyBindgen
 
       def visit_template_specialization(cursor, cursor_template, underlying_type)
         under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
-        template_arguments = underlying_type.canonical.spelling.match(/\<(.*)\>/)[1]
+        # Get template arguments including any default values that were omitted in the typedef
+        template_arguments = get_full_template_arguments(underlying_type, cursor_template)
 
         result = ""
 
@@ -1367,6 +1443,10 @@ module RubyBindgen
 
         base_template = base_template_ref.referenced
 
+        # Extract template arguments from base_spelling (which includes all args from base class)
+        # e.g., "Tests::Matx<unsigned char, 2, 1>" -> "unsigned char, 2, 1"
+        base_template_arguments = base_spelling.match(/<(.+)>\z/)&.[](1) || template_arguments
+
         result = ""
 
         # Check if this base class has its own base that needs auto-generation (recursive)
@@ -1378,11 +1458,11 @@ module RubyBindgen
             # Get namespace from base_spelling
             namespace = base_spelling.split("<").first.split("::")[0..-2].join("::")
             base_base_name = base_base_template_ref.referenced.spelling
-            base_base_spelling = namespace.empty? ? "#{base_base_name}<#{template_arguments}>" : "#{namespace}::#{base_base_name}<#{template_arguments}>"
+            base_base_spelling = namespace.empty? ? "#{base_base_name}<#{base_template_arguments}>" : "#{namespace}::#{base_base_name}<#{base_template_arguments}>"
 
             # Recursively auto-generate if needed
             if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
-              result = auto_generate_base_class(base_base_ref, base_base_spelling, template_arguments, under)
+              result = auto_generate_base_class(base_base_ref, base_base_spelling, base_template_arguments, under)
             end
           end
         end
@@ -1392,7 +1472,7 @@ module RubyBindgen
 
         # Generate a Ruby class name from the base spelling
         ruby_name = base_spelling.split("::").last.gsub(/<.*>/, "").camelize +
-                    template_arguments.split(",").map(&:strip).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join
+                    split_template_args(base_template_arguments).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join
 
         cruby_name = "rb_c#{ruby_name}"
 
@@ -1403,7 +1483,7 @@ module RubyBindgen
                         :base_spelling => base_spelling,
                         :base_base_spelling => base_base_spelling,
                         :base_template => base_template,
-                        :template_arguments => template_arguments,
+                        :template_arguments => base_template_arguments,
                         :under => under)
       end
 
@@ -1727,35 +1807,100 @@ module RubyBindgen
 
       # Given a typedef cursor and its underlying type, resolve the base class
       # to an actual instantiated type (e.g., PtrStep<unsigned char> instead of PtrStep<T>).
+      # Correctly handles cases where derived and base templates have different numbers of
+      # template parameters (e.g., Vec<_Tp, cn> : public Matx<_Tp, cn, 1>).
       # Returns the resolved base class spelling or nil if no base class exists.
       def resolve_base_instantiation(cursor, underlying_type)
         # Get template reference from the typedef
         template_ref = cursor.find_by_kind(false, :cursor_template_ref).first
         return nil unless template_ref
 
+        derived_template = template_ref.referenced
+
         # Get base specifier from the template
-        base_spec = template_ref.referenced.find_by_kind(false, :cursor_cxx_base_specifier).first
+        base_spec = derived_template.find_by_kind(false, :cursor_cxx_base_specifier).first
         return nil unless base_spec
 
         # Get the template reference in the base specifier
         base_template_ref = base_spec.find_by_kind(false, :cursor_template_ref).first
         return nil unless base_template_ref
 
-        # Extract template arguments from the canonical spelling
+        # Extract template arguments from the canonical spelling of the typedef
         canonical = underlying_type.canonical.spelling
         return nil unless canonical =~ /<(.+)>\z/
 
-        template_args = $1
+        template_args_str = $1
+
         # Get namespace from canonical (everything before the last ::Name<args>)
         namespace = canonical.split('<').first.split('::')[0..-2].join('::')
 
+        # Get template parameter names from the derived template
+        template_params = []
+        derived_template.each do |c|
+          if c.kind == :cursor_template_type_parameter || c.kind == :cursor_non_type_template_parameter
+            template_params << c.spelling
+          end
+        end
+
+        # Parse template argument values (handling nested templates with commas)
+        template_arg_values = split_template_args(template_args_str)
+
+        # Build substitution map: param_name -> actual_value
+        subs = {}
+        template_params.each_with_index do |param, i|
+          subs[param] = template_arg_values[i] if template_arg_values[i]
+        end
+
+        # Get the base specifier's type spelling (e.g., "Matx<_Tp, cn, 1>")
+        base_type_spelling = base_spec.type.spelling
+        return nil unless base_type_spelling =~ /<(.+)>\z/
+
+        base_args_str = $1
+
+        # Split and substitute base template arguments
+        base_args = split_template_args(base_args_str).map do |arg|
+          subs[arg] || arg
+        end
+
         # Construct the fully qualified base class instantiation
         base_name = base_template_ref.referenced.spelling
+        resolved_args = base_args.join(', ')
         if namespace.empty?
-          "#{base_name}<#{template_args}>"
+          "#{base_name}<#{resolved_args}>"
         else
-          "#{namespace}::#{base_name}<#{template_args}>"
+          "#{namespace}::#{base_name}<#{resolved_args}>"
         end
+      end
+
+      # Split template arguments string, respecting nested angle brackets
+      # e.g., "int, std::pair<int, double>, 5" -> ["int", "std::pair<int, double>", "5"]
+      def split_template_args(args_str)
+        result = []
+        current = String.new
+        depth = 0
+
+        args_str.each_char do |c|
+          case c
+          when '<'
+            depth += 1
+            current << c
+          when '>'
+            depth -= 1
+            current << c
+          when ','
+            if depth == 0
+              result << current.strip
+              current = String.new
+            else
+              current << c
+            end
+          else
+            current << c
+          end
+        end
+
+        result << current.strip unless current.strip.empty?
+        result
       end
     end
   end

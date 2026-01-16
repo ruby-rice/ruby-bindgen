@@ -51,4 +51,33 @@ namespace Tests
     PlaneWarper(float scale = 1.0f) { projector.scale = scale; }
     float getScale() const { return projector.scale; }
   };
+
+  // Issue: Derived template has fewer params than base template
+  // Like OpenCV's Vec<_Tp, cn> : public Matx<_Tp, cn, 1>
+  template<typename _Tp, int m, int n>
+  class Matx
+  {
+  public:
+    static constexpr int rows = m;
+    static constexpr int cols = n;
+    _Tp val[m * n];
+
+    Matx() {}
+    _Tp dot(const Matx& other) const { return val[0] * other.val[0]; }
+  };
+
+  template<typename _Tp, int cn>
+  class Vec : public Matx<_Tp, cn, 1>
+  {
+  public:
+    static constexpr int channels = cn;
+
+    Vec() : Matx<_Tp, cn, 1>() {}
+    _Tp cross(const Vec& other) const { return this->val[0] * other.val[0]; }
+  };
+
+  // typedef specializations that should correctly resolve base class
+  typedef Vec<unsigned char, 2> Vec2b;
+  typedef Vec<int, 3> Vec3i;
+  typedef Vec<double, 4> Vec4d;
 }
