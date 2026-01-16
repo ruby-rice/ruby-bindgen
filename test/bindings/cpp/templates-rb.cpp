@@ -8,7 +8,7 @@ inline void Data_builder(Data_Type_T& klass)
 {
   klass.define_constructor(Constructor<Internal::Data<Rows, Columns>>()).
     define_constructor(Constructor<Internal::Data<Rows, Columns>, char*>(),
-      ArgBuffer("type")).
+      Arg("type")).
     define_attr("rows", &Internal::Data<Rows, Columns>::Rows).
     define_attr("columns", &Internal::Data<Rows, Columns>::Columns).
     define_method("get_rows", &Internal::Data<Rows, Columns>::getRows).

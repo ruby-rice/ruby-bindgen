@@ -12,7 +12,7 @@ void Init_Filtering()
   rb_mOuter.define_module_function("normal_function", &Outer::normalFunction);
 
   rb_mOuter.define_module_function<void(*)(const char*)>("print_formatted", &Outer::printFormatted,
-    ArgBuffer("msg"));
+    Arg("msg"));
 
   Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass = define_class_under<Outer::MyClass>(rb_mOuter, "MyClass").
     define_constructor(Constructor<Outer::MyClass>()).

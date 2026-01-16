@@ -455,6 +455,14 @@ module RubyBindgen
       # Returns true if the type is:
       #   - A pointer to a fundamental type (int*, double*, char*, etc.)
       #   - A double pointer (T**) - pointer to any pointer type
+      # Types that look like pointers to fundamentals but are actually strings
+      # char* and wchar_t* are C strings, not buffers
+      STRING_POINTER_TYPES = [
+        :type_char_u,   # char (unsigned on some platforms)
+        :type_char_s,   # char (signed on some platforms)
+        :type_wchar     # wchar_t (wide strings)
+      ].freeze
+
       def buffer_type?(type)
         return false unless type.kind == :type_pointer
 
@@ -462,7 +470,11 @@ module RubyBindgen
         # Strip const qualifier to check underlying type
         pointee_kind = pointee.kind
 
+        # Exclude string types - char* and wchar_t* are C strings, not buffers
+        return false if STRING_POINTER_TYPES.include?(pointee_kind)
+
         # Case 1: Pointer to fundamental type (int*, double*, etc.)
+        # This includes unsigned char* (uchar*) for byte buffers
         return true if FUNDAMENTAL_TYPES.include?(pointee_kind)
 
         # Case 2: Double pointer (T**) - pointer to any pointer

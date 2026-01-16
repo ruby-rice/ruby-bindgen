@@ -16,7 +16,7 @@ void Init_Buffers()
     ArgBuffer("values"), Arg("count"));
 
   define_global_function("process_char_buffer", &processCharBuffer,
-    ArgBuffer("buffer"), Arg("length"));
+    Arg("buffer"), Arg("length"));
 
   define_global_function("process_unsigned_buffer", &processUnsignedBuffer,
     ArgBuffer("data"), Arg("size"));
