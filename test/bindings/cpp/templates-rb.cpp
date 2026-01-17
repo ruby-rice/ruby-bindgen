@@ -61,6 +61,13 @@ inline void Container_builder(Data_Type_T& klass)
     define_attr("size", &Tests::Container<T>::size);
 };
 
+template<typename Data_Type_T, typename T>
+inline void Wrapper_builder(Data_Type_T& klass)
+{
+  klass.define_constant("Type_id", (int)Tests::Wrapper<T>::type_id).
+    define_attr("data", &Tests::Wrapper<T>::data);
+};
+
 void Init_Templates()
 {
   Module rb_mInternal = define_module("Internal");
@@ -104,4 +111,11 @@ void Init_Templates()
   Rice::Data_Type<Tests::Consumer> rb_cTestsConsumer = define_class_under<Tests::Consumer>(rb_mTests, "Consumer").
     define_constructor(Constructor<Tests::Consumer, const Tests::Container<Tests::Item>&>(),
       Arg("items"));
+
+  Rice::Data_Type<Tests::lowercase_type> rb_cTestsLowercaseType = define_class_under<Tests::lowercase_type>(rb_mTests, "LowercaseType").
+    define_constructor(Constructor<Tests::lowercase_type>()).
+    define_attr("value", &Tests::lowercase_type::value);
+
+  Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = define_class_under<Tests::Wrapper<Tests::lowercase_type>>(rb_mTests, "WrapperTestsLowercaseType").
+    define(&Wrapper_builder<Data_Type<Tests::Wrapper<Tests::lowercase_type>>, Tests::lowercase_type>);
 }

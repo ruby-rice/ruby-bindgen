@@ -558,36 +558,67 @@ module RubyBindgen
         nil
       end
 
-      # Qualify template arguments in a type spelling by looking up unqualified identifiers
-      # e.g., std::map<String, DictValue> -> std::map<cv::String, cv::dnn::DictValue>
+      # Qualify template arguments in a type spelling
+      # e.g., DataType<hfloat> -> DataType<cv::hfloat>
+      # Uses the canonical type to extract fully qualified names
       def qualify_template_args(spelling, type)
-        return spelling unless spelling.include?('<')
+        return spelling if spelling.nil? || !spelling.include?('<')
 
+        # Build a map of simple_name -> qualified_name from the canonical type
+        qualifications = {}
+        return spelling if type.nil?
+        collect_type_qualifications(type.canonical, qualifications)
+
+        # Apply qualifications to the spelling
         result = spelling.dup
-
-        # Find all unqualified type names (uppercase identifiers not preceded by ::)
-        # Pattern: word boundary, not preceded by ::, uppercase letter, rest of identifier
-        unqualified_names = spelling.scan(/(?<!:)\b([A-Z][a-zA-Z0-9_]*)\b/).flatten.uniq
-
-        unqualified_names.each do |name|
-          # Skip if already qualified in the spelling
-          next if spelling.match?(/\w+::#{Regexp.escape(name)}\b/)
-
-          # Look up the type in the type name map
-          if @type_name_map && @type_name_map[name]
-            qualified = @type_name_map[name]
-            # Replace unqualified name with qualified name (word boundaries)
-            result = result.gsub(/(?<![:\w])#{Regexp.escape(name)}(?![:\w])/, qualified)
-          end
+        qualifications.each do |simple_name, qualified_name|
+          next if simple_name == qualified_name
+          # Replace unqualified occurrences (not preceded by :: or word char)
+          result = result.gsub(/(?<![:\w])#{Regexp.escape(simple_name)}(?!\w)/, qualified_name)
         end
 
         result
+      end
+
+      # Recursively collect simple_name -> qualified_name mappings from a type's template arguments
+      def collect_type_qualifications(type, qualifications)
+        return if type.nil? || type.kind == :type_invalid
+        return unless type.num_template_arguments > 0
+
+        type.num_template_arguments.times do |i|
+          arg_type = type.template_argument_type(i)
+          next if arg_type.kind == :type_invalid
+
+          # Handle pointer types - get the pointee
+          check_type = arg_type
+          check_type = check_type.pointee while check_type.kind == :type_pointer
+
+          # Get declaration info
+          decl = check_type.declaration
+          if decl.kind != :cursor_no_decl_found
+            simple_name = decl.spelling
+            qualified_name = decl.qualified_name
+            if !simple_name.empty? && simple_name != qualified_name
+              qualifications[simple_name] = qualified_name
+            end
+          end
+
+          # Recurse into nested template arguments
+          collect_type_qualifications(arg_type, qualifications)
+        end
       end
 
       # Get qualified C++ class name for use in templates
       # Qualifies any template arguments that need namespace prefixes
       def qualified_class_name_cpp(cursor)
         qualify_template_args(cursor.class_name_cpp, cursor.type)
+      end
+
+      # Get qualified display name for a cursor
+      # Qualifies any template arguments that need namespace prefixes
+      # Used for generating fully qualified names in enum constants, etc.
+      def qualified_display_name_cpp(cursor)
+        qualify_template_args(cursor.qualified_display_name, cursor.type)
       end
 
       def type_spellings(cursor)

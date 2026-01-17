@@ -114,4 +114,22 @@ namespace Tests
     public:
         Consumer(const Container<Item>& items);
     };
+
+    // Test lowercase type names that need namespace qualification
+    // Similar to cv::hfloat being used in cv::DataType<hfloat>
+    class lowercase_type
+    {
+    public:
+        int value;
+    };
+
+    template<typename T>
+    class Wrapper
+    {
+    public:
+        enum { type_id = 0 };
+        T data;
+    };
+
+    typedef Wrapper<lowercase_type> WrappedLowercase;
 }

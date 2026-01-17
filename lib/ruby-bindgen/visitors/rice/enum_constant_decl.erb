@@ -1,4 +1,4 @@
-<%- qualified_name = "#{cursor.semantic_parent.semantic_parent.qualified_display_name}::#{cursor.spelling}" -%>
+<%- qualified_name = "#{qualified_display_name_cpp(cursor.semantic_parent.semantic_parent)}::#{cursor.spelling}" -%>
 <%- if cursor.semantic_parent.anonymous? && cursor.semantic_parent.semantic_parent.kind == :cursor_class_template -%>
 define_constant("<%= cursor.spelling.upcase_first  %>", (int)<%= qualified_name %>)
 <%- elsif cursor.semantic_parent.anonymous? -%>
