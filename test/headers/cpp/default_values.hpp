@@ -1,3 +1,5 @@
+#include <cstddef>
+
 namespace cv
 {
   class Range
@@ -14,8 +16,14 @@ namespace cv
   class Mat
   {
   public:
+    // Anonymous enum inside a class - like cv::Mat::AUTO_STEP
+    enum { AUTO_STEP = 0 };
+
     Mat();
     Mat(const Mat& m, const Range& rowRange, const Range& colRange = Range::all());
+    // Constructor with anonymous enum default value
+    // Should generate: cv::Mat::AUTO_STEP, not cv::Mat::(unnamed enum at ...)::AUTO_STEP
+    Mat(int rows, int cols, void* data, size_t step = AUTO_STEP);
   };
 
   // Test default values in class templates with nested types

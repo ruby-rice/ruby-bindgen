@@ -898,6 +898,10 @@ module RubyBindgen
                                enum_parent = ref.semantic_parent.semantic_parent
                                if enum_parent && enum_parent.kind == :cursor_namespace
                                  "#{enum_parent.qualified_name}::#{ref.spelling}"
+                               elsif ref.semantic_parent.anonymous?
+                                 # Anonymous enum inside a class/struct - use the class's qualified name
+                                 # e.g., cv::Mat::AUTO_STEP instead of cv::Mat::(unnamed enum at ...)::AUTO_STEP
+                                 "#{enum_parent.qualified_name}::#{ref.spelling}"
                                else
                                  # Unscoped enum inside a class/struct - use full qualified name
                                  ref.qualified_name
@@ -1501,11 +1505,37 @@ module RubyBindgen
             # Get namespace from base_spelling
             namespace = base_spelling.split("<").first.split("::")[0..-2].join("::")
             base_base_name = base_base_template_ref.referenced.spelling
-            base_base_spelling = namespace.empty? ? "#{base_base_name}<#{base_template_arguments}>" : "#{namespace}::#{base_base_name}<#{base_template_arguments}>"
 
-            # Recursively auto-generate if needed
-            if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
-              result = auto_generate_base_class(base_base_ref, base_base_spelling, base_template_arguments, under)
+            # Get template parameters from the base template (e.g., _Tp, cn for Vec)
+            template_params = []
+            base_template.each do |c|
+              if c.kind == :cursor_template_type_parameter || c.kind == :cursor_non_type_template_parameter
+                template_params << c.spelling
+              end
+            end
+
+            # Build substitution map from template params to actual values
+            template_arg_values = split_template_args(base_template_arguments)
+            subs = {}
+            template_params.each_with_index do |param, i|
+              subs[param] = template_arg_values[i] if template_arg_values[i]
+            end
+
+            # Get the base's base specifier type spelling (e.g., "Matx<_Tp, cn, 1>")
+            base_base_type_spelling = base_base_ref.type.spelling
+            if base_base_type_spelling =~ /<(.+)>\z/
+              base_base_args_str = $1
+              # Substitute template parameters with actual values
+              base_base_args = split_template_args(base_base_args_str).map do |arg|
+                subs[arg] || arg
+              end
+              resolved_base_base_args = base_base_args.join(', ')
+              base_base_spelling = namespace.empty? ? "#{base_base_name}<#{resolved_base_base_args}>" : "#{namespace}::#{base_base_name}<#{resolved_base_base_args}>"
+
+              # Recursively auto-generate if needed
+              if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
+                result = auto_generate_base_class(base_base_ref, base_base_spelling, resolved_base_base_args, under)
+              end
             end
           end
         end

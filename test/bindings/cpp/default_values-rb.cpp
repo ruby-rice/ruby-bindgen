@@ -48,7 +48,11 @@ void Init_DefaultValues()
   Rice::Data_Type<cv::Mat> rb_cCvMat = define_class_under<cv::Mat>(rb_mCv, "Mat").
     define_constructor(Constructor<cv::Mat>()).
     define_constructor(Constructor<cv::Mat, const cv::Mat&, const cv::Range&, const cv::Range&>(),
-      Arg("m"), Arg("row_range"), Arg("col_range") = static_cast<const cv::Range&>(cv::Range::all()));
+      Arg("m"), Arg("row_range"), Arg("col_range") = static_cast<const cv::Range&>(cv::Range::all())).
+    define_constructor(Constructor<cv::Mat, int, int, void*, int>(),
+      Arg("rows"), Arg("cols"), ArgBuffer("data"), Arg("step") = static_cast<int>(cv::Mat::AUTO_STEP));
+
+  rb_cCvMat.define_constant("AUTO_STEP", (int)cv::Mat::AUTO_STEP);
 
   Rice::Data_Type<cv::Affine3<float>> rb_cAffine3f = define_class_under<cv::Affine3<float>>(rb_mCv, "Affine3Float").
     define(&Affine3_builder<Data_Type<cv::Affine3<float>>, float>);
@@ -63,7 +67,7 @@ void Init_DefaultValues()
     define(&Rect__builder<Data_Type<cv::Rect_<double>>, double>);
 
   rb_mCv.define_module_function("render", &cv::render,
-    Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(cv::Rect_<double>(0.0, 0.0, 1.0, 1.0)));
+    Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(Rect_<double>(0.0, 0.0, 1.0, 1.0)));
 
   Module rb_mIo = define_module("Io");
 
