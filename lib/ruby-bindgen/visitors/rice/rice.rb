@@ -621,6 +621,26 @@ module RubyBindgen
         qualify_template_args(cursor.qualified_display_name, cursor.type)
       end
 
+      # Qualify dependent types within template arguments
+      # e.g., "cv::Point_<typename DataType<_Tp>::channel_type>"
+      #    -> "cv::Point_<typename cv::DataType<_Tp>::channel_type>"
+      # Looks for patterns like "typename SomeClass<...>::member" and qualifies using @type_name_map
+      def qualify_dependent_types_in_template_args(spelling)
+        return spelling unless spelling.include?('typename')
+
+        # Match "typename ClassName<...>::" patterns where ClassName might need qualification
+        spelling.gsub(/typename\s+([A-Za-z_][A-Za-z0-9_]*)(<[^>]+>)?::/) do |match|
+          class_name = $1
+          template_part = $2 || ''
+          qualified = @type_name_map[class_name]
+          if qualified && qualified != class_name
+            "typename #{qualified}#{template_part}::"
+          else
+            match
+          end
+        end
+      end
+
       def type_spellings(cursor)
         cursor.type.arg_types.map do |arg_type|
           type_spelling(arg_type)
@@ -633,11 +653,14 @@ module RubyBindgen
                      # Deal with any types a class template defines for itself
                      spelling = if type.declaration.kind == :cursor_class_template
                                   spelling = type.spelling
-                                  if type.spelling.match(/\w+::/)
+                                  qualified_spelling = if type.spelling.match(/\w+::/)
                                     spelling
                                   else
                                     spelling.sub(type.declaration.spelling, type.declaration.qualified_name)
                                   end
+                                  # Also qualify template arguments that may contain dependent types
+                                  # e.g., Point_<typename DataType<_Tp>::channel_type> needs DataType qualified
+                                  qualify_dependent_types_in_template_args(qualified_spelling)
                                 elsif type.declaration.kind == :cursor_class_decl
                                   # Template instantiations (e.g., TemplateConstructor<int>) return cursor_class_decl
                                   # Need to preserve template args from type.spelling
@@ -663,7 +686,19 @@ module RubyBindgen
                                   end
                                 elsif type.declaration.kind == :cursor_typedef_decl && type.declaration.semantic_parent.kind == :cursor_class_template
                                   # Dependent types in templates need 'typename' keyword
-                                 "#{type.const_qualified? ? "const " : ""}typename #{type.declaration.semantic_parent.qualified_display_name}::#{type.spelling.sub("const ", "")}"
+                                  # qualified_display_name returns template params but may miss namespace (e.g., "DataType<_Tp>")
+                                  # qualified_name returns namespace but no template params (e.g., "cv::DataType")
+                                  # Combine them to get fully qualified name with template params
+                                  parent = type.declaration.semantic_parent
+                                  display = parent.qualified_display_name
+                                  qualified = parent.qualified_name
+                                  full_parent_name = if display.include?('<') && !display.start_with?(qualified)
+                                                       template_part = display[display.index('<')..]
+                                                       "#{qualified}#{template_part}"
+                                                     else
+                                                       display
+                                                     end
+                                 "#{type.const_qualified? ? "const " : ""}typename #{full_parent_name}::#{type.spelling.sub("const ", "")}"
                                 elsif type.declaration.kind == :cursor_typedef_decl
                                   # For typedef inside template instantiation (e.g. std::vector<Pixel>::iterator)
                                   # use type.spelling which preserves template args, but qualify them
@@ -1870,8 +1905,8 @@ module RubyBindgen
             # Map simple name to qualified name (e.g., "String" -> "cv::String")
             next if child.spelling.empty?
             @type_name_map[child.spelling] ||= child.qualified_name
-          when :cursor_class_decl, :cursor_struct, :cursor_enum_decl
-            # Also include class/struct/enum declarations
+          when :cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_class_template
+            # Also include class/struct/enum declarations and class templates
             next if child.spelling.empty?
             @type_name_map[child.spelling] ||= child.qualified_name
           end

@@ -132,4 +132,35 @@ namespace Tests
     };
 
     typedef Wrapper<lowercase_type> WrappedLowercase;
+
+    // Test dependent type qualification in template arguments
+    // Similar to cv::Mat_<_Tp> with Point_<typename DataType<_Tp>::channel_type> parameter
+    template<typename T>
+    struct DataType
+    {
+        typedef T channel_type;
+        static const int channels = 1;
+    };
+
+    template<typename T>
+    class Point_
+    {
+    public:
+        T x, y;
+        Point_() : x(0), y(0) {}
+        Point_(T x_, T y_) : x(x_), y(y_) {}
+    };
+
+    template<typename _Tp>
+    class Mat_
+    {
+    public:
+        Mat_() = default;
+        // Constructor with dependent type in template argument
+        // Should generate: Point_<typename Tests::DataType<_Tp>::channel_type>
+        // NOT: Point_<typename DataType<_Tp>::channel_type>
+        explicit Mat_(const Point_<typename DataType<_Tp>::channel_type>& pt);
+    };
+
+    typedef Mat_<float> Mat1f;
 }

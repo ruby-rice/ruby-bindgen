@@ -68,6 +68,30 @@ inline void Wrapper_builder(Data_Type_T& klass)
     define_attr("data", &Tests::Wrapper<T>::data);
 };
 
+template<typename Data_Type_T, typename T>
+inline void DataType_builder(Data_Type_T& klass)
+{
+  klass.define_constant("Channels", Tests::DataType<T>::channels);
+};
+
+template<typename Data_Type_T, typename T>
+inline void Point__builder(Data_Type_T& klass)
+{
+  klass.define_attr("x", &Tests::Point_<T>::x).
+    define_attr("y", &Tests::Point_<T>::y).
+    define_constructor(Constructor<Tests::Point_<T>>()).
+    define_constructor(Constructor<Tests::Point_<T>, T, T>(),
+      Arg("x_"), Arg("y_"));
+};
+
+template<typename Data_Type_T, typename _Tp>
+inline void Mat__builder(Data_Type_T& klass)
+{
+  klass.define_constructor(Constructor<Tests::Mat_<_Tp>>()).
+    define_constructor(Constructor<Tests::Mat_<_Tp>, const Tests::Point_<typename Tests::DataType<_Tp>::channel_type>&>(),
+      Arg("pt"));
+};
+
 void Init_Templates()
 {
   Module rb_mInternal = define_module("Internal");
@@ -118,4 +142,7 @@ void Init_Templates()
 
   Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = define_class_under<Tests::Wrapper<Tests::lowercase_type>>(rb_mTests, "WrapperTestsLowercaseType").
     define(&Wrapper_builder<Data_Type<Tests::Wrapper<Tests::lowercase_type>>, Tests::lowercase_type>);
+
+  Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = define_class_under<Tests::Mat_<float>>(rb_mTests, "MatFloat").
+    define(&Mat__builder<Data_Type<Tests::Mat_<float>>, float>);
 }
