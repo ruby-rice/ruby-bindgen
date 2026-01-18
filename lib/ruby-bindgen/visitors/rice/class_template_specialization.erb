@@ -1,5 +1,10 @@
 <%- var_name = defined?(cruby_name) ? cruby_name : cursor.cruby_name -%>
-<%- ruby_class_name = template_specialization.gsub(/<.*>/, "").split("::").last.camelize + template_arguments.split(",").map(&:strip).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join -%>
+<%- # Use typedef/using name if cursor is a typedef, otherwise generate from template -%>
+<%- ruby_class_name = if cursor.kind == :cursor_typedef_decl || cursor.kind == :cursor_type_alias_decl
+                        cursor.spelling.camelize
+                      else
+                        template_specialization.gsub(/<.*>/, "").split("::").last.camelize + template_arguments.split(",").map(&:strip).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join
+                      end -%>
 <%- if under && base_spelling -%>
 Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>, <%= base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>").
 <%- elsif under -%>

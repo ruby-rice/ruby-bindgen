@@ -119,10 +119,10 @@ void Init_Templates()
     define_constructor(Constructor<Tests::TypeTraits<double>>()).
     define_constant("Type", Tests::TypeTraits<double>::type);
 
-  Rice::Data_Type<Tests::Transform<float>> rb_cTransformf = define_class_under<Tests::Transform<float>>(rb_mTests, "TransformFloat").
+  Rice::Data_Type<Tests::Transform<float>> rb_cTransformf = define_class_under<Tests::Transform<float>>(rb_mTests, "Transformf").
     define(&Transform_builder<Data_Type<Tests::Transform<float>>, float>);
 
-  Rice::Data_Type<Tests::Transform<double>> rb_cTransformd = define_class_under<Tests::Transform<double>>(rb_mTests, "TransformDouble").
+  Rice::Data_Type<Tests::Transform<double>> rb_cTransformd = define_class_under<Tests::Transform<double>>(rb_mTests, "Transformd").
     define(&Transform_builder<Data_Type<Tests::Transform<double>>, double>);
 
   Rice::Data_Type<Tests::Item> rb_cTestsItem = define_class_under<Tests::Item>(rb_mTests, "Item").
@@ -140,9 +140,9 @@ void Init_Templates()
     define_constructor(Constructor<Tests::lowercase_type>()).
     define_attr("value", &Tests::lowercase_type::value);
 
-  Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = define_class_under<Tests::Wrapper<Tests::lowercase_type>>(rb_mTests, "WrapperTestsLowercaseType").
+  Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = define_class_under<Tests::Wrapper<Tests::lowercase_type>>(rb_mTests, "WrappedLowercase").
     define(&Wrapper_builder<Data_Type<Tests::Wrapper<Tests::lowercase_type>>, Tests::lowercase_type>);
 
-  Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = define_class_under<Tests::Mat_<float>>(rb_mTests, "MatFloat").
+  Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = define_class_under<Tests::Mat_<float>>(rb_mTests, "Mat1f").
     define(&Mat__builder<Data_Type<Tests::Mat_<float>>, float>);
 }

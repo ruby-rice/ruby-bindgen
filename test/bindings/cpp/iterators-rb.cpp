@@ -96,7 +96,7 @@ void Init_Iterators()
     define_constructor(Constructor<iter::IncompleteBitmap>()).
     define_iterator<iter::IncompleteIterator(iter::IncompleteBitmap::*)()>(&iter::IncompleteBitmap::begin, &iter::IncompleteBitmap::end, "each");
 
-  Rice::Data_Type<iter::TemplateContainer<iter::Pixel>> rb_cPixelContainer = define_class_under<iter::TemplateContainer<iter::Pixel>>(rb_mIter, "TemplateContainerIterPixel").
+  Rice::Data_Type<iter::TemplateContainer<iter::Pixel>> rb_cPixelContainer = define_class_under<iter::TemplateContainer<iter::Pixel>>(rb_mIter, "PixelContainer").
     define(&TemplateContainer_builder<Data_Type<iter::TemplateContainer<iter::Pixel>>, iter::Pixel>);
 
   Rice::Data_Type<iter::VectorBitmap> rb_cIterVectorBitmap = define_class_under<iter::VectorBitmap>(rb_mIter, "VectorBitmap").

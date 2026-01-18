@@ -1103,6 +1103,14 @@ module RubyBindgen
         qualified_name = decl.qualified_name
         return nil if qualified_name&.start_with?('std::')
 
+        # If decl is a typedef, get the underlying type's declaration
+        # e.g., typedef SparseMatConstIterator_<uchar> SparseMatConstIterator
+        if decl.kind == :cursor_typedef_decl || decl.kind == :cursor_type_alias_decl
+          underlying_type = iterator_type.canonical
+          underlying_decl = underlying_type.declaration
+          decl = underlying_decl if underlying_decl.kind != :cursor_no_decl_found
+        end
+
         # Check for required typedefs: value_type, reference, pointer, difference_type, iterator_category
         has_value_type = false
         has_reference = false
@@ -1126,8 +1134,11 @@ module RubyBindgen
         return nil if has_value_type && has_reference && has_pointer && has_difference_type && has_iterator_category
 
         # Infer traits from operator* return type
+        # Use recursive iteration to find inherited methods from base classes
+        # Note: Iterators without operator* (like OpenCV's SparseMatConstIterator which uses node())
+        # cannot have traits auto-generated. Add them to skip_symbols in the config.
         value_type = nil
-        decl.each(false) do |child, _|
+        decl.each do |child, _|
           if child.kind == :cursor_cxx_method && child.spelling == "operator*"
             result_type = child.result_type
             # Remove reference to get the value type

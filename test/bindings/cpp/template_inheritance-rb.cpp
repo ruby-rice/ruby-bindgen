@@ -54,12 +54,12 @@ void Init_TemplateInheritance()
 
   Rice::Data_Type<Tests::BasePtr<unsigned char>> rb_cBasePtrUnsignedChar = define_class_under<Tests::BasePtr<unsigned char>>(rb_mTests, "BasePtrUnsignedChar").
     define(&BasePtr_builder<Data_Type<Tests::BasePtr<unsigned char>>, unsigned char>);
-  Rice::Data_Type<Tests::DerivedPtr<unsigned char>> rb_cDerivedPtrb = define_class_under<Tests::DerivedPtr<unsigned char>, Tests::BasePtr<unsigned char>>(rb_mTests, "DerivedPtrUnsignedChar").
+  Rice::Data_Type<Tests::DerivedPtr<unsigned char>> rb_cDerivedPtrb = define_class_under<Tests::DerivedPtr<unsigned char>, Tests::BasePtr<unsigned char>>(rb_mTests, "DerivedPtrb").
     define(&DerivedPtr_builder<Data_Type<Tests::DerivedPtr<unsigned char>>, unsigned char>);
 
   Rice::Data_Type<Tests::BasePtr<float>> rb_cBasePtrFloat = define_class_under<Tests::BasePtr<float>>(rb_mTests, "BasePtrFloat").
     define(&BasePtr_builder<Data_Type<Tests::BasePtr<float>>, float>);
-  Rice::Data_Type<Tests::DerivedPtr<float>> derived_ptrf = define_class_under<Tests::DerivedPtr<float>, Tests::BasePtr<float>>(rb_mTests, "DerivedPtrFloat").
+  Rice::Data_Type<Tests::DerivedPtr<float>> derived_ptrf = define_class_under<Tests::DerivedPtr<float>, Tests::BasePtr<float>>(rb_mTests, "DerivedPtrf").
     define(&DerivedPtr_builder<Data_Type<Tests::DerivedPtr<float>>, float>);
 
   Rice::Data_Type<Tests::PlaneProjector> rb_cTestsPlaneProjector = define_class_under<Tests::PlaneProjector>(rb_mTests, "PlaneProjector").
@@ -75,16 +75,16 @@ void Init_TemplateInheritance()
 
   Rice::Data_Type<Tests::Matx<unsigned char, 2, 1>> rb_cMatxUnsignedChar21 = define_class_under<Tests::Matx<unsigned char, 2, 1>>(rb_mTests, "MatxUnsignedChar21").
     define(&Matx_builder<Data_Type<Tests::Matx<unsigned char, 2, 1>>, unsigned char, 2, 1>);
-  Rice::Data_Type<Tests::Vec<unsigned char, 2>> rb_cVec2b = define_class_under<Tests::Vec<unsigned char, 2>, Tests::Matx<unsigned char, 2, 1>>(rb_mTests, "VecUnsignedChar2").
+  Rice::Data_Type<Tests::Vec<unsigned char, 2>> rb_cVec2b = define_class_under<Tests::Vec<unsigned char, 2>, Tests::Matx<unsigned char, 2, 1>>(rb_mTests, "Vec2b").
     define(&Vec_builder<Data_Type<Tests::Vec<unsigned char, 2>>, unsigned char, 2>);
 
   Rice::Data_Type<Tests::Matx<int, 3, 1>> rb_cMatxInt31 = define_class_under<Tests::Matx<int, 3, 1>>(rb_mTests, "MatxInt31").
     define(&Matx_builder<Data_Type<Tests::Matx<int, 3, 1>>, int, 3, 1>);
-  Rice::Data_Type<Tests::Vec<int, 3>> rb_cVec3i = define_class_under<Tests::Vec<int, 3>, Tests::Matx<int, 3, 1>>(rb_mTests, "VecInt3").
+  Rice::Data_Type<Tests::Vec<int, 3>> rb_cVec3i = define_class_under<Tests::Vec<int, 3>, Tests::Matx<int, 3, 1>>(rb_mTests, "Vec3i").
     define(&Vec_builder<Data_Type<Tests::Vec<int, 3>>, int, 3>);
 
   Rice::Data_Type<Tests::Matx<double, 4, 1>> rb_cMatxDouble41 = define_class_under<Tests::Matx<double, 4, 1>>(rb_mTests, "MatxDouble41").
     define(&Matx_builder<Data_Type<Tests::Matx<double, 4, 1>>, double, 4, 1>);
-  Rice::Data_Type<Tests::Vec<double, 4>> rb_cVec4d = define_class_under<Tests::Vec<double, 4>, Tests::Matx<double, 4, 1>>(rb_mTests, "VecDouble4").
+  Rice::Data_Type<Tests::Vec<double, 4>> rb_cVec4d = define_class_under<Tests::Vec<double, 4>, Tests::Matx<double, 4, 1>>(rb_mTests, "Vec4d").
     define(&Vec_builder<Data_Type<Tests::Vec<double, 4>>, double, 4>);
 }
