@@ -17,6 +17,16 @@ namespace std
 
 using namespace Rice;
 
+template<typename Data_Type_T, typename T>
+inline void TemplateContainer_builder(Data_Type_T& klass)
+{
+  klass.define_constructor(Constructor<iter::TemplateContainer<T>>()).
+    template define_iterator<typename iter::TemplateContainer<T>::iterator(iter::TemplateContainer<T>::*)()>(&iter::TemplateContainer<T>::begin, &iter::TemplateContainer<T>::end, "each").
+    template define_iterator<typename iter::TemplateContainer<T>::const_iterator(iter::TemplateContainer<T>::*)() const>(&iter::TemplateContainer<T>::begin, &iter::TemplateContainer<T>::end, "each_const").
+    template define_iterator<std::reverse_iterator<iter::TemplateContainer<T>::iterator>(iter::TemplateContainer<T>::*)()>(&iter::TemplateContainer<T>::rbegin, &iter::TemplateContainer<T>::rend, "each_reverse").
+    template define_iterator<std::reverse_iterator<iter::TemplateContainer<T>::const_iterator>(iter::TemplateContainer<T>::*)() const>(&iter::TemplateContainer<T>::rbegin, &iter::TemplateContainer<T>::rend, "each_reverse_const");
+};
+
 void Init_Iterators()
 {
   Module rb_mIter = define_module("Iter");
@@ -85,6 +95,9 @@ void Init_Iterators()
   Rice::Data_Type<iter::IncompleteBitmap> rb_cIterIncompleteBitmap = define_class_under<iter::IncompleteBitmap>(rb_mIter, "IncompleteBitmap").
     define_constructor(Constructor<iter::IncompleteBitmap>()).
     define_iterator<iter::IncompleteIterator(iter::IncompleteBitmap::*)()>(&iter::IncompleteBitmap::begin, &iter::IncompleteBitmap::end, "each");
+
+  Rice::Data_Type<iter::TemplateContainer<iter::Pixel>> rb_cPixelContainer = define_class_under<iter::TemplateContainer<iter::Pixel>>(rb_mIter, "TemplateContainerIterPixel").
+    define(&TemplateContainer_builder<Data_Type<iter::TemplateContainer<iter::Pixel>>, iter::Pixel>);
 
   Rice::Data_Type<iter::VectorBitmap> rb_cIterVectorBitmap = define_class_under<iter::VectorBitmap>(rb_mIter, "VectorBitmap").
     define_constructor(Constructor<iter::VectorBitmap>()).

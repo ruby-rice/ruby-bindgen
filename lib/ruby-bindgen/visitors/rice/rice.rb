@@ -597,7 +597,14 @@ module RubyBindgen
           decl = check_type.declaration
           if decl.kind != :cursor_no_decl_found
             simple_name = decl.spelling
-            qualified_name = decl.qualified_name
+            # For typedefs inside class templates (like cv::Mat_<_Tp>::iterator),
+            # qualified_name returns cv::Mat_::iterator (missing template params).
+            # Use qualified_display_name of the parent to preserve template params.
+            qualified_name = if decl.kind == :cursor_typedef_decl && decl.semantic_parent.kind == :cursor_class_template
+                               "#{decl.semantic_parent.qualified_display_name}::#{simple_name}"
+                             else
+                               decl.qualified_name
+                             end
             if !simple_name.empty? && simple_name != qualified_name
               qualifications[simple_name] = qualified_name
             end
@@ -676,7 +683,7 @@ module RubyBindgen
                                   # If qualified_name ends with bare spelling (sans template), it's more complete
                                   # e.g., spelling="ocl::Queue" qualified="cv::ocl::Queue" -> use qualified
                                   # e.g., spelling="const ocl::Queue" qualified="cv::ocl::Queue" -> use qualified
-                                  if qualified.end_with?(bare_spelling_no_template)
+                                  result_spelling = if qualified.end_with?(bare_spelling_no_template)
                                     # Preserve template args from original spelling
                                     template_args = bare_spelling[/<.*/] || ''
                                     "#{const_prefix}#{qualified}#{template_args}"
@@ -684,6 +691,9 @@ module RubyBindgen
                                     # Spelling already has full namespace, return as-is
                                     "#{const_prefix}#{bare_spelling}"
                                   end
+                                  # Qualify any nested typedefs in template arguments
+                                  # e.g., std::reverse_iterator<iterator> -> std::reverse_iterator<cv::Mat_<_Tp>::iterator>
+                                  qualify_template_args(result_spelling, type)
                                 elsif type.declaration.kind == :cursor_typedef_decl && type.declaration.semantic_parent.kind == :cursor_class_template
                                   # Dependent types in templates need 'typename' keyword
                                   # qualified_display_name returns template params but may miss namespace (e.g., "DataType<_Tp>")
@@ -970,9 +980,42 @@ module RubyBindgen
         default_text
       end
 
+      # Qualify nested typedefs from a class template in a type spelling
+      # e.g., "std::reverse_iterator<iterator>" -> "std::reverse_iterator<cv::Mat_<_Tp>::iterator>"
+      def qualify_class_template_typedefs(spelling, class_template)
+        return spelling unless class_template&.kind == :cursor_class_template
+
+        # Collect typedef names from the class template
+        typedef_names = []
+        class_template.each do |child|
+          if child.kind == :cursor_typedef_decl || child.kind == :cursor_type_alias_decl
+            typedef_names << child.spelling
+          end
+        end
+
+        return spelling if typedef_names.empty?
+
+        # Get the qualified class template name with template params
+        qualified_parent = class_template.qualified_display_name
+
+        result = spelling.dup
+        typedef_names.each do |name|
+          # Replace unqualified typedef names (not preceded by :: or word char)
+          result = result.gsub(/(?<![:\w])#{Regexp.escape(name)}(?![:\w])/, "#{qualified_parent}::#{name}")
+        end
+
+        result
+      end
+
       def method_signature(cursor)
         param_types = type_spellings(cursor)
         result_type = type_spelling(cursor.type.result_type)
+
+        # Qualify nested typedefs from class template in result type and param types
+        if cursor.semantic_parent&.kind == :cursor_class_template
+          result_type = qualify_class_template_typedefs(result_type, cursor.semantic_parent)
+          param_types = param_types.map { |pt| qualify_class_template_typedefs(pt, cursor.semantic_parent) }
+        end
 
         signature = Array.new
         if cursor.kind == :cursor_function || cursor.static?

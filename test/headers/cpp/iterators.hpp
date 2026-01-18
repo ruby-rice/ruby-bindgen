@@ -141,6 +141,37 @@ namespace iter
     IncompleteIterator end();
   };
 
+  // Test class template with nested iterator typedefs
+  // Similar to cv::Mat_<_Tp> which has iterator/const_iterator typedefs
+  // and returns std::reverse_iterator<iterator> from rbegin/rend
+  template<typename T>
+  class TemplateContainer
+  {
+  public:
+    typedef T* iterator;
+    typedef const T* const_iterator;
+
+    TemplateContainer() : data_(nullptr), size_(0) {}
+
+    iterator begin() { return data_; }
+    iterator end() { return data_ + size_; }
+    const_iterator begin() const { return data_; }
+    const_iterator end() const { return data_ + size_; }
+
+    // Reverse iterators using std::reverse_iterator with nested typedef
+    // This tests that "iterator" gets qualified to "iter::TemplateContainer<T>::iterator"
+    std::reverse_iterator<iterator> rbegin() { return std::reverse_iterator<iterator>(end()); }
+    std::reverse_iterator<iterator> rend() { return std::reverse_iterator<iterator>(begin()); }
+    std::reverse_iterator<const_iterator> rbegin() const { return std::reverse_iterator<const_iterator>(end()); }
+    std::reverse_iterator<const_iterator> rend() const { return std::reverse_iterator<const_iterator>(begin()); }
+
+  private:
+    T* data_;
+    size_t size_;
+  };
+
+  typedef TemplateContainer<Pixel> PixelContainer;
+
   // Test with std::vector iterator types (like BitmapPlusPlus)
   class VectorBitmap
   {
