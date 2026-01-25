@@ -89,7 +89,9 @@ inline void Mat__builder(Data_Type_T& klass)
 {
   klass.define_constructor(Constructor<Tests::Mat_<_Tp>>()).
     define_constructor(Constructor<Tests::Mat_<_Tp>, const Tests::Point_<typename Tests::DataType<_Tp>::channel_type>&>(),
-      Arg("pt"));
+      Arg("pt")).
+    define_constructor(Constructor<Tests::Mat_<_Tp>, int, int, _Tp*>(),
+      Arg("rows"), Arg("cols"), std::conditional_t<std::is_fundamental_v<_Tp>, ArgBuffer, Arg>("data"));
 };
 
 void Init_Templates()

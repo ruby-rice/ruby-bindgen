@@ -485,8 +485,8 @@ module RubyBindgen
         return false unless type.kind == :type_pointer
 
         pointee = type.pointee
-        # Strip const qualifier to check underlying type
-        pointee_kind = pointee.kind
+        # Use canonical type to resolve template type parameters (e.g., _Tp* -> float*)
+        pointee_kind = pointee.canonical.kind
 
         # Exclude string types - char* and wchar_t* are C strings, not buffers
         return false if STRING_POINTER_TYPES.include?(pointee_kind)
@@ -848,8 +848,17 @@ module RubyBindgen
           # Use parameter name if available, otherwise generate a default name (matches Rice convention)
           param_name = param.spelling.empty? ? "arg_#{index}" : param.spelling.underscore
 
-          # Use ArgBuffer for pointers to fundamental types or double pointers (T**)
-          arg_class = buffer_type?(param.type) ? "ArgBuffer" : "Arg"
+          # Determine argument class: Arg, ArgBuffer, or constexpr for template type parameters
+          type = param.type
+          if type.kind == :type_pointer && type.pointee.kind == :type_unexposed
+            # Template type parameter pointer (e.g., _Tp*) - use constexpr to decide at compile time
+            # Note: check pointee.kind (not canonical.kind) to distinguish _Tp* from Mat_<_Tp>*
+            type_param = type.pointee.spelling
+            arg_class = "std::conditional_t<std::is_fundamental_v<#{type_param}>, ArgBuffer, Arg>"
+          else
+            # Concrete type - use ArgBuffer for fundamental pointers and double pointers
+            arg_class = buffer_type?(type) ? "ArgBuffer" : "Arg"
+          end
           result = "#{arg_class}(\"#{param_name}\")"
 
           # Check if there is a default value by looking for expression children.

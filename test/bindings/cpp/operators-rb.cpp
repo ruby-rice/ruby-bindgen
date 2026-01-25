@@ -9,7 +9,7 @@ inline void DataPtr_builder(Data_Type_T& klass)
   klass.define_attr("data", &DataPtr<T>::data).
     define_constructor(Constructor<DataPtr<T>>()).
     define_constructor(Constructor<DataPtr<T>, T*>(),
-      Arg("ptr")).
+      std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("ptr")).
     define_method("to_ptr", [](DataPtr<T>& self) -> T*
     {
       return self;

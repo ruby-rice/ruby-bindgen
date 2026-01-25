@@ -160,6 +160,10 @@ namespace Tests
         // Should generate: Point_<typename Tests::DataType<_Tp>::channel_type>
         // NOT: Point_<typename DataType<_Tp>::channel_type>
         explicit Mat_(const Point_<typename DataType<_Tp>::channel_type>& pt);
+
+        // Constructor with pointer to template type parameter
+        // _Tp* should be treated as ArgBuffer since _Tp will be instantiated with fundamental types
+        Mat_(int rows, int cols, _Tp* data);
     };
 
     typedef Mat_<float> Mat1f;

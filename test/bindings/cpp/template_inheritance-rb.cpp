@@ -9,7 +9,7 @@ inline void BasePtr_builder(Data_Type_T& klass)
   klass.define_attr("data", &Tests::BasePtr<T>::data).
     define_constructor(Constructor<Tests::BasePtr<T>>()).
     define_constructor(Constructor<Tests::BasePtr<T>, T*>(),
-      Arg("data_"));
+      std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("data_"));
 };
 
 template<typename Data_Type_T, typename T>
@@ -18,7 +18,7 @@ inline void DerivedPtr_builder(Data_Type_T& klass)
   klass.define_attr("step", &Tests::DerivedPtr<T>::step).
     define_constructor(Constructor<Tests::DerivedPtr<T>>()).
     define_constructor(Constructor<Tests::DerivedPtr<T>, T*, int>(),
-      Arg("data_"), Arg("step_"));
+      std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("data_"), Arg("step_"));
 };
 
 template<typename Data_Type_T, typename P>
