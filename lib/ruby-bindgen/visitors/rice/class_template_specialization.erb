@@ -5,13 +5,17 @@
                       else
                         template_specialization.gsub(/<.*>/, "").split("::").last.camelize + template_arguments.split(",").map(&:strip).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join
                       end -%>
+<%- has_builder = !@empty_builders.include?(cursor_template.spelling) -%>
+<%- terminator = has_builder ? "." : ";" -%>
 <%- if under && base_spelling -%>
-Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>, <%= base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>").
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>, <%= base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>")<%= terminator %>
 <%- elsif under -%>
-Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>").
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>")<%= terminator %>
 <%- elsif base_spelling -%>
-Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>, <%= base_spelling %>>("<%= ruby_class_name %>").
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>, <%= base_spelling %>>("<%= ruby_class_name %>")<%= terminator %>
 <%- else -%>
-Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>>("<%= ruby_class_name %>").
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>>("<%= ruby_class_name %>")<%= terminator %>
 <%- end -%>
+<%- if has_builder -%>
   define(&<%= cursor_template.spelling %>_builder<Data_Type<<%= template_specialization %>>, <%= template_arguments %>>);
+<%- end -%>

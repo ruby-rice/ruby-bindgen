@@ -86,6 +86,19 @@ void Init_Classes()
       return self;
     });
 
+  Rice::Data_Type<Outer::NonAssignable> rb_cOuterNonAssignable = define_class_under<Outer::NonAssignable>(rb_mOuter, "NonAssignable").
+    define_constructor(Constructor<Outer::NonAssignable>());
+
+  Rice::Data_Type<Outer::ProtectedAssign> rb_cOuterProtectedAssign = define_class_under<Outer::ProtectedAssign>(rb_mOuter, "ProtectedAssign").
+    define_constructor(Constructor<Outer::ProtectedAssign>());
+
+  Rice::Data_Type<Outer::AttributeTest> rb_cOuterAttributeTest = define_class_under<Outer::AttributeTest>(rb_mOuter, "AttributeTest").
+    define_constructor(Constructor<Outer::AttributeTest>()).
+    define_attr("regular_field", &Outer::AttributeTest::regular_field).
+    define_attr("const_field", &Outer::AttributeTest::const_field, Rice::AttrAccess::Read).
+    define_attr("non_assignable_field", &Outer::AttributeTest::non_assignable_field, Rice::AttrAccess::Read).
+    define_attr("protected_assign_field", &Outer::AttributeTest::protected_assign_field, Rice::AttrAccess::Read);
+
   Rice::Data_Type<Outer::foo> rb_cOuterFoo = define_class_under<Outer::foo>(rb_mOuter, "Foo").
     define_constructor(Constructor<Outer::foo>()).
     define_attr("value", &Outer::foo::value);

@@ -45,6 +45,8 @@ module RubyBindgen
         @non_member_operators = Hash.new { |h, k| h[k] = [] }
         # Iterators that need std::iterator_traits specialization
         @incomplete_iterators = Hash.new
+        # Template classes with no bindable content (all methods deprecated/skipped)
+        @empty_builders = Set.new
       end
 
       # Check if a cursor should be skipped based on skip_symbols config.
@@ -375,6 +377,12 @@ module RubyBindgen
                                   :only_static => true)
         @overloads_stack.pop
 
+        # If no children (all methods deprecated/skipped), don't generate builder
+        if children.empty?
+          @empty_builders.add(cursor.spelling)
+          return ""
+        end
+
         children_content = merge_children(children, :indentation => 4, :separator => ".\n",
                                                     :terminator => ";", :strip => true)
 
@@ -448,6 +456,16 @@ module RubyBindgen
           return false unless copyable_class?(base_decl)
         end
 
+        true
+      end
+
+      # Check if a class/struct has an accessible copy assignment operator.
+      # Returns false if operator= is private, protected, or deleted.
+      def copy_assignable_class?(decl)
+        decl.find_by_kind(false, :cursor_cxx_method).each do |method|
+          next unless method.spelling == "operator="
+          return false if method.deleted? || method.private? || method.protected?
+        end
         true
       end
 

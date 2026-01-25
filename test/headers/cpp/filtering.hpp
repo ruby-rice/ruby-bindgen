@@ -86,6 +86,20 @@ namespace Outer
     void method();
   };
 
+  // --- Template class with all deprecated methods ---
+  // The builder function should NOT be generated since all methods are deprecated
+
+  template<typename T>
+  class DeprecatedTemplate
+  {
+  public:
+    __attribute__((deprecated)) DeprecatedTemplate();
+    __attribute__((deprecated)) void deprecatedMethod1();
+    __attribute__((deprecated)) void deprecatedMethod2();
+  };
+
+  typedef DeprecatedTemplate<int> DeprecatedTemplateInt;
+
   // --- Class with deprecated conversion operator ---
 
   class OtherClass {};

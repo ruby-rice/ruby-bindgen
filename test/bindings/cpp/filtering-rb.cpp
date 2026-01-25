@@ -23,6 +23,8 @@ void Init_Filtering()
       Arg("param1"), Arg("param2")).
     define_method("do_something", &Outer::ClassWithDeprecatedConstructor::doSomething);
 
+  Rice::Data_Type<Outer::DeprecatedTemplate<int>> rb_cDeprecatedTemplateInt = define_class_under<Outer::DeprecatedTemplate<int>>(rb_mOuter, "DeprecatedTemplateInt");
+
   Rice::Data_Type<Outer::OtherClass> rb_cOuterOtherClass = define_class_under<Outer::OtherClass>(rb_mOuter, "OtherClass").
     define_constructor(Constructor<Outer::OtherClass>());
 

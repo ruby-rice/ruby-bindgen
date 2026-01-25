@@ -111,6 +111,32 @@ namespace Outer
     };
   }
 
+  // Test attribute access detection (const, non-assignable, etc.)
+  class NonAssignable
+  {
+  public:
+    NonAssignable() = default;
+    NonAssignable(const NonAssignable&) = default;
+    NonAssignable& operator=(const NonAssignable&) = delete;
+  };
+
+  class ProtectedAssign
+  {
+  public:
+    ProtectedAssign() = default;
+  protected:
+    ProtectedAssign& operator=(const ProtectedAssign&) = default;
+  };
+
+  class AttributeTest
+  {
+  public:
+    int regular_field = 0;                    // read-write
+    const int const_field = 42;               // read-only (const)
+    NonAssignable non_assignable_field;       // read-only (deleted operator=)
+    ProtectedAssign protected_assign_field;   // read-only (protected operator=)
+  };
+
   // Test word boundary matching in template argument qualification.
   // The class "foo" should not match "foo" inside "foobar" namespace.
   // This tests the fix for the cvflann::anyimpl::choose_policy<any> bug
