@@ -87,7 +87,9 @@ void Init_Classes()
     });
 
   Rice::Data_Type<Outer::NonAssignable> rb_cOuterNonAssignable = define_class_under<Outer::NonAssignable>(rb_mOuter, "NonAssignable").
-    define_constructor(Constructor<Outer::NonAssignable>());
+    define_constructor(Constructor<Outer::NonAssignable>()).
+    define_constructor(Constructor<Outer::NonAssignable, const Outer::NonAssignable&>(),
+      Arg("arg_0"));
 
   Rice::Data_Type<Outer::ProtectedAssign> rb_cOuterProtectedAssign = define_class_under<Outer::ProtectedAssign>(rb_mOuter, "ProtectedAssign").
     define_constructor(Constructor<Outer::ProtectedAssign>());

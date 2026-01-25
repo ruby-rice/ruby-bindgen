@@ -142,6 +142,10 @@ void Init_Templates()
     define_constructor(Constructor<Tests::lowercase_type>()).
     define_attr("value", &Tests::lowercase_type::value);
 
+  Rice::Data_Type<Tests::TypeTraits<Tests::lowercase_type>> rb_cTestsTypeTraitsLowercaseType = define_class_under<Tests::TypeTraits<Tests::lowercase_type>>(rb_mTests, "TypeTraitsLowercaseType").
+    define_constructor(Constructor<Tests::TypeTraits<Tests::lowercase_type>>()).
+    define_constant("Type", Tests::TypeTraits<Tests::lowercase_type>::type);
+
   Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = define_class_under<Tests::Wrapper<Tests::lowercase_type>>(rb_mTests, "WrappedLowercase").
     define(&Wrapper_builder<Data_Type<Tests::Wrapper<Tests::lowercase_type>>, Tests::lowercase_type>);
 

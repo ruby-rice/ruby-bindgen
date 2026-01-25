@@ -507,9 +507,9 @@ module RubyBindgen
       # This method compares the actual arguments with the template parameters and
       # appends any missing default values.
       def get_full_template_arguments(underlying_type, cursor_template)
-        # Extract template arguments from canonical spelling
-        canonical_spelling = underlying_type.canonical.spelling
-        match = canonical_spelling.match(/\<(.*)\>/)
+        # Extract template arguments from canonical spelling, qualified
+        qualified_spelling = qualify_template_args(underlying_type.canonical.spelling, underlying_type)
+        match = qualified_spelling.match(/\<(.*)\>/)
         return "" unless match
 
         extracted_args = match[1]
@@ -583,9 +583,10 @@ module RubyBindgen
         return spelling if spelling.nil? || !spelling.include?('<')
 
         # Build a map of simple_name -> qualified_name from the canonical type
-        qualifications = {}
-        return spelling if type.nil?
-        collect_type_qualifications(type.canonical, qualifications)
+        # Start with @type_name_map, then override with canonical type qualifications
+        # which are more specific to this context
+        qualifications = @type_name_map.dup
+        collect_type_qualifications(type.canonical, qualifications) if type
 
         # Apply qualifications to the spelling
         result = spelling.dup
@@ -817,18 +818,13 @@ module RubyBindgen
             # For non-namespaced templates, qualified_display_name falls back to
             # spelling which loses template args, so use display_name instead.
             parent = cursor.semantic_parent
-            class_name = parent.qualified_display_name
-            if parent.semantic_parent.kind == :cursor_translation_unit
-              class_name = parent.display_name
-            end
+            class_name = qualified_display_name_cpp(parent)
             signature << class_name
             params = type_spellings(cursor)
             signature += params
 
-          when :cursor_class_decl
-            signature << cursor.class_name_cpp
-          when :cursor_struct
-            signature << cursor.class_name_cpp
+          when :cursor_class_decl, :cursor_struct
+            signature << qualified_display_name_cpp(cursor)
           else
             raise("Unsupported cursor kind: #{cursor.kind}")
         end
@@ -1774,7 +1770,7 @@ module RubyBindgen
       def visit_variable_constant(cursor)
         self.render_cursor(cursor, "constant",
                            :name => cursor.spelling.upcase_first,
-                           :qualified_name => cursor.qualified_display_name)
+                           :qualified_name => qualified_display_name_cpp(cursor))
       end
 
       def create_project_files

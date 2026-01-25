@@ -123,6 +123,17 @@ namespace Tests
         int value;
     };
 
+    // Test template argument qualification in define_constant
+    // TypeTraits<lowercase_type> should generate:
+    //   define_constant("Type", Tests::TypeTraits<Tests::lowercase_type>::type)
+    // NOT:
+    //   define_constant("Type", Tests::TypeTraits<lowercase_type>::type)
+    template<>
+    struct TypeTraits<lowercase_type>
+    {
+        static const int type = 4;
+    };
+
     template<typename T>
     class Wrapper
     {
