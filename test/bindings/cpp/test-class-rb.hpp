@@ -1,3 +1,5 @@
+#pragma once
+
 #include <rice/rice.hpp>
 
 #include "./class-rb.hpp"
