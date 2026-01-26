@@ -83,6 +83,17 @@ module RubyBindgen
         @overloads_stack.last || Hash.new
       end
 
+      # Visit children in two passes: non-static first, then static.
+      # Static methods must come last because Rice's Forwardable module needs
+      # instance methods registered before static factory methods that return smart pointers.
+      def visit_children_two_pass(cursor, exclude_kinds:)
+        @overloads_stack.push(cursor.overloads)
+        children = visit_children(cursor, exclude_kinds: exclude_kinds, only_static: false)
+        children += visit_children(cursor, exclude_kinds: exclude_kinds, only_static: true)
+        @overloads_stack.pop
+        children
+      end
+
       def visit_start
       end
 
@@ -241,22 +252,8 @@ module RubyBindgen
 
         end
 
-        # Push overloads
-        @overloads_stack.push(cursor.overloads)
-
-        # Visit non-static methods first, then static methods.
-        # Static methods must come last because Rice uses Ruby's Forwardable module
-        # to forward method calls from smart pointers to the wrapped object. To build
-        # the list of methods to forward, Rice inspects its native registry which is
-        # populated by define_method/define_attr calls. Static factory methods that
-        # return smart pointers must therefore be defined after instance methods.
-        children += visit_children(cursor,
-                                  :exclude_kinds => [:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl],
-                                  :only_static => false)
-        children += visit_children(cursor,
-                                  :exclude_kinds => [:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl],
-                                  :only_static => true)
-        @overloads_stack.pop
+        children += visit_children_two_pass(cursor,
+                                           exclude_kinds: [:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl])
 
         children_content = merge_children(children, :indentation => 2, :separator => ".\n", terminator: ";\n", :strip => true)
 
@@ -360,22 +357,8 @@ module RubyBindgen
           end
         end.join(", ")
 
-        # Visit children
-        @overloads_stack.push(cursor.overloads)
-
-        # Visit non-static methods first, then static methods.
-        # Static methods must come last because Rice uses Ruby's Forwardable module
-        # to forward method calls from smart pointers to the wrapped object. To build
-        # the list of methods to forward, Rice inspects its native registry which is
-        # populated by define_method/define_attr calls. Static factory methods that
-        # return smart pointers must therefore be defined after instance methods.
-        children = visit_children(cursor,
-                                  :exclude_kinds => [:cursor_typedef_decl, :cursor_alias_decl],
-                                  :only_static => false)
-        children += visit_children(cursor,
-                                  :exclude_kinds => [:cursor_typedef_decl, :cursor_alias_decl],
-                                  :only_static => true)
-        @overloads_stack.pop
+        children = visit_children_two_pass(cursor,
+                                           exclude_kinds: [:cursor_typedef_decl, :cursor_alias_decl])
 
         # If no children (all methods deprecated/skipped), don't generate builder
         if children.empty?
@@ -406,7 +389,7 @@ module RubyBindgen
           source_text = cursor.extent.text
           return true if source_text.nil?
           @export_macros.any? { |macro| source_text.include?(macro) }
-        rescue => e
+        rescue
           # If we can't read the source, assume it's exported
           true
         end
@@ -1077,18 +1060,17 @@ module RubyBindgen
 
       ITERATOR_METHODS = ["begin", "end", "cbegin", "cend", "rbegin", "rend", "crbegin", "crend"].freeze
 
+      # Common skip checks for functions and methods
+      def skip_callable?(cursor)
+        skip_symbol?(cursor) ||
+          cursor.availability == :deprecated ||
+          cursor.spelling.end_with?('_')
+      end
+
       def visit_cxx_method(cursor)
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
-
-        # Skip explicitly listed symbols
-        return if skip_symbol?(cursor)
-
-        # Skip deprecated methods (they may not be exported from library)
-        return if cursor.availability == :deprecated
-
-        # Skip internal methods (underscore suffix naming convention)
-        return if cursor.spelling.end_with?('_')
+        return if skip_callable?(cursor)
 
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
@@ -1325,20 +1307,8 @@ module RubyBindgen
       def visit_function(cursor)
         # Can't return arrays in C++
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
-
-        # Skip explicitly listed symbols
-        return if skip_symbol?(cursor)
-
-        # Skip functions without required export macros (e.g., CV_EXPORTS)
+        return if skip_callable?(cursor)
         return unless has_export_macro?(cursor)
-
-        # Skip deprecated functions (they may not be exported from library)
-        return if cursor.availability == :deprecated
-
-        # Skip internal functions (underscore suffix naming convention)
-        return if cursor.spelling.end_with?('_')
-
-        # Skip variadic functions - they can't be wrapped directly
         return if cursor.type.variadic?
 
         if cursor.spelling.match(/operator/)
@@ -1424,11 +1394,6 @@ module RubyBindgen
         # Rice already provides bitwise operators (&, |, ^, ~, <<, >>) for enums automatically
         return if class_cursor.kind == :cursor_enum_decl
 
-        # Make sure we have seen the cursor class, it could be in a different translation unit!
-        #return unless class_cursor.location.file == cursor.translation_unit.spelling
-
-        class_cursor.location.file == cursor.translation_unit.spelling
-
         # Collect non-member operators to render grouped by class later
         @non_member_operators[class_cursor.cruby_name] << { cursor: cursor, class_cursor: class_cursor }
         nil
@@ -1490,21 +1455,6 @@ module RubyBindgen
           result << "#{cruby_name}.\n    #{lines.join(".\n    ")};"
         end
         result.join("\n  \n  ")
-      end
-
-      def visit_type_alias_decl(cursor)
-        return if cursor.semantic_parent.kind == :cursor_class_decl
-
-        case cursor.underlying_type.kind
-        when :type_elaborated
-          # If this is a struct or a union or enum we have already rendered it
-          return if [:type_record, :type_enum].include?(cursor.underlying_type&.canonical&.kind)
-        when :type_pointer
-          #if cursor.underlying_type.function?
-          #  return self.visit_callback(cursor.ruby_name, cursor.find_by_kind(false, :cursor_parameter_decl), cursor.underlying_type.pointee)
-          #end
-        end
-        #render_cursor(cursor)
       end
 
       def visit_typedef_decl(cursor)
@@ -1605,123 +1555,74 @@ module RubyBindgen
                         :base_spelling => nil, :under => under)
       end
 
-      # Auto-generate a base class definition when no typedef exists for it
-      def auto_generate_base_class(base_ref, base_spelling, template_arguments, under)
-        # Get the base template cursor
+      # Generate Ruby class name from a C++ template instantiation spelling
+      # e.g., "Tests::Matx<unsigned char, 2, 1>" -> "MatxUnsignedChar21"
+      def ruby_name_from_template(base_spelling, template_arguments)
+        base_name = base_spelling.sub(/<.*>\z/, "").split("::").last.camelize
+        args_name = split_template_args(template_arguments).map { |t|
+          t.split("::").last.camelize
+        }.join
+        base_name + args_name
+      end
+
+      # Auto-generate a base class definition when no typedef exists for it.
+      # When recursive: true, also generates any base classes of the base class.
+      def auto_generate_base_class(base_ref, base_spelling, template_arguments, under, recursive: true)
         base_template_ref = base_ref.find_by_kind(false, :cursor_template_ref).first
         return "" unless base_template_ref
 
         base_template = base_template_ref.referenced
-
-        # Extract template arguments from base_spelling (which includes all args from base class)
-        # e.g., "Tests::Matx<unsigned char, 2, 1>" -> "unsigned char, 2, 1"
         base_template_arguments = base_spelling.match(/<(.+)>\z/)&.[](1) || template_arguments
+        return "" unless base_template_arguments
 
         result = ""
-
-        # Check if this base class has its own base that needs auto-generation (recursive)
-        base_base_ref = base_template.find_by_kind(false, :cursor_cxx_base_specifier).first
         base_base_spelling = nil
-        if base_base_ref
-          base_base_template_ref = base_base_ref.find_by_kind(false, :cursor_template_ref).first
-          if base_base_template_ref
-            # Get namespace from base_spelling
-            namespace = base_spelling.split("<").first.split("::")[0..-2].join("::")
-            base_base_name = base_base_template_ref.referenced.spelling
 
-            # Get template parameters from the base template (e.g., _Tp, cn for Vec)
-            template_params = []
-            base_template.each do |c|
-              if c.kind == :cursor_template_type_parameter || c.kind == :cursor_non_type_template_parameter
-                template_params << c.spelling
-              end
-            end
+        # Check if this base class has its own base that needs auto-generation
+        if recursive
+          base_base_ref = base_template.find_by_kind(false, :cursor_cxx_base_specifier).first
+          if base_base_ref
+            base_base_template_ref = base_base_ref.find_by_kind(false, :cursor_template_ref).first
+            if base_base_template_ref
+              namespace = base_spelling.split("<").first.split("::")[0..-2].join("::")
+              base_base_name = base_base_template_ref.referenced.spelling
 
-            # Build substitution map from template params to actual values
-            template_arg_values = split_template_args(base_template_arguments)
-            subs = {}
-            template_params.each_with_index do |param, i|
-              subs[param] = template_arg_values[i] if template_arg_values[i]
-            end
+              # Build substitution map from template params to actual values
+              template_params = base_template.find_by_kind(false, :cursor_template_type_parameter,
+                                                           :cursor_non_type_template_parameter).map(&:spelling)
+              template_arg_values = split_template_args(base_template_arguments)
+              subs = template_params.each_with_index.to_h { |param, i| [param, template_arg_values[i]] }
 
-            # Get the base's base specifier type spelling (e.g., "Matx<_Tp, cn, 1>")
-            base_base_type_spelling = base_base_ref.type.spelling
-            if base_base_type_spelling =~ /<(.+)>\z/
-              base_base_args_str = $1
               # Substitute template parameters with actual values
-              base_base_args = split_template_args(base_base_args_str).map do |arg|
-                subs[arg] || arg
-              end
-              resolved_base_base_args = base_base_args.join(', ')
-              base_base_spelling = namespace.empty? ? "#{base_base_name}<#{resolved_base_base_args}>" : "#{namespace}::#{base_base_name}<#{resolved_base_base_args}>"
+              base_base_type_spelling = base_base_ref.type.spelling
+              if base_base_type_spelling =~ /<(.+)>\z/
+                base_base_args = split_template_args($1).map { |arg| subs[arg] || arg }.join(', ')
+                base_base_spelling = namespace.empty? ? "#{base_base_name}<#{base_base_args}>" : "#{namespace}::#{base_base_name}<#{base_base_args}>"
 
-              # Recursively auto-generate if needed
-              if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
-                result = auto_generate_base_class(base_base_ref, base_base_spelling, resolved_base_base_args, under)
+                if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
+                  result = auto_generate_base_class(base_base_ref, base_base_spelling, base_base_args, under)
+                end
               end
             end
           end
         end
 
-        # Mark as generated to avoid duplicates
         @auto_generated_bases << base_spelling
-
-        # Generate a Ruby class name from the base spelling
-        ruby_name = base_spelling.split("::").last.gsub(/<.*>/, "").camelize +
-                    split_template_args(base_template_arguments).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join
-
+        ruby_name = ruby_name_from_template(base_spelling, base_template_arguments)
         cruby_name = "rb_c#{ruby_name}"
 
         @classes[cruby_name] = base_spelling
         result + render_template("auto_generated_base_class",
-                        :cruby_name => cruby_name,
-                        :ruby_name => ruby_name,
-                        :base_spelling => base_spelling,
-                        :base_base_spelling => base_base_spelling,
-                        :base_template => base_template,
-                        :template_arguments => base_template_arguments,
+                        :cruby_name => cruby_name, :ruby_name => ruby_name,
+                        :base_spelling => base_spelling, :base_base_spelling => base_base_spelling,
+                        :base_template => base_template, :template_arguments => base_template_arguments,
                         :under => under)
       end
 
       # Auto-generate a template base class for a non-template derived class.
-      # This is called when a regular class (not a typedef) inherits from a template instantiation.
       # For example: class PlaneWarper : public WarperBase<PlaneProjector>
       def auto_generate_template_base_for_class(base_specifier, base_spelling, under)
-        # Get the template reference from the base specifier
-        base_template_ref = base_specifier.find_by_kind(false, :cursor_template_ref).first
-        return "" unless base_template_ref
-
-        base_template = base_template_ref.referenced
-
-        # Extract template arguments from base_spelling (e.g., "Tests::WarperBase<Tests::PlaneProjector>" -> "Tests::PlaneProjector")
-        template_arguments = base_spelling.match(/<(.+)>\z/)&.[](1)
-        return "" unless template_arguments
-
-        # Mark as generated to avoid duplicates
-        @auto_generated_bases << base_spelling
-
-        # Generate a Ruby class name from the base spelling
-        # e.g., "Tests::WarperBase<Tests::PlaneProjector>" -> "WarperBasePlaneProjector"
-        # First remove the template part to get "Tests::WarperBase", then get the last component
-        base_without_template = base_spelling.sub(/<.*>\z/, "")
-        base_name = base_without_template.split("::").last.camelize
-        args_name = template_arguments.split(",").map(&:strip).map { |t|
-          # Get the last component and camelize it (handles underscores properly)
-          t.split("::").last.camelize
-        }.join
-
-        ruby_name = base_name + args_name
-        cruby_name = "rb_c#{ruby_name}"
-
-        @classes[cruby_name] = base_spelling
-        render_template("auto_generated_base_class",
-                        :cruby_name => cruby_name,
-                        :ruby_name => ruby_name,
-                        :base_spelling => base_spelling,
-                        :base_base_spelling => nil,
-                        :base_template => base_template,
-                        :template_arguments => template_arguments,
-                        :under => under)
+        auto_generate_base_class(base_specifier, base_spelling, nil, under, recursive: false)
       end
 
       def visit_union(cursor)
@@ -1877,7 +1778,7 @@ module RubyBindgen
           results << visit_class_template_builder(class_template_cursor)
           @overloads_stack.pop
         end
-        result = merge_children(results, :indentation => indentation, :separator => separator, :strip => strip)
+        merge_children(results, :indentation => indentation, :separator => separator, :strip => strip)
       end
 
       def visit_children(cursor, exclude_kinds: Set.new, only_static: nil)
@@ -1885,17 +1786,15 @@ module RubyBindgen
         cursor.each(false) do |child_cursor, parent_cursor|
           if child_cursor.location.in_system_header?
             next :continue
-					end
+          end
 
-					path = child_cursor.location
-
-					# This sometimes does not work - for example OpenCV defines the macros
-					# CV__DNN_INLINE_NS_BEGIN/CV__DNN_INLINE_NS_END in a separate header file
-					# which causes from_main_file? to be false. So manually check.
-					# unless child_cursor.location.from_main_file?
-					unless child_cursor.file_location.file == child_cursor.translation_unit.file.name
-					  next :continue
-					end
+          # This sometimes does not work - for example OpenCV defines the macros
+          # CV__DNN_INLINE_NS_BEGIN/CV__DNN_INLINE_NS_END in a separate header file
+          # which causes from_main_file? to be false. So manually check.
+          # unless child_cursor.location.from_main_file?
+          unless child_cursor.file_location.file == child_cursor.translation_unit.file.name
+            next :continue
+          end
 
           # For some reason child.cursor.public? filters out way too much
           if child_cursor.private? || child_cursor.protected?
@@ -1913,11 +1812,6 @@ module RubyBindgen
           if child_cursor.forward_declaration?
             next :continue
           end
-
-          # Skip static variables and static functions
-          #if child_cursor.linkage == :internal && !child_cursor.spelling.match(/operator/)
-          #  next :continue
-          #end
 
           if exclude_kinds.include?(child_cursor.kind)
             next :continue
