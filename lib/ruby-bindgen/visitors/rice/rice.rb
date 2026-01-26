@@ -1000,6 +1000,15 @@ module RubyBindgen
           end
         end
 
+        # Finally, use @type_name_map to qualify any remaining type names that weren't
+        # found via cursor traversal. This handles cases like template constructor calls
+        # (e.g., Rect_<double>(...)) where there's no template_ref cursor in the expression.
+        @type_name_map.each do |simple_name, qualified_name|
+          next if simple_name == qualified_name
+          # Replace unqualified occurrences (not preceded by :: or word char)
+          default_text = default_text.gsub(/(?<![:\w])#{Regexp.escape(simple_name)}(?![:\w])/, qualified_name)
+        end
+
         default_text
       end
 

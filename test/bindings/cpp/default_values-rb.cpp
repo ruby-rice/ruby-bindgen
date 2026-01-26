@@ -67,7 +67,7 @@ void Init_DefaultValues()
     define(&Rect__builder<Data_Type<cv::Rect_<double>>, double>);
 
   rb_mCv.define_module_function("render", &cv::render,
-    Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(Rect_<double>(0.0, 0.0, 1.0, 1.0)));
+    Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(cv::Rect_<double>(0.0, 0.0, 1.0, 1.0)));
 
   Module rb_mIo = define_module("Io");
 
