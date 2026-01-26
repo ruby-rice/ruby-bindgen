@@ -1,0 +1,8 @@
+# Test bindings configuration for Linux
+
+clang_args:
+  - "-xc++"
+  - "-std=c++17"
+  - "-I/usr/lib/clang/21/include"
+  - "-I/usr/include/c++/15"
+  - "-I/usr/include/c++/15/x86_64-redhat-linux"

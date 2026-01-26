@@ -1,8 +1,22 @@
 require 'bundler/setup'
 require 'minitest/autorun'
+require 'yaml'
 
-if Gem.win_platform?
-  ENV["LIBCLANG"]="C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/x64/bin/libclang.dll"
+# Load platform-specific bindings config
+def load_bindings_config
+  config_name = Gem.win_platform? ? 'bindings-windows.yaml' : 'bindings-linux.yaml'
+  config_path = File.join(__dir__, 'headers', config_name)
+
+  return {} unless File.exist?(config_path)
+
+  config = YAML.safe_load(File.read(config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
+  config.transform_keys(&:to_sym)
+end
+
+# Set up libclang path from config
+bindings_config = load_bindings_config
+if bindings_config[:libclang]
+  ENV["LIBCLANG"] = bindings_config[:libclang]
 end
 
 # Add refinements directory to load path to make it easier to test locally built extensions
@@ -24,6 +38,11 @@ class AbstractTest < Minitest::Test
   end
 
   def create_parser(header, args = nil)
+    # Load platform-specific clang args if not provided
+    if args.nil?
+      config = load_bindings_config
+      args = config[:clang_args]
+    end
     RubyBindgen::Parser.new(self.create_inputter(header), args)
   end
 

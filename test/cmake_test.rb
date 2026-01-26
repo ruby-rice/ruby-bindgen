@@ -6,7 +6,7 @@ class CMakeTest < AbstractTest
   def test_cmake
     header = "cpp/classes.hpp"
     parser = create_parser(header)
-    visitor = create_visitor(RubyBindgen::Visitors::CMake, "test-classes", header)
+    visitor = create_visitor(RubyBindgen::Visitors::CMake, header)
     parser.generate(visitor)
   end
 end
