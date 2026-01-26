@@ -166,4 +166,55 @@ namespace Outer
     {
     };
   }
+
+  // Test inherited overloaded methods.
+  // When a derived class inherits overloaded methods from a base class,
+  // the bindings need explicit function pointer signatures to disambiguate.
+  // This tests the fix for cv::xfeatures2d::AffineFeature2D::detect issue.
+  class FeatureDetector
+  {
+  public:
+    virtual ~FeatureDetector() = default;
+
+    // Overloaded detect methods
+    virtual void detect(int image, int& keypoints) const;
+    virtual void detect(int image, int& keypoints, int mask) const;
+
+    // Overloaded compute methods
+    virtual void compute(int image, int& keypoints, int& descriptors) const;
+    virtual void compute(int images, int& keypoints, int& descriptors, bool useProvidedKeypoints) const;
+  };
+
+  class DescriptorExtractor : public FeatureDetector
+  {
+  public:
+    // This class inherits detect and compute overloads from FeatureDetector,
+    // but may add its own methods.
+    void extract(int image, int& descriptors) const;
+  };
+
+  class Feature2D : public DescriptorExtractor
+  {
+  public:
+    // Bring base class methods into scope with using declarations.
+    // This simulates cv::Feature2D pattern where inherited overloaded methods
+    // are explicitly brought into derived class scope.
+    using FeatureDetector::detect;
+    using FeatureDetector::compute;
+
+    // Additional method specific to this class
+    void detectAndCompute(int image, int mask, int& keypoints, int& descriptors) const;
+  };
+
+  class AffineFeature2D : public Feature2D
+  {
+  public:
+    // This class should also need explicit signatures for inherited detect/compute
+    // because they are overloaded in the base class hierarchy.
+    using Feature2D::detect;
+    using Feature2D::compute;
+
+    // Override one variant
+    virtual void detect(int image, int& keypoints, int mask) const override;
+  };
 }

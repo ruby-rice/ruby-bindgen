@@ -3,6 +3,7 @@ require 'ffi/clang'
 require 'ruby-bindgen/refinements/translation_unit'
 require 'ruby-bindgen/refinements/cursor'
 require 'ruby-bindgen/refinements/string'
+require 'ruby-bindgen/refinements/type'
 
 require 'ruby-bindgen/inputter'
 require 'ruby-bindgen/outputter'

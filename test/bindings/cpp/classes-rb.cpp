@@ -111,4 +111,30 @@ void Init_Classes()
 
   Rice::Data_Type<Outer::foobar::wrapper<Outer::foobar::foo>> rb_cOuterFoobarWrapperFoo = define_class_under<Outer::foobar::wrapper<Outer::foobar::foo>>(rb_mOuterFoobar, "WrapperFoo").
     define_constructor(Constructor<Outer::foobar::wrapper<Outer::foobar::foo>>());
+
+  Rice::Data_Type<Outer::FeatureDetector> rb_cOuterFeatureDetector = define_class_under<Outer::FeatureDetector>(rb_mOuter, "FeatureDetector").
+    define_constructor(Constructor<Outer::FeatureDetector>()).
+    define_method<void(Outer::FeatureDetector::*)(int, int&) const>("detect", &Outer::FeatureDetector::detect,
+      Arg("image"), Arg("keypoints")).
+    define_method<void(Outer::FeatureDetector::*)(int, int&, int) const>("detect", &Outer::FeatureDetector::detect,
+      Arg("image"), Arg("keypoints"), Arg("mask")).
+    define_method<void(Outer::FeatureDetector::*)(int, int&, int&) const>("compute", &Outer::FeatureDetector::compute,
+      Arg("image"), Arg("keypoints"), Arg("descriptors")).
+    define_method<void(Outer::FeatureDetector::*)(int, int&, int&, bool) const>("compute", &Outer::FeatureDetector::compute,
+      Arg("images"), Arg("keypoints"), Arg("descriptors"), Arg("use_provided_keypoints"));
+
+  Rice::Data_Type<Outer::DescriptorExtractor> rb_cOuterDescriptorExtractor = define_class_under<Outer::DescriptorExtractor, Outer::FeatureDetector>(rb_mOuter, "DescriptorExtractor").
+    define_constructor(Constructor<Outer::DescriptorExtractor>()).
+    define_method("extract", &Outer::DescriptorExtractor::extract,
+      Arg("image"), Arg("descriptors"));
+
+  Rice::Data_Type<Outer::Feature2D> rb_cOuterFeature2D = define_class_under<Outer::Feature2D, Outer::DescriptorExtractor>(rb_mOuter, "Feature2D").
+    define_constructor(Constructor<Outer::Feature2D>()).
+    define_method("detect_and_compute", &Outer::Feature2D::detectAndCompute,
+      Arg("image"), Arg("mask"), Arg("keypoints"), Arg("descriptors"));
+
+  Rice::Data_Type<Outer::AffineFeature2D> rb_cOuterAffineFeature2D = define_class_under<Outer::AffineFeature2D, Outer::Feature2D>(rb_mOuter, "AffineFeature2D").
+    define_constructor(Constructor<Outer::AffineFeature2D>()).
+    define_method<void(Outer::AffineFeature2D::*)(int, int&, int) const>("detect", &Outer::AffineFeature2D::detect,
+      Arg("image"), Arg("keypoints"), Arg("mask"));
 }

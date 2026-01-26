@@ -70,13 +70,44 @@ module FFI
       def overloads
         # Include function templates - if a regular function has a template overload,
         # we need explicit type cast (e.g., KernelArg::Constant has both const Mat& and template versions)
-        result = self.find_by_kind(false, :cursor_cxx_method, :cursor_function, :cursor_function_template).
-             group_by do |cursor|
-               cursor.spelling
-             end.
-             select do |spelling, cursors|
-               cursors.size > 1
-             end
+        #
+        # Also check base classes - if a method is overloaded in the base class hierarchy,
+        # we need explicit signatures even when only one variant is declared in this class.
+        # This handles the cv::xfeatures2d::AffineFeature2D::detect case where detect is
+        # overloaded in cv::Feature2D but AffineFeature2D only overrides one variant.
+        #
+        # Important: Only consider it an overload if the method signatures differ.
+        # Overrides (same signature in derived class) don't need explicit type casts.
+        methods = self.find_by_kind(false, :cursor_cxx_method, :cursor_function, :cursor_function_template)
+
+        # Collect methods from base classes
+        base_specifiers = self.find_by_kind(false, :cursor_cxx_base_specifier)
+        base_specifiers.each do |base|
+          base_decl = base.type.declaration
+          next if base_decl.kind == :cursor_no_decl_found
+
+          # Get methods from base class (recursively handled by base's overloads call)
+          base_methods = base_decl.find_by_kind(false, :cursor_cxx_method, :cursor_function, :cursor_function_template)
+          methods.concat(base_methods)
+
+          # Also recursively check base class's base classes
+          base_decl.overloads.each do |name, cursors|
+            methods.concat(cursors)
+          end
+        end
+
+        # Group by name, then check if there are actually different signatures
+        result = methods.group_by do |cursor|
+          cursor.spelling
+        end.select do |spelling, cursors|
+          # Need at least 2 methods with the same name
+          next false if cursors.size < 2
+
+          # Check if there are different signatures (not just overrides)
+          # Use the type's spelling which includes parameter types
+          signatures = cursors.map { |c| c.type.spelling }.uniq
+          signatures.size > 1
+        end
         result
       end
     end
