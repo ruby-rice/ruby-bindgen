@@ -742,13 +742,15 @@ module RubyBindgen
                                     "#{type.const_qualified? ? "const " : ""}#{qualified}"
                                   end
                                elsif type.declaration.kind == :cursor_type_alias_decl
-                                  # C++11 using declarations (e.g., using SizeArray = std::vector<int>)
-                                  # Need to qualify nested type aliases like GpuMatND::SizeArray
-                                  # Also need to qualify template arguments (same as typedef case)
+                                  # C++11 using declarations (e.g., using iterator = __normal_iterator<...>)
+                                  # MSVC's STL uses 'using' instead of 'typedef' for iterator types, so
+                                  # std::vector<Pixel>::iterator appears as cursor_type_alias_decl on Windows
+                                  # but cursor_typedef_decl on Linux. We need to qualify template arguments
+                                  # in both cases (e.g., std::vector<Pixel> -> std::vector<iter::Pixel>).
                                   spelling = type.spelling
                                   qualified = type.declaration.qualified_name
                                   if spelling.include?('<')
-                                    # Qualify template arguments
+                                    # Qualify template arguments (e.g., std::vector<Pixel> -> std::vector<ns::Pixel>)
                                     qualified_spelling = qualify_template_args(spelling, type)
                                     "#{type.const_qualified? ? "const " : ""}#{qualified_spelling}"
                                   elsif qualified.end_with?(spelling)
@@ -882,26 +884,36 @@ module RubyBindgen
       # Finds the default value expression for a parameter and returns it with qualified type/function names.
       # For example, transforms "Range::all()" to "cv::Range::all()" and "noArray()" to "cv::noArray()".
       # Returns nil if no default value.
+      # Finds the default value expression for a parameter and returns it with qualified names.
+      #
+      # Architecture: Separates text extraction from semantic analysis to avoid macro expansion issues.
+      # - Text extraction: Uses param.extent.text (original source) to get the default value
+      # - Semantic analysis: Uses cursor traversal only to identify what needs namespace qualification
+      #
+      # This approach is necessary because cursor extent text can reflect macro expansion on some platforms.
+      # For example, on Windows UCRT, 'stdout' expands to '__acrt_iob_func', but we want to preserve 'stdout'.
+      #
+      # @param param [Cursor] A parameter cursor that may have a default value
+      # @return [String, nil] The default value with qualified names, or nil if no default value
       def find_default_value(param)
-        # Architecture: Separate text extraction from semantic analysis.
-        # 1. Extract default value text directly from parameter source extent
-        # 2. Use cursors only for semantic analysis (finding what needs qualification)
-        # This avoids issues with macro expansion in cursor extent text.
-
-        # Get the parameter's source text and verify it has a default value
+        # Get the parameter's source text and verify it has a default value.
+        # Template arguments like '4' in 'Vec<_Tp, 4>' also appear as literal children,
+        # but they won't have '=' in the extent.
         param_extent = param.extent.text
         return nil unless param_extent&.include?('=')
 
-        # Extract the default value text from param_extent (everything after '=')
-        # This is the original source text, unaffected by macro expansion
+        # Extract default value text from param_extent (everything after '=').
+        # This gives us the original source text, unaffected by macro expansion.
         default_text = param_extent.sub(/.*?=\s*/, '')
         return nil if default_text.empty?
 
-        # Find the default value expression cursor for semantic analysis only
-        # (not for text extraction)
+        # Find the default value expression cursor for semantic analysis.
+        # We need this to traverse child cursors and find what needs qualification.
+        # Note: cursor_paren_expr is included for Windows where macros like 'stdout' wrap in parens.
         default_value_kinds = [:cursor_unexposed_expr, :cursor_call_expr, :cursor_decl_ref_expr,
                                :cursor_cxx_typeid_expr, :cursor_paren_expr] + CURSOR_LITERALS
         default_expr = param.find_by_kind(false, *default_value_kinds).find do |expr|
+          # Filter out decl_ref_expr that reference template parameters (part of type, not default value)
           if expr.kind == :cursor_decl_ref_expr
             ref = expr.referenced
             ref && ref.kind != :cursor_non_type_template_parameter && ref.kind != :cursor_template_type_parameter
@@ -911,12 +923,14 @@ module RubyBindgen
         end
         return nil unless default_expr
 
-        # Use cursor traversal to find type references that need namespace qualification
+        # Phase 1: Qualify type references (e.g., Range::all() -> cv::Range::all())
+        # Find type_ref and template_ref cursors to identify types that need namespace qualification.
         default_expr.find_by_kind(true, :cursor_type_ref, :cursor_template_ref).each do |type_ref|
           ref = type_ref.referenced
           next unless ref && ref.kind != :cursor_invalid_file
 
           begin
+            # For typedefs in class templates, preserve template parameters in the qualified name
             qualified_name = if ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
                                "#{ref.semantic_parent.qualified_display_name}::#{ref.spelling}"
                              else
@@ -926,14 +940,15 @@ module RubyBindgen
             next if simple_name.nil? || simple_name.empty?
             next if simple_name == qualified_name
 
-            # Only qualify if the simple name appears in the default text
+            # Replace unqualified occurrences (negative lookbehind avoids already-qualified names)
             default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
           rescue ArgumentError
-            # Skip if we can't get qualified name
+            # Skip if we can't get qualified name (e.g., invalid cursor)
           end
         end
 
-        # Use cursor traversal to find declaration references (functions, enum values) that need qualification
+        # Phase 2: Qualify declaration references (functions, enum values, static members)
+        # For example: noArray() -> cv::noArray(), NORM_L2 -> cv::NORM_L2
         decl_refs = default_expr.find_by_kind(true, :cursor_decl_ref_expr)
         decl_refs = [default_expr] + decl_refs if default_expr.kind == :cursor_decl_ref_expr
         decl_refs.each do |decl_ref|
@@ -941,28 +956,33 @@ module RubyBindgen
           next unless ref && ref.kind != :cursor_invalid_file
 
           begin
-            # Get the simple name (what appears in source) and qualified name
+            # Use ref.spelling (the symbol's declared name) rather than extent.text.
+            # This gives us what the symbol is actually named, not what text appears in source.
             simple_name = ref.spelling
             next if simple_name.nil? || simple_name.empty?
 
-            # For class methods, check if already qualified in source
+            # Skip methods already qualified in source (e.g., Range::all() has 'all' after '::')
             if ref.kind == :cursor_cxx_method
               next if default_text.match?(/::#{Regexp.escape(simple_name)}\s*\(/)
             end
 
-            # Determine the correct qualified name
+            # Determine the correct qualified name based on declaration context
             qualified_name = if ref.kind == :cursor_enum_constant_decl &&
                                 ref.semantic_parent.kind == :cursor_enum_decl &&
                                 !ref.semantic_parent.enum_scoped?
+                               # Unscoped (C-style) enum: values are in enclosing scope, not under enum type
+                               # e.g., cv::DECOMP_SVD (correct), not cv::DecompTypes::DECOMP_SVD
                                enum_parent = ref.semantic_parent.semantic_parent
                                if enum_parent && enum_parent.kind == :cursor_namespace
                                  "#{enum_parent.qualified_name}::#{simple_name}"
                                elsif ref.semantic_parent.anonymous?
+                                 # Anonymous enum in class: cv::Mat::AUTO_STEP, not cv::Mat::(unnamed)::AUTO_STEP
                                  "#{enum_parent.qualified_name}::#{simple_name}"
                                else
                                  ref.qualified_name
                                end
                              elsif ref.semantic_parent.kind == :cursor_class_template
+                               # Class template members need qualified_display_name to preserve template params
                                "#{ref.semantic_parent.qualified_display_name}::#{simple_name}"
                              else
                                ref.qualified_name
@@ -971,19 +991,21 @@ module RubyBindgen
             next if simple_name == qualified_name
             next if qualified_name.start_with?('::')
 
-            # Only qualify if the qualified name ends with the simple name
-            # This skips macros where the referenced symbol differs (e.g., stdout -> __acrt_iob_func)
+            # Skip macro identifiers: if qualified_name doesn't end with simple_name, the cursor
+            # resolved through a macro to a different symbol (e.g., stdout -> __acrt_iob_func on Windows).
+            # We want to keep the original source text in these cases.
             next unless qualified_name.end_with?(simple_name)
 
-            # Apply qualification to the default text
+            # Apply qualification (negative lookbehind avoids double-qualifying)
             default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
           rescue ArgumentError
             # Skip if we can't get qualified name
           end
         end
 
-        # Use @type_name_map to qualify any remaining type names not found via cursor traversal
-        # (e.g., template constructor calls like Rect_<double>(...))
+        # Phase 3: Qualify any remaining type names using @type_name_map.
+        # This catches cases not found via cursor traversal, like template constructor calls
+        # (e.g., Rect_<double>(...) where there's no template_ref cursor in the expression).
         @type_name_map.each do |simple_name, qualified_name|
           next if simple_name == qualified_name
           default_text = default_text.gsub(/(?<![:\w])#{Regexp.escape(simple_name)}(?![:\w])/, qualified_name)
