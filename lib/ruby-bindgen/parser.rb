@@ -7,7 +7,7 @@ module RubyBindgen
   class Parser
     attr_reader :inputter, :clang_args
 
-    def initialize(inputter, clang_args, follow_includes = false)
+    def initialize(inputter, clang_args)
       @inputter = inputter
       @clang_args = clang_args
       @index = FFI::Clang::Index.new(false, true)

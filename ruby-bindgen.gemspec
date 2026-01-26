@@ -39,7 +39,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ffi-clang', '>= 0.10'
   spec.add_dependency 'ostruct', '>= 0.6.0'
 
-  spec.add_development_dependency 'minitest'
   spec.add_development_dependency 'logger'
+  spec.add_development_dependency 'minitest'
   spec.add_development_dependency 'mutex_m'
+  spec.add_development_dependency 'rake'
 end
