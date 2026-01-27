@@ -18,8 +18,12 @@ extension: my_extension
 
 # Path to libclang shared library (optional)
 # If not specified, ffi-clang will attempt to find it automatically
-# Useful when you have multiple LLVM versions or non-standard install locations
+# Can be a single path or platform-specific paths (clang-cl for MSVC, clang for others)
 libclang: /usr/lib64/libclang.so
+# Or platform-specific:
+# libclang:
+#   clang-cl: C:/Program Files/Microsoft Visual Studio/.../libclang.dll
+#   clang: /usr/lib64/libclang.so
 
 # Custom Rice include header (optional)
 # If not specified, a default header with rice.hpp and stl.hpp is generated
@@ -53,11 +57,20 @@ skip_symbols:
 
 # Clang compiler arguments
 # Include paths, language standard, defines, etc.
+# Can be an array or platform-specific (clang-cl for MSVC, clang for others)
 clang_args:
   - -I/path/to/system/includes
   - -I/path/to/library/includes
   - -std=c++17
   - -xc++
+# Or platform-specific:
+# clang_args:
+#   clang-cl:
+#     - -IC:/Program Files/Microsoft Visual Studio/.../include
+#     - -xc++
+#   clang:
+#     - -I/usr/lib/clang/17/include
+#     - -xc++
 ```
 
 ## Configuration Options
@@ -75,18 +88,23 @@ clang_args:
 | Option | Default | Description |
 |--------|---------|-------------|
 | `extension` | none | Name of the Ruby extension. Used for the `Init_` function name. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{extension}-rb.cpp`, `{extension}-rb.hpp`, `{extension}.def`). When omitted, only per-file bindings are generated. |
-| `libclang` | auto-detect | Path to the libclang shared library. When specified, sets the `LIBCLANG` environment variable before loading ffi-clang. Useful when you have multiple LLVM versions or non-standard install locations. |
+| `libclang` | auto-detect | Path to the libclang shared library. Can be a string or a hash with `clang-cl` (MSVC) and `clang` (Linux/macOS/MinGW) keys for platform-specific paths. When specified, sets the `LIBCLANG` environment variable before loading ffi-clang. |
 | `include` | auto-generated | Path to a custom Rice include header. See [Include Header](#include-header) for details. |
 | `match` | `["**/*.{h,hpp}"]` | Glob patterns specifying which header files to process. |
 | `skip` | `[]` | Glob patterns specifying which header files to skip. |
 | `export_macros` | `[]` | List of macros that indicate a symbol is exported. Only functions/classes with these macros will be included. |
 | `skip_symbols` | `[]` | List of symbol names to skip. Supports simple names (`versionMajor`), fully qualified names (`cv::ocl::PlatformInfo::versionMajor`), or regex patterns (`/pattern/`). |
-| `clang_args` | `[]` | Arguments passed to libclang for parsing. Include paths, language options, etc. |
+| `clang_args` | `[]` | Arguments passed to libclang for parsing. Can be an array or a hash with `clang-cl` (MSVC) and `clang` (Linux/macOS/MinGW) keys for platform-specific arguments. |
 
 ## Example: OpenCV Bindings
 
 ```yaml
 extension: opencv_ruby
+
+# Platform-specific libclang paths
+libclang:
+  clang-cl: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
+  clang: /usr/lib64/libclang.so
 
 input: /path/to/opencv/include/opencv4
 output: /path/to/opencv-ruby/ext
@@ -108,12 +126,46 @@ export_macros:
   - CV_EXPORTS
   - CV_EXPORTS_W
 
+# Platform-specific clang arguments
 clang_args:
-  - -I/usr/include/c++/11
-  - -I/path/to/opencv/include/opencv4
-  - -std=c++17
-  - -xc++
+  clang-cl:
+    - -IC:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.38.33130/include
+    - -IC:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/ucrt
+    - -IC:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/lib/clang/16/include
+    - -I/path/to/opencv/include/opencv4
+    - -xc++
+  clang:
+    - -I/usr/lib/clang/17/include
+    - -I/usr/include/c++/13
+    - -I/path/to/opencv/include/opencv4
+    - -xc++
 ```
+
+## Platform-Specific Configuration
+
+The `libclang` and `clang_args` options support platform-specific values using a hash with toolchain keys:
+
+- **`clang-cl`**: Used when Ruby is built with MSVC (`RUBY_PLATFORM` contains `mswin`)
+- **`clang`**: Used for all other platforms (Linux, macOS, MinGW)
+
+This allows a single configuration file to work across different development environments:
+
+```yaml
+libclang:
+  clang-cl: C:/Program Files/Microsoft Visual Studio/.../libclang.dll
+  clang: /usr/lib64/libclang.so
+
+clang_args:
+  clang-cl:
+    - -IC:/Program Files/Microsoft Visual Studio/.../include
+    - -xc++
+  clang:
+    - -I/usr/lib/clang/17/include
+    - -I/usr/include/c++/13
+    - -xc++
+```
+
+You can also use a simple string/array if you only need single-platform support.
 
 ## Clang Arguments
 
@@ -178,6 +230,7 @@ C:\Program Files\LLVM\bin\libclang.dll
 
 ### Example Configuration
 
+Single platform:
 ```yaml
 # Linux
 libclang: /usr/lib64/libclang.so
@@ -187,6 +240,15 @@ libclang: /opt/homebrew/opt/llvm/lib/libclang.dylib
 
 # Windows with Visual Studio
 libclang: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
+```
+
+Cross-platform (recommended for shared configs):
+```yaml
+# clang-cl is used for MSVC (Ruby platform contains 'mswin')
+# clang is used for everything else (Linux, macOS, MinGW)
+libclang:
+  clang-cl: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
+  clang: /usr/lib64/libclang.so
 ```
 
 ## Export Macros

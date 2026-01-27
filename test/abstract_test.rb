@@ -4,13 +4,31 @@ require 'yaml'
 
 # Load platform-specific bindings config
 def load_bindings_config
-  config_name = Gem.win_platform? ? 'bindings-windows.yaml' : 'bindings-linux.yaml'
-  config_path = File.join(__dir__, 'headers', config_name)
-
+  config_path = File.join(__dir__, 'headers', 'bindings.yaml')
   return {} unless File.exist?(config_path)
 
   config = YAML.safe_load(File.read(config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
-  config.transform_keys(&:to_sym)
+
+  # Select toolchain: clang-cl for MSVC (mswin), clang for everything else (Linux/Mac/MinGW)
+  toolchain = RUBY_PLATFORM =~ /mswin/ ? 'clang-cl' : 'clang'
+
+  result = {}
+
+  # Extract libclang path for this toolchain
+  if config['libclang']&.is_a?(Hash) && config['libclang'][toolchain]
+    result[:libclang] = config['libclang'][toolchain]
+  elsif config['libclang']&.is_a?(String)
+    result[:libclang] = config['libclang']
+  end
+
+  # Extract clang_args for this toolchain
+  if config['clang_args']&.is_a?(Hash) && config['clang_args'][toolchain]
+    result[:clang_args] = config['clang_args'][toolchain]
+  elsif config['clang_args']&.is_a?(Array)
+    result[:clang_args] = config['clang_args']
+  end
+
+  result
 end
 
 # Set up libclang path from config
