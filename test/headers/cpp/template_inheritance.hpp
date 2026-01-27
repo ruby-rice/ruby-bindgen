@@ -80,4 +80,32 @@ namespace Tests
   typedef Vec<unsigned char, 2> Vec2b;
   typedef Vec<int, 3> Vec3i;
   typedef Vec<double, 4> Vec4d;
+
+  // Issue: Template class inheriting from non-template class
+  // Like OpenCV's Mat_<_Tp> : public Mat
+  class Mat
+  {
+  public:
+    int rows;
+    int cols;
+
+    Mat() : rows(0), cols(0) {}
+    Mat(int rows_, int cols_) : rows(rows_), cols(cols_) {}
+  };
+
+  template<typename _Tp>
+  class Mat_ : public Mat
+  {
+  public:
+    Mat_() : Mat() {}
+    Mat_(int rows_, int cols_) : Mat(rows_, cols_) {}
+
+    _Tp& at(int row, int col) { return data[row * cols + col]; }
+
+  private:
+    _Tp data[100];  // simplified storage
+  };
+
+  typedef Mat_<unsigned char> Mat1b;
+  typedef Mat_<float> Mat1f;
 }

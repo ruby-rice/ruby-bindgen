@@ -48,6 +48,16 @@ inline void Vec_builder(Data_Type_T& klass)
       Arg("other"));
 };
 
+template<typename Data_Type_T, typename _Tp>
+inline void Mat__builder(Data_Type_T& klass)
+{
+  klass.define_constructor(Constructor<Tests::Mat_<_Tp>>()).
+    define_constructor(Constructor<Tests::Mat_<_Tp>, int, int>(),
+      Arg("rows_"), Arg("cols_")).
+    define_method("at", &Tests::Mat_<_Tp>::at,
+      Arg("row"), Arg("col"));
+};
+
 void Init_TemplateInheritance()
 {
   Module rb_mTests = define_module("Tests");
@@ -87,4 +97,17 @@ void Init_TemplateInheritance()
     define(&Matx_builder<Data_Type<Tests::Matx<double, 4, 1>>, double, 4, 1>);
   Rice::Data_Type<Tests::Vec<double, 4>> rb_cVec4d = define_class_under<Tests::Vec<double, 4>, Tests::Matx<double, 4, 1>>(rb_mTests, "Vec4d").
     define(&Vec_builder<Data_Type<Tests::Vec<double, 4>>, double, 4>);
+
+  Rice::Data_Type<Tests::Mat> rb_cTestsMat = define_class_under<Tests::Mat>(rb_mTests, "Mat").
+    define_attr("rows", &Tests::Mat::rows).
+    define_attr("cols", &Tests::Mat::cols).
+    define_constructor(Constructor<Tests::Mat>()).
+    define_constructor(Constructor<Tests::Mat, int, int>(),
+      Arg("rows_"), Arg("cols_"));
+
+  Rice::Data_Type<Tests::Mat_<unsigned char>> rb_cMat1b = define_class_under<Tests::Mat_<unsigned char>, Tests::Mat>(rb_mTests, "Mat1b").
+    define(&Mat__builder<Data_Type<Tests::Mat_<unsigned char>>, unsigned char>);
+
+  Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = define_class_under<Tests::Mat_<float>, Tests::Mat>(rb_mTests, "Mat1f").
+    define(&Mat__builder<Data_Type<Tests::Mat_<float>>, float>);
 }

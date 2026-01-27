@@ -1886,7 +1886,12 @@ module RubyBindgen
 
         # Get the template reference in the base specifier
         base_template_ref = base_spec.find_by_kind(false, :cursor_template_ref).first
-        return nil unless base_template_ref
+
+        # If there's no template ref, the base class is a non-template class (e.g., Mat_<_Tp> : public Mat)
+        unless base_template_ref
+          base_type_ref = base_spec.find_by_kind(false, :cursor_type_ref).first
+          return base_type_ref&.referenced&.qualified_name
+        end
 
         # Extract template arguments from the canonical spelling of the typedef
         canonical = underlying_type.canonical.spelling
