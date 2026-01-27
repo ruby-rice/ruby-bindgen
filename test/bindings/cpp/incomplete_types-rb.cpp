@@ -9,8 +9,23 @@ inline void Ptr_builder(Data_Type_T& klass)
   klass.define_attr("ptr", &Outer::Inner::Ptr<T>::ptr);
 };
 
+template<typename Data_Type_T, typename T>
+inline void Deleter_builder(Data_Type_T& klass)
+{
+  klass.define_method("call", &Outer::Inner::Deleter<T>::operator(),
+      std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("obj"));
+};
+
 void Init_IncompleteTypes()
 {
+  Rice::Data_Type<ExternalOpaqueA> rb_cExternalOpaqueA = define_class<ExternalOpaqueA>("ExternalOpaqueA");
+
+  Rice::Data_Type<ExternalOpaqueB> rb_cExternalOpaqueB = define_class<ExternalOpaqueB>("ExternalOpaqueB");
+
+  Rice::Data_Type<OpaqueTypeC> rb_cOpaqueTypeC = define_class<OpaqueTypeC>("OpaqueTypeC");
+
+  Rice::Data_Type<OpaqueTypeD> rb_cOpaqueTypeD = define_class<OpaqueTypeD>("OpaqueTypeD");
+
   Module rb_mOuter = define_module("Outer");
 
   Module rb_mOuterInner = define_module_under(rb_mOuter, "Inner");
@@ -133,4 +148,20 @@ void Init_IncompleteTypes()
     define_method("get_value_ref", &Outer::Inner::PimplClassWithRefReturn::getValueRef).
     define_method("get_value_const_ref", &Outer::Inner::PimplClassWithRefReturn::getValueConstRef).
     define_method("get_value", &Outer::Inner::PimplClassWithRefReturn::getValue);
+
+  Rice::Data_Type<Outer::Inner::ExternalOpaqueWrapper> rb_cOuterInnerExternalOpaqueWrapper = define_class_under<Outer::Inner::ExternalOpaqueWrapper>(rb_mOuterInner, "ExternalOpaqueWrapper").
+    define_constructor(Constructor<Outer::Inner::ExternalOpaqueWrapper>()).
+    define_singleton_function("get_handle_a", &Outer::Inner::ExternalOpaqueWrapper::getHandleA).
+    define_singleton_function("get_handle_b", &Outer::Inner::ExternalOpaqueWrapper::getHandleB).
+    define_singleton_function("use_handle_a", &Outer::Inner::ExternalOpaqueWrapper::useHandleA,
+      Arg("handle")).
+    define_singleton_function("use_handle_b", &Outer::Inner::ExternalOpaqueWrapper::useHandleB,
+      Arg("handle")).
+    define_singleton_function("get_raw_a", &Outer::Inner::ExternalOpaqueWrapper::getRawA).
+    define_singleton_function("get_raw_b", &Outer::Inner::ExternalOpaqueWrapper::getRawB);
+
+  Rice::Data_Type<Outer::Inner::DeleterUser> rb_cOuterInnerDeleterUser = define_class_under<Outer::Inner::DeleterUser>(rb_mOuterInner, "DeleterUser").
+    define_constructor(Constructor<Outer::Inner::DeleterUser>()).
+    define_attr("deleter_a", &Outer::Inner::DeleterUser::deleterA).
+    define_method("get_deleter_b", &Outer::Inner::DeleterUser::getDeleterB);
 }

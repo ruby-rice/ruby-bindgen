@@ -1,6 +1,24 @@
-// Test case for pimpl pattern - methods/fields returning incomplete types should be skipped
+// Test case for incomplete/opaque types:
+// 1. Inner forward-declared classes (pimpl pattern)
+// 2. External opaque types from other headers (like CUDA types)
+// 3. C-style opaque typedef declarations (like CvCapture, CvVideoWriter from OpenCV)
 
 #include <cstdint>
+
+// External opaque types (like CUstream_st, CUevent_st from CUDA)
+// These are forward-declared structs that are never fully defined
+struct ExternalOpaqueA;
+struct ExternalOpaqueB;
+
+// Typedefs to pointers (like cudaStream_t = CUstream_st*)
+typedef ExternalOpaqueA* OpaqueHandleA;
+typedef ExternalOpaqueB* OpaqueHandleB;
+
+// C-style opaque typedef declarations (like CvCapture, CvVideoWriter from OpenCV)
+// These combine a forward declaration with a typedef in one statement.
+// Both should be registered with Rice.
+typedef struct OpaqueTypeC OpaqueTypeC;
+typedef struct OpaqueTypeD OpaqueTypeD;
 
 namespace Outer
 {
@@ -245,6 +263,49 @@ namespace Outer
     private:
       Impl* p;
       int val;
+    };
+
+    // =========================================================================
+    // External opaque types tests (like cv::cuda::StreamAccessor with cudaStream_t)
+    // =========================================================================
+
+    // Class that wraps external opaque types (like cv::cuda::StreamAccessor)
+    class ExternalOpaqueWrapper
+    {
+    public:
+      // Methods using external opaque pointer types via typedef
+      // Rice needs to register ExternalOpaqueA and ExternalOpaqueB
+      static OpaqueHandleA getHandleA();
+      static OpaqueHandleB getHandleB();
+
+      // Methods taking external opaque types as parameters
+      static void useHandleA(OpaqueHandleA handle);
+      static void useHandleB(OpaqueHandleB handle);
+
+      // Method returning raw pointer to external opaque type
+      static ExternalOpaqueA* getRawA();
+      static ExternalOpaqueB* getRawB();
+    };
+
+    // Template that uses external opaque type as argument (like cv::DefaultDeleter<CvVideoWriter>)
+    template<typename T>
+    class Deleter
+    {
+    public:
+      void operator()(T* obj) const;
+    };
+
+    // Class using Deleter with external opaque type
+    class DeleterUser
+    {
+    public:
+      DeleterUser();
+
+      // Field with template containing external opaque type
+      Deleter<ExternalOpaqueA> deleterA;
+
+      // Method returning template with external opaque type
+      Deleter<ExternalOpaqueB> getDeleterB();
     };
   }
 }
