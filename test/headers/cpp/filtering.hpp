@@ -101,6 +101,21 @@ namespace Outer
   // Typedef creates instantiation, but builder should still be skipped
   typedef SkippedTemplateClass<int> SkippedTemplateClassInt;
 
+  // --- Constructors/methods with skipped param types ---
+
+  // Template class that has a constructor taking a skipped type
+  template<typename T>
+  class UsesSkippedType
+  {
+  public:
+    UsesSkippedType();
+    // This constructor should be skipped because SkippedTemplateClass is in skip_symbols
+    UsesSkippedType(const SkippedTemplateClass<T>& skipped);
+    void normalMethod();
+  };
+
+  typedef UsesSkippedType<int> UsesSkippedTypeInt;
+
   // --- Template class with all deprecated methods ---
   // The builder function should NOT be generated since all methods are deprecated
 

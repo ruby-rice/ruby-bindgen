@@ -3,6 +3,13 @@
 
 using namespace Rice;
 
+template<typename Data_Type_T, typename T>
+inline void UsesSkippedType_builder(Data_Type_T& klass)
+{
+  klass.define_constructor(Constructor<Outer::UsesSkippedType<T>>()).
+    define_method("normal_method", &Outer::UsesSkippedType<T>::normalMethod);
+};
+
 void Init_Filtering()
 {
   Module rb_mOuter = define_module("Outer");
@@ -22,6 +29,9 @@ void Init_Filtering()
     define_constructor(Constructor<Outer::ClassWithDeprecatedConstructor, int, int>(),
       Arg("param1"), Arg("param2")).
     define_method("do_something", &Outer::ClassWithDeprecatedConstructor::doSomething);
+
+  Rice::Data_Type<Outer::UsesSkippedType<int>> rb_cUsesSkippedTypeInt = define_class_under<Outer::UsesSkippedType<int>>(rb_mOuter, "UsesSkippedTypeInt").
+    define(&UsesSkippedType_builder<Data_Type<Outer::UsesSkippedType<int>>, int>);
 
   Rice::Data_Type<Outer::DeprecatedTemplate<int>> rb_cDeprecatedTemplateInt = define_class_under<Outer::DeprecatedTemplate<int>>(rb_mOuter, "DeprecatedTemplateInt");
 

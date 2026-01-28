@@ -49,6 +49,27 @@ module RubyBindgen
         @empty_builders = Set.new
       end
 
+      # Check if a type's spelling contains a skipped symbol.
+      # Used to filter out methods/constructors that reference skipped types.
+      def type_references_skipped_symbol?(type)
+        spelling = type.spelling
+        @skip_symbols.any? do |skip|
+          next false if skip.start_with?('/')  # Skip regex patterns for type checking
+          # Check if the type spelling contains the skipped symbol
+          # Also check simple name (last component) since type spelling may omit namespaces
+          # e.g., type spelling "const MatCommaInitializer_<_Tp>&" should match "cv::MatCommaInitializer_"
+          simple_name = skip.split('::').last
+          spelling.include?(skip) || spelling.include?(simple_name)
+        end
+      end
+
+      # Check if any parameter type of a callable references a skipped symbol.
+      def has_skipped_param_type?(cursor)
+        (0...cursor.type.args_size).any? do |i|
+          type_references_skipped_symbol?(cursor.type.arg_type(i))
+        end
+      end
+
       # Check if a cursor should be skipped based on skip_symbols config.
       # Supports simple names, fully qualified names, and regex patterns (strings starting with /).
       # Examples:
@@ -208,6 +229,9 @@ module RubyBindgen
 
         # Do not construct abstract classes
         return if cursor.semantic_parent.abstract?
+
+        # Skip constructors that take skipped types as parameters
+        return if has_skipped_param_type?(cursor)
 
         signature = constructor_signature(cursor)
         args = arguments(cursor)
