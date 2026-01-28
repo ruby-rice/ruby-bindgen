@@ -44,7 +44,7 @@ void Init_Iterators()
     define_constructor(Constructor<iter::PixelIterator, iter::PixelIterator::pointer>(),
       Arg("p")).
     define_method("dereference", &iter::PixelIterator::operator*).
-    define_method("increment_pre", &iter::PixelIterator::operator++).
+    define_method("increment", &iter::PixelIterator::operator++).
     define_method("!=", &iter::PixelIterator::operator!=,
       Arg("other"));
 
@@ -53,7 +53,7 @@ void Init_Iterators()
     define_constructor(Constructor<iter::ConstPixelIterator, iter::ConstPixelIterator::pointer>(),
       Arg("p")).
     define_method("dereference", &iter::ConstPixelIterator::operator*).
-    define_method("increment_pre", &iter::ConstPixelIterator::operator++).
+    define_method("increment", &iter::ConstPixelIterator::operator++).
     define_method("!=", &iter::ConstPixelIterator::operator!=,
       Arg("other"));
 
@@ -62,7 +62,7 @@ void Init_Iterators()
     define_constructor(Constructor<iter::ReversePixelIterator, iter::ReversePixelIterator::pointer>(),
       Arg("p")).
     define_method("dereference", &iter::ReversePixelIterator::operator*).
-    define_method("increment_pre", &iter::ReversePixelIterator::operator++).
+    define_method("increment", &iter::ReversePixelIterator::operator++).
     define_method("!=", &iter::ReversePixelIterator::operator!=,
       Arg("other"));
 
@@ -71,7 +71,7 @@ void Init_Iterators()
     define_constructor(Constructor<iter::ConstReversePixelIterator, iter::ConstReversePixelIterator::pointer>(),
       Arg("p")).
     define_method("dereference", &iter::ConstReversePixelIterator::operator*).
-    define_method("increment_pre", &iter::ConstReversePixelIterator::operator++).
+    define_method("increment", &iter::ConstReversePixelIterator::operator++).
     define_method("!=", &iter::ConstReversePixelIterator::operator!=,
       Arg("other"));
 
@@ -88,8 +88,8 @@ void Init_Iterators()
       Arg("p")).
     define_method("dereference", &iter::IncompleteIterator::operator*).
     define_method("arrow", &iter::IncompleteIterator::operator->).
-    define_method<iter::IncompleteIterator&(iter::IncompleteIterator::*)()>("increment_pre", &iter::IncompleteIterator::operator++).
-    define_method<iter::IncompleteIterator(iter::IncompleteIterator::*)(int)>("increment", &iter::IncompleteIterator::operator++,
+    define_method<iter::IncompleteIterator&(iter::IncompleteIterator::*)()>("increment", &iter::IncompleteIterator::operator++).
+    define_method<iter::IncompleteIterator(iter::IncompleteIterator::*)(int)>("increment_post", &iter::IncompleteIterator::operator++,
       Arg("arg_0"));
 
   Rice::Data_Type<iter::IncompleteBitmap> rb_cIterIncompleteBitmap = define_class_under<iter::IncompleteBitmap>(rb_mIter, "IncompleteBitmap").

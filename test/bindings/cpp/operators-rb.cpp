@@ -87,11 +87,11 @@ void Init_Operators()
       Arg("other")).
     define_method("logical_or", &Operators::operator||,
       Arg("other")).
-    define_method<Operators&(Operators::*)()>("increment_pre", &Operators::operator++).
-    define_method<Operators(Operators::*)(int)>("increment", &Operators::operator++,
+    define_method<Operators&(Operators::*)()>("increment", &Operators::operator++).
+    define_method<Operators(Operators::*)(int)>("increment_post", &Operators::operator++,
       Arg("arg_0")).
-    define_method<Operators&(Operators::*)()>("decrement_pre", &Operators::operator--).
-    define_method<Operators(Operators::*)(int)>("decrement", &Operators::operator--,
+    define_method<Operators&(Operators::*)()>("decrement", &Operators::operator--).
+    define_method<Operators(Operators::*)(int)>("decrement_post", &Operators::operator--,
       Arg("arg_0")).
     define_method<int&(Operators::*)(int)>("[]", &Operators::operator[],
       Arg("index")).

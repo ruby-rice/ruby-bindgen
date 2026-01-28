@@ -31,8 +31,8 @@ module RubyBindgen
       '->' => 'arrow',
 
       # Increment/decrement - arity-dependent (prefix=0 args, postfix=1 arg)
-      '++' => ->(cursor) { cursor.type.args_size == 0 ? 'increment_pre' : 'increment' },
-      '--' => ->(cursor) { cursor.type.args_size == 0 ? 'decrement_pre' : 'decrement' },
+      '++' => ->(cursor) { cursor.type.args_size == 0 ? 'increment' : 'increment_post' },
+      '--' => ->(cursor) { cursor.type.args_size == 0 ? 'decrement' : 'decrement_post' },
 
       # Dereference vs multiply - arity-dependent (unary=0 args, binary=1 arg)
       '*' => ->(cursor) { cursor.type.args_size == 0 ? 'dereference' : '*' },
