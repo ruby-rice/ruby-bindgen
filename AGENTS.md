@@ -16,28 +16,38 @@ bd sync               # Sync with git
 For ruby-bindgen features and capabilities, see [docs/features.md](docs/features.md).
 For configuration options, see [docs/configuration.md](docs/configuration.md).
 
-## Test Status
+## Key Files
 
-All 13 ruby-bindgen tests pass:
-- classes, enums, functions, inheritance, templates, constructors, operators
-- default_values, iterators, template_inheritance, overloads, incomplete_types, filtering
+- `lib/ruby-bindgen/visitors/rice/rice.rb` - Main visitor that walks the AST
+- `lib/ruby-bindgen/visitors/rice/*.erb` - ERB templates that generate Rice C++ code
+- `test/headers/cpp/*.hpp` - Test input headers
+- `test/bindings/cpp/*-rb.cpp` - Expected output (golden files)
 
-To regenerate the bindings files, which are used to validates tests:
+## Running Tests
 
 ```bash
-# Regenerate ruby-bindgen test expected files
-ENV["UPDATE_EXPECTED"]=1
+# Run all tests
+bundle exec ruby -Ilib -Itest test/rice_test.rb
+
+# Run a specific test
+bundle exec ruby -Ilib -Itest test/rice_test.rb --name test_classes
+
+# Regenerate expected files after making changes
+UPDATE_EXPECTED=1 bundle exec ruby -Ilib -Itest test/rice_test.rb
 ```
+
+All 15 tests: classes, enums, functions, inheritance, templates, constructors, operators, default_values, iterators, template_inheritance, overloads, incomplete_types, filtering, template_defaults, buffers
 
 ## Regenerate opencv-ruby bindings
 
-See `/mnt/c/Source/opencv-ruby/ext/bindings.yaml` for the full configuration.
+See `/mnt/c/Source/opencv-ruby/ext/bindings.yaml` for the full configuration. Use the match field to configure what *.h/*.hpp files are processed and thus generate bindings for.
 
 ```bash
 # Generate bindings
 cd /mnt/c/Source/ruby-bindgen
 bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/bindings.yaml
 ```
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
