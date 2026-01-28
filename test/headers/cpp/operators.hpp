@@ -192,9 +192,10 @@ public:
 
     // Unsigned integer types
     operator unsigned int() const { return 5U; }              // to_u
-    operator unsigned long() const { return 6UL; }            // to_u
+    operator unsigned long() const { return 6UL; }            // to_ul
     operator unsigned long long() const { return 7ULL; }      // to_u64
     operator unsigned short() const { return 8; }             // to_u16
+
 
     // Floating point types
     operator float() const { return 9.0f; }                   // to_f32
@@ -204,4 +205,13 @@ public:
     // Other types
     operator bool() const { return true; }                    // to_bool
     operator std::string() const { return "hello"; }          // to_s
+};
+
+// Test size_t conversion separately to see what clang reports
+class SizeTConversion
+{
+public:
+    size_t value;
+    SizeTConversion() : value(0) {}
+    operator size_t() const { return value; }
 };

@@ -78,6 +78,8 @@ module RubyBindgen
       'uint16_t' => 'u16',
       'uint32_t' => 'u32',
       'uint64_t' => 'u64',
+      # Size type (platform-independent)
+      'size_t' => 'size',
       # Floating point types
       'float' => 'f32',
       'double' => 'f',
@@ -163,8 +165,9 @@ module RubyBindgen
 
     # Handle conversion functions like operator int(), operator float()
     def ruby_conversion_function(cursor)
-      # Extract the type from "operator TYPE"
-      type_name = cursor.spelling.sub(/^operator\s*/, '')
+      # Use result_type.spelling to get the original typedef name (e.g., "size_t")
+      # rather than the resolved type from cursor.spelling (e.g., "unsigned long")
+      type_name = cursor.type.result_type.spelling
 
       # Look up Ruby convention for this type
       suffix = CONVERSION_TYPE_MAPPINGS[type_name]

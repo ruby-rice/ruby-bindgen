@@ -239,6 +239,7 @@ The following table shows how C++ types map to Ruby method names and their corre
 | `uint16_t` | `to_u16` | `Integer` |
 | `uint32_t` | `to_u32` | `Integer` |
 | `uint64_t` | `to_u64` | `Integer` |
+| `size_t` | `to_size` | `Integer` |
 | `float` | `to_f32` | `Float` |
 | `double` | `to_f` | `Float` |
 | `long double` | `to_ld` | `Float` |

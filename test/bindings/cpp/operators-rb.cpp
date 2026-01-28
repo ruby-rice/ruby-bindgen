@@ -220,6 +220,14 @@ void Init_Operators()
       return self;
     });
 
+  Rice::Data_Type<SizeTConversion> rb_cSizeTConversion = define_class<SizeTConversion>("SizeTConversion").
+    define_attr("value", &SizeTConversion::value).
+    define_constructor(Constructor<SizeTConversion>()).
+    define_method("to_size", [](const SizeTConversion& self) -> size_t
+    {
+      return self;
+    });
+
   rb_cMatrix.
     define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
   {
