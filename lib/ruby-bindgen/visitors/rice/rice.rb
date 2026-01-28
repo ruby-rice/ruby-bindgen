@@ -1442,6 +1442,9 @@ module RubyBindgen
         # Handle template case. For example:
         #   typedef Point_<int> Point2i;
         if cursor_template_ref
+          # Skip if the template class is in skip_symbols
+          return if skip_symbol?(cursor_template_ref.referenced)
+
           visit_template_specialization(cursor, cursor_template_ref.referenced, cursor.underlying_type)
         else
           # Check for reference to template reference. For example:
@@ -1741,6 +1744,11 @@ module RubyBindgen
           # Check if class template is from the main file.
           # Note: from_main_file? doesn't work when -include is used, so manually check.
           unless class_template_cursor.file_location.file == class_template_cursor.translation_unit.file.name
+            next :continue
+          end
+
+          # Skip if explicitly listed in skip_symbols
+          if skip_symbol?(class_template_cursor)
             next :continue
           end
 

@@ -86,6 +86,21 @@ namespace Outer
     void method();
   };
 
+  // --- Skipped Template Class Tests ---
+
+  // Template class in skip_symbols - builder should NOT be generated
+  template<typename T>
+  class SkippedTemplateClass
+  {
+  public:
+    SkippedTemplateClass();
+    void method();
+    T value;
+  };
+
+  // Typedef creates instantiation, but builder should still be skipped
+  typedef SkippedTemplateClass<int> SkippedTemplateClassInt;
+
   // --- Template class with all deprecated methods ---
   // The builder function should NOT be generated since all methods are deprecated
 
