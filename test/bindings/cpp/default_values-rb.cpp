@@ -9,6 +9,7 @@ inline void Vec3_builder(Data_Type_T& klass)
   klass.define_constructor(Constructor<cv::Vec3<T>>()).
     define_constructor(Constructor<cv::Vec3<T>, T, T, T>(),
       Arg("x"), Arg("y"), Arg("z")).
+    define_attr("data", &cv::Vec3<T>::data, Rice::AttrAccess::Read).
     define_singleton_function("all", &cv::Vec3<T>::all,
       Arg("value"));
 };

@@ -135,6 +135,7 @@ namespace Outer
     const int const_field = 42;               // read-only (const)
     NonAssignable non_assignable_field;       // read-only (deleted operator=)
     ProtectedAssign protected_assign_field;   // read-only (protected operator=)
+    int array_field[3];                       // array field (currently skipped)
   };
 
   // Test word boundary matching in template argument qualification.

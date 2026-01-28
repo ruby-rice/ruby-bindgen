@@ -1347,9 +1347,6 @@ module RubyBindgen
       def visit_field_decl(cursor)
         return unless cursor.public?
 
-        # Can't return arrays in C++
-        return if cursor.type.is_a?(::FFI::Clang::Types::Array)
-
         self.render_cursor(cursor, "field_decl")
       end
 

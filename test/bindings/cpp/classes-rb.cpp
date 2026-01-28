@@ -99,7 +99,8 @@ void Init_Classes()
     define_attr("regular_field", &Outer::AttributeTest::regular_field).
     define_attr("const_field", &Outer::AttributeTest::const_field, Rice::AttrAccess::Read).
     define_attr("non_assignable_field", &Outer::AttributeTest::non_assignable_field, Rice::AttrAccess::Read).
-    define_attr("protected_assign_field", &Outer::AttributeTest::protected_assign_field, Rice::AttrAccess::Read);
+    define_attr("protected_assign_field", &Outer::AttributeTest::protected_assign_field, Rice::AttrAccess::Read).
+    define_attr("array_field", &Outer::AttributeTest::array_field, Rice::AttrAccess::Read);
 
   Rice::Data_Type<Outer::foo> rb_cOuterFoo = define_class_under<Outer::foo>(rb_mOuter, "Foo").
     define_constructor(Constructor<Outer::foo>()).

@@ -34,6 +34,7 @@ inline void Matx_builder(Data_Type_T& klass)
 {
   klass.define_constant("Rows", Tests::Matx<_Tp, m, n>::rows).
     define_constant("Cols", Tests::Matx<_Tp, m, n>::cols).
+    define_attr("val", &Tests::Matx<_Tp, m, n>::val, Rice::AttrAccess::Read).
     define_constructor(Constructor<Tests::Matx<_Tp, m, n>>()).
     define_method("dot", &Tests::Matx<_Tp, m, n>::dot,
       Arg("other"));
