@@ -25,6 +25,10 @@ bool checkValue(int x);   // -> check_value (NOT check_value?)
 bool validate(int x);     // -> validate (NOT validate?)
 bool process(int a, int b); // -> process (NOT process?)
 
+// Predicate functions with "is" prefix should get ? suffix even with params (ruby-bindgen-1xq)
+bool isContinuous(int i = -1);    // -> continuous?
+bool isSubmatrix(int i);          // -> submatrix? (even without default)
+
 class Widget
 {
 public:

@@ -46,6 +46,12 @@ void Init_Functions()
   define_global_function("process", &process,
     Arg("a"), Arg("b"));
 
+  define_global_function("continuous?", &isContinuous,
+    Arg("i") = static_cast<int>(-1));
+
+  define_global_function("submatrix?", &isSubmatrix,
+    Arg("i"));
+
   Rice::Data_Type<Widget> rb_cWidget = define_class<Widget>("Widget").
     define_constructor(Constructor<Widget>()).
     define_method("empty?", &Widget::empty).

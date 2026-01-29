@@ -197,9 +197,14 @@ module RubyBindgen
 
       # Regular method (not an operator)
       unless spelling.start_with?('operator')
-        # Only add ? suffix for predicate methods (bool return, no parameters)
-        # Methods with parameters that return bool are typically actions returning success/failure
-        if cursor.type.result_type.spelling == "bool" && cursor.type.args_size == 0
+        is_bool = cursor.type.result_type.spelling == "bool"
+        # Methods starting with "is" prefix (isFoo or is_foo) are predicates
+        is_prefixed = spelling.match?(/^is[A-Z_]/)
+
+        # Add ? suffix for predicate methods:
+        # 1. bool return with no parameters, OR
+        # 2. bool return with "is" prefix (regardless of parameters)
+        if is_bool && (cursor.type.args_size == 0 || is_prefixed)
           return "#{spelling.underscore.sub(/^is_/, "")}?"
         else
           return spelling.underscore
