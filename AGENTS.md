@@ -40,7 +40,7 @@ All 15 tests: classes, enums, functions, inheritance, templates, constructors, o
 
 ## Regenerate opencv-ruby bindings
 
-See `/mnt/c/Source/opencv-ruby/ext/bindings.yaml` for the full configuration. Use the match field to configure what *.h/*.hpp files are processed and thus generate bindings for.
+See `/mnt/c/Source/opencv-ruby/ext/bindings.yaml` for the full configuration. Use the match field to configure what *.h/*.hpp files are processed and thus generate bindings for.   
 
 ```bash
 # Generate bindings
