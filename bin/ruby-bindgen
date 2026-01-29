@@ -48,19 +48,35 @@ module RubyBindGen
     def load_config
       @config = YAML.safe_load(File.read(@config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
       @config = symbolize_keys(@config)
+      @config_dir = File.dirname(File.expand_path(@config_path))
 
       # Select toolchain: clang-cl for MSVC (mswin), clang for everything else
       @toolchain = RUBY_PLATFORM =~ /mswin/ ? :'clang-cl' : :clang
 
-      # Resolve platform-specific libclang
-      if @config[:libclang].is_a?(Hash)
-        @config[:libclang] = @config[:libclang][@toolchain]
+      # New structure: clang-cl:/clang: as top-level keys with libclang and args
+      if @config[@toolchain].is_a?(Hash)
+        toolchain_config = @config[@toolchain]
+        @config[:libclang] = toolchain_config[:libclang]
+        @config[:clang_args] = toolchain_config[:args]
+      else
+        # Legacy structure: separate libclang: and clang_args: with nested toolchain keys
+        if @config[:libclang].is_a?(Hash)
+          @config[:libclang] = @config[:libclang][@toolchain]
+        end
+
+        if @config[:clang_args].is_a?(Hash)
+          @config[:clang_args] = @config[:clang_args][@toolchain]
+        end
       end
 
-      # Resolve platform-specific clang_args
-      if @config[:clang_args].is_a?(Hash)
-        @config[:clang_args] = @config[:clang_args][@toolchain]
-      end
+      # Resolve relative paths for input/output (relative to config file location)
+      @config[:input] = resolve_path(@config[:input]) if @config[:input]
+      @config[:output] = resolve_path(@config[:output]) if @config[:output]
+    end
+
+    def resolve_path(path)
+      return path if Pathname.new(path).absolute?
+      File.expand_path(path, @config_dir)
     end
 
     def setup_libclang
