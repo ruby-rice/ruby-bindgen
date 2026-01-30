@@ -997,23 +997,26 @@ module RubyBindgen
       def qualify_class_template_typedefs(spelling, class_template)
         return spelling unless class_template&.kind == :cursor_class_template
 
-        # Collect typedef names from the class template
-        typedef_names = []
-        class_template.each do |child|
-          if child.kind == :cursor_typedef_decl || child.kind == :cursor_type_alias_decl
-            typedef_names << child.spelling
+        # Cache typedef names per class template to avoid repeated traversals
+        @class_template_typedefs ||= {}
+        cache_key = class_template.usr
+        typedef_info = @class_template_typedefs[cache_key] ||= begin
+          names = []
+          class_template.each(false) do |child|
+            child_kind = child.kind
+            if child_kind == :cursor_typedef_decl || child_kind == :cursor_type_alias_decl
+              names << child.spelling
+            end
           end
+          { names: names, qualified_parent: class_template.qualified_display_name }
         end
 
-        return spelling if typedef_names.empty?
-
-        # Get the qualified class template name with template params
-        qualified_parent = class_template.qualified_display_name
+        return spelling if typedef_info[:names].empty?
 
         result = spelling.dup
-        typedef_names.each do |name|
+        typedef_info[:names].each do |name|
           # Replace unqualified typedef names (not preceded by :: or word char)
-          result = result.gsub(/(?<![:\w])#{Regexp.escape(name)}(?![:\w])/, "#{qualified_parent}::#{name}")
+          result = result.gsub(/(?<![:\w])#{Regexp.escape(name)}(?![:\w])/, "#{typedef_info[:qualified_parent]}::#{name}")
         end
 
         result
@@ -1805,7 +1808,9 @@ module RubyBindgen
             next :continue
           end
 
-          unless child_cursor.declaration? || child_cursor.kind == :cursor_macro_definition
+          child_kind = child_cursor.kind
+
+          unless child_cursor.declaration? || child_kind == :cursor_macro_definition
             next :continue
           end
 
@@ -1813,7 +1818,7 @@ module RubyBindgen
             next :continue
           end
 
-          if exclude_kinds.include?(child_cursor.kind)
+          if exclude_kinds.include?(child_kind)
             next :continue
           end
 
@@ -1821,7 +1826,7 @@ module RubyBindgen
           # Non-methods are only visited when only_static is false (first pass)
           # Methods are filtered by their static status
           if !only_static.nil?
-            if child_cursor.kind == :cursor_cxx_method
+            if child_kind == :cursor_cxx_method
               next :continue if only_static != child_cursor.static?
             else
               # Non-methods only in the non-static pass
@@ -1829,7 +1834,7 @@ module RubyBindgen
             end
           end
 
-          visit_method = self.figure_method(child_cursor)
+          visit_method = "visit_#{child_kind.to_s.delete_prefix("cursor_").underscore}".to_sym
           if self.respond_to?(visit_method)
             content = self.send(visit_method, child_cursor)
             case content
