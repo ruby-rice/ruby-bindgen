@@ -31,9 +31,9 @@ void Init_Enums()
 
   Rice::Data_Type<MyNamespace::Buffer> rb_cMyNamespaceBuffer = define_class_under<MyNamespace::Buffer>(rb_mMyNamespace, "Buffer").
     define_constructor(Constructor<MyNamespace::Buffer>()).
-    define_method("create", &MyNamespace::Buffer::create,
+    define_method<void(MyNamespace::Buffer::*)(int, int, MyNamespace::Buffer::Target)>("create", &MyNamespace::Buffer::create,
       Arg("rows"), Arg("cols"), Arg("target") = static_cast<MyNamespace::Buffer::Target>(MyNamespace::Buffer::Target::ARRAY_BUFFER)).
-    define_method("bind", &MyNamespace::Buffer::bind,
+    define_method<void(MyNamespace::Buffer::*)(MyNamespace::Buffer::Target)>("bind", &MyNamespace::Buffer::bind,
       Arg("target") = static_cast<MyNamespace::Buffer::Target>(MyNamespace::Buffer::Target::ARRAY_BUFFER));
 
   Enum<MyNamespace::Buffer::Target> rb_cMyNamespaceBufferTarget = define_enum_under<MyNamespace::Buffer::Target>("Target", rb_cMyNamespaceBuffer).
@@ -47,7 +47,7 @@ void Init_Enums()
 
   Rice::Data_Type<MyNamespace::Solver> rb_cMyNamespaceSolver = define_class_under<MyNamespace::Solver>(rb_mMyNamespace, "Solver").
     define_constructor(Constructor<MyNamespace::Solver>()).
-    define_method("solve", &MyNamespace::Solver::solve,
+    define_method<void(MyNamespace::Solver::*)(int)>("solve", &MyNamespace::Solver::solve,
       Arg("method") = static_cast<int>(MyNamespace::DECOMP_SVD));
 
   Enum<MyNamespace::Flags> rb_cMyNamespaceFlags = define_enum_under<MyNamespace::Flags>("Flags", rb_mMyNamespace).

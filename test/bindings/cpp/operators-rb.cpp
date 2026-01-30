@@ -27,65 +27,65 @@ void Init_Operators()
     define_constructor(Constructor<Operators>()).
     define_constructor(Constructor<Operators, int>(),
       Arg("v")).
-    define_method("+", &Operators::operator+,
+    define_method<Operators(Operators::*)(const Operators&) const>("+", &Operators::operator+,
       Arg("other")).
-    define_method("-", &Operators::operator-,
+    define_method<Operators(Operators::*)(const Operators&) const>("-", &Operators::operator-,
       Arg("other")).
     define_method<Operators(Operators::*)(const Operators&) const>("*", &Operators::operator*,
       Arg("other")).
-    define_method("/", &Operators::operator/,
+    define_method<Operators(Operators::*)(const Operators&) const>("/", &Operators::operator/,
       Arg("other")).
-    define_method("%", &Operators::operator%,
+    define_method<Operators(Operators::*)(const Operators&) const>("%", &Operators::operator%,
       Arg("other")).
-    define_method("assign", &Operators::operator=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign", &Operators::operator=,
       Arg("other")).
-    define_method("assign_plus", &Operators::operator+=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign_plus", &Operators::operator+=,
       Arg("other")).
-    define_method("assign_minus", &Operators::operator-=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign_minus", &Operators::operator-=,
       Arg("other")).
-    define_method("assign_multiply", &Operators::operator*=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign_multiply", &Operators::operator*=,
       Arg("other")).
-    define_method("assign_divide", &Operators::operator/=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign_divide", &Operators::operator/=,
       Arg("other")).
-    define_method("assign_modulus", &Operators::operator%=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign_modulus", &Operators::operator%=,
       Arg("other")).
-    define_method("&", &Operators::operator&,
+    define_method<Operators(Operators::*)(const Operators&) const>("&", &Operators::operator&,
       Arg("other")).
-    define_method("|", &Operators::operator|,
+    define_method<Operators(Operators::*)(const Operators&) const>("|", &Operators::operator|,
       Arg("other")).
-    define_method("^", &Operators::operator^,
+    define_method<Operators(Operators::*)(const Operators&) const>("^", &Operators::operator^,
       Arg("other")).
-    define_method("~", &Operators::operator~).
-    define_method("<<", &Operators::operator<<,
+    define_method<Operators(Operators::*)() const>("~", &Operators::operator~).
+    define_method<Operators(Operators::*)(int) const>("<<", &Operators::operator<<,
       Arg("shift")).
-    define_method(">>", &Operators::operator>>,
+    define_method<Operators(Operators::*)(int) const>(">>", &Operators::operator>>,
       Arg("shift")).
-    define_method("assign_and", &Operators::operator&=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign_and", &Operators::operator&=,
       Arg("other")).
-    define_method("assign_or", &Operators::operator|=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign_or", &Operators::operator|=,
       Arg("other")).
-    define_method("assign_xor", &Operators::operator^=,
+    define_method<Operators&(Operators::*)(const Operators&)>("assign_xor", &Operators::operator^=,
       Arg("other")).
-    define_method("assign_left_shift", &Operators::operator<<=,
+    define_method<Operators&(Operators::*)(int)>("assign_left_shift", &Operators::operator<<=,
       Arg("shift")).
-    define_method("assign_right_shift", &Operators::operator>>=,
+    define_method<Operators&(Operators::*)(int)>("assign_right_shift", &Operators::operator>>=,
       Arg("shift")).
-    define_method("==", &Operators::operator==,
+    define_method<bool(Operators::*)(const Operators&) const>("==", &Operators::operator==,
       Arg("other")).
-    define_method("!=", &Operators::operator!=,
+    define_method<bool(Operators::*)(const Operators&) const>("!=", &Operators::operator!=,
       Arg("other")).
-    define_method("<", &Operators::operator<,
+    define_method<bool(Operators::*)(const Operators&) const>("<", &Operators::operator<,
       Arg("other")).
-    define_method(">", &Operators::operator>,
+    define_method<bool(Operators::*)(const Operators&) const>(">", &Operators::operator>,
       Arg("other")).
-    define_method("<=", &Operators::operator<=,
+    define_method<bool(Operators::*)(const Operators&) const>("<=", &Operators::operator<=,
       Arg("other")).
-    define_method(">=", &Operators::operator>=,
+    define_method<bool(Operators::*)(const Operators&) const>(">=", &Operators::operator>=,
       Arg("other")).
-    define_method("!", &Operators::operator!).
-    define_method("logical_and", &Operators::operator&&,
+    define_method<bool(Operators::*)() const>("!", &Operators::operator!).
+    define_method<bool(Operators::*)(const Operators&) const>("logical_and", &Operators::operator&&,
       Arg("other")).
-    define_method("logical_or", &Operators::operator||,
+    define_method<bool(Operators::*)(const Operators&) const>("logical_or", &Operators::operator||,
       Arg("other")).
     define_method<Operators&(Operators::*)()>("increment", &Operators::operator++).
     define_method<Operators(Operators::*)(int)>("increment_post", &Operators::operator++,
@@ -101,7 +101,7 @@ void Init_Operators()
     }).
     define_method<const int&(Operators::*)(int) const>("[]", &Operators::operator[],
       Arg("index")).
-    define_method("call", &Operators::operator(),
+    define_method<int(Operators::*)(int, int)>("call", &Operators::operator(),
       Arg("a"), Arg("b")).
     define_method<int(Operators::*)() const>("dereference", &Operators::operator*).
     define_method<Operators*(Operators::*)()>("arrow", &Operators::operator->).
@@ -163,7 +163,7 @@ void Init_Operators()
 
   Rice::Data_Type<FileWriter> rb_cFileWriter = define_class<FileWriter>("FileWriter").
     define_constructor(Constructor<FileWriter>()).
-    define_method("open?", &FileWriter::isOpen);
+    define_method<bool(FileWriter::*)() const>("open?", &FileWriter::isOpen);
 
   Rice::Data_Type<AllConversions> rb_cAllConversions = define_class<AllConversions>("AllConversions").
     define_constructor(Constructor<AllConversions>()).

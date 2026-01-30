@@ -11,7 +11,7 @@ void Init_Overloads()
 
   Rice::Data_Type<Outer::Inner::Queue> rb_cOuterInnerQueue = define_class_under<Outer::Inner::Queue>(rb_mOuterInner, "Queue").
     define_constructor(Constructor<Outer::Inner::Queue>()).
-    define_method("finish", &Outer::Inner::Queue::finish);
+    define_method<void(Outer::Inner::Queue::*)()>("finish", &Outer::Inner::Queue::finish);
 
   Rice::Data_Type<Outer::Inner::Device> rb_cOuterInnerDevice = define_class_under<Outer::Inner::Device>(rb_mOuterInner, "Device").
     define_constructor(Constructor<Outer::Inner::Device>());

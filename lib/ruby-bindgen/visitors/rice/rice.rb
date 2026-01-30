@@ -34,7 +34,6 @@ module RubyBindgen
         @include_header = include_header
         @init_names = Hash.new
         @namespaces = Set.new
-        @overloads_stack = Array.new
         @classes = Hash.new  # Maps cruby_name -> C++ type for Data_Type<T> declarations
         @typedef_map = Hash.new
         @type_name_map = Hash.new  # Maps simple type names to qualified names
@@ -100,10 +99,6 @@ module RubyBindgen
         end
       end
 
-      def overloads
-        @overloads_stack.last || Hash.new
-      end
-
       # Visit class children, ensuring static methods come last.
       # Rice's Forwardable module needs instance methods registered before
       # static factory methods that return smart pointers.
@@ -111,14 +106,14 @@ module RubyBindgen
       # Static methods must come last because Rice's Forwardable module needs
       # instance methods registered before static factory methods that return smart pointers.
       def visit_children_two_pass(cursor, exclude_kinds:)
-        @overloads_stack.push(cursor.overloads)
         children = visit_children(cursor, exclude_kinds: exclude_kinds, only_static: false)
         children += visit_children(cursor, exclude_kinds: exclude_kinds, only_static: true)
-        @overloads_stack.pop
         children
       end
 
       def visit_start
+        # Clear caches from previous runs
+        @class_template_typedefs = {}
       end
 
       def visit_end
@@ -152,7 +147,6 @@ module RubyBindgen
         @incomplete_iterators.clear
 
         cursor = translation_unit.cursor
-        @overloads_stack.push(cursor.overloads)
 
         # Build typedef map only (type_name_map no longer needed)
         build_typedef_map(cursor)
@@ -186,8 +180,6 @@ module RubyBindgen
         unless non_member_ops.empty?
           content = content + "\n  " + non_member_ops
         end
-
-        @overloads_stack.pop
 
         # Render C++ file
         STDOUT << "  Writing: " << rice_cpp << "\n"
@@ -1075,11 +1067,7 @@ module RubyBindgen
           return visit_cxx_iterator_method(cursor)
         end
 
-        signature = if self.overloads.include?(cursor.spelling)
-                      method_signature(cursor)
-                    else
-                      nil
-                    end
+        signature = method_signature(cursor)
 
         result = Array.new
 
@@ -1316,11 +1304,7 @@ module RubyBindgen
         name = cursor.ruby_name
         args = arguments(cursor)
 
-        signature = if self.overloads.include?(cursor.spelling)
-                      method_signature(cursor)
-                    else
-                      nil
-                    end
+        signature = method_signature(cursor)
 
         # Check if return type should use ReturnBuffer
         return_buffer = buffer_type?(cursor.type.result_type)
@@ -1362,9 +1346,7 @@ module RubyBindgen
           result << self.render_cursor(cursor, "namespace", :under => under)
         end
 
-        @overloads_stack.push(cursor.overloads)
         result << self.render_children(cursor)
-        @overloads_stack.pop
 
         result.join("\n")
       end
@@ -1777,9 +1759,7 @@ module RubyBindgen
             next :continue
           end
 
-          @overloads_stack.push(cursor.overloads)
           results << visit_class_template_builder(class_template_cursor)
-          @overloads_stack.pop
         end
         merge_children(results, :indentation => indentation, :separator => separator, :strip => strip)
       end

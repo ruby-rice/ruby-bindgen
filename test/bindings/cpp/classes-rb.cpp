@@ -30,16 +30,16 @@ void Init_Classes()
     define_constructor(Constructor<Outer::MyClass>()).
     define_constructor(Constructor<Outer::MyClass, int>(),
       Arg("a")).
-    define_method("method_one", &Outer::MyClass::methodOne,
+    define_method<void(Outer::MyClass::*)(int)>("method_one", &Outer::MyClass::methodOne,
       Arg("a")).
-    define_method("method_two", &Outer::MyClass::methodTwo,
+    define_method<void(Outer::MyClass::*)(int, bool)>("method_two", &Outer::MyClass::methodTwo,
       Arg("a"), Arg("b")).
     define_method<void(Outer::MyClass::*)(int)>("overloaded", &Outer::MyClass::overloaded,
       Arg("a")).
     define_method<void(Outer::MyClass::*)(bool)>("overloaded", &Outer::MyClass::overloaded,
       Arg("a")).
     define_attr("field_one", &Outer::MyClass::field_one).
-    define_singleton_function("static_method_one?", &Outer::MyClass::staticMethodOne);
+    define_singleton_function<bool(*)()>("static_method_one?", &Outer::MyClass::staticMethodOne);
 
   Module rb_mOuterInner = define_module_under(rb_mOuter, "Inner");
 
@@ -51,7 +51,7 @@ void Init_Classes()
 
   Rice::Data_Type<Outer::Inner::ContainerClass::Callback> rb_cOuterInnerContainerClassCallback = define_class_under<Outer::Inner::ContainerClass::Callback>(rb_cOuterInnerContainerClass, "Callback").
     define_constructor(Constructor<Outer::Inner::ContainerClass::Callback>()).
-    define_method("compute?", &Outer::Inner::ContainerClass::Callback::compute);
+    define_method<bool(Outer::Inner::ContainerClass::Callback::*)() const>("compute?", &Outer::Inner::ContainerClass::Callback::compute);
 
   Rice::Data_Type<Outer::Inner::ContainerClass::Config> rb_cOuterInnerContainerClassConfig = define_class_under<Outer::Inner::ContainerClass::Config>(rb_cOuterInnerContainerClass, "Config").
     define_constructor(Constructor<Outer::Inner::ContainerClass::Config>()).
@@ -65,7 +65,7 @@ void Init_Classes()
     define_constructor(Constructor<Outer::Inner::GpuMat>()).
     define_constructor(Constructor<Outer::Inner::GpuMat, int, int, Outer::Inner::GpuMat::Allocator*>(),
       Arg("rows"), Arg("cols"), Arg("allocator") = static_cast<Outer::Inner::GpuMat::Allocator*>(Outer::Inner::GpuMat::defaultAllocator())).
-    define_singleton_function("default_allocator", &Outer::Inner::GpuMat::defaultAllocator);
+    define_singleton_function<Outer::Inner::GpuMat::Allocator*(*)()>("default_allocator", &Outer::Inner::GpuMat::defaultAllocator);
 
   Rice::Data_Type<Outer::Inner::GpuMat::Allocator> rb_cOuterInnerGpuMatAllocator = define_class_under<Outer::Inner::GpuMat::Allocator>(rb_cOuterInnerGpuMat, "Allocator").
     define_constructor(Constructor<Outer::Inner::GpuMat::Allocator>());
@@ -76,11 +76,11 @@ void Init_Classes()
       Arg("size"), Arg("type")).
     define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int, void*, Outer::Inner::GpuMatND::StepArray>(),
       Arg("size"), Arg("type"), ArgBuffer("data"), Arg("step") = static_cast<Outer::Inner::GpuMatND::StepArray>(Outer::Inner::GpuMatND::defaultStepArray())).
-    define_singleton_function("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray);
+    define_singleton_function<Outer::Inner::GpuMatND::StepArray&(*)()>("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray);
 
   Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream").
     define_constructor(Constructor<Outer::Inner::Stream>()).
-    define_method("this_type_does_not_support_comparisons", &Outer::Inner::Stream::this_type_does_not_support_comparisons).
+    define_method<void(Outer::Inner::Stream::*)() const>("this_type_does_not_support_comparisons", &Outer::Inner::Stream::this_type_does_not_support_comparisons).
     define_method("to_i", [](const Outer::Inner::Stream& self) -> int
     {
       return self;
@@ -126,12 +126,12 @@ void Init_Classes()
 
   Rice::Data_Type<Outer::DescriptorExtractor> rb_cOuterDescriptorExtractor = define_class_under<Outer::DescriptorExtractor, Outer::FeatureDetector>(rb_mOuter, "DescriptorExtractor").
     define_constructor(Constructor<Outer::DescriptorExtractor>()).
-    define_method("extract", &Outer::DescriptorExtractor::extract,
+    define_method<void(Outer::DescriptorExtractor::*)(int, int&) const>("extract", &Outer::DescriptorExtractor::extract,
       Arg("image"), Arg("descriptors"));
 
   Rice::Data_Type<Outer::Feature2D> rb_cOuterFeature2D = define_class_under<Outer::Feature2D, Outer::DescriptorExtractor>(rb_mOuter, "Feature2D").
     define_constructor(Constructor<Outer::Feature2D>()).
-    define_method("detect_and_compute", &Outer::Feature2D::detectAndCompute,
+    define_method<void(Outer::Feature2D::*)(int, int, int&, int&) const>("detect_and_compute", &Outer::Feature2D::detectAndCompute,
       Arg("image"), Arg("mask"), Arg("keypoints"), Arg("descriptors"));
 
   Rice::Data_Type<Outer::AffineFeature2D> rb_cOuterAffineFeature2D = define_class_under<Outer::AffineFeature2D, Outer::Feature2D>(rb_mOuter, "AffineFeature2D").

@@ -9,72 +9,72 @@ void Init_Buffers()
     define_constructor(Constructor<BufferClass>()).
     define_attr("value", &BufferClass::value);
 
-  define_global_function("process_int_buffer", &processIntBuffer,
+  define_global_function<void(*)(int*, int)>("process_int_buffer", &processIntBuffer,
     ArgBuffer("data"), Arg("size"));
 
-  define_global_function("process_double_buffer", &processDoubleBuffer,
+  define_global_function<void(*)(double*, int)>("process_double_buffer", &processDoubleBuffer,
     ArgBuffer("values"), Arg("count"));
 
-  define_global_function("process_char_buffer", &processCharBuffer,
+  define_global_function<void(*)(char*, int)>("process_char_buffer", &processCharBuffer,
     Arg("buffer"), Arg("length"));
 
-  define_global_function("process_unsigned_buffer", &processUnsignedBuffer,
+  define_global_function<void(*)(unsigned char*, size_t)>("process_unsigned_buffer", &processUnsignedBuffer,
     ArgBuffer("data"), Arg("size"));
 
-  define_global_function("read_int_buffer", &readIntBuffer,
+  define_global_function<void(*)(const int*, int)>("read_int_buffer", &readIntBuffer,
     ArgBuffer("data"), Arg("size"));
 
-  define_global_function("read_double_buffer", &readDoubleBuffer,
+  define_global_function<void(*)(const double*, int)>("read_double_buffer", &readDoubleBuffer,
     ArgBuffer("values"), Arg("count"));
 
-  define_global_function("get_min_max", &getMinMax,
+  define_global_function<void(*)(const double*, int, double*, double*)>("get_min_max", &getMinMax,
     ArgBuffer("input"), Arg("size"), ArgBuffer("min_val"), ArgBuffer("max_val"));
 
-  define_global_function("process_int_arrays", &processIntArrays,
+  define_global_function<void(*)(int**, int)>("process_int_arrays", &processIntArrays,
     ArgBuffer("arrays"), Arg("count"));
 
-  define_global_function("process_string_array", &processStringArray,
+  define_global_function<void(*)(char**, int)>("process_string_array", &processStringArray,
     ArgBuffer("strings"), Arg("count"));
 
-  define_global_function("process_object_array", &processObjectArray,
+  define_global_function<void(*)(BufferClass**, int)>("process_object_array", &processObjectArray,
     ArgBuffer("objects"), Arg("count"));
 
-  define_global_function("process_const_object_array", &processConstObjectArray,
+  define_global_function<void(*)(const BufferClass**, int)>("process_const_object_array", &processConstObjectArray,
     ArgBuffer("objects"), Arg("count"));
 
-  define_global_function("create_int_buffer", &createIntBuffer,
+  define_global_function<int*(*)(int)>("create_int_buffer", &createIntBuffer,
     Arg("size"), ReturnBuffer());
 
-  define_global_function("create_double_buffer", &createDoubleBuffer,
+  define_global_function<double*(*)(int)>("create_double_buffer", &createDoubleBuffer,
     Arg("size"), ReturnBuffer());
 
-  define_global_function("get_read_only_float_buffer", &getReadOnlyFloatBuffer,
+  define_global_function<const float*(*)()>("get_read_only_float_buffer", &getReadOnlyFloatBuffer,
     ReturnBuffer());
 
-  define_global_function("create_int_arrays", &createIntArrays,
+  define_global_function<int**(*)(int, int)>("create_int_arrays", &createIntArrays,
     Arg("rows"), Arg("cols"), ReturnBuffer());
 
-  define_global_function("create_object_array", &createObjectArray,
+  define_global_function<BufferClass**(*)(int)>("create_object_array", &createObjectArray,
     Arg("count"), ReturnBuffer());
 
   Rice::Data_Type<DataProcessor> rb_cDataProcessor = define_class<DataProcessor>("DataProcessor").
     define_constructor(Constructor<DataProcessor>()).
-    define_method("set_data", &DataProcessor::setData,
+    define_method<void(DataProcessor::*)(int*, int)>("set_data", &DataProcessor::setData,
       ArgBuffer("data"), Arg("size")).
-    define_method("set_weights", &DataProcessor::setWeights,
+    define_method<void(DataProcessor::*)(const double*, int)>("set_weights", &DataProcessor::setWeights,
       ArgBuffer("weights"), Arg("count")).
-    define_method("set_matrices", &DataProcessor::setMatrices,
+    define_method<void(DataProcessor::*)(float**, int)>("set_matrices", &DataProcessor::setMatrices,
       ArgBuffer("matrices"), Arg("count")).
-    define_method("set_objects", &DataProcessor::setObjects,
+    define_method<void(DataProcessor::*)(BufferClass**, int)>("set_objects", &DataProcessor::setObjects,
       ArgBuffer("objects"), Arg("count")).
-    define_method("get_data", &DataProcessor::getData,
+    define_method<int*(DataProcessor::*)()>("get_data", &DataProcessor::getData,
       ReturnBuffer()).
-    define_method("get_weights", &DataProcessor::getWeights,
+    define_method<const double*(DataProcessor::*)()>("get_weights", &DataProcessor::getWeights,
       ReturnBuffer()).
-    define_method("get_matrices", &DataProcessor::getMatrices,
+    define_method<float**(DataProcessor::*)()>("get_matrices", &DataProcessor::getMatrices,
       ReturnBuffer()).
-    define_method("get_objects", &DataProcessor::getObjects,
+    define_method<BufferClass**(DataProcessor::*)()>("get_objects", &DataProcessor::getObjects,
       ReturnBuffer()).
-    define_method("compute_stats", &DataProcessor::computeStats,
+    define_method<void(DataProcessor::*)(double*, double*)>("compute_stats", &DataProcessor::computeStats,
       ArgBuffer("mean"), ArgBuffer("stddev"));
 }

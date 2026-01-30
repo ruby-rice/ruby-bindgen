@@ -5,7 +5,7 @@ using namespace Rice;
 
 void Init_Functions()
 {
-  define_global_function("some_function", &someFunction,
+  define_global_function<void(*)(float)>("some_function", &someFunction,
     Arg("a"));
 
   define_global_function<void(*)(int)>("overload", &overload,
@@ -17,7 +17,7 @@ void Init_Functions()
   define_global_function<void(*)(int, int, int)>("overload", &overload,
     Arg("a"), Arg("b"), Arg("c") = static_cast<int>(10));
 
-  define_global_function("get_const_string", &getConstString);
+  define_global_function<const char* const(*)()>("get_const_string", &getConstString);
 
   define_global_function<void(*)(const char*)>("process_string", &processString,
     Arg("str"));
@@ -25,39 +25,39 @@ void Init_Functions()
   define_global_function<void(*)(const char* const, int)>("process_string", &processString,
     Arg("str"), Arg("len"));
 
-  define_global_function("unnamed_params", &unnamedParams,
+  define_global_function<void(*)(int, float, double)>("unnamed_params", &unnamedParams,
     Arg("arg_0"), Arg("arg_1"), Arg("arg_2"));
 
-  define_global_function("mixed_params", &mixedParams,
+  define_global_function<void(*)(int, float, double, int)>("mixed_params", &mixedParams,
     Arg("named"), Arg("arg_1"), Arg("also_named"), Arg("arg_3"));
 
-  define_global_function("empty?", &isEmpty);
+  define_global_function<bool(*)()>("empty?", &isEmpty);
 
-  define_global_function("valid?", &isValid);
+  define_global_function<bool(*)()>("valid?", &isValid);
 
-  define_global_function("has_data?", &hasData);
+  define_global_function<bool(*)()>("has_data?", &hasData);
 
-  define_global_function("check_value", &checkValue,
+  define_global_function<bool(*)(int)>("check_value", &checkValue,
     Arg("x"));
 
-  define_global_function("validate", &validate,
+  define_global_function<bool(*)(int)>("validate", &validate,
     Arg("x"));
 
-  define_global_function("process", &process,
+  define_global_function<bool(*)(int, int)>("process", &process,
     Arg("a"), Arg("b"));
 
-  define_global_function("continuous?", &isContinuous,
+  define_global_function<bool(*)(int)>("continuous?", &isContinuous,
     Arg("i") = static_cast<int>(-1));
 
-  define_global_function("submatrix?", &isSubmatrix,
+  define_global_function<bool(*)(int)>("submatrix?", &isSubmatrix,
     Arg("i"));
 
   Rice::Data_Type<Widget> rb_cWidget = define_class<Widget>("Widget").
     define_constructor(Constructor<Widget>()).
-    define_method("empty?", &Widget::empty).
-    define_method("enabled?", &Widget::isEnabled).
-    define_method("contains", &Widget::contains,
+    define_method<bool(Widget::*)()>("empty?", &Widget::empty).
+    define_method<bool(Widget::*)()>("enabled?", &Widget::isEnabled).
+    define_method<bool(Widget::*)(int)>("contains", &Widget::contains,
       Arg("x")).
-    define_method("try_set", &Widget::trySet,
+    define_method<bool(Widget::*)(int)>("try_set", &Widget::trySet,
       Arg("value"));
 }

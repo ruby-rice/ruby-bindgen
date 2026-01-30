@@ -11,8 +11,8 @@ inline void Data_builder(Data_Type_T& klass)
       Arg("type")).
     define_attr("rows", &Internal::Data<Rows, Columns>::Rows).
     define_attr("columns", &Internal::Data<Rows, Columns>::Columns).
-    define_method("get_rows", &Internal::Data<Rows, Columns>::getRows).
-    define_method("get_columns", &Internal::Data<Rows, Columns>::getColumns);
+    template define_method<int(Internal::Data<Rows, Columns>::*)()>("get_rows", &Internal::Data<Rows, Columns>::getRows).
+    template define_method<int(Internal::Data<Rows, Columns>::*)()>("get_columns", &Internal::Data<Rows, Columns>::getColumns);
 };
 
 template<typename Data_Type_T, typename T, int Rows, int Columns>
@@ -21,9 +21,9 @@ inline void Matrix_builder(Data_Type_T& klass)
   klass.define_constructor(Constructor<Tests::Matrix<T, Rows, Columns>>()).
     define_constructor(Constructor<Tests::Matrix<T, Rows, Columns>, const Tests::Matrix<T, Rows, Columns>&>(),
       Arg("other")).
-    define_method("column", &Tests::Matrix<T, Rows, Columns>::column,
+    template define_method<Tests::Matrix<T, Rows, 1>(Tests::Matrix<T, Rows, Columns>::*)(int) const>("column", &Tests::Matrix<T, Rows, Columns>::column,
       Arg("column")).
-    define_method("row", &Tests::Matrix<T, Rows, Columns>::row,
+    template define_method<Tests::Matrix<T, 1, Columns>(Tests::Matrix<T, Rows, Columns>::*)(int) const>("row", &Tests::Matrix<T, Rows, Columns>::row,
       Arg("column")).
     define_attr("data", &Tests::Matrix<T, Rows, Columns>::data).
     template define_method<void(Tests::Matrix<T, Rows, Columns>::*)(int, int)>("create", &Tests::Matrix<T, Rows, Columns>::create,
@@ -49,9 +49,9 @@ inline void Transform_builder(Data_Type_T& klass)
   klass.define_constructor(Constructor<Tests::Transform<T>>()).
     define_constructor(Constructor<Tests::Transform<T>, const typename Tests::Transform<T>::Vec3&>(),
       Arg("translation")).
-    define_method("set_rotation", &Tests::Transform<T>::setRotation,
+    template define_method<void(Tests::Transform<T>::*)(const typename Tests::Transform<T>::Mat3&)>("set_rotation", &Tests::Transform<T>::setRotation,
       Arg("rotation")).
-    define_method("get_translation", &Tests::Transform<T>::getTranslation);
+    template define_method<typename Tests::Transform<T>::Vec3(Tests::Transform<T>::*)() const>("get_translation", &Tests::Transform<T>::getTranslation);
 };
 
 template<typename Data_Type_T, typename T>

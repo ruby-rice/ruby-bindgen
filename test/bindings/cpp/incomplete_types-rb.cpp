@@ -12,7 +12,7 @@ inline void Ptr_builder(Data_Type_T& klass)
 template<typename Data_Type_T, typename T>
 inline void Deleter_builder(Data_Type_T& klass)
 {
-  klass.define_method("call", &Outer::Inner::Deleter<T>::operator(),
+  klass.template define_method<void(Outer::Inner::Deleter<T>::*)(T*) const>("call", &Outer::Inner::Deleter<T>::operator(),
       std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("obj"));
 };
 
@@ -36,8 +36,8 @@ void Init_IncompleteTypes()
 
   rb_cOuterInnerPimplClass.
     define_constructor(Constructor<Outer::Inner::PimplClass>()).
-    define_method("get_impl", &Outer::Inner::PimplClass::getImpl).
-    define_method("empty?", &Outer::Inner::PimplClass::empty);
+    define_method<Outer::Inner::PimplClass::Impl*(Outer::Inner::PimplClass::*)() const>("get_impl", &Outer::Inner::PimplClass::getImpl).
+    define_method<bool(Outer::Inner::PimplClass::*)() const>("empty?", &Outer::Inner::PimplClass::empty);
 
   Rice::Data_Type<Outer::Inner::PimplClassWithPublicField> rb_cOuterInnerPimplClassWithPublicField = define_class_under<Outer::Inner::PimplClassWithPublicField>(rb_mOuterInner, "PimplClassWithPublicField");
 
@@ -58,7 +58,7 @@ void Init_IncompleteTypes()
     define_constructor(Constructor<Outer::Inner::PimplClassWithConstructor, int>(),
       Arg("value")).
     define_constructor(Constructor<Outer::Inner::PimplClassWithConstructor>()).
-    define_method("get_value", &Outer::Inner::PimplClassWithConstructor::getValue);
+    define_method<int(Outer::Inner::PimplClassWithConstructor::*)() const>("get_value", &Outer::Inner::PimplClassWithConstructor::getValue);
 
   Rice::Data_Type<Outer::Inner::PimplClassWithSmartPtr> rb_cOuterInnerPimplClassWithSmartPtr = define_class_under<Outer::Inner::PimplClassWithSmartPtr>(rb_mOuterInner, "PimplClassWithSmartPtr");
 
@@ -98,12 +98,12 @@ void Init_IncompleteTypes()
 
   rb_cOuterInnerPimplClassWithStaticMethods.
     define_constructor(Constructor<Outer::Inner::PimplClassWithStaticMethods>()).
-    define_singleton_function("create_impl", &Outer::Inner::PimplClassWithStaticMethods::createImpl).
-    define_singleton_function("init_from_impl", &Outer::Inner::PimplClassWithStaticMethods::initFromImpl,
+    define_singleton_function<Outer::Inner::PimplClassWithStaticMethods::Impl*(*)()>("create_impl", &Outer::Inner::PimplClassWithStaticMethods::createImpl).
+    define_singleton_function<void(*)(Outer::Inner::PimplClassWithStaticMethods::Impl*)>("init_from_impl", &Outer::Inner::PimplClassWithStaticMethods::initFromImpl,
       Arg("impl")).
-    define_singleton_function("get_smart_impl", &Outer::Inner::PimplClassWithStaticMethods::getSmartImpl).
-    define_singleton_function("get_value", &Outer::Inner::PimplClassWithStaticMethods::getValue).
-    define_singleton_function("set_value", &Outer::Inner::PimplClassWithStaticMethods::setValue,
+    define_singleton_function<Outer::Inner::Ptr<Outer::Inner::PimplClassWithStaticMethods::Impl>(*)()>("get_smart_impl", &Outer::Inner::PimplClassWithStaticMethods::getSmartImpl).
+    define_singleton_function<int(*)()>("get_value", &Outer::Inner::PimplClassWithStaticMethods::getValue).
+    define_singleton_function<void(*)(int)>("set_value", &Outer::Inner::PimplClassWithStaticMethods::setValue,
       Arg("val"));
 
   Rice::Data_Type<Outer::Inner::Ptr<Outer::Inner::FactoryClass>> rb_cOuterInnerPtrOuterInnerFactoryclass = define_class_under<Outer::Inner::Ptr<Outer::Inner::FactoryClass>>(rb_mOuterInner, "PtrOuterInnerFactoryclass").
@@ -111,12 +111,12 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::FactoryClass> rb_cOuterInnerFactoryClass = define_class_under<Outer::Inner::FactoryClass>(rb_mOuterInner, "FactoryClass").
     define_constructor(Constructor<Outer::Inner::FactoryClass>()).
-    define_method("clone", &Outer::Inner::FactoryClass::clone).
+    define_method<Outer::Inner::Ptr<Outer::Inner::FactoryClass>(Outer::Inner::FactoryClass::*)() const>("clone", &Outer::Inner::FactoryClass::clone).
     define_attr("parent", &Outer::Inner::FactoryClass::parent).
-    define_method("set_parent", &Outer::Inner::FactoryClass::setParent,
+    define_method<void(Outer::Inner::FactoryClass::*)(Outer::Inner::Ptr<Outer::Inner::FactoryClass>)>("set_parent", &Outer::Inner::FactoryClass::setParent,
       Arg("p")).
-    define_method("get_value", &Outer::Inner::FactoryClass::getValue).
-    define_singleton_function("create", &Outer::Inner::FactoryClass::create);
+    define_method<int(Outer::Inner::FactoryClass::*)() const>("get_value", &Outer::Inner::FactoryClass::getValue).
+    define_singleton_function<Outer::Inner::Ptr<Outer::Inner::FactoryClass>(*)()>("create", &Outer::Inner::FactoryClass::create);
 
   Rice::Data_Type<Outer::Inner::OuterWithFactory> rb_cOuterInnerOuterWithFactory = define_class_under<Outer::Inner::OuterWithFactory>(rb_mOuterInner, "OuterWithFactory").
     define_constructor(Constructor<Outer::Inner::OuterWithFactory>()).
@@ -124,14 +124,14 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::OuterWithFactory::InnerFactory> rb_cOuterInnerOuterWithFactoryInnerFactory = define_class_under<Outer::Inner::OuterWithFactory::InnerFactory>(rb_cOuterInnerOuterWithFactory, "InnerFactory").
     define_constructor(Constructor<Outer::Inner::OuterWithFactory::InnerFactory>()).
-    define_singleton_function("create_outer", &Outer::Inner::OuterWithFactory::InnerFactory::createOuter);
+    define_singleton_function<Outer::Inner::Ptr<Outer::Inner::OuterWithFactory>(*)()>("create_outer", &Outer::Inner::OuterWithFactory::InnerFactory::createOuter);
 
   Rice::Data_Type<Outer::Inner::TypedefReturnClass> rb_cOuterInnerTypedefReturnClass = define_class_under<Outer::Inner::TypedefReturnClass>(rb_mOuterInner, "TypedefReturnClass").
     define_constructor(Constructor<Outer::Inner::TypedefReturnClass>()).
-    define_method("get_count", &Outer::Inner::TypedefReturnClass::getCount).
-    define_method("get_signed_count", &Outer::Inner::TypedefReturnClass::getSignedCount).
-    define_method("get_size", &Outer::Inner::TypedefReturnClass::getSize).
-    define_method("reset", &Outer::Inner::TypedefReturnClass::reset).
+    define_method<uint64_t(Outer::Inner::TypedefReturnClass::*)() const>("get_count", &Outer::Inner::TypedefReturnClass::getCount).
+    define_method<int64_t(Outer::Inner::TypedefReturnClass::*)() const>("get_signed_count", &Outer::Inner::TypedefReturnClass::getSignedCount).
+    define_method<std::size_t(Outer::Inner::TypedefReturnClass::*)() const>("get_size", &Outer::Inner::TypedefReturnClass::getSize).
+    define_method<void(Outer::Inner::TypedefReturnClass::*)()>("reset", &Outer::Inner::TypedefReturnClass::reset).
     define_attr("count", &Outer::Inner::TypedefReturnClass::count).
     define_attr("signed_count", &Outer::Inner::TypedefReturnClass::signedCount).
     define_attr("sz", &Outer::Inner::TypedefReturnClass::sz);
@@ -142,26 +142,26 @@ void Init_IncompleteTypes()
 
   rb_cOuterInnerPimplClassWithRefReturn.
     define_constructor(Constructor<Outer::Inner::PimplClassWithRefReturn>()).
-    define_method("get_impl_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRef).
-    define_method("get_impl_const_ref", &Outer::Inner::PimplClassWithRefReturn::getImplConstRef).
-    define_method("get_impl_rvalue_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRvalueRef).
-    define_method("get_value_ref", &Outer::Inner::PimplClassWithRefReturn::getValueRef).
-    define_method("get_value_const_ref", &Outer::Inner::PimplClassWithRefReturn::getValueConstRef).
-    define_method("get_value", &Outer::Inner::PimplClassWithRefReturn::getValue);
+    define_method<Outer::Inner::PimplClassWithRefReturn::Impl&(Outer::Inner::PimplClassWithRefReturn::*)()>("get_impl_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRef).
+    define_method<const Outer::Inner::PimplClassWithRefReturn::Impl&(Outer::Inner::PimplClassWithRefReturn::*)() const>("get_impl_const_ref", &Outer::Inner::PimplClassWithRefReturn::getImplConstRef).
+    define_method<Outer::Inner::PimplClassWithRefReturn::Impl&&(Outer::Inner::PimplClassWithRefReturn::*)()>("get_impl_rvalue_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRvalueRef).
+    define_method<int&(Outer::Inner::PimplClassWithRefReturn::*)()>("get_value_ref", &Outer::Inner::PimplClassWithRefReturn::getValueRef).
+    define_method<const int&(Outer::Inner::PimplClassWithRefReturn::*)() const>("get_value_const_ref", &Outer::Inner::PimplClassWithRefReturn::getValueConstRef).
+    define_method<int(Outer::Inner::PimplClassWithRefReturn::*)() const>("get_value", &Outer::Inner::PimplClassWithRefReturn::getValue);
 
   Rice::Data_Type<Outer::Inner::ExternalOpaqueWrapper> rb_cOuterInnerExternalOpaqueWrapper = define_class_under<Outer::Inner::ExternalOpaqueWrapper>(rb_mOuterInner, "ExternalOpaqueWrapper").
     define_constructor(Constructor<Outer::Inner::ExternalOpaqueWrapper>()).
-    define_singleton_function("get_handle_a", &Outer::Inner::ExternalOpaqueWrapper::getHandleA).
-    define_singleton_function("get_handle_b", &Outer::Inner::ExternalOpaqueWrapper::getHandleB).
-    define_singleton_function("use_handle_a", &Outer::Inner::ExternalOpaqueWrapper::useHandleA,
+    define_singleton_function<OpaqueHandleA(*)()>("get_handle_a", &Outer::Inner::ExternalOpaqueWrapper::getHandleA).
+    define_singleton_function<OpaqueHandleB(*)()>("get_handle_b", &Outer::Inner::ExternalOpaqueWrapper::getHandleB).
+    define_singleton_function<void(*)(OpaqueHandleA)>("use_handle_a", &Outer::Inner::ExternalOpaqueWrapper::useHandleA,
       Arg("handle")).
-    define_singleton_function("use_handle_b", &Outer::Inner::ExternalOpaqueWrapper::useHandleB,
+    define_singleton_function<void(*)(OpaqueHandleB)>("use_handle_b", &Outer::Inner::ExternalOpaqueWrapper::useHandleB,
       Arg("handle")).
-    define_singleton_function("get_raw_a", &Outer::Inner::ExternalOpaqueWrapper::getRawA).
-    define_singleton_function("get_raw_b", &Outer::Inner::ExternalOpaqueWrapper::getRawB);
+    define_singleton_function<ExternalOpaqueA*(*)()>("get_raw_a", &Outer::Inner::ExternalOpaqueWrapper::getRawA).
+    define_singleton_function<ExternalOpaqueB*(*)()>("get_raw_b", &Outer::Inner::ExternalOpaqueWrapper::getRawB);
 
   Rice::Data_Type<Outer::Inner::DeleterUser> rb_cOuterInnerDeleterUser = define_class_under<Outer::Inner::DeleterUser>(rb_mOuterInner, "DeleterUser").
     define_constructor(Constructor<Outer::Inner::DeleterUser>()).
     define_attr("deleter_a", &Outer::Inner::DeleterUser::deleterA).
-    define_method("get_deleter_b", &Outer::Inner::DeleterUser::getDeleterB);
+    define_method<Outer::Inner::Deleter<ExternalOpaqueB>(Outer::Inner::DeleterUser::*)()>("get_deleter_b", &Outer::Inner::DeleterUser::getDeleterB);
 }

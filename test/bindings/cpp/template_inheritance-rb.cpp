@@ -25,7 +25,7 @@ template<typename Data_Type_T, typename P>
 inline void WarperBase_builder(Data_Type_T& klass)
 {
   klass.define_attr("projector", &Tests::WarperBase<P>::projector).
-    define_method("set_projector", &Tests::WarperBase<P>::setProjector,
+    template define_method<void(Tests::WarperBase<P>::*)(const P&)>("set_projector", &Tests::WarperBase<P>::setProjector,
       Arg("p"));
 };
 
@@ -36,7 +36,7 @@ inline void Matx_builder(Data_Type_T& klass)
     define_constant("Cols", Tests::Matx<_Tp, m, n>::cols).
     define_attr("val", &Tests::Matx<_Tp, m, n>::val, Rice::AttrAccess::Read).
     define_constructor(Constructor<Tests::Matx<_Tp, m, n>>()).
-    define_method("dot", &Tests::Matx<_Tp, m, n>::dot,
+    template define_method<_Tp(Tests::Matx<_Tp, m, n>::*)(const Tests::Matx<_Tp, m, n>&) const>("dot", &Tests::Matx<_Tp, m, n>::dot,
       Arg("other"));
 };
 
@@ -45,7 +45,7 @@ inline void Vec_builder(Data_Type_T& klass)
 {
   klass.define_constant("Channels", Tests::Vec<_Tp, cn>::channels).
     define_constructor(Constructor<Tests::Vec<_Tp, cn>>()).
-    define_method("cross", &Tests::Vec<_Tp, cn>::cross,
+    template define_method<_Tp(Tests::Vec<_Tp, cn>::*)(const Tests::Vec<_Tp, cn>&) const>("cross", &Tests::Vec<_Tp, cn>::cross,
       Arg("other"));
 };
 
@@ -55,7 +55,7 @@ inline void Mat__builder(Data_Type_T& klass)
   klass.define_constructor(Constructor<Tests::Mat_<_Tp>>()).
     define_constructor(Constructor<Tests::Mat_<_Tp>, int, int>(),
       Arg("rows_"), Arg("cols_")).
-    define_method("at", &Tests::Mat_<_Tp>::at,
+    template define_method<_Tp&(Tests::Mat_<_Tp>::*)(int, int)>("at", &Tests::Mat_<_Tp>::at,
       Arg("row"), Arg("col"));
 };
 
@@ -82,7 +82,7 @@ void Init_TemplateInheritance()
   Rice::Data_Type<Tests::PlaneWarper> rb_cTestsPlaneWarper = define_class_under<Tests::PlaneWarper, Tests::WarperBase<Tests::PlaneProjector>>(rb_mTests, "PlaneWarper").
     define_constructor(Constructor<Tests::PlaneWarper, float>(),
       Arg("scale") = static_cast<float>(1.0f)).
-    define_method("get_scale", &Tests::PlaneWarper::getScale);
+    define_method<float(Tests::PlaneWarper::*)() const>("get_scale", &Tests::PlaneWarper::getScale);
 
   Rice::Data_Type<Tests::Matx<unsigned char, 2, 1>> rb_cMatxUnsignedChar21 = define_class_under<Tests::Matx<unsigned char, 2, 1>>(rb_mTests, "MatxUnsignedChar21").
     define(&Matx_builder<Data_Type<Tests::Matx<unsigned char, 2, 1>>, unsigned char, 2, 1>);
