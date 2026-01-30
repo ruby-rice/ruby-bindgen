@@ -80,3 +80,27 @@ public:
     // Out parameter method
     void computeStats(double* mean, double* stddev);
 };
+
+// =============================================================================
+// Function pointer parameters
+// =============================================================================
+
+// Callback function type
+typedef bool (*ProcessCallback)(int* data, int size, void* userData);
+
+// Function taking a function pointer parameter
+void processWithCallback(int* data, int size, ProcessCallback callback, void* userData);
+
+// Function taking inline function pointer (not typedef)
+void setFaceDetector(bool (*detector)(int*, int*, void*), void* userData);
+
+// Class with function pointer methods
+class EventHandler
+{
+public:
+    // Method taking function pointer
+    void setCallback(void (*callback)(int eventType, void* data), void* userData);
+
+    // Method taking function pointer returning bool
+    void setValidator(bool (*validate)(const char* input));
+};

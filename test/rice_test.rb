@@ -156,4 +156,15 @@ class RiceTest < AbstractTest
     parser.generate(visitor)
     validate_result(visitor.outputter)
   end
+
+  def test_cross_file_typedef
+    # Tests that typedefs from included headers are found when generating
+    # base classes. DerivedVector4d inherits from BaseMatrix<double, 4>,
+    # which has typedef BaseMatrix4d in cross_file_base.hpp.
+    header = "cpp/cross_file_derived.hpp"
+    parser = create_parser(header)
+    visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
+    parser.generate(visitor)
+    validate_result(visitor.outputter)
+  end
 end

@@ -713,7 +713,15 @@ module RubyBindgen
           "#{type_spelling(type.non_reference_type)}&&"
         when :type_pointer
           ptr_const = type.const_qualified? ? " const" : ""
-          "#{type_spelling(type.pointee)}*#{ptr_const}"
+          pointee = type.pointee
+          if pointee.kind == :type_function_proto || pointee.kind == :type_function_no_proto
+            # Function pointer: format as "return_type (*)(arg_types...)"
+            result_type = type_spelling(pointee.result_type)
+            arg_types = pointee.arg_types.map { |t| type_spelling(t) }.join(", ")
+            "#{result_type} (*#{ptr_const})(#{arg_types})"
+          else
+            "#{type_spelling(pointee)}*#{ptr_const}"
+          end
         when :type_incomplete_array
           type.canonical.spelling
         when :type_elaborated
@@ -1054,7 +1062,8 @@ module RubyBindgen
       def skip_callable?(cursor)
         skip_symbol?(cursor) ||
           cursor.availability == :deprecated ||
-          cursor.spelling.end_with?('_')
+          cursor.spelling.end_with?('_') ||
+          cursor.type.variadic?
       end
 
       def visit_cxx_method(cursor)
@@ -1295,7 +1304,6 @@ module RubyBindgen
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
         return if skip_callable?(cursor)
         return unless has_export_macro?(cursor)
-        return if cursor.type.variadic?
 
         if cursor.spelling.match(/operator/)
           return self.visit_operator_non_member(cursor)
@@ -1364,15 +1372,22 @@ module RubyBindgen
         #   std::ostream& operator << (std::ostream& out, const Complex<_Tp>& c)
         return if cursor.type.args_size != 2
 
-        class_cursor = cursor.type.arg_type(0).non_reference_type.declaration
+        arg0_type = cursor.type.arg_type(0).non_reference_type
+        class_cursor = arg0_type.declaration
 
         # This can happen when the first operator is a fundamental type like double
         return if class_cursor.kind == :cursor_no_decl_found
         # Rice already provides bitwise operators (&, |, ^, ~, <<, >>) for enums automatically
         return if class_cursor.kind == :cursor_enum_decl
 
+        # Check if there's a typedef for this type (e.g., Matx44d for Matx<double, 4, 4>)
+        # Strip const/volatile qualifiers since typedef_map keys don't include them
+        canonical = arg0_type.canonical.spelling.gsub(/\b(const|volatile)\s+/, '')
+        typedef_cursor = @typedef_map[canonical]
+        target_cursor = typedef_cursor || class_cursor
+
         # Collect non-member operators to render grouped by class later
-        @non_member_operators[class_cursor.cruby_name] << { cursor: cursor, class_cursor: class_cursor }
+        @non_member_operators[target_cursor.cruby_name] << { cursor: cursor, class_cursor: target_cursor }
         nil
       end
 
@@ -1387,7 +1402,11 @@ module RubyBindgen
 
             # Handle ostream << specially - generates inspect method on the second arg's class
             if cursor.spelling.match(/<</) && cursor.type.arg_type(0).spelling.match(/ostream/)
-              target_class = cursor.type.arg_type(1).non_reference_type.declaration.cruby_name
+              arg1_non_ref = cursor.type.arg_type(1).non_reference_type
+              # Strip const/volatile qualifiers since typedef_map keys don't include them
+              arg1_canonical = arg1_non_ref.canonical.spelling.gsub(/\b(const|volatile)\s+/, '')
+              arg1_typedef = @typedef_map[arg1_canonical]
+              target_class = arg1_typedef ? arg1_typedef.cruby_name : arg1_non_ref.declaration.cruby_name
               arg_type = type_spelling(cursor.type.arg_type(1))
               grouped[target_class] << <<~CPP.strip
                 define_method("inspect", [](#{arg_type} self) -> std::string
@@ -1849,13 +1868,13 @@ module RubyBindgen
       end
 
       # Build maps for type lookups:
-      # - @typedef_map: canonical type spellings -> typedef/using declarations (main file only)
+      # - @typedef_map: canonical type spellings -> typedef/using declarations
+      #   Includes all files (not just main) because base classes may have typedefs in included headers
       # - @type_name_map: only class templates for typename qualification (minimal map)
       def build_typedef_map(cursor)
         cursor.find_by_kind(true, :cursor_typedef_decl, :cursor_type_alias_decl, :cursor_class_template) do |child|
           case child.kind
           when :cursor_typedef_decl, :cursor_type_alias_decl
-            next unless child.location.from_main_file?
             canonical = child.underlying_type.canonical.spelling
             @typedef_map[canonical] = child
           when :cursor_class_template

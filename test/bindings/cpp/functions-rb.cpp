@@ -60,4 +60,9 @@ void Init_Functions()
       Arg("x")).
     define_method<bool(Widget::*)(int)>("try_set", &Widget::trySet,
       Arg("value"));
+
+  Rice::Data_Type<Logger> rb_cLogger = define_class<Logger>("Logger").
+    define_constructor(Constructor<Logger>()).
+    define_singleton_function<void(*)(int)>("set_level", &Logger::setLevel,
+      Arg("level"));
 }

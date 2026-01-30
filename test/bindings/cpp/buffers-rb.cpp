@@ -77,4 +77,17 @@ void Init_Buffers()
       ReturnBuffer()).
     define_method<void(DataProcessor::*)(double*, double*)>("compute_stats", &DataProcessor::computeStats,
       ArgBuffer("mean"), ArgBuffer("stddev"));
+
+  define_global_function<void(*)(int*, int, ProcessCallback, void*)>("process_with_callback", &processWithCallback,
+    ArgBuffer("data"), Arg("size"), Arg("callback"), ArgBuffer("user_data"));
+
+  define_global_function<void(*)(bool (*)(int*, int*, void*), void*)>("set_face_detector", &setFaceDetector,
+    Arg("detector"), ArgBuffer("user_data"));
+
+  Rice::Data_Type<EventHandler> rb_cEventHandler = define_class<EventHandler>("EventHandler").
+    define_constructor(Constructor<EventHandler>()).
+    define_method<void(EventHandler::*)(void (*)(int, void*), void*)>("set_callback", &EventHandler::setCallback,
+      Arg("callback"), ArgBuffer("user_data")).
+    define_method<void(EventHandler::*)(bool (*)(const char*))>("set_validator", &EventHandler::setValidator,
+      Arg("validate"));
 }

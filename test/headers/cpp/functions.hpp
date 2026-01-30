@@ -37,3 +37,19 @@ public:
   bool contains(int x);     // -> contains (NOT contains?)
   bool trySet(int value);   // -> try_set (NOT try_set?)
 };
+
+// =============================================================================
+// Variadic functions - should be SKIPPED (cannot be bound to Ruby)
+// =============================================================================
+
+// C-style variadic function (printf-like)
+int logMessage(int level, const char* fmt, ...);
+
+// Class with variadic static method
+class Logger
+{
+public:
+  static void setLevel(int level);                    // -> should be generated
+  static int log(int level, const char* fmt, ...);    // -> should be SKIPPED
+  static int error(const char* fmt, ...);             // -> should be SKIPPED
+};
