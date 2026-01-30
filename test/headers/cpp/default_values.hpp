@@ -172,3 +172,29 @@ namespace noncopyable
   void use_derived_cpp03(const DerivedFromCpp03& obj = DerivedFromCpp03());
   void use_derived_cpp11(const DerivedFromCpp11& obj = DerivedFromCpp11());
 }
+
+// Test partially-qualified namespace in default values
+// Like cv::makePtr<flann::KDTreeIndexParams>() which should become
+// cv::makePtr<cv::flann::KDTreeIndexParams>()
+namespace outer
+{
+  template<typename T>
+  T* makePtr() { return new T(); }
+
+  namespace inner
+  {
+    class IndexParams
+    {
+    public:
+      IndexParams() {}
+    };
+  }
+
+  class Matcher
+  {
+  public:
+    // Default value uses partially-qualified name: inner::IndexParams
+    // Should become: outer::inner::IndexParams
+    Matcher(inner::IndexParams* params = makePtr<inner::IndexParams>());
+  };
+}

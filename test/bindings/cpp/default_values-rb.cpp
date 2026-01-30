@@ -140,4 +140,15 @@ void Init_DefaultValues()
 
   rb_mNoncopyable.define_module_function<void(*)(const noncopyable::DerivedFromCpp11&)>("use_derived_cpp11", &noncopyable::use_derived_cpp11,
     Arg("obj"));
+
+  Module rb_mOuter = define_module("Outer");
+
+  Module rb_mOuterInner = define_module_under(rb_mOuter, "Inner");
+
+  Rice::Data_Type<outer::inner::IndexParams> rb_cOuterInnerIndexParams = define_class_under<outer::inner::IndexParams>(rb_mOuterInner, "IndexParams").
+    define_constructor(Constructor<outer::inner::IndexParams>());
+
+  Rice::Data_Type<outer::Matcher> rb_cOuterMatcher = define_class_under<outer::Matcher>(rb_mOuter, "Matcher").
+    define_constructor(Constructor<outer::Matcher, outer::inner::IndexParams*>(),
+      Arg("params") = static_cast<outer::inner::IndexParams*>(outer::makePtr<outer::inner::IndexParams>()));
 }

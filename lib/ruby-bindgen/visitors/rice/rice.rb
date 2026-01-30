@@ -580,13 +580,30 @@ module RubyBindgen
 
       # Qualify template arguments in a type spelling
       # e.g., DataType<hfloat> -> DataType<cv::hfloat>
-      # Uses the canonical type to extract fully qualified names
+      # Collects qualified names from both original and canonical types
       def qualify_template_args(spelling, type)
         return spelling if spelling.nil? || !spelling.include?('<')
 
-        # Build a map of simple_name -> qualified_name from the canonical type
+        # Build a map of simple_name -> qualified_name from both the original type
+        # (for typedefs like cv::String) and the canonical type (for concrete types)
         qualifications = {}
-        collect_type_qualifications(type.canonical, qualifications) if type
+        if type
+          collect_type_qualifications(type, qualifications)
+          collect_type_qualifications(type.canonical, qualifications)
+        end
+
+        # Also check for typedef names in the spelling that we can qualify via @typedef_map
+        # This handles cases where libclang's template_argument_type returns the resolved type
+        # instead of the typedef name (e.g., String -> std::string instead of cv::String)
+        @typedef_map.each do |canonical_spelling, typedef_cursor|
+          simple_name = typedef_cursor.spelling
+          qualified_name = typedef_cursor.qualified_name
+          next if simple_name == qualified_name
+          # Only add if the simple name appears in the spelling (unqualified)
+          if spelling.match?(/(?<![:\w])#{Regexp.escape(simple_name)}(?!\w)/)
+            qualifications[simple_name] = qualified_name
+          end
+        end
 
         # Apply qualifications to the spelling
         result = spelling.dup
@@ -932,6 +949,12 @@ module RubyBindgen
 
             # Replace unqualified occurrences (negative lookbehind avoids already-qualified names)
             default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
+
+            # Replace partially-qualified names (e.g., flann::Foo -> cv::flann::Foo)
+            # Match any prefix::simple_name that isn't already fully qualified
+            default_text = default_text.gsub(/(?<!\w)(\w+(?:::\w+)*)::#{Regexp.escape(simple_name)}\b/) do |match|
+              match == qualified_name ? match : qualified_name
+            end
           rescue ArgumentError
             # Skip if we can't get qualified name (e.g., invalid cursor)
           end
@@ -1884,7 +1907,11 @@ module RubyBindgen
             next if parent_kind == :cursor_class_decl || parent_kind == :cursor_struct ||
                     parent_kind == :cursor_class_template || parent_kind == :cursor_class_template_partial_specialization
             canonical = child.underlying_type.canonical.spelling
-            @typedef_map[canonical] = child
+            existing = @typedef_map[canonical]
+            # Prefer non-std typedefs over std ones (e.g., cv::String over std::string)
+            if existing.nil? || (existing.qualified_name.start_with?("std::") && !child.qualified_name.start_with?("std::"))
+              @typedef_map[canonical] = child
+            end
           when :cursor_class_template
             # Only collect class templates for typename pattern qualification
             next if child.spelling.empty?
