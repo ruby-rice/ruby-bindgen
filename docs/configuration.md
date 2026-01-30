@@ -16,24 +16,15 @@ ruby-bindgen config.yaml
 # If omitted, only per-file bindings are generated without project wrapper files
 extension: my_extension
 
-# Path to libclang shared library (optional)
-# If not specified, ffi-clang will attempt to find it automatically
-# Can be a single path or platform-specific paths (clang-cl for MSVC, clang for others)
-libclang: /usr/lib64/libclang.so
-# Or platform-specific:
-# libclang:
-#   clang-cl: C:/Program Files/Microsoft Visual Studio/.../libclang.dll
-#   clang: /usr/lib64/libclang.so
-
 # Custom Rice include header (optional)
 # If not specified, a default header with rice.hpp and stl.hpp is generated
 # Use this to add custom Type<T> specializations for smart pointers, etc.
 include: my_rice_include.hpp
 
-# Path to the directory containing header files
+# Path to the directory containing header files (can be relative to this config file)
 input: /path/to/headers
 
-# Path to the output directory for generated bindings
+# Path to the output directory for generated bindings (can be relative to this config file)
 output: /path/to/output
 
 # Binding format: "Rice" (C++) or "FFI" (C)
@@ -55,22 +46,25 @@ skip_symbols:
   - internalFunction
   - MyNamespace::MyClass::privateMethod
 
-# Clang compiler arguments
-# Include paths, language standard, defines, etc.
-# Can be an array or platform-specific (clang-cl for MSVC, clang for others)
-clang_args:
-  - -I/path/to/system/includes
-  - -I/path/to/library/includes
-  - -std=c++17
-  - -xc++
-# Or platform-specific:
-# clang_args:
-#   clang-cl:
-#     - -IC:/Program Files/Microsoft Visual Studio/.../include
-#     - -xc++
-#   clang:
-#     - -I/usr/lib/clang/17/include
-#     - -xc++
+# === Compiler Toolchain (platform-specific) ===
+# Use clang-cl: for MSVC (Ruby platform contains 'mswin')
+# Use clang: for everything else (Linux, macOS, MinGW)
+
+clang-cl:
+  # Path to libclang shared library (optional, auto-detected if omitted)
+  libclang: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
+  # Clang compiler arguments: include paths, language standard, defines, etc.
+  args:
+    - -IC:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.38.33130/include
+    - -IC:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/ucrt
+    - -xc++
+
+clang:
+  libclang: /usr/lib64/libclang.so
+  args:
+    - -I/usr/lib/clang/17/include
+    - -I/usr/include/c++/13
+    - -xc++
 ```
 
 ## Configuration Options
@@ -79,32 +73,38 @@ clang_args:
 
 | Option | Description |
 |--------|-------------|
-| `input` | Directory containing the header files to parse. |
-| `output` | Directory where generated binding files will be written. |
+| `input` | Directory containing the header files to parse. Can be absolute or relative to the config file location. |
+| `output` | Directory where generated binding files will be written. Can be absolute or relative to the config file location. |
 | `format` | Type of bindings to generate: `Rice` for C++ or `FFI` for C. |
+
+**Note:** Relative paths for `input` and `output` are resolved from the config file's directory, not the current working directory. This makes configs portable across different machines.
 
 ### Optional Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `extension` | none | Name of the Ruby extension. Used for the `Init_` function name. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{extension}-rb.cpp`, `{extension}-rb.hpp`, `{extension}.def`). When omitted, only per-file bindings are generated. |
-| `libclang` | auto-detect | Path to the libclang shared library. Can be a string or a hash with `clang-cl` (MSVC) and `clang` (Linux/macOS/MinGW) keys for platform-specific paths. When specified, sets the `LIBCLANG` environment variable before loading ffi-clang. |
 | `include` | auto-generated | Path to a custom Rice include header. See [Include Header](#include-header) for details. |
 | `match` | `["**/*.{h,hpp}"]` | Glob patterns specifying which header files to process. |
 | `skip` | `[]` | Glob patterns specifying which header files to skip. |
 | `export_macros` | `[]` | List of macros that indicate a symbol is exported. Only functions/classes with these macros will be included. |
 | `skip_symbols` | `[]` | List of symbol names to skip. Supports simple names (`versionMajor`), fully qualified names (`cv::ocl::PlatformInfo::versionMajor`), or regex patterns (`/pattern/`). |
-| `clang_args` | `[]` | Arguments passed to libclang for parsing. Can be an array or a hash with `clang-cl` (MSVC) and `clang` (Linux/macOS/MinGW) keys for platform-specific arguments. |
+
+### Compiler Toolchain Options
+
+The compiler toolchain is configured using `clang-cl:` (for MSVC) or `clang:` (for Linux/macOS/MinGW) top-level keys:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `clang-cl:` | - | Compiler settings for MSVC platform (when `RUBY_PLATFORM` contains `mswin`). |
+| `clang:` | - | Compiler settings for all other platforms (Linux, macOS, MinGW). |
+| `libclang` | auto-detect | Path to the libclang shared library. Nested under `clang-cl:` or `clang:`. When specified, sets the `LIBCLANG` environment variable before loading ffi-clang. |
+| `args` | `[]` | Arguments passed to libclang for parsing (include paths, language standard, defines, etc.). Nested under `clang-cl:` or `clang:`. |
 
 ## Example: OpenCV Bindings
 
 ```yaml
 extension: opencv_ruby
-
-# Platform-specific libclang paths
-libclang:
-  clang-cl: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
-  clang: /usr/lib64/libclang.so
 
 input: /path/to/opencv/include/opencv4
 output: /path/to/opencv-ruby/ext
@@ -126,15 +126,19 @@ export_macros:
   - CV_EXPORTS
   - CV_EXPORTS_W
 
-# Platform-specific clang arguments
-clang_args:
-  clang-cl:
+# === Compiler Toolchain (platform-specific) ===
+clang-cl:
+  libclang: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
+  args:
     - -IC:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.38.33130/include
     - -IC:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/ucrt
     - -IC:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/lib/clang/16/include
     - -I/path/to/opencv/include/opencv4
     - -xc++
-  clang:
+
+clang:
+  libclang: /usr/lib64/libclang.so
+  args:
     - -I/usr/lib/clang/17/include
     - -I/usr/include/c++/13
     - -I/path/to/opencv/include/opencv4
@@ -143,33 +147,37 @@ clang_args:
 
 ## Platform-Specific Configuration
 
-The `libclang` and `clang_args` options support platform-specific values using a hash with toolchain keys:
+Ruby-bindgen uses top-level toolchain keys to configure compiler settings for different platforms:
 
-- **`clang-cl`**: Used when Ruby is built with MSVC (`RUBY_PLATFORM` contains `mswin`)
-- **`clang`**: Used for all other platforms (Linux, macOS, MinGW)
+- **`clang-cl:`**: Used when Ruby is built with MSVC (`RUBY_PLATFORM` contains `mswin`)
+- **`clang:`**: Used for all other platforms (Linux, macOS, MinGW)
 
-This allows a single configuration file to work across different development environments:
+Each toolchain section contains:
+- `libclang`: Path to the libclang shared library (optional, auto-detected if omitted)
+- `args`: Array of arguments passed to libclang for parsing
+
+This structure allows a single configuration file to work across different development environments:
 
 ```yaml
-libclang:
-  clang-cl: C:/Program Files/Microsoft Visual Studio/.../libclang.dll
-  clang: /usr/lib64/libclang.so
-
-clang_args:
-  clang-cl:
+clang-cl:
+  libclang: C:/Program Files/Microsoft Visual Studio/.../libclang.dll
+  args:
     - -IC:/Program Files/Microsoft Visual Studio/.../include
     - -xc++
-  clang:
+
+clang:
+  libclang: /usr/lib64/libclang.so
+  args:
     - -I/usr/lib/clang/17/include
     - -I/usr/include/c++/13
     - -xc++
 ```
 
-You can also use a simple string/array if you only need single-platform support.
+You only need to include the toolchain sections for platforms you target.
 
 ## Clang Arguments
 
-The `clang_args` section is crucial for successful parsing. You typically need:
+The `args` section under each toolchain is crucial for successful parsing. You typically need:
 
 1. **System include paths** - Standard library headers
 2. **Library include paths** - The library's own headers
@@ -230,25 +238,19 @@ C:\Program Files\LLVM\bin\libclang.dll
 
 ### Example Configuration
 
-Single platform:
 ```yaml
-# Linux
-libclang: /usr/lib64/libclang.so
+# Cross-platform configuration (recommended)
+clang-cl:
+  libclang: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
+  args:
+    - -IC:/Program Files/Microsoft Visual Studio/...
+    - -xc++
 
-# macOS with Homebrew
-libclang: /opt/homebrew/opt/llvm/lib/libclang.dylib
-
-# Windows with Visual Studio
-libclang: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
-```
-
-Cross-platform (recommended for shared configs):
-```yaml
-# clang-cl is used for MSVC (Ruby platform contains 'mswin')
-# clang is used for everything else (Linux, macOS, MinGW)
-libclang:
-  clang-cl: C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/Llvm/x64/bin/libclang.dll
-  clang: /usr/lib64/libclang.so
+clang:
+  libclang: /usr/lib64/libclang.so  # or /opt/homebrew/opt/llvm/lib/libclang.dylib on macOS
+  args:
+    - -I/usr/lib/clang/17/include
+    - -xc++
 ```
 
 ## Export Macros
