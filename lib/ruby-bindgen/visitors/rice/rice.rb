@@ -740,7 +740,7 @@ module RubyBindgen
             "#{type_spelling(pointee)}*#{ptr_const}"
           end
         when :type_incomplete_array
-          type.canonical.spelling
+          type.spelling
         when :type_elaborated
           type_spelling_elaborated(type)
         else

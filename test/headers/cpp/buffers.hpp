@@ -11,6 +11,13 @@ public:
 };
 
 // =============================================================================
+// Incomplete array parameters with typedef element types
+// =============================================================================
+
+// size_t[] should preserve the typedef name, not expand to "unsigned long[]"
+void processKernelDims(int dims, size_t globalsize[], size_t localsize[]);
+
+// =============================================================================
 // Functions with pointer to fundamental type parameters -> ArgBuffer
 // =============================================================================
 

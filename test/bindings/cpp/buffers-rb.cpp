@@ -9,6 +9,9 @@ void Init_Buffers()
     define_constructor(Constructor<BufferClass>()).
     define_attr("value", &BufferClass::value);
 
+  define_global_function<void(*)(int, size_t[], size_t[])>("process_kernel_dims", &processKernelDims,
+    Arg("dims"), Arg("globalsize"), Arg("localsize"));
+
   define_global_function<void(*)(int*, int)>("process_int_buffer", &processIntBuffer,
     ArgBuffer("data"), Arg("size"));
 
