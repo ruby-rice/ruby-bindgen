@@ -253,7 +253,7 @@ module RubyBindgen
         # Is there a base class?
         base = nil
         auto_generated_base = ""
-        base_specifier = cursor.find_by_kind(false, :cursor_cxx_base_specifier).first
+        base_specifier = cursor.find_first_by_kind(false, :cursor_cxx_base_specifier)
         if base_specifier
           # Use canonical spelling for fully qualified type name with namespaces
           base = base_specifier.type.canonical.spelling
@@ -270,7 +270,7 @@ module RubyBindgen
         # Are there any constructors? If not, C++ will define one implicitly
         # (but not for incomplete/opaque types which can't be instantiated)
         constructors = cursor.find_by_kind(false, :cursor_constructor)
-        if !cursor.abstract? && !cursor.opaque_declaration? && constructors.empty?
+        if !cursor.abstract? && !cursor.opaque_declaration? && constructors.none?
           children << self.render_template("constructor",
                                          :cursor => cursor,
                                          :signature => self.constructor_signature(cursor),
@@ -286,7 +286,7 @@ module RubyBindgen
         # Collect forward-declared (incomplete) inner classes
         # They must be registered with Rice before the parent class methods use them
         incomplete_classes = []
-        cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct).each do |child_cursor|
+        cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
           next unless child_cursor.opaque_declaration?
           incomplete_classes << visit_incomplete_class(child_cursor, cursor)
@@ -305,14 +305,14 @@ module RubyBindgen
                                      :children => children_content)
 
         # Define any complete embedded classes and structs
-        cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct).each do |child_cursor|
+        cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
           next if child_cursor.opaque_declaration?
           result << visit_class_decl(child_cursor)
         end
 
         # Define any embedded enums
-        cursor.find_by_kind(false, :cursor_enum_decl).each do |child_cursor|
+        cursor.find_by_kind(false, :cursor_enum_decl) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
           result << visit_enum_decl(child_cursor)
         end
@@ -341,7 +341,7 @@ module RubyBindgen
             next if type.canonical.spelling.start_with?("std::")
 
             # Find class template declaration
-            template_ref = param.find_by_kind(true, :cursor_template_ref).first
+            template_ref = param.find_first_by_kind(true, :cursor_template_ref)
             next unless template_ref
             decl = template_ref.referenced
             next unless decl.kind == :cursor_class_template
@@ -472,7 +472,7 @@ module RubyBindgen
       # Check if a class/struct has an accessible copy assignment operator.
       # Returns false if operator= is private, protected, or deleted.
       def copy_assignable_class?(decl)
-        decl.find_by_kind(false, :cursor_cxx_method).each do |method|
+        decl.find_by_kind(false, :cursor_cxx_method) do |method|
           next unless method.spelling == "operator="
           return false if method.deleted? || method.private? || method.protected?
         end
@@ -528,7 +528,7 @@ module RubyBindgen
         template_parameter_kinds = [:cursor_template_type_parameter,
                                     :cursor_non_type_template_parameter,
                                     :cursor_template_template_parameter]
-        template_params = cursor_template.find_by_kind(false, *template_parameter_kinds)
+        template_params = cursor_template.find_by_kind(false, *template_parameter_kinds).to_a
         expected_count = template_params.length
 
         # Count extracted arguments (handle nested templates by counting only top-level commas)
@@ -911,7 +911,7 @@ module RubyBindgen
 
         # Phase 1: Qualify type references (e.g., Range::all() -> cv::Range::all())
         # Find type_ref and template_ref cursors to identify types that need namespace qualification.
-        default_expr.find_by_kind(true, :cursor_type_ref, :cursor_template_ref).each do |type_ref|
+        default_expr.find_by_kind(true, :cursor_type_ref, :cursor_template_ref) do |type_ref|
           ref = type_ref.referenced
           next unless ref && ref.kind != :cursor_invalid_file
 
@@ -935,7 +935,7 @@ module RubyBindgen
 
         # Phase 2: Qualify declaration references (functions, enum values, static members)
         # For example: noArray() -> cv::noArray(), NORM_L2 -> cv::NORM_L2
-        decl_refs = default_expr.find_by_kind(true, :cursor_decl_ref_expr)
+        decl_refs = default_expr.find_by_kind(true, :cursor_decl_ref_expr).to_a
         decl_refs = [default_expr] + decl_refs if default_expr.kind == :cursor_decl_ref_expr
         decl_refs.each do |decl_ref|
           ref = decl_ref.referenced
@@ -1459,7 +1459,7 @@ module RubyBindgen
         canonical = cursor.underlying_type.canonical.spelling
         return if canonical.start_with?("std::")
 
-        cursor_template_ref = cursor.find_by_kind(false, :cursor_template_ref).first
+        cursor_template_ref = cursor.find_first_by_kind(false, :cursor_template_ref)
 
         # Handle template case. For example:
         #   typedef Point_<int> Point2i;
@@ -1471,9 +1471,9 @@ module RubyBindgen
         else
           # Check for reference to template reference. For example:
           #   typedef Point2i Point;
-          cursor_ref = cursor.find_by_kind(false, :cursor_type_ref).first
+          cursor_ref = cursor.find_first_by_kind(false, :cursor_type_ref)
           if cursor_ref
-            cursor_template_ref = cursor_ref.referenced.find_by_kind(false, :cursor_template_ref).first
+            cursor_template_ref = cursor_ref.referenced.find_first_by_kind(false, :cursor_template_ref)
             if cursor_template_ref
               visit_template_specialization(cursor, cursor_template_ref.referenced, cursor_ref.referenced.underlying_type)
             end
@@ -1494,11 +1494,11 @@ module RubyBindgen
         result = ""
 
         # Is there a base class?
-        base_ref = cursor_template.find_by_kind(false, :cursor_cxx_base_specifier).first
+        base_ref = cursor_template.find_first_by_kind(false, :cursor_cxx_base_specifier)
         base_spelling = nil
         if base_ref
           # Base class children can be a :cursor_type_ref or :cursor_template_ref
-          type_ref = base_ref.find_by_kind(false, :cursor_type_ref, :cursor_template_ref).first
+          type_ref = base_ref.find_first_by_kind(false, :cursor_type_ref, :cursor_template_ref)
           base = type_ref.definition
 
           # Resolve the base class to its instantiated form (e.g., PtrStep<unsigned char>)
@@ -1563,7 +1563,7 @@ module RubyBindgen
       # Auto-generate a base class definition when no typedef exists for it.
       # When recursive: true, also generates any base classes of the base class.
       def auto_generate_base_class(base_ref, base_spelling, template_arguments, under, recursive: true)
-        base_template_ref = base_ref.find_by_kind(false, :cursor_template_ref).first
+        base_template_ref = base_ref.find_first_by_kind(false, :cursor_template_ref)
         return "" unless base_template_ref
 
         base_template = base_template_ref.referenced
@@ -1575,9 +1575,9 @@ module RubyBindgen
 
         # Check if this base class has its own base that needs auto-generation
         if recursive
-          base_base_ref = base_template.find_by_kind(false, :cursor_cxx_base_specifier).first
+          base_base_ref = base_template.find_first_by_kind(false, :cursor_cxx_base_specifier)
           if base_base_ref
-            base_base_template_ref = base_base_ref.find_by_kind(false, :cursor_template_ref).first
+            base_base_template_ref = base_base_ref.find_first_by_kind(false, :cursor_template_ref)
             if base_base_template_ref
               namespace = base_spelling.split("<").first.split("::")[0..-2].join("::")
               base_base_name = base_base_template_ref.referenced.spelling
@@ -1627,17 +1627,17 @@ module RubyBindgen
         result = Array.new
 
         # Define any embedded unions
-        cursor.find_by_kind(false, :cursor_union).each do |struct|
+        cursor.find_by_kind(false, :cursor_union) do |struct|
           result << visit_struct(struct)
         end
 
         # Define any embedded structures
-        cursor.find_by_kind(false, :cursor_struct).each do |struct|
+        cursor.find_by_kind(false, :cursor_struct) do |struct|
           result << visit_struct(struct)
         end
 
         # Define any embedded callbacks
-        cursor.find_by_kind(false, :cursor_field_decl).each do |field|
+        cursor.find_by_kind(false, :cursor_field_decl) do |field|
           if field.type.is_a?(::FFI::Clang::Types::Pointer) && field.type.function?
             callback_name = "#{cursor.ruby}_#{field.ruby}_callback"
             result << self.visit_callback(callback_name, field.parameters, field.type.pointee)
@@ -1750,7 +1750,7 @@ module RubyBindgen
 
       def render_class_templates(cursor, indentation: 0, separator: "\n", strip: false)
         results = Array.new
-        cursor.find_by_kind(true, :cursor_class_template).each do |class_template_cursor|
+        cursor.find_by_kind(true, :cursor_class_template) do |class_template_cursor|
           if class_template_cursor.private? || class_template_cursor.protected?
             next :continue
           end
@@ -1867,7 +1867,7 @@ module RubyBindgen
       # - @typedef_map: canonical type spellings -> typedef/using declarations (main file only)
       # - @type_name_map: only class templates for typename qualification (minimal map)
       def build_typedef_map(cursor)
-        cursor.find_by_kind(true, :cursor_typedef_decl, :cursor_type_alias_decl, :cursor_class_template).each do |child|
+        cursor.find_by_kind(true, :cursor_typedef_decl, :cursor_type_alias_decl, :cursor_class_template) do |child|
           case child.kind
           when :cursor_typedef_decl, :cursor_type_alias_decl
             next unless child.location.from_main_file?
@@ -1888,21 +1888,21 @@ module RubyBindgen
       # Returns the resolved base class spelling or nil if no base class exists.
       def resolve_base_instantiation(cursor, underlying_type)
         # Get template reference from the typedef
-        template_ref = cursor.find_by_kind(false, :cursor_template_ref).first
+        template_ref = cursor.find_first_by_kind(false, :cursor_template_ref)
         return nil unless template_ref
 
         derived_template = template_ref.referenced
 
         # Get base specifier from the template
-        base_spec = derived_template.find_by_kind(false, :cursor_cxx_base_specifier).first
+        base_spec = derived_template.find_first_by_kind(false, :cursor_cxx_base_specifier)
         return nil unless base_spec
 
         # Get the template reference in the base specifier
-        base_template_ref = base_spec.find_by_kind(false, :cursor_template_ref).first
+        base_template_ref = base_spec.find_first_by_kind(false, :cursor_template_ref)
 
         # If there's no template ref, the base class is a non-template class (e.g., Mat_<_Tp> : public Mat)
         unless base_template_ref
-          base_type_ref = base_spec.find_by_kind(false, :cursor_type_ref).first
+          base_type_ref = base_spec.find_first_by_kind(false, :cursor_type_ref)
           return base_type_ref&.referenced&.qualified_name
         end
 

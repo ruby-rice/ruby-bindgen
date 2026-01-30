@@ -67,6 +67,15 @@ module FFI
         result
       end
 
+      # Find first child cursor matching any of the given kinds.
+      # Short-circuits on first match to avoid building full array.
+      def find_first_by_kind(recurse, *kinds)
+        self.each(recurse) do |child, parent|
+          return child if kinds.include?(child.kind)
+        end
+        nil
+      end
+
       def overloads
         # Include function templates - if a regular function has a template overload,
         # we need explicit type cast (e.g., KernelArg::Constant has both const Mat& and template versions)
@@ -78,17 +87,20 @@ module FFI
         #
         # Important: Only consider it an overload if the method signatures differ.
         # Overrides (same signature in derived class) don't need explicit type casts.
-        methods = self.find_by_kind(false, :cursor_cxx_method, :cursor_function, :cursor_function_template)
+        methods = []
+        self.find_by_kind(false, :cursor_cxx_method, :cursor_function, :cursor_function_template) do |m|
+          methods << m
+        end
 
         # Collect methods from base classes
-        base_specifiers = self.find_by_kind(false, :cursor_cxx_base_specifier)
-        base_specifiers.each do |base|
+        self.find_by_kind(false, :cursor_cxx_base_specifier) do |base|
           base_decl = base.type.declaration
           next if base_decl.kind == :cursor_no_decl_found
 
           # Get methods from base class (recursively handled by base's overloads call)
-          base_methods = base_decl.find_by_kind(false, :cursor_cxx_method, :cursor_function, :cursor_function_template)
-          methods.concat(base_methods)
+          base_decl.find_by_kind(false, :cursor_cxx_method, :cursor_function, :cursor_function_template) do |m|
+            methods << m
+          end
 
           # Also recursively check base class's base classes
           base_decl.overloads.each do |name, cursors|
