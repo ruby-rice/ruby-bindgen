@@ -109,4 +109,17 @@ namespace MyNamespace
     a = a | b;
     return a;
   }
+
+  // Function with enum parameter - tests that enum type is fully qualified
+  // in function signature (cv::dnn::Backend not dnn::Backend)
+  inline const char* seasonName(Season season)
+  {
+    switch (season) {
+      case Season::Spring: return "Spring";
+      case Season::Summer: return "Summer";
+      case Season::Fall: return "Fall";
+      case Season::Winter: return "Winter";
+    }
+    return "Unknown";
+  }
 }

@@ -770,6 +770,10 @@ module RubyBindgen
           # MSVC uses 'using' where gcc uses 'typedef', so handle identically.
           type_spelling_typedef_or_alias(type, const_prefix)
 
+        when :cursor_enum_decl
+          # Enum declaration - use fully qualified name (e.g., cv::dnn::Backend not dnn::Backend)
+          "#{const_prefix}#{decl.qualified_name}"
+
         else
           # Class declarations, template instantiations, etc.
           # Here we CAN use canonical.spelling if it has better-qualified template args,
