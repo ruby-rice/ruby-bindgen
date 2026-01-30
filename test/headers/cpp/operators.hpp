@@ -215,3 +215,17 @@ public:
     SizeTConversion() : value(0) {}
     operator size_t() const { return value; }
 };
+
+// =============================================================================
+// Test that non-member operators for std:: types that Rice converts to
+// native Ruby types are SKIPPED (no Rice wrapper exists for these).
+// =============================================================================
+
+// Typedef to std::string (like cv::String)
+typedef std::string MyString;
+
+// This operator should be SKIPPED because MyString is std::string,
+// which Rice converts to Ruby String (no Rice wrapper class exists).
+// If not skipped, generated code would try to add methods to rb_cString
+// which is Ruby's built-in String class.
+MyString& operator<<(MyString& out, const Printable& p);

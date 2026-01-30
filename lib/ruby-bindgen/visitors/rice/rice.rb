@@ -1410,6 +1410,12 @@ module RubyBindgen
         # Check if there's a typedef for this type (e.g., Matx44d for Matx<double, 4, 4>)
         # Strip const/volatile qualifiers since typedef_map keys don't include them
         canonical = arg0_type.canonical.spelling.gsub(/\b(const|volatile)\s+/, '')
+
+        # Skip types that Rice converts to native Ruby types (no Rice wrapper exists).
+        # These map to Ruby builtins: string→String, string_view→String, complex→Complex,
+        # monostate→NilClass, tuple→Array. Note: std::vector, std::pair, etc. ARE wrapped.
+        return if canonical.match?(/\bstd::basic_string<|\bstd::basic_string_view<|\bstd::complex<|\bstd::monostate\b|\bstd::tuple</)
+
         typedef_cursor = @typedef_map[canonical]
         target_cursor = typedef_cursor || class_cursor
 
