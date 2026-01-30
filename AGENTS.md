@@ -36,7 +36,13 @@ bundle exec ruby -Ilib -Itest test/rice_test.rb --name test_classes
 UPDATE_EXPECTED=1 bundle exec ruby -Ilib -Itest test/rice_test.rb
 ```
 
-All 15 tests: classes, enums, functions, inheritance, templates, constructors, operators, default_values, iterators, template_inheritance, overloads, incomplete_types, filtering, template_defaults, buffers
+All 16 tests: classes, enums, functions, inheritance, templates, constructors, operators, default_values, iterators, template_inheritance, overloads, incomplete_types, filtering, template_defaults, buffers, cross_file_typedef
+
+## Test Coverage Requirements
+
+**Every bug fix MUST include test coverage.** Add test cases to the appropriate header file in `test/headers/cpp/` and update the expected output in `test/bindings/cpp/`.
+
+For typedef-related issues, use `cross_file_base.hpp` and `cross_file_derived.hpp`.
 
 ## Regenerate opencv-ruby bindings
 

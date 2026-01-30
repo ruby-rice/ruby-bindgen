@@ -1875,6 +1875,10 @@ module RubyBindgen
         cursor.find_by_kind(true, :cursor_typedef_decl, :cursor_type_alias_decl, :cursor_class_template) do |child|
           case child.kind
           when :cursor_typedef_decl, :cursor_type_alias_decl
+            # Skip typedefs inside classes/structs (like DataType<T>::value_type)
+            parent_kind = child.semantic_parent.kind
+            next if parent_kind == :cursor_class_decl || parent_kind == :cursor_struct ||
+                    parent_kind == :cursor_class_template || parent_kind == :cursor_class_template_partial_specialization
             canonical = child.underlying_type.canonical.spelling
             @typedef_map[canonical] = child
           when :cursor_class_template

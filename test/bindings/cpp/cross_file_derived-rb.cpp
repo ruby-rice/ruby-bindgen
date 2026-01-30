@@ -20,9 +20,22 @@ void Init_CrossFileDerived()
   Rice::Data_Type<CrossFile::DerivedVector<double, 4>> rb_cDerivedVector4d = define_class_under<CrossFile::DerivedVector<double, 4>, CrossFile::BaseMatrix<double, 4>>(rb_mCrossFile, "DerivedVector4d").
     define(&DerivedVector_builder<Data_Type<CrossFile::DerivedVector<double, 4>>, double, 4>);
 
+  Rice::Data_Type<CrossFile::SimpleRange> rb_cCrossFileSimpleRange = define_class_under<CrossFile::SimpleRange>(rb_mCrossFile, "SimpleRange").
+    define_attr("start", &CrossFile::SimpleRange::start).
+    define_attr("end", &CrossFile::SimpleRange::end).
+    define_constructor(Constructor<CrossFile::SimpleRange>()).
+    define_constructor(Constructor<CrossFile::SimpleRange, int, int>(),
+      Arg("s"), Arg("e"));
+
   rb_cBaseMatrix4d.
     define_method("*", [](const CrossFile::BaseMatrix4d& self, double other) -> CrossFile::BaseMatrix4d
   {
     return self * other;
+  });
+  
+  rb_cCrossFileSimpleRange.
+    define_method("==", [](const CrossFile::SimpleRange& self, const CrossFile::SimpleRange& other) -> bool
+  {
+    return self == other;
   });
 }

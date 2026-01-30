@@ -30,4 +30,29 @@ namespace CrossFile
     for(int i=0; i<4; i++) result.data[i] = m.data[i] * scalar;
     return result;
   }
+
+  // Simple class to test that internal typedefs don't pollute the typedef_map
+  class SimpleRange
+  {
+  public:
+    int start, end;
+    SimpleRange() : start(0), end(0) {}
+    SimpleRange(int s, int e) : start(s), end(e) {}
+  };
+
+  // Class with internal typedef (like OpenCV's DataType<T> pattern)
+  // The internal typedef should NOT be used for non-member operator naming
+  template<typename T>
+  class DataType
+  {
+  public:
+    typedef T value_type;
+    typedef value_type work_type;  // This should NOT be picked up as a typedef for T
+  };
+
+  // Non-member operator on SimpleRange - should use rb_cSimpleRange, NOT rb_cWorkType
+  inline bool operator==(const SimpleRange& a, const SimpleRange& b)
+  {
+    return a.start == b.start && a.end == b.end;
+  }
 }
