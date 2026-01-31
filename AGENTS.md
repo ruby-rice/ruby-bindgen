@@ -38,6 +38,8 @@ UPDATE_EXPECTED=1 bundle exec ruby -Ilib -Itest test/rice_test.rb
 
 All 16 tests: classes, enums, functions, inheritance, templates, constructors, operators, default_values, iterators, template_inheritance, overloads, incomplete_types, filtering, template_defaults, buffers, cross_file_typedef
 
+**IMPORTANT:** Before using `UPDATE_EXPECTED=1` or committing any changes, you MUST first run ALL tests to verify your changes don't break existing functionality. Never blindly update expected files without checking for regressions.
+
 ## Test Coverage Requirements
 
 **Every bug fix MUST include test coverage.** Add test cases to the appropriate header file in `test/headers/cpp/` and update the expected output in `test/bindings/cpp/`.

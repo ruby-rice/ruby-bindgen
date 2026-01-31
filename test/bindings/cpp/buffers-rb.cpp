@@ -5,6 +5,18 @@ using namespace Rice;
 
 void Init_Buffers()
 {
+  Module rb_mBufferNS = define_module("BufferNS");
+
+  Rice::Data_Type<BufferNS::Point2f> rb_cBufferNSPoint2f = define_class_under<BufferNS::Point2f>(rb_mBufferNS, "Point2f").
+    define_constructor(Constructor<BufferNS::Point2f>()).
+    define_attr("x", &BufferNS::Point2f::x).
+    define_attr("y", &BufferNS::Point2f::y);
+
+  Rice::Data_Type<BufferNS::Shape> rb_cBufferNSShape = define_class_under<BufferNS::Shape>(rb_mBufferNS, "Shape").
+    define_constructor(Constructor<BufferNS::Shape>()).
+    define_method<void(BufferNS::Shape::*)(BufferNS::Point2f[]) const>("set_points", &BufferNS::Shape::setPoints,
+      Arg("pts"));
+
   Rice::Data_Type<BufferClass> rb_cBufferClass = define_class<BufferClass>("BufferClass").
     define_constructor(Constructor<BufferClass>()).
     define_attr("value", &BufferClass::value);

@@ -740,7 +740,9 @@ module RubyBindgen
             "#{type_spelling(pointee)}*#{ptr_const}"
           end
         when :type_incomplete_array
-          type.spelling
+          element_spelling = type_spelling(type.element_type)
+          const_prefix = type.const_qualified? ? "const " : ""
+          "#{const_prefix}#{element_spelling}[]"
         when :type_elaborated
           type_spelling_elaborated(type)
         else
@@ -1554,7 +1556,7 @@ module RubyBindgen
               # Base has a typedef - check if it has been generated yet
               unless @classes.key?(base_typedef.cruby_name)
                 # Force generate the typedef first (recursively handles its bases)
-                result = visit_typedef_decl(base_typedef)
+                result = visit_typedef_decl(base_typedef) || ""
               end
             elsif !@auto_generated_bases.include?(base_spelling)
               # No typedef - auto-generate

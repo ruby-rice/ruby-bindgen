@@ -4,6 +4,25 @@
 
 #include <cstddef>
 
+// =============================================================================
+// Incomplete array parameters with namespaced element types
+// =============================================================================
+
+namespace BufferNS
+{
+  struct Point2f
+  {
+    float x, y;
+  };
+
+  // Class with method taking incomplete array of namespaced type
+  class Shape
+  {
+  public:
+    void setPoints(Point2f pts[]) const;
+  };
+}
+
 class BufferClass
 {
 public:
