@@ -192,13 +192,26 @@ module RubyBindgen
         # Then the rice generated header file
         includes << "#include \"#{File.basename(rice_header)}\""
 
-        class_templates = render_class_templates(cursor)
+        class_templates, has_builders = render_class_templates(cursor)
         content = render_children(cursor, :indentation => 2)
 
         # Render non-member operators grouped by class
         non_member_ops = render_non_member_operators
         unless non_member_ops.empty?
           content = content + "\n  " + non_member_ops
+        end
+
+        # Generate .ipp file if builders exist (for reusability without duplicate Init symbols)
+        rice_ipp = nil
+        if has_builders
+          rice_ipp = File.join(File.dirname(relative_path), "#{basename}.ipp")
+          STDOUT << "  Writing: " << rice_ipp << "\n"
+          ipp_content = render_cursor(cursor, "translation_unit.ipp",
+                                      :class_templates => class_templates,
+                                      :includes => includes,
+                                      :incomplete_iterators => @incomplete_iterators)
+          ipp_content = cleanup_whitespace(ipp_content)
+          self.outputter.write(rice_ipp, ipp_content)
         end
 
         # Render C++ file
@@ -209,7 +222,8 @@ module RubyBindgen
                                 :includes => includes,
                                 :init_name => init_name,
                                 :rice_header => rice_header,
-                                :incomplete_iterators => @incomplete_iterators)
+                                :incomplete_iterators => @incomplete_iterators,
+                                :rice_ipp => rice_ipp ? File.basename(rice_ipp) : nil)
         content = cleanup_whitespace(content)
         self.outputter.write(rice_cpp, content)
 
@@ -1815,6 +1829,7 @@ module RubyBindgen
         template.result(b)
       end
 
+      # Returns [content, has_builders] where has_builders indicates if any builder templates were generated
       def render_class_templates(cursor, indentation: 0, separator: "\n", strip: false)
         results = Array.new
         cursor.find_by_kind(true, :cursor_class_template) do |class_template_cursor|
@@ -1843,7 +1858,9 @@ module RubyBindgen
 
           results << visit_class_template_builder(class_template_cursor)
         end
-        merge_children(results, :indentation => indentation, :separator => separator, :strip => strip)
+        content = merge_children(results, :indentation => indentation, :separator => separator, :strip => strip)
+        has_builders = !results.empty? && !content.strip.empty?
+        [content, has_builders]
       end
 
       def visit_children(cursor, exclude_kinds: Set.new, only_static: nil)
