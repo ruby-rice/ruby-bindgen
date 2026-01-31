@@ -116,6 +116,36 @@ namespace Outer
 
   typedef UsesSkippedType<int> UsesSkippedTypeInt;
 
+  // --- Template specialization with skipped type as template argument ---
+
+  // Skipped type used in template argument
+  class SkippedArgType {};
+
+  // Generic template (wrapper/deleter pattern like cv::DefaultDeleter)
+  template<typename T>
+  class Wrapper
+  {
+  public:
+    Wrapper();
+    void wrap(T* obj);
+  };
+
+  // This specialization should be SKIPPED because SkippedArgType is in skip_symbols
+  template<> class MY_EXPORT Wrapper<SkippedArgType>
+  {
+  public:
+    Wrapper();
+    void wrap(SkippedArgType* obj);
+  };
+
+  // This specialization should be INCLUDED (int is not skipped)
+  template<> class MY_EXPORT Wrapper<int>
+  {
+  public:
+    Wrapper();
+    void wrap(int* obj);
+  };
+
   // --- Template class with all deprecated methods ---
   // The builder function should NOT be generated since all methods are deprecated
 

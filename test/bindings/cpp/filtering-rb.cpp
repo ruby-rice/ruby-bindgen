@@ -10,6 +10,14 @@ inline void UsesSkippedType_builder(Data_Type_T& klass)
     template define_method<void(Outer::UsesSkippedType<T>::*)()>("normal_method", &Outer::UsesSkippedType<T>::normalMethod);
 };
 
+template<typename Data_Type_T, typename T>
+inline void Wrapper_builder(Data_Type_T& klass)
+{
+  klass.define_constructor(Constructor<Outer::Wrapper<T>>()).
+    template define_method<void(Outer::Wrapper<T>::*)(T*)>("wrap", &Outer::Wrapper<T>::wrap,
+      std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("obj"));
+};
+
 void Init_Filtering()
 {
   Module rb_mOuter = define_module("Outer");
@@ -32,6 +40,11 @@ void Init_Filtering()
 
   Rice::Data_Type<Outer::UsesSkippedType<int>> rb_cUsesSkippedTypeInt = define_class_under<Outer::UsesSkippedType<int>>(rb_mOuter, "UsesSkippedTypeInt").
     define(&UsesSkippedType_builder<Data_Type<Outer::UsesSkippedType<int>>, int>);
+
+  Rice::Data_Type<Outer::Wrapper<int>> rb_cOuterWrapperInt = define_class_under<Outer::Wrapper<int>>(rb_mOuter, "WrapperInt").
+    define_constructor(Constructor<Outer::Wrapper<int>>()).
+    define_method<void(Outer::Wrapper<int>::*)(int*)>("wrap", &Outer::Wrapper<int>::wrap,
+      ArgBuffer("obj"));
 
   Rice::Data_Type<Outer::DeprecatedTemplate<int>> rb_cDeprecatedTemplateInt = define_class_under<Outer::DeprecatedTemplate<int>>(rb_mOuter, "DeprecatedTemplateInt");
 

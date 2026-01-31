@@ -69,6 +69,16 @@ module RubyBindgen
         end
       end
 
+      # Check if template arguments string contains any skipped symbol.
+      # Used when auto-instantiating templates like cv::DefaultDeleter<CvHaarClassifierCascade>.
+      def template_args_reference_skipped_symbol?(template_args)
+        @skip_symbols.any? do |skip|
+          next false if skip.start_with?('/')  # Skip regex patterns for simple string check
+          simple_name = skip.split('::').last.strip
+          template_args.include?(skip) || template_args.include?(simple_name)
+        end
+      end
+
       # Check if a cursor should be skipped based on skip_symbols config.
       # Supports simple names, fully qualified names, and regex patterns (strings starting with /).
       # Examples:
@@ -83,6 +93,16 @@ module RubyBindgen
           qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty?
           parent = parent.semantic_parent
         end
+
+        # Extract template arguments from display_name (spelling doesn't include them)
+        # e.g., display_name is "DefaultDeleter<CvHaarClassifierCascade>" while spelling is just "DefaultDeleter"
+        template_args = nil
+        if match = cursor.display_name.match(/<(.+)>\z/)
+          template_args = match[1]
+        end
+
+        # Check template arguments for skipped symbols (check once, not per skip_symbol)
+        return true if template_args && template_args_reference_skipped_symbol?(template_args)
 
         @skip_symbols.any? do |skip|
           if skip.start_with?('/') && skip.end_with?('/')
@@ -1415,8 +1435,7 @@ module RubyBindgen
         # Rice already provides bitwise operators (&, |, ^, ~, <<, >>) for enums automatically
         return if class_cursor.kind == :cursor_enum_decl
 
-        # Check if there's a typedef for this type (e.g., Matx44d for Matx<double, 4, 4>)
-        # Strip const/volatile qualifiers since typedef_map keys don't include them
+        # Strip const/volatile qualifiers for type checking
         canonical = arg0_type.canonical.spelling.gsub(/\b(const|volatile)\s+/, '')
 
         # Skip types that Rice converts to native Ruby types (no Rice wrapper exists).
@@ -1424,11 +1443,10 @@ module RubyBindgen
         # monostate→NilClass, tuple→Array. Note: std::vector, std::pair, etc. ARE wrapped.
         return if canonical.match?(/\bstd::basic_string<|\bstd::basic_string_view<|\bstd::complex<|\bstd::monostate\b|\bstd::tuple</)
 
-        typedef_cursor = @typedef_map[canonical]
-        target_cursor = typedef_cursor || class_cursor
-
+        # Use the class cursor directly - operators should be attached to the actual class
+        # (e.g., rb_cCvMat for cv::Mat), not to typedefs (e.g., rb_cMatND which is typedef for Mat)
         # Collect non-member operators to render grouped by class later
-        @non_member_operators[target_cursor.cruby_name] << { cursor: cursor, class_cursor: target_cursor }
+        @non_member_operators[class_cursor.cruby_name] << { cursor: cursor, class_cursor: class_cursor }
         nil
       end
 
@@ -1583,6 +1601,10 @@ module RubyBindgen
         return "" unless cursor_template
         match = instantiated_type.match(/\<(.*)\>/)
         return "" unless match
+
+        # Skip if template arguments contain skipped symbols
+        template_args = match[1]
+        return "" if template_args_reference_skipped_symbol?(template_args)
 
         cruby_name = "rb_c#{instantiated_type.gsub(/::|<|>|,|\s+/, ' ').split.map(&:capitalize).join}"
         return "" if @classes.key?(cruby_name)
