@@ -348,6 +348,90 @@ Static members on classes use `define_singleton_attr`.
 
 `const` qualified variables and namespace-level variables generate Ruby constants.
 
+## Generated Files
+
+For each input header (e.g., `mat.hpp`), ruby-bindgen generates up to three output files:
+
+| File | Purpose | Always Generated? |
+|------|---------|-------------------|
+| `mat-rb.hpp` | Declarations (Init function prototype) | Yes |
+| `mat-rb.cpp` | Implementation (Init function body, class registrations) | Yes |
+| `mat-rb.ipp` | Template builder functions for class templates | Only when builders exist |
+
+### Template Builder Files (.ipp)
+
+When a header contains class templates with specializations (via `typedef` or `using`), ruby-bindgen generates reusable `_builder` template functions. These are placed in a separate `.ipp` file to enable reuse without duplicate symbol errors.
+
+**Example**: For `templates.hpp` containing:
+
+```cpp
+template<typename T> class Matrix { ... };
+typedef Matrix<float> Matrixf;
+```
+
+Ruby-bindgen generates:
+
+**templates-rb.ipp** (template builders):
+```cpp
+#include <templates.hpp>
+#include "templates-rb.hpp"
+
+using namespace Rice;
+
+template<typename Data_Type_T, typename T>
+inline void Matrix_builder(Data_Type_T& klass)
+{
+  klass.define_constructor(Constructor<Matrix<T>>())
+       .define_attr("data", &Matrix<T>::data);
+};
+```
+
+**templates-rb.cpp** (Init function only):
+```cpp
+#include "templates-rb.ipp"
+
+void Init_Templates()
+{
+  Rice::Data_Type<Matrix<float>> rb_cMatrixf =
+    define_class<Matrix<float>>("Matrixf")
+      .define(&Matrix_builder<Data_Type<Matrix<float>>, float>);
+}
+```
+
+### Reusing Builder Templates
+
+The `.ipp` separation enables refinement files to reuse builders without causing duplicate `Init_` symbol errors:
+
+```cpp
+// mat_refinements.cpp - Custom extensions
+#include "mat-rb.ipp"  // Gets builders, NOT Init_Core_Mat
+
+void Init_Mat_Refinements()
+{
+  // Use Mat__builder for custom specializations
+  Rice::Data_Type<cv::Mat_<double>> rb_cMat1d =
+    define_class<cv::Mat_<double>>("Mat1d")
+      .define(&Mat__builder<Data_Type<cv::Mat_<double>>, double>);
+}
+```
+
+### Files Without Builders
+
+Headers containing only regular classes (no class templates) generate only `.hpp` and `.cpp` files. The `.cpp` file contains includes and the Init function inline:
+
+```cpp
+// inheritance-rb.cpp (no .ipp needed)
+#include <inheritance.hpp>
+#include "inheritance-rb.hpp"
+
+using namespace Rice;
+
+void Init_Inheritance()
+{
+  // Class registrations...
+}
+```
+
 ## Generated File Names
 
 ### Init Function Names
