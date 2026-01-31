@@ -141,6 +141,14 @@ void Init_DefaultValues()
   rb_mNoncopyable.define_module_function<void(*)(const noncopyable::DerivedFromCpp11&)>("use_derived_cpp11", &noncopyable::use_derived_cpp11,
     Arg("obj"));
 
+  Module rb_mCvFisheye = define_module_under(rb_mCv, "Fisheye");
+
+  rb_mCvFisheye.define_constant("CALIB_USE_INTRINSIC_GUESS", (int)cv::fisheye::CALIB_USE_INTRINSIC_GUESS);
+  rb_mCvFisheye.define_constant("CALIB_FIX_INTRINSIC", (int)cv::fisheye::CALIB_FIX_INTRINSIC);
+
+  rb_mCv.define_module_function<void(*)(int)>("calibrate_fisheye", &cv::calibrateFisheye,
+    Arg("flags") = static_cast<int>(cv::fisheye::CALIB_FIX_INTRINSIC));
+
   Module rb_mOuter = define_module("Outer");
 
   Module rb_mOuterInner = define_module_under(rb_mOuter, "Inner");

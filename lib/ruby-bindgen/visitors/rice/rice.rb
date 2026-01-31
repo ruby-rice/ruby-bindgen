@@ -1011,6 +1011,12 @@ module RubyBindgen
 
             # Apply qualification (negative lookbehind avoids double-qualifying)
             default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
+
+            # Replace partially-qualified names (e.g., fisheye::CALIB_FIX_INTRINSIC -> cv::fisheye::CALIB_FIX_INTRINSIC)
+            # Match any prefix::simple_name that isn't already fully qualified
+            default_text = default_text.gsub(/(?<!\w)(\w+(?:::\w+)*)::#{Regexp.escape(simple_name)}\b/) do |match|
+              match == qualified_name ? match : qualified_name
+            end
           rescue ArgumentError
             # Skip if we can't get qualified name
           end

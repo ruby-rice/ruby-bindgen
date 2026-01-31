@@ -173,6 +173,23 @@ namespace noncopyable
   void use_derived_cpp11(const DerivedFromCpp11& obj = DerivedFromCpp11());
 }
 
+// Test partially-qualified enum values in default values
+// Like fisheye::CALIB_FIX_INTRINSIC which should become cv::fisheye::CALIB_FIX_INTRINSIC
+namespace cv
+{
+  namespace fisheye
+  {
+    enum {
+      CALIB_USE_INTRINSIC_GUESS = 1,
+      CALIB_FIX_INTRINSIC = 256
+    };
+  }
+
+  // Function with partially-qualified enum in default value
+  // fisheye::CALIB_FIX_INTRINSIC should become cv::fisheye::CALIB_FIX_INTRINSIC
+  void calibrateFisheye(int flags = fisheye::CALIB_FIX_INTRINSIC);
+}
+
 // Test partially-qualified namespace in default values
 // Like cv::makePtr<flann::KDTreeIndexParams>() which should become
 // cv::makePtr<cv::flann::KDTreeIndexParams>()
