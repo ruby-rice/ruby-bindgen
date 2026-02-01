@@ -1467,11 +1467,13 @@ module RubyBindgen
       def render_non_member_operators
         # First, separate ostream operators (they go on the second arg's class)
         # from regular operators (they go on the first arg's class)
-        grouped = Hash.new { |h, k| h[k] = [] }
+        # Each entry stores { lines: [], cpp_type: string } for cross-file Data_Type<T>() usage
+        grouped = Hash.new { |h, k| h[k] = { lines: [], cpp_type: nil } }
 
         @non_member_operators.each do |cruby_name, operators|
           operators.each do |op|
             cursor = op[:cursor]
+            class_cursor = op[:class_cursor]
 
             # Handle ostream << specially - generates inspect method on the second arg's class
             if cursor.spelling.match(/<</) && cursor.type.arg_type(0).spelling.match(/ostream/)
@@ -1480,8 +1482,10 @@ module RubyBindgen
               arg1_canonical = arg1_non_ref.canonical.spelling.gsub(/\b(const|volatile)\s+/, '')
               arg1_typedef = @typedef_map[arg1_canonical]
               target_class = arg1_typedef ? arg1_typedef.cruby_name : arg1_non_ref.declaration.cruby_name
+              target_cursor = arg1_typedef || arg1_non_ref.declaration
               arg_type = type_spelling(cursor.type.arg_type(1))
-              grouped[target_class] << <<~CPP.strip
+              grouped[target_class][:cpp_type] ||= qualified_class_name_cpp(target_cursor)
+              grouped[target_class][:lines] << <<~CPP.strip
                 define_method("inspect", [](#{arg_type} self) -> std::string
                   {
                     std::ostringstream stream;
@@ -1507,7 +1511,8 @@ module RubyBindgen
                 return_stmt = "return self #{op_symbol} other;"
               end
 
-              grouped[cruby_name] << <<~CPP.strip
+              grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
+              grouped[cruby_name][:lines] << <<~CPP.strip
                 define_method("#{ruby_name}", [](#{arg0_type} self, #{arg1_type} other) -> #{result_type}
                   {
                     #{return_stmt}
@@ -1519,9 +1524,13 @@ module RubyBindgen
 
         # Now render each group as a chained method call
         result = []
-        grouped.each do |cruby_name, lines|
+        grouped.each do |cruby_name, info|
+          lines = info[:lines]
+          cpp_type = info[:cpp_type]
           next if lines.empty?
-          result << "#{cruby_name}.\n    #{lines.join(".\n    ")};"
+          # Use variable for locally-defined classes, Data_Type<T>() for cross-file references
+          class_ref = @classes.key?(cruby_name) ? cruby_name : "Data_Type<#{cpp_type}>()"
+          result << "#{class_ref}.\n    #{lines.join(".\n    ")};"
         end
         result.join("\n  \n  ")
       end

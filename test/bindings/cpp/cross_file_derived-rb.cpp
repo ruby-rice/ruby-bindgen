@@ -27,4 +27,10 @@ void Init_CrossFileDerived()
   {
     return self == other;
   });
+  
+  Data_Type<CrossFile::Point2d>().
+    define_method("+", [](const CrossFile::Point2d& self, double other) -> CrossFile::Point2d
+  {
+    return self + other;
+  });
 }

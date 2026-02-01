@@ -14,4 +14,14 @@ namespace CrossFile
 
   // Typedef for a specific instantiation
   typedef BaseMatrix<double, 4> BaseMatrix4d;
+
+  // Simple standalone class (not a base class of anything in derived file)
+  // Used to test cross-file non-member operator references
+  class Point2d
+  {
+  public:
+    double x, y;
+    Point2d() : x(0), y(0) {}
+    Point2d(double x, double y) : x(x), y(y) {}
+  };
 }

@@ -55,4 +55,12 @@ namespace CrossFile
   {
     return a.start == b.start && a.end == b.end;
   }
+
+  // Non-member operator on Point2d from cross_file_base.hpp
+  // Tests true cross-file reference: Point2d is NOT defined in this file,
+  // so generated code should use Data_Type<Point2d>() instead of rb_cPoint2d
+  inline Point2d operator+(const Point2d& p, double scalar)
+  {
+    return Point2d(p.x + scalar, p.y + scalar);
+  }
 }
