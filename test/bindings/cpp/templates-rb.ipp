@@ -1,8 +1,3 @@
-#include <templates.hpp>
-#include "templates-rb.hpp"
-
-using namespace Rice;
-
 template<typename Data_Type_T, int Rows, int Columns>
 inline void Data_builder(Data_Type_T& klass)
 {

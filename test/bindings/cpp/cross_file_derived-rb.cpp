@@ -1,3 +1,8 @@
+#include <cross_file_derived.hpp>
+#include "cross_file_derived-rb.hpp"
+
+using namespace Rice;
+
 #include "cross_file_derived-rb.ipp"
 
 void Init_CrossFileDerived()

@@ -1,6 +1,3 @@
-<%- if rice_ipp -%>
-#include "<%= rice_ipp %>"
-<%- else -%>
 <%- includes.each do |include| -%>
 <%= include %>
 <%- end -%>
@@ -26,6 +23,9 @@ namespace std
 
 using namespace Rice;
 
+<%- if rice_ipp -%>
+#include "<%= rice_ipp %>"
+<%- else -%>
 <%= class_templates %>
 <%- end -%>
 

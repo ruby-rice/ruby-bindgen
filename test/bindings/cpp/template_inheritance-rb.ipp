@@ -1,8 +1,3 @@
-#include <template_inheritance.hpp>
-#include "template_inheritance-rb.hpp"
-
-using namespace Rice;
-
 template<typename Data_Type_T, typename T>
 inline void BasePtr_builder(Data_Type_T& klass)
 {

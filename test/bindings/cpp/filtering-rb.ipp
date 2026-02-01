@@ -1,8 +1,3 @@
-#include <filtering.hpp>
-#include "filtering-rb.hpp"
-
-using namespace Rice;
-
 template<typename Data_Type_T, typename T>
 inline void UsesSkippedType_builder(Data_Type_T& klass)
 {

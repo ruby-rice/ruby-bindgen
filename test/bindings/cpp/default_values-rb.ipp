@@ -1,8 +1,3 @@
-#include <default_values.hpp>
-#include "default_values-rb.hpp"
-
-using namespace Rice;
-
 template<typename Data_Type_T, typename T>
 inline void Vec3_builder(Data_Type_T& klass)
 {

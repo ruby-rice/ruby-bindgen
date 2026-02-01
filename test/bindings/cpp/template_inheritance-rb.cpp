@@ -1,3 +1,8 @@
+#include <template_inheritance.hpp>
+#include "template_inheritance-rb.hpp"
+
+using namespace Rice;
+
 #include "template_inheritance-rb.ipp"
 
 void Init_TemplateInheritance()

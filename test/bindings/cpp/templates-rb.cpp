@@ -1,3 +1,8 @@
+#include <templates.hpp>
+#include "templates-rb.hpp"
+
+using namespace Rice;
+
 #include "templates-rb.ipp"
 
 void Init_Templates()

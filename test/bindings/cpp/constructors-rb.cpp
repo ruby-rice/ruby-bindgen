@@ -1,3 +1,8 @@
+#include <constructors.hpp>
+#include "constructors-rb.hpp"
+
+using namespace Rice;
+
 #include "constructors-rb.ipp"
 
 void Init_Constructors()

@@ -1,8 +1,3 @@
-#include <operators.hpp>
-#include "operators-rb.hpp"
-
-using namespace Rice;
-
 template<typename Data_Type_T, typename T>
 inline void DataPtr_builder(Data_Type_T& klass)
 {

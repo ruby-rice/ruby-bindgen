@@ -1,3 +1,8 @@
+#include <filtering.hpp>
+#include "filtering-rb.hpp"
+
+using namespace Rice;
+
 #include "filtering-rb.ipp"
 
 void Init_Filtering()

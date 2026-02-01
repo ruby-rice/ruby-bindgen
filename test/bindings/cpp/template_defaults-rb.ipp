@@ -1,8 +1,3 @@
-#include <template_defaults.hpp>
-#include "template_defaults-rb.hpp"
-
-using namespace Rice;
-
 template<typename Data_Type_T, typename T, int Rows, int Cols>
 inline void Matrix_builder(Data_Type_T& klass)
 {

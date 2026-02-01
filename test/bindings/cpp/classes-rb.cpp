@@ -1,3 +1,8 @@
+#include <classes.hpp>
+#include "classes-rb.hpp"
+
+using namespace Rice;
+
 #include "classes-rb.ipp"
 
 void Init_Classes()

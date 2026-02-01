@@ -1,3 +1,8 @@
+#include <default_values.hpp>
+#include "default_values-rb.hpp"
+
+using namespace Rice;
+
 #include "default_values-rb.ipp"
 
 void Init_DefaultValues()

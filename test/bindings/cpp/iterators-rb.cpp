@@ -1,3 +1,22 @@
+#include <iterators.hpp>
+#include "iterators-rb.hpp"
+
+// Iterator traits specializations for iterators missing std::iterator_traits
+namespace std
+{
+  template<>
+  struct iterator_traits<iter::IncompleteIterator>
+  {
+    using iterator_category = forward_iterator_tag;
+    using value_type = iter::Pixel;
+    using difference_type = ptrdiff_t;
+    using pointer = iter::Pixel*;
+    using reference = iter::Pixel&;
+  };
+}
+
+using namespace Rice;
+
 #include "iterators-rb.ipp"
 
 void Init_Iterators()

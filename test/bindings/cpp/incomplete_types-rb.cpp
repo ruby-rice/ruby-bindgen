@@ -1,3 +1,8 @@
+#include <incomplete_types.hpp>
+#include "incomplete_types-rb.hpp"
+
+using namespace Rice;
+
 #include "incomplete_types-rb.ipp"
 
 void Init_IncompleteTypes()

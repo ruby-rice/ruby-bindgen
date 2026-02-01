@@ -1,8 +1,3 @@
-#include <cross_file_derived.hpp>
-#include "cross_file_derived-rb.hpp"
-
-using namespace Rice;
-
 template<typename Data_Type_T, typename T, int N>
 inline void DerivedVector_builder(Data_Type_T& klass)
 {

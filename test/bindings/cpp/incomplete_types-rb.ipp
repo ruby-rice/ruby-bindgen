@@ -1,8 +1,3 @@
-#include <incomplete_types.hpp>
-#include "incomplete_types-rb.hpp"
-
-using namespace Rice;
-
 template<typename Data_Type_T, typename T>
 inline void Ptr_builder(Data_Type_T& klass)
 {

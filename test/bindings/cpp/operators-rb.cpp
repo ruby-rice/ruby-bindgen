@@ -1,3 +1,8 @@
+#include <operators.hpp>
+#include "operators-rb.hpp"
+
+using namespace Rice;
+
 #include "operators-rb.ipp"
 
 void Init_Operators()
