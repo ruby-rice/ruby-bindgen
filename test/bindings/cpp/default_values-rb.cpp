@@ -26,17 +26,13 @@ void Init_DefaultValues()
 
   rb_cCvMat.define_constant("AUTO_STEP", (int)cv::Mat::AUTO_STEP);
 
-  Rice::Data_Type<cv::Affine3<float>> rb_cAffine3f = define_class_under<cv::Affine3<float>>(rb_mCv, "Affine3f").
-    define(&Affine3_builder<Data_Type<cv::Affine3<float>>, float>);
+  Rice::Data_Type<cv::Affine3<float>> rb_cAffine3f = Affine3_instantiate<float>(rb_mCv, "Affine3f");
 
-  Rice::Data_Type<cv::Affine3<double>> rb_cAffine3d = define_class_under<cv::Affine3<double>>(rb_mCv, "Affine3d").
-    define(&Affine3_builder<Data_Type<cv::Affine3<double>>, double>);
+  Rice::Data_Type<cv::Affine3<double>> rb_cAffine3d = Affine3_instantiate<double>(rb_mCv, "Affine3d");
 
-  Rice::Data_Type<cv::Rect_<int>> rb_cRect = define_class_under<cv::Rect_<int>>(rb_mCv, "Rect").
-    define(&Rect__builder<Data_Type<cv::Rect_<int>>, int>);
+  Rice::Data_Type<cv::Rect_<int>> rb_cRect = Rect__instantiate<int>(rb_mCv, "Rect");
 
-  Rice::Data_Type<cv::Rect_<double>> rb_cRect2d = define_class_under<cv::Rect_<double>>(rb_mCv, "Rect2d").
-    define(&Rect__builder<Data_Type<cv::Rect_<double>>, double>);
+  Rice::Data_Type<cv::Rect_<double>> rb_cRect2d = Rect__instantiate<double>(rb_mCv, "Rect2d");
 
   rb_mCv.define_module_function<void(*)(const cv::Rect_<double>&)>("render", &cv::render,
     Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(cv::Rect_<double>(0.0, 0.0, 1.0, 1.0)));

@@ -410,6 +410,30 @@ module RubyBindgen
           end
         end.join(", ")
 
+        # Build fully qualified type using template params (e.g., Tests::Matrix<T, Rows, Columns>)
+        param_names = template_parameters.map(&:spelling).join(", ")
+        fully_qualified_type = "#{cursor.qualified_name}<#{param_names}>"
+
+        # Get base class if present (for inheritance in instantiate function)
+        base_spelling = nil
+        base_specifier = cursor.find_first_by_kind(false, :cursor_cxx_base_specifier)
+        if base_specifier
+          base_template_ref = base_specifier.find_first_by_kind(false, :cursor_template_ref)
+          if base_template_ref
+            # Template base: use type spelling which has template params (e.g., Matx<_Tp, cn, 1>)
+            base_spelling = base_specifier.type.spelling
+            # Qualify with namespace if needed
+            base_ns = base_template_ref.referenced.qualified_name.sub(base_template_ref.referenced.spelling, "")
+            if base_ns && !base_ns.empty? && !base_spelling.start_with?(base_ns)
+              base_spelling = "#{base_ns}#{base_spelling}"
+            end
+          else
+            # Non-template base: use qualified name
+            base_type_ref = base_specifier.find_first_by_kind(false, :cursor_type_ref)
+            base_spelling = base_type_ref&.referenced&.qualified_name
+          end
+        end
+
         children = visit_children_two_pass(cursor,
                                            exclude_kinds: [:cursor_typedef_decl, :cursor_alias_decl])
 
@@ -428,7 +452,10 @@ module RubyBindgen
         # Render class
         result = Array.new
         result << self.render_cursor(cursor, "class_template", :under => under,
-                                     :template_signature => template_signature, :children => children_content)
+                                     :template_signature => template_signature,
+                                     :fully_qualified_type => fully_qualified_type,
+                                     :base_spelling => base_spelling,
+                                     :children => children_content)
 
         merge_children(result, indentation: 0, separator: ".\n", strip: false)
       end

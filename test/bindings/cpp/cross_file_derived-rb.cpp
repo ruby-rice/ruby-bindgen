@@ -9,10 +9,8 @@ void Init_CrossFileDerived()
 {
   Module rb_mCrossFile = define_module("CrossFile");
 
-  Rice::Data_Type<CrossFile::BaseMatrix<double, 4>> rb_cBaseMatrix4d = define_class_under<CrossFile::BaseMatrix<double, 4>>(rb_mCrossFile, "BaseMatrix4d").
-    define(&BaseMatrix_builder<Data_Type<CrossFile::BaseMatrix<double, 4>>, double, 4>);
-  Rice::Data_Type<CrossFile::DerivedVector<double, 4>> rb_cDerivedVector4d = define_class_under<CrossFile::DerivedVector<double, 4>, CrossFile::BaseMatrix<double, 4>>(rb_mCrossFile, "DerivedVector4d").
-    define(&DerivedVector_builder<Data_Type<CrossFile::DerivedVector<double, 4>>, double, 4>);
+  Rice::Data_Type<CrossFile::BaseMatrix<double, 4>> rb_cBaseMatrix4d = BaseMatrix_instantiate<double, 4>(rb_mCrossFile, "BaseMatrix4d");
+  Rice::Data_Type<CrossFile::DerivedVector<double, 4>> rb_cDerivedVector4d = DerivedVector_instantiate<double, 4>(rb_mCrossFile, "DerivedVector4d");
 
   Rice::Data_Type<CrossFile::SimpleRange> rb_cCrossFileSimpleRange = define_class_under<CrossFile::SimpleRange>(rb_mCrossFile, "SimpleRange").
     define_attr("start", &CrossFile::SimpleRange::start).

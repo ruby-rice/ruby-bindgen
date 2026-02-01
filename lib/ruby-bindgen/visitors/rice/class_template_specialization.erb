@@ -5,17 +5,20 @@
                       else
                         template_specialization.gsub(/<.*>/, "").split("::").last.camelize + template_arguments.split(",").map(&:strip).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join
                       end -%>
-<%- has_builder = !@empty_builders.include?(cursor_template.spelling) -%>
-<%- terminator = has_builder ? "." : ";" -%>
-<%- if under && base_spelling -%>
-Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>, <%= base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>")<%= terminator %>
-<%- elsif under -%>
-Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>")<%= terminator %>
-<%- elsif base_spelling -%>
-Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>, <%= base_spelling %>>("<%= ruby_class_name %>")<%= terminator %>
+<%- has_instantiate = !@empty_builders.include?(cursor_template.spelling) -%>
+<%- if has_instantiate -%>
+<%- # New pattern: call the instantiate function which handles everything -%>
+<%- parent_module = under ? under.cruby_name : "Rice::Module(rb_cObject)" -%>
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = <%= cursor_template.spelling %>_instantiate<<%= template_arguments %>>(<%= parent_module %>, "<%= ruby_class_name %>");
 <%- else -%>
-Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>>("<%= ruby_class_name %>")<%= terminator %>
+<%- # Empty template: no instantiate function, just define the class -%>
+<%- if under && base_spelling -%>
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>, <%= base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>");
+<%- elsif under -%>
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class_under<<%= template_specialization %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>");
+<%- elsif base_spelling -%>
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>, <%= base_spelling %>>("<%= ruby_class_name %>");
+<%- else -%>
+Rice::Data_Type<<%= template_specialization %>> <%= var_name %> = define_class<<%= template_specialization %>>("<%= ruby_class_name %>");
 <%- end -%>
-<%- if has_builder -%>
-  define(&<%= cursor_template.spelling %>_builder<Data_Type<<%= template_specialization %>>, <%= template_arguments %>>);
 <%- end -%>

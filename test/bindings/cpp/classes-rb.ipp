@@ -1,6 +1,7 @@
-template<typename Data_Type_T, typename T>
-inline void wrapper_builder(Data_Type_T& klass)
+template<typename T>
+inline Rice::Data_Type<Outer::foobar::wrapper<T>> wrapper_instantiate(Rice::Module& parent, const char* name)
 {
-  klass.define_attr("item", &Outer::foobar::wrapper<T>::item);
-};
+  return Rice::define_class_under<Outer::foobar::wrapper<T>>(parent, name).
+    define_attr("item", &Outer::foobar::wrapper<T>::item);
+}
 

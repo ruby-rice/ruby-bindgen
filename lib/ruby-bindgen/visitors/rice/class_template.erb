@@ -1,7 +1,12 @@
-template<typename Data_Type_T, <%= template_signature %>>
-inline void <%= cursor.spelling %>_builder(Data_Type_T& klass)
+template<<%= template_signature %>>
+inline Rice::Data_Type<<%= fully_qualified_type %>> <%= cursor.spelling %>_instantiate(Rice::Module& parent, const char* name)
 {
-  <%- unless children.empty? -%>
-  klass.<%= children.lstrip %>
-  <%- end -%>
-};
+<%- if base_spelling -%>
+  return Rice::define_class_under<<%= fully_qualified_type %>, <%= base_spelling %>>(parent, name)<%- terminator = children.empty? ? ";" : "." -%><%= terminator %>
+<%- else -%>
+  return Rice::define_class_under<<%= fully_qualified_type %>>(parent, name)<%- terminator = children.empty? ? ";" : "." -%><%= terminator %>
+<%- end -%>
+<%- unless children.empty? -%>
+    <%= children.lstrip %>
+<%- end -%>
+}

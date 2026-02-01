@@ -9,16 +9,13 @@ void Init_Templates()
 {
   Module rb_mInternal = define_module("Internal");
 
-  Rice::Data_Type<Internal::Data<2, 2>> rb_cData22 = define_class_under<Internal::Data<2, 2>>(rb_mInternal, "Data22").
-    define(&Data_builder<Data_Type<Internal::Data<2, 2>>, 2, 2>);
+  Rice::Data_Type<Internal::Data<2, 2>> rb_cData22 = Data_instantiate<2, 2>(rb_mInternal, "Data22");
 
   Module rb_mTests = define_module("Tests");
 
-  Rice::Data_Type<Tests::Matrix<int, 2, 2>> rb_cMatrixInt22 = define_class_under<Tests::Matrix<int, 2, 2>>(rb_mTests, "MatrixInt22").
-    define(&Matrix_builder<Data_Type<Tests::Matrix<int, 2, 2>>, int, 2, 2>);
+  Rice::Data_Type<Tests::Matrix<int, 2, 2>> rb_cMatrixInt22 = Matrix_instantiate<int, 2, 2>(rb_mTests, "MatrixInt22");
 
-  Rice::Data_Type<Tests::Matrix<float, 3, 3>> matrix_float33 = define_class_under<Tests::Matrix<float, 3, 3>>(rb_mTests, "MatrixFloat33").
-    define(&Matrix_builder<Data_Type<Tests::Matrix<float, 3, 3>>, float, 3, 3>);
+  Rice::Data_Type<Tests::Matrix<float, 3, 3>> matrix_float33 = Matrix_instantiate<float, 3, 3>(rb_mTests, "MatrixFloat33");
 
   Rice::Data_Type<Tests::TypeTraits<int>> rb_cTestsTypeTraitsInt = define_class_under<Tests::TypeTraits<int>>(rb_mTests, "TypeTraitsInt").
     define_constructor(Constructor<Tests::TypeTraits<int>>()).
@@ -32,18 +29,15 @@ void Init_Templates()
     define_constructor(Constructor<Tests::TypeTraits<double>>()).
     define_constant("Type", Tests::TypeTraits<double>::type);
 
-  Rice::Data_Type<Tests::Transform<float>> rb_cTransformf = define_class_under<Tests::Transform<float>>(rb_mTests, "Transformf").
-    define(&Transform_builder<Data_Type<Tests::Transform<float>>, float>);
+  Rice::Data_Type<Tests::Transform<float>> rb_cTransformf = Transform_instantiate<float>(rb_mTests, "Transformf");
 
-  Rice::Data_Type<Tests::Transform<double>> rb_cTransformd = define_class_under<Tests::Transform<double>>(rb_mTests, "Transformd").
-    define(&Transform_builder<Data_Type<Tests::Transform<double>>, double>);
+  Rice::Data_Type<Tests::Transform<double>> rb_cTransformd = Transform_instantiate<double>(rb_mTests, "Transformd");
 
   Rice::Data_Type<Tests::Item> rb_cTestsItem = define_class_under<Tests::Item>(rb_mTests, "Item").
     define_constructor(Constructor<Tests::Item>()).
     define_attr("value", &Tests::Item::value);
 
-  Rice::Data_Type<Tests::Container<Tests::Item>> rb_cTestsContainerTestsItem = define_class_under<Tests::Container<Tests::Item>>(rb_mTests, "ContainerTestsItem").
-    define(&Container_builder<Data_Type<Tests::Container<Tests::Item>>, Tests::Item>);
+  Rice::Data_Type<Tests::Container<Tests::Item>> rb_cTestsContainerTestsItem = Container_instantiate<Tests::Item>(rb_mTests, "ContainerTestsItem");
 
   Rice::Data_Type<Tests::Consumer> rb_cTestsConsumer = define_class_under<Tests::Consumer>(rb_mTests, "Consumer").
     define_constructor(Constructor<Tests::Consumer, const Tests::Container<Tests::Item>&>(),
@@ -57,9 +51,7 @@ void Init_Templates()
     define_constructor(Constructor<Tests::TypeTraits<Tests::lowercase_type>>()).
     define_constant("Type", Tests::TypeTraits<Tests::lowercase_type>::type);
 
-  Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = define_class_under<Tests::Wrapper<Tests::lowercase_type>>(rb_mTests, "WrappedLowercase").
-    define(&Wrapper_builder<Data_Type<Tests::Wrapper<Tests::lowercase_type>>, Tests::lowercase_type>);
+  Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = Wrapper_instantiate<Tests::lowercase_type>(rb_mTests, "WrappedLowercase");
 
-  Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = define_class_under<Tests::Mat_<float>>(rb_mTests, "Mat1f").
-    define(&Mat__builder<Data_Type<Tests::Mat_<float>>, float>);
+  Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = Mat__instantiate<float>(rb_mTests, "Mat1f");
 }

@@ -11,13 +11,11 @@ void Init_TemplateInheritance()
 
   Rice::Data_Type<Tests::BasePtr<unsigned char>> rb_cBasePtrUnsignedChar = define_class_under<Tests::BasePtr<unsigned char>>(rb_mTests, "BasePtrUnsignedChar").
     define(&BasePtr_builder<Data_Type<Tests::BasePtr<unsigned char>>, unsigned char>);
-  Rice::Data_Type<Tests::DerivedPtr<unsigned char>> rb_cDerivedPtrb = define_class_under<Tests::DerivedPtr<unsigned char>, Tests::BasePtr<unsigned char>>(rb_mTests, "DerivedPtrb").
-    define(&DerivedPtr_builder<Data_Type<Tests::DerivedPtr<unsigned char>>, unsigned char>);
+  Rice::Data_Type<Tests::DerivedPtr<unsigned char>> rb_cDerivedPtrb = DerivedPtr_instantiate<unsigned char>(rb_mTests, "DerivedPtrb");
 
   Rice::Data_Type<Tests::BasePtr<float>> rb_cBasePtrFloat = define_class_under<Tests::BasePtr<float>>(rb_mTests, "BasePtrFloat").
     define(&BasePtr_builder<Data_Type<Tests::BasePtr<float>>, float>);
-  Rice::Data_Type<Tests::DerivedPtr<float>> derived_ptrf = define_class_under<Tests::DerivedPtr<float>, Tests::BasePtr<float>>(rb_mTests, "DerivedPtrf").
-    define(&DerivedPtr_builder<Data_Type<Tests::DerivedPtr<float>>, float>);
+  Rice::Data_Type<Tests::DerivedPtr<float>> derived_ptrf = DerivedPtr_instantiate<float>(rb_mTests, "DerivedPtrf");
 
   Rice::Data_Type<Tests::PlaneProjector> rb_cTestsPlaneProjector = define_class_under<Tests::PlaneProjector>(rb_mTests, "PlaneProjector").
     define_attr("scale", &Tests::PlaneProjector::scale).
@@ -32,18 +30,15 @@ void Init_TemplateInheritance()
 
   Rice::Data_Type<Tests::Matx<unsigned char, 2, 1>> rb_cMatxUnsignedChar21 = define_class_under<Tests::Matx<unsigned char, 2, 1>>(rb_mTests, "MatxUnsignedChar21").
     define(&Matx_builder<Data_Type<Tests::Matx<unsigned char, 2, 1>>, unsigned char, 2, 1>);
-  Rice::Data_Type<Tests::Vec<unsigned char, 2>> rb_cVec2b = define_class_under<Tests::Vec<unsigned char, 2>, Tests::Matx<unsigned char, 2, 1>>(rb_mTests, "Vec2b").
-    define(&Vec_builder<Data_Type<Tests::Vec<unsigned char, 2>>, unsigned char, 2>);
+  Rice::Data_Type<Tests::Vec<unsigned char, 2>> rb_cVec2b = Vec_instantiate<unsigned char, 2>(rb_mTests, "Vec2b");
 
   Rice::Data_Type<Tests::Matx<int, 3, 1>> rb_cMatxInt31 = define_class_under<Tests::Matx<int, 3, 1>>(rb_mTests, "MatxInt31").
     define(&Matx_builder<Data_Type<Tests::Matx<int, 3, 1>>, int, 3, 1>);
-  Rice::Data_Type<Tests::Vec<int, 3>> rb_cVec3i = define_class_under<Tests::Vec<int, 3>, Tests::Matx<int, 3, 1>>(rb_mTests, "Vec3i").
-    define(&Vec_builder<Data_Type<Tests::Vec<int, 3>>, int, 3>);
+  Rice::Data_Type<Tests::Vec<int, 3>> rb_cVec3i = Vec_instantiate<int, 3>(rb_mTests, "Vec3i");
 
   Rice::Data_Type<Tests::Matx<double, 4, 1>> rb_cMatxDouble41 = define_class_under<Tests::Matx<double, 4, 1>>(rb_mTests, "MatxDouble41").
     define(&Matx_builder<Data_Type<Tests::Matx<double, 4, 1>>, double, 4, 1>);
-  Rice::Data_Type<Tests::Vec<double, 4>> rb_cVec4d = define_class_under<Tests::Vec<double, 4>, Tests::Matx<double, 4, 1>>(rb_mTests, "Vec4d").
-    define(&Vec_builder<Data_Type<Tests::Vec<double, 4>>, double, 4>);
+  Rice::Data_Type<Tests::Vec<double, 4>> rb_cVec4d = Vec_instantiate<double, 4>(rb_mTests, "Vec4d");
 
   Rice::Data_Type<Tests::Mat> rb_cTestsMat = define_class_under<Tests::Mat>(rb_mTests, "Mat").
     define_attr("rows", &Tests::Mat::rows).
@@ -52,9 +47,7 @@ void Init_TemplateInheritance()
     define_constructor(Constructor<Tests::Mat, int, int>(),
       Arg("rows_"), Arg("cols_"));
 
-  Rice::Data_Type<Tests::Mat_<unsigned char>> rb_cMat1b = define_class_under<Tests::Mat_<unsigned char>, Tests::Mat>(rb_mTests, "Mat1b").
-    define(&Mat__builder<Data_Type<Tests::Mat_<unsigned char>>, unsigned char>);
+  Rice::Data_Type<Tests::Mat_<unsigned char>> rb_cMat1b = Mat__instantiate<unsigned char>(rb_mTests, "Mat1b");
 
-  Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = define_class_under<Tests::Mat_<float>, Tests::Mat>(rb_mTests, "Mat1f").
-    define(&Mat__builder<Data_Type<Tests::Mat_<float>>, float>);
+  Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = Mat__instantiate<float>(rb_mTests, "Mat1f");
 }

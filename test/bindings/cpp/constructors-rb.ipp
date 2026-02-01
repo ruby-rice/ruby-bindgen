@@ -1,8 +1,9 @@
-template<typename Data_Type_T, typename T>
-inline void TemplateConstructor_builder(Data_Type_T& klass)
+template<typename T>
+inline Rice::Data_Type<TemplateConstructor<T>> TemplateConstructor_instantiate(Rice::Module& parent, const char* name)
 {
-  klass.define_constructor(Constructor<TemplateConstructor<T>>()).
+  return Rice::define_class_under<TemplateConstructor<T>>(parent, name).
+    define_constructor(Constructor<TemplateConstructor<T>>()).
     define_constructor(Constructor<TemplateConstructor<T>, T>(),
       Arg("value"));
-};
+}
 

@@ -1,8 +1,9 @@
-template<typename Data_Type_T, typename T, int N>
-inline void DerivedVector_builder(Data_Type_T& klass)
+template<typename T, int N>
+inline Rice::Data_Type<CrossFile::DerivedVector<T, N>> DerivedVector_instantiate(Rice::Module& parent, const char* name)
 {
-  klass.define_constructor(Constructor<CrossFile::DerivedVector<T, N>>()).
+  return Rice::define_class_under<CrossFile::DerivedVector<T, N>, CrossFile::BaseMatrix<T, N>>(parent, name).
+    define_constructor(Constructor<CrossFile::DerivedVector<T, N>>()).
     template define_method<T(CrossFile::DerivedVector<T, N>::*)(const CrossFile::DerivedVector<T, N>&) const>("dot", &CrossFile::DerivedVector<T, N>::dot,
       Arg("other"));
-};
+}
 

@@ -25,8 +25,7 @@ void Init_Filtering()
       Arg("param1"), Arg("param2")).
     define_method<void(Outer::ClassWithDeprecatedConstructor::*)()>("do_something", &Outer::ClassWithDeprecatedConstructor::doSomething);
 
-  Rice::Data_Type<Outer::UsesSkippedType<int>> rb_cUsesSkippedTypeInt = define_class_under<Outer::UsesSkippedType<int>>(rb_mOuter, "UsesSkippedTypeInt").
-    define(&UsesSkippedType_builder<Data_Type<Outer::UsesSkippedType<int>>, int>);
+  Rice::Data_Type<Outer::UsesSkippedType<int>> rb_cUsesSkippedTypeInt = UsesSkippedType_instantiate<int>(rb_mOuter, "UsesSkippedTypeInt");
 
   Rice::Data_Type<Outer::Wrapper<int>> rb_cOuterWrapperInt = define_class_under<Outer::Wrapper<int>>(rb_mOuter, "WrapperInt").
     define_constructor(Constructor<Outer::Wrapper<int>>()).
