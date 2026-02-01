@@ -125,9 +125,9 @@ module RubyBindgen
       # Visit children in two passes: non-static first, then static.
       # Static methods must come last because Rice's Forwardable module needs
       # instance methods registered before static factory methods that return smart pointers.
-      def visit_children_two_pass(cursor, exclude_kinds:)
-        children = visit_children(cursor, exclude_kinds: exclude_kinds, only_static: false)
-        children += visit_children(cursor, exclude_kinds: exclude_kinds, only_static: true)
+      def visit_children_two_pass(cursor, exclude_kinds: nil, only_kinds: nil)
+        children = visit_children(cursor, exclude_kinds: exclude_kinds || Set.new, only_kinds: only_kinds, only_static: false)
+        children += visit_children(cursor, exclude_kinds: exclude_kinds || Set.new, only_kinds: only_kinds, only_static: true)
         children
       end
 
@@ -396,7 +396,56 @@ module RubyBindgen
         render_cursor(cursor, "incomplete_class", :under => parent_cursor)
       end
 
+      # Get base class spelling from a cursor's base specifier.
+      # Handles both template and non-template base classes.
+      # Returns nil if no base class exists.
+      def get_base_spelling(cursor)
+        base_specifier = cursor.find_first_by_kind(false, :cursor_cxx_base_specifier)
+        return nil unless base_specifier
+
+        base_template_ref = base_specifier.find_first_by_kind(false, :cursor_template_ref)
+        if base_template_ref
+          # Template base: use type spelling which has template params (e.g., Matx<_Tp, cn, 1>)
+          base_spelling = base_specifier.type&.spelling
+          return nil unless base_spelling
+
+          # Qualify with namespace if needed
+          ref = base_template_ref.referenced
+          return base_spelling unless ref
+
+          ref_qualified = ref.qualified_name
+          ref_spelling = ref.spelling
+          return base_spelling unless ref_qualified && ref_spelling
+
+          base_ns = ref_qualified.sub(ref_spelling, "")
+          if !base_ns.empty? && !base_spelling.start_with?(base_ns)
+            base_spelling = "#{base_ns}#{base_spelling}"
+          end
+          base_spelling
+        else
+          # Non-template base: use qualified name
+          base_type_ref = base_specifier.find_first_by_kind(false, :cursor_type_ref)
+          result = base_type_ref&.referenced&.qualified_name
+          result
+        end
+      end
+
       def visit_class_template_builder(cursor)
+        children = visit_children_two_pass(cursor,
+                                           only_kinds: [:cursor_cxx_method, :cursor_constructor, :cursor_field_decl, :cursor_variable,
+                                                        :cursor_enum_decl, :cursor_conversion_function])
+
+        # If no children (all methods deprecated/skipped), don't generate builder
+        if children.empty?
+          @empty_builders.add(cursor.spelling)
+          return ""
+        end
+
+        # TODO: Calling get_base_spelling crashes libclang on certain templates.
+        # Fix the instantiate functions by hand for now.
+        # base_spelling = get_base_spelling(cursor)
+        base_spelling = nil
+
         template_parameter_kinds = [:cursor_template_type_parameter,
                                     :cursor_non_type_template_parameter,
                                     :cursor_template_template_parameter]
@@ -406,42 +455,14 @@ module RubyBindgen
           if template_parameter.kind == :cursor_template_type_parameter
             "typename #{template_parameter.spelling}"
           else
-            "#{template_parameter.type.spelling} #{template_parameter.spelling}"
+            type_spelling = template_parameter.type&.spelling || "int"
+            "#{type_spelling} #{template_parameter.spelling}"
           end
         end.join(", ")
 
         # Build fully qualified type using template params (e.g., Tests::Matrix<T, Rows, Columns>)
         param_names = template_parameters.map(&:spelling).join(", ")
         fully_qualified_type = "#{cursor.qualified_name}<#{param_names}>"
-
-        # Get base class if present (for inheritance in instantiate function)
-        base_spelling = nil
-        base_specifier = cursor.find_first_by_kind(false, :cursor_cxx_base_specifier)
-        if base_specifier
-          base_template_ref = base_specifier.find_first_by_kind(false, :cursor_template_ref)
-          if base_template_ref
-            # Template base: use type spelling which has template params (e.g., Matx<_Tp, cn, 1>)
-            base_spelling = base_specifier.type.spelling
-            # Qualify with namespace if needed
-            base_ns = base_template_ref.referenced.qualified_name.sub(base_template_ref.referenced.spelling, "")
-            if base_ns && !base_ns.empty? && !base_spelling.start_with?(base_ns)
-              base_spelling = "#{base_ns}#{base_spelling}"
-            end
-          else
-            # Non-template base: use qualified name
-            base_type_ref = base_specifier.find_first_by_kind(false, :cursor_type_ref)
-            base_spelling = base_type_ref&.referenced&.qualified_name
-          end
-        end
-
-        children = visit_children_two_pass(cursor,
-                                           exclude_kinds: [:cursor_typedef_decl, :cursor_alias_decl])
-
-        # If no children (all methods deprecated/skipped), don't generate builder
-        if children.empty?
-          @empty_builders.add(cursor.spelling)
-          return ""
-        end
 
         children_content = merge_children(children, :indentation => 4, :separator => ".\n",
                                                     :terminator => ";", :strip => true)
@@ -1899,7 +1920,7 @@ module RubyBindgen
         [content, has_builders]
       end
 
-      def visit_children(cursor, exclude_kinds: Set.new, only_static: nil)
+      def visit_children(cursor, exclude_kinds: Set.new, only_kinds: nil, only_static: nil)
         results = Array.new
         cursor.each(false) do |child_cursor, parent_cursor|
           if child_cursor.location.in_system_header?
@@ -1934,6 +1955,10 @@ module RubyBindgen
           end
 
           if exclude_kinds.include?(child_kind)
+            next :continue
+          end
+
+          if only_kinds && !only_kinds.include?(child_kind)
             next :continue
           end
 

@@ -1,5 +1,5 @@
 template<typename T>
-inline Rice::Data_Type<cv::Vec3<T>> Vec3_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<cv::Vec3<T>> Vec3_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<cv::Vec3<T>>(parent, name).
     define_constructor(Constructor<cv::Vec3<T>>()).
@@ -11,7 +11,7 @@ inline Rice::Data_Type<cv::Vec3<T>> Vec3_instantiate(Rice::Module& parent, const
 }
 
 template<typename T>
-inline Rice::Data_Type<cv::Affine3<T>> Affine3_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<cv::Affine3<T>> Affine3_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<cv::Affine3<T>>(parent, name).
     define_constructor(Constructor<cv::Affine3<T>>()).
@@ -20,7 +20,7 @@ inline Rice::Data_Type<cv::Affine3<T>> Affine3_instantiate(Rice::Module& parent,
 }
 
 template<typename T>
-inline Rice::Data_Type<cv::Rect_<T>> Rect__instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<cv::Rect_<T>> Rect__instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<cv::Rect_<T>>(parent, name).
     define_constructor(Constructor<cv::Rect_<T>>()).

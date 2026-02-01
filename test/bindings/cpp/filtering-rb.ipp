@@ -1,5 +1,5 @@
 template<typename T>
-inline Rice::Data_Type<Outer::UsesSkippedType<T>> UsesSkippedType_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Outer::UsesSkippedType<T>> UsesSkippedType_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Outer::UsesSkippedType<T>>(parent, name).
     define_constructor(Constructor<Outer::UsesSkippedType<T>>()).
@@ -7,7 +7,7 @@ inline Rice::Data_Type<Outer::UsesSkippedType<T>> UsesSkippedType_instantiate(Ri
 }
 
 template<typename T>
-inline Rice::Data_Type<Outer::Wrapper<T>> Wrapper_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Outer::Wrapper<T>> Wrapper_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Outer::Wrapper<T>>(parent, name).
     define_constructor(Constructor<Outer::Wrapper<T>>()).

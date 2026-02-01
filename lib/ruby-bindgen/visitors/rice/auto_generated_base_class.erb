@@ -1,10 +1,5 @@
-<%- if under && base_base_spelling -%>
-Rice::Data_Type<<%= base_spelling %>> <%= cruby_name %> = define_class_under<<%= base_spelling %>, <%= base_base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_name %>").
-<%- elsif under -%>
-Rice::Data_Type<<%= base_spelling %>> <%= cruby_name %> = define_class_under<<%= base_spelling %>>(<%= under.cruby_name %>, "<%= ruby_name %>").
-<%- elsif base_base_spelling -%>
-Rice::Data_Type<<%= base_spelling %>> <%= cruby_name %> = define_class<<%= base_spelling %>, <%= base_base_spelling %>>("<%= ruby_name %>").
+<%- if under -%>
+Rice::Data_Type<<%= base_spelling %>> <%= cruby_name %> = <%= base_template.spelling %>_instantiate<<%= template_arguments %>>(<%= under.cruby_name %>, "<%= ruby_name %>");
 <%- else -%>
-Rice::Data_Type<<%= base_spelling %>> <%= cruby_name %> = define_class<<%= base_spelling %>>("<%= ruby_name %>").
+Rice::Data_Type<<%= base_spelling %>> <%= cruby_name %> = <%= base_template.spelling %>_instantiate<<%= template_arguments %>>(Rice::Module(rb_cObject), "<%= ruby_name %>");
 <%- end -%>
-  define(&<%= base_template.spelling %>_builder<Data_Type<<%= base_spelling %>>, <%= template_arguments %>>);

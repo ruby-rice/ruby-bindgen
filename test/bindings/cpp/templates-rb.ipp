@@ -1,5 +1,5 @@
 template<int Rows, int Columns>
-inline Rice::Data_Type<Internal::Data<Rows, Columns>> Data_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Internal::Data<Rows, Columns>> Data_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Internal::Data<Rows, Columns>>(parent, name).
     define_constructor(Constructor<Internal::Data<Rows, Columns>>()).
@@ -12,7 +12,7 @@ inline Rice::Data_Type<Internal::Data<Rows, Columns>> Data_instantiate(Rice::Mod
 }
 
 template<typename T, int Rows, int Columns>
-inline Rice::Data_Type<Tests::Matrix<T, Rows, Columns>> Matrix_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Tests::Matrix<T, Rows, Columns>> Matrix_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::Matrix<T, Rows, Columns>>(parent, name).
     define_constructor(Constructor<Tests::Matrix<T, Rows, Columns>>()).
@@ -35,14 +35,14 @@ inline Rice::Data_Type<Tests::Matrix<T, Rows, Columns>> Matrix_instantiate(Rice:
 }
 
 template<typename T>
-inline Rice::Data_Type<Tests::TypeTraits<T>> TypeTraits_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Tests::TypeTraits<T>> TypeTraits_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::TypeTraits<T>>(parent, name).
     define_constant("Type", Tests::TypeTraits<T>::type);
 }
 
 template<typename T>
-inline Rice::Data_Type<Tests::Transform<T>> Transform_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Tests::Transform<T>> Transform_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::Transform<T>>(parent, name).
     define_constructor(Constructor<Tests::Transform<T>>()).
@@ -54,7 +54,7 @@ inline Rice::Data_Type<Tests::Transform<T>> Transform_instantiate(Rice::Module& 
 }
 
 template<typename T>
-inline Rice::Data_Type<Tests::Container<T>> Container_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Tests::Container<T>> Container_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::Container<T>>(parent, name).
     define_attr("data", &Tests::Container<T>::data).
@@ -62,7 +62,7 @@ inline Rice::Data_Type<Tests::Container<T>> Container_instantiate(Rice::Module& 
 }
 
 template<typename T>
-inline Rice::Data_Type<Tests::Wrapper<T>> Wrapper_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Tests::Wrapper<T>> Wrapper_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::Wrapper<T>>(parent, name).
     define_constant("Type_id", (int)Tests::Wrapper<T>::type_id).
@@ -70,14 +70,14 @@ inline Rice::Data_Type<Tests::Wrapper<T>> Wrapper_instantiate(Rice::Module& pare
 }
 
 template<typename T>
-inline Rice::Data_Type<Tests::DataType<T>> DataType_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Tests::DataType<T>> DataType_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::DataType<T>>(parent, name).
     define_constant("Channels", Tests::DataType<T>::channels);
 }
 
 template<typename T>
-inline Rice::Data_Type<Tests::Point_<T>> Point__instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Tests::Point_<T>> Point__instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::Point_<T>>(parent, name).
     define_attr("x", &Tests::Point_<T>::x).
@@ -88,7 +88,7 @@ inline Rice::Data_Type<Tests::Point_<T>> Point__instantiate(Rice::Module& parent
 }
 
 template<typename _Tp>
-inline Rice::Data_Type<Tests::Mat_<_Tp>> Mat__instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<Tests::Mat_<_Tp>> Mat__instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::Mat_<_Tp>>(parent, name).
     define_constructor(Constructor<Tests::Mat_<_Tp>>()).

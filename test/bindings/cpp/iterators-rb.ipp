@@ -1,5 +1,5 @@
 template<typename T>
-inline Rice::Data_Type<iter::TemplateContainer<T>> TemplateContainer_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<iter::TemplateContainer<T>> TemplateContainer_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<iter::TemplateContainer<T>>(parent, name).
     define_constructor(Constructor<iter::TemplateContainer<T>>()).

@@ -1,5 +1,5 @@
 template<typename T>
-inline Rice::Data_Type<DataPtr<T>> DataPtr_instantiate(Rice::Module& parent, const char* name)
+inline Rice::Data_Type<DataPtr<T>> DataPtr_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<DataPtr<T>>(parent, name).
     define_attr("data", &DataPtr<T>::data).
