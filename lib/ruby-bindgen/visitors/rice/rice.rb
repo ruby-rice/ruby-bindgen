@@ -674,19 +674,6 @@ module RubyBindgen
           collect_type_qualifications(type.canonical, qualifications)
         end
 
-        # Also check for typedef names in the spelling that we can qualify via @typedef_map
-        # This handles cases where libclang's template_argument_type returns the resolved type
-        # instead of the typedef name (e.g., String -> std::string instead of cv::String)
-        @typedef_map.each do |canonical_spelling, typedef_cursor|
-          simple_name = typedef_cursor.spelling
-          qualified_name = typedef_cursor.qualified_name
-          next if simple_name == qualified_name
-          # Only add if the simple name appears in the spelling (unqualified)
-          if spelling.match?(/(?<![:\w])#{Regexp.escape(simple_name)}(?!\w)/)
-            qualifications[simple_name] = qualified_name
-          end
-        end
-
         # Apply qualifications to the spelling
         result = spelling.dup
         qualifications.each do |simple_name, qualified_name|
