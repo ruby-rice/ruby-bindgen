@@ -1502,12 +1502,7 @@ module RubyBindgen
       end
 
       def render_non_member_operators
-        # Indentation for lambda bodies in chained method calls
-        indent = "    "  # 4 spaces - matches method chaining indentation
-        body_indent = indent + "  "  # 6 spaces - lambda body
-
-        # First, separate ostream operators (they go on the second arg's class)
-        # from regular operators (they go on the first arg's class)
+        # Group operators by target class
         # Each entry stores { lines: [], cpp_type: string } for cross-file Data_Type<T>() usage
         grouped = Hash.new { |h, k| h[k] = { lines: [], cpp_type: nil } }
 
@@ -1526,12 +1521,8 @@ module RubyBindgen
               target_cursor = arg1_typedef || arg1_non_ref.declaration
               arg_type = type_spelling(cursor.type.arg_type(1))
               grouped[target_class][:cpp_type] ||= qualified_class_name_cpp(target_cursor)
-              grouped[target_class][:lines] << "define_method(\"inspect\", [](#{arg_type} self) -> std::string\n" \
-                                               "#{indent}{\n" \
-                                               "#{body_indent}std::ostringstream stream;\n" \
-                                               "#{body_indent}stream << self;\n" \
-                                               "#{body_indent}return stream.str();\n" \
-                                               "#{indent}})"
+              grouped[target_class][:lines] << render_template("non_member_operator_inspect",
+                                                               :arg_type => arg_type).strip
             elsif cursor.type.args_size == 1
               # Unary non-member operator (e.g., operator~(const Mat& m), operator-(const Mat& m))
               arg0_type = type_spelling(cursor.type.arg_type(0))
@@ -1545,10 +1536,11 @@ module RubyBindgen
                           end
 
               grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
-              grouped[cruby_name][:lines] << "define_method(\"#{ruby_name}\", [](#{arg0_type} self) -> #{result_type}\n" \
-                                             "#{indent}{\n" \
-                                             "#{body_indent}return #{op_symbol}self;\n" \
-                                             "#{indent}})"
+              grouped[cruby_name][:lines] << render_template("non_member_operator_unary",
+                                                             :ruby_name => ruby_name,
+                                                             :arg0_type => arg0_type,
+                                                             :result_type => result_type,
+                                                             :op_symbol => op_symbol).strip
             else
               # Binary non-member operator (e.g., operator+(const Mat& a, const Mat& b))
               arg0_type = type_spelling(cursor.type.arg_type(0))
@@ -1562,17 +1554,19 @@ module RubyBindgen
                 return_stmt = "self #{op_symbol} other;"
               elsif result_type.include?("&") && result_type.include?(arg0_type.gsub(/[&\s]/, ''))
                 # Returns reference to self (e.g., FileStorage& operator<<)
-                return_stmt = "self #{op_symbol} other;\n#{body_indent}return self;"
+                return_stmt = "self #{op_symbol} other;\n  return self;"
               else
                 # Returns a value (e.g., bool, ptrdiff_t)
                 return_stmt = "return self #{op_symbol} other;"
               end
 
               grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
-              grouped[cruby_name][:lines] << "define_method(\"#{ruby_name}\", [](#{arg0_type} self, #{arg1_type} other) -> #{result_type}\n" \
-                                             "#{indent}{\n" \
-                                             "#{body_indent}#{return_stmt}\n" \
-                                             "#{indent}})"
+              grouped[cruby_name][:lines] << render_template("non_member_operator_binary",
+                                                             :ruby_name => ruby_name,
+                                                             :arg0_type => arg0_type,
+                                                             :arg1_type => arg1_type,
+                                                             :result_type => result_type,
+                                                             :return_stmt => return_stmt).strip
             end
           end
         end
@@ -1585,7 +1579,9 @@ module RubyBindgen
           next if lines.empty?
           # Use variable for locally-defined classes, Data_Type<T>() for cross-file references
           class_ref = @classes.key?(cruby_name) ? cruby_name : "Data_Type<#{cpp_type}>()"
-          result << "#{class_ref}.\n#{indent}#{lines.join(".\n#{indent}")};"
+          # Join with method chaining, indented 4 spaces (2 for function body + 2 for method chain)
+          content = merge_children(lines, :indentation => 4, :separator => ".\n", :strip => true)
+          result << "#{class_ref}.\n#{content};"
         end
         result.join("\n  \n  ")
       end
