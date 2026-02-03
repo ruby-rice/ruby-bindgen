@@ -16,6 +16,10 @@ public:
     Operators operator/(const Operators& other) const;
     Operators operator%(const Operators& other) const;
 
+    // Unary arithmetic operators - Ruby uses +@ and -@ method names
+    Operators operator+() const;  // unary plus -> +@
+    Operators operator-() const;  // unary minus -> -@
+
     // Assignment operators - map to Ruby methods
     Operators& operator=(const Operators& other);
     Operators& operator+=(const Operators& other);

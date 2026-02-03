@@ -22,6 +22,8 @@ void Init_Operators()
       Arg("other")).
     define_method<Operators(Operators::*)(const Operators&) const>("%", &Operators::operator%,
       Arg("other")).
+    define_method<Operators(Operators::*)() const>("+@", &Operators::operator+).
+    define_method<Operators(Operators::*)() const>("-@", &Operators::operator-).
     define_method<Operators&(Operators::*)(const Operators&)>("assign", &Operators::operator=,
       Arg("other")).
     define_method<Operators&(Operators::*)(const Operators&)>("assign_plus", &Operators::operator+=,
