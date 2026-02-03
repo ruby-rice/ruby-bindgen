@@ -1523,7 +1523,8 @@ module RubyBindgen
               arg_type = type_spelling(cursor.type.arg_type(1))
               grouped[target_class][:cpp_type] ||= qualified_class_name_cpp(target_cursor)
               grouped[target_class][:lines] << <<~CPP.strip
-                define_method("inspect", [](#{arg_type} self) -> std::string {
+                define_method("inspect", [](#{arg_type} self) -> std::string
+                  {
                     std::ostringstream stream;
                     stream << self;
                     return stream.str();
@@ -1543,7 +1544,8 @@ module RubyBindgen
 
               grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
               grouped[cruby_name][:lines] << <<~CPP.strip
-                define_method("#{ruby_name}", [](#{arg0_type} self) -> #{result_type} {
+                define_method("#{ruby_name}", [](#{arg0_type} self) -> #{result_type}
+                  {
                     return #{op_symbol}self;
                   })
               CPP
@@ -1560,7 +1562,7 @@ module RubyBindgen
                 return_stmt = "self #{op_symbol} other;"
               elsif result_type.include?("&") && result_type.include?(arg0_type.gsub(/[&\s]/, ''))
                 # Returns reference to self (e.g., FileStorage& operator<<)
-                return_stmt = "self #{op_symbol} other;\n      return self;"
+                return_stmt = "self #{op_symbol} other;\n    return self;"
               else
                 # Returns a value (e.g., bool, ptrdiff_t)
                 return_stmt = "return self #{op_symbol} other;"
@@ -1568,7 +1570,8 @@ module RubyBindgen
 
               grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
               grouped[cruby_name][:lines] << <<~CPP.strip
-                define_method("#{ruby_name}", [](#{arg0_type} self, #{arg1_type} other) -> #{result_type} {
+                define_method("#{ruby_name}", [](#{arg0_type} self, #{arg1_type} other) -> #{result_type}
+                  {
                     #{return_stmt}
                   })
               CPP

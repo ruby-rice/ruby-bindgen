@@ -214,46 +214,56 @@ void Init_Operators()
     });
 
   rb_cMatrix.
-    define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix& {
+    define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
+  {
     self += other;
-      return self;
+    return self;
   }).
-    define_method("assign_minus", [](Matrix& self, const Matrix& other) -> Matrix& {
+    define_method("assign_minus", [](Matrix& self, const Matrix& other) -> Matrix&
+  {
     self -= other;
-      return self;
+    return self;
   }).
-    define_method("assign_multiply", [](Matrix& self, double other) -> Matrix& {
+    define_method("assign_multiply", [](Matrix& self, double other) -> Matrix&
+  {
     self *= other;
-      return self;
+    return self;
   }).
-    define_method("~", [](const Matrix& self) -> Matrix {
+    define_method("~", [](const Matrix& self) -> Matrix
+  {
     return ~self;
   }).
-    define_method("-@", [](const Matrix& self) -> Matrix {
+    define_method("-@", [](const Matrix& self) -> Matrix
+  {
     return -self;
   }).
-    define_method("+@", [](const Matrix& self) -> Matrix {
+    define_method("+@", [](const Matrix& self) -> Matrix
+  {
     return +self;
   });
   
   rb_cPrintable.
-    define_method("inspect", [](const Printable& self) -> std::string {
+    define_method("inspect", [](const Printable& self) -> std::string
+  {
     std::ostringstream stream;
     stream << self;
     return stream.str();
   });
   
   rb_cFileWriter.
-    define_method("<<", [](FileWriter& self, const std::string& other) -> FileWriter& {
+    define_method("<<", [](FileWriter& self, const std::string& other) -> FileWriter&
+  {
     self << other;
-      return self;
+    return self;
   }).
-    define_method("<<", [](FileWriter& self, int other) -> FileWriter& {
+    define_method("<<", [](FileWriter& self, int other) -> FileWriter&
+  {
     self << other;
-      return self;
+    return self;
   }).
-    define_method("<<", [](FileWriter& self, const Printable& other) -> FileWriter& {
+    define_method("<<", [](FileWriter& self, const Printable& other) -> FileWriter&
+  {
     self << other;
-      return self;
+    return self;
   });
 }
