@@ -1472,9 +1472,11 @@ module RubyBindgen
       def visit_operator_non_member(cursor)
         # This is a stand-alone operator, such as:
         #
-        #   MatExpr operator + (const Mat& a, const Mat& b);
+        #   MatExpr operator + (const Mat& a, const Mat& b);  # binary (2 args)
         #   std::ostream& operator << (std::ostream& out, const Complex<_Tp>& c)
-        return if cursor.type.args_size != 2
+        #   MatExpr operator ~(const Mat& m);  # unary (1 arg)
+        #   MatExpr operator -(const Mat& m);  # unary negation (1 arg)
+        return if cursor.type.args_size < 1 || cursor.type.args_size > 2
 
         arg0_type = cursor.type.arg_type(0).non_reference_type
         class_cursor = arg0_type.declaration
@@ -1528,7 +1530,22 @@ module RubyBindgen
                     return stream.str();
                   })
               CPP
+            elsif cursor.type.args_size == 1
+              # Unary non-member operator (e.g., operator~(const Mat& m), operator-(const Mat& m))
+              arg0_type = type_spelling(cursor.type.arg_type(0))
+              result_type = type_spelling(cursor.result_type)
+              op_symbol = cursor.spelling.sub(/^operator\s*/, '')
+              ruby_name = cursor.ruby_name
+
+              grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
+              grouped[cruby_name][:lines] << <<~CPP.strip
+                define_method("#{ruby_name}", [](#{arg0_type} self) -> #{result_type}
+                  {
+                    return #{op_symbol}self;
+                  })
+              CPP
             else
+              # Binary non-member operator (e.g., operator+(const Mat& a, const Mat& b))
               arg0_type = type_spelling(cursor.type.arg_type(0))
               arg1_type = type_spelling(cursor.type.arg_type(1))
               result_type = type_spelling(cursor.result_type)
