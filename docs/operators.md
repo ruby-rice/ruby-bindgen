@@ -24,6 +24,65 @@ C++ and Ruby support overriding the same arithmetic operators.
 | /   | /    |
 | %   | %    |
 
+## Unary Operators
+
+C++ supports unary versions of `+`, `-`, `~`, and `!`. Ruby uses special method names for unary `+` and `-` to distinguish them from their binary counterparts.
+
+| C++ | Ruby | Notes |
+|:---:|:----:|:------|
+| +a  | +@   | Unary plus |
+| -a  | -@   | Unary minus (negation) |
+| ~a  | ~    | Bitwise NOT |
+| !a  | !    | Logical NOT |
+
+### Member Unary Operators
+
+```cpp
+class Vector
+{
+public:
+    Vector operator-() const;  // Unary minus
+    Vector operator+() const;  // Unary plus
+    Vector operator~() const;  // Bitwise NOT
+};
+```
+
+Ruby-bindgen generates:
+
+```cpp
+define_method("-@", &Vector::operator-);
+define_method("+@", &Vector::operator+);
+define_method("~", &Vector::operator~);
+```
+
+### Non-Member Unary Operators
+
+Non-member unary operators (common in libraries like OpenCV) are also supported:
+
+```cpp
+// Non-member unary operators
+MatExpr operator~(const Mat& m);   // Bitwise NOT
+MatExpr operator-(const Mat& m);   // Negation
+MatExpr operator+(const Mat& m);   // Unary plus
+```
+
+Ruby-bindgen generates lambdas that call the C++ operator:
+
+```cpp
+rb_cMat.
+    define_method("~", [](const Mat& self) -> MatExpr { return ~self; }).
+    define_method("-@", [](const Mat& self) -> MatExpr { return -self; }).
+    define_method("+@", [](const Mat& self) -> MatExpr { return +self; });
+```
+
+In Ruby:
+
+```ruby
+mat = Mat.new(rows, cols, type)
+negated = -mat     # Calls -@ method
+inverted = ~mat    # Calls ~ method
+```
+
 ## Assignment Operators
 
 C++ supports overriding assignment operators while Ruby does not. Thus these operators must be mapped to Ruby methods.
@@ -91,10 +150,10 @@ C++ supports increment and decrement operators while Ruby does not. Thus these o
 
 | C++  | Ruby             | Ruby Method    |
 |:----:|:----------------:|:---------------|
-| ++a  | Not overridable  | increment_pre  |
-| a++  | Not overridable  | increment      |
-| --a  | Not overridable  | decrement_pre  |
-| a--  | Not overridable  | decrement      |
+| ++a  | Not overridable  | increment      |
+| a++  | Not overridable  | increment_post |
+| --a  | Not overridable  | decrement      |
+| a--  | Not overridable  | decrement_post |
 
 ## Other Operators
 
