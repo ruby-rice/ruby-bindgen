@@ -20,20 +20,17 @@ void Init_CrossFileDerived()
       Arg("s"), Arg("e"));
 
   rb_cBaseMatrix4d.
-    define_method("*", [](const CrossFile::BaseMatrix4d& self, double other) -> CrossFile::BaseMatrix4d
-  {
+    define_method("*", [](const CrossFile::BaseMatrix4d& self, double other) -> CrossFile::BaseMatrix4d {
     return self * other;
   });
   
   rb_cCrossFileSimpleRange.
-    define_method("==", [](const CrossFile::SimpleRange& self, const CrossFile::SimpleRange& other) -> bool
-  {
+    define_method("==", [](const CrossFile::SimpleRange& self, const CrossFile::SimpleRange& other) -> bool {
     return self == other;
   });
   
   Data_Type<CrossFile::Point2d>().
-    define_method("+", [](const CrossFile::Point2d& self, double other) -> CrossFile::Point2d
-  {
+    define_method("+", [](const CrossFile::Point2d& self, double other) -> CrossFile::Point2d {
     return self + other;
   });
 }
