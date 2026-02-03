@@ -231,9 +231,13 @@ void Init_Operators()
   {
     return ~self;
   }).
-    define_method("-", [](const Matrix& self) -> Matrix
+    define_method("-@", [](const Matrix& self) -> Matrix
   {
     return -self;
+  }).
+    define_method("+@", [](const Matrix& self) -> Matrix
+  {
+    return +self;
   });
   
   rb_cPrintable.

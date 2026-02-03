@@ -37,9 +37,14 @@ module RubyBindgen
       # Dereference vs multiply - arity-dependent (unary=0 args, binary=1 arg)
       '*' => ->(cursor) { cursor.type.args_size == 0 ? 'dereference' : '*' },
 
+      # Unary plus/minus vs binary - arity-dependent
+      # Ruby uses +@ and -@ for unary operators, + and - for binary
+      # Member: unary=0 args, binary=1 arg
+      # Non-member: unary=1 arg, binary=2 args (but we check member arity here)
+      '+' => ->(cursor) { cursor.type.args_size == 0 ? '+@' : '+' },
+      '-' => ->(cursor) { cursor.type.args_size == 0 ? '-@' : '-' },
+
       # Pass-through operators - Ruby supports these directly
-      '+' => '+',
-      '-' => '-',
       '/' => '/',
       '%' => '%',
       '&' => '&',

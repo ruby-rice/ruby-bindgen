@@ -1535,7 +1535,12 @@ module RubyBindgen
               arg0_type = type_spelling(cursor.type.arg_type(0))
               result_type = type_spelling(cursor.result_type)
               op_symbol = cursor.spelling.sub(/^operator\s*/, '')
-              ruby_name = cursor.ruby_name
+              # Ruby uses +@ and -@ for unary plus/minus, but ~ and ! stay as-is
+              ruby_name = case op_symbol
+                          when '+' then '+@'
+                          when '-' then '-@'
+                          else op_symbol
+                          end
 
               grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
               grouped[cruby_name][:lines] << <<~CPP.strip

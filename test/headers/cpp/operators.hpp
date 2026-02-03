@@ -145,9 +145,13 @@ Matrix& operator-=(Matrix& a, const Matrix& b);
 Matrix& operator*=(Matrix& a, double scalar);
 
 // Non-member unary operators (like OpenCV's operator~(const Mat& m))
-// These have only 1 argument and should generate: return ~self;
+// These have only 1 argument and should generate the correct Ruby method name:
+//   ~ -> "~"
+//   - -> "-@" (Ruby's unary minus)
+//   + -> "+@" (Ruby's unary plus)
 Matrix operator~(const Matrix& m);
 Matrix operator-(const Matrix& m);
+Matrix operator+(const Matrix& m);
 
 // Test non-member << operators
 #include <ostream>
