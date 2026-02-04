@@ -23,6 +23,7 @@ void Init_Classes()
   Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass = define_class_under<Outer::MyClass, Outer::BaseClass>(rb_mOuter, "MyClass").
     define_constant("SOME_CONSTANT", Outer::MyClass::SOME_CONSTANT).
     define_singleton_attr("StaticFieldOne", &Outer::MyClass::static_field_one).
+    define_singleton_function<bool(*)()>("static_method_one?", &Outer::MyClass::staticMethodOne).
     define_constructor(Constructor<Outer::MyClass>()).
     define_constructor(Constructor<Outer::MyClass, int>(),
       Arg("a")).
@@ -34,8 +35,7 @@ void Init_Classes()
       Arg("a")).
     define_method<void(Outer::MyClass::*)(bool)>("overloaded", &Outer::MyClass::overloaded,
       Arg("a")).
-    define_attr("field_one", &Outer::MyClass::field_one).
-    define_singleton_function<bool(*)()>("static_method_one?", &Outer::MyClass::staticMethodOne);
+    define_attr("field_one", &Outer::MyClass::field_one);
 
   Module rb_mOuterInner = define_module_under(rb_mOuter, "Inner");
 
@@ -58,21 +58,21 @@ void Init_Classes()
     define_value("ASYMMETRIC_GRID", Outer::Inner::ContainerClass::GridType::ASYMMETRIC_GRID);
 
   Rice::Data_Type<Outer::Inner::GpuMat> rb_cOuterInnerGpuMat = define_class_under<Outer::Inner::GpuMat>(rb_mOuterInner, "GpuMat").
+    define_singleton_function<Outer::Inner::GpuMat::Allocator*(*)()>("default_allocator", &Outer::Inner::GpuMat::defaultAllocator).
     define_constructor(Constructor<Outer::Inner::GpuMat>()).
     define_constructor(Constructor<Outer::Inner::GpuMat, int, int, Outer::Inner::GpuMat::Allocator*>(),
-      Arg("rows"), Arg("cols"), Arg("allocator") = static_cast<Outer::Inner::GpuMat::Allocator*>(Outer::Inner::GpuMat::defaultAllocator())).
-    define_singleton_function<Outer::Inner::GpuMat::Allocator*(*)()>("default_allocator", &Outer::Inner::GpuMat::defaultAllocator);
+      Arg("rows"), Arg("cols"), Arg("allocator") = static_cast<Outer::Inner::GpuMat::Allocator*>(Outer::Inner::GpuMat::defaultAllocator()));
 
   Rice::Data_Type<Outer::Inner::GpuMat::Allocator> rb_cOuterInnerGpuMatAllocator = define_class_under<Outer::Inner::GpuMat::Allocator>(rb_cOuterInnerGpuMat, "Allocator").
     define_constructor(Constructor<Outer::Inner::GpuMat::Allocator>());
 
   Rice::Data_Type<Outer::Inner::GpuMatND> rb_cOuterInnerGpuMatND = define_class_under<Outer::Inner::GpuMatND>(rb_mOuterInner, "GpuMatND").
+    define_singleton_function<Outer::Inner::GpuMatND::StepArray&(*)()>("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray).
     define_constructor(Constructor<Outer::Inner::GpuMatND>()).
     define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int>(),
       Arg("size"), Arg("type")).
     define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int, void*, Outer::Inner::GpuMatND::StepArray>(),
-      Arg("size"), Arg("type"), ArgBuffer("data"), Arg("step") = static_cast<Outer::Inner::GpuMatND::StepArray>(Outer::Inner::GpuMatND::defaultStepArray())).
-    define_singleton_function<Outer::Inner::GpuMatND::StepArray&(*)()>("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray);
+      Arg("size"), Arg("type"), ArgBuffer("data"), Arg("step") = static_cast<Outer::Inner::GpuMatND::StepArray>(Outer::Inner::GpuMatND::defaultStepArray()));
 
   Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream").
     define_constructor(Constructor<Outer::Inner::Stream>()).

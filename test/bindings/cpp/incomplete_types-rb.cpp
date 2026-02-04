@@ -99,12 +99,12 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::FactoryClass> rb_cOuterInnerFactoryClass = define_class_under<Outer::Inner::FactoryClass>(rb_mOuterInner, "FactoryClass").
     define_constructor(Constructor<Outer::Inner::FactoryClass>()).
+    define_singleton_function<Outer::Inner::Ptr<Outer::Inner::FactoryClass>(*)()>("create", &Outer::Inner::FactoryClass::create).
     define_method<Outer::Inner::Ptr<Outer::Inner::FactoryClass>(Outer::Inner::FactoryClass::*)() const>("clone", &Outer::Inner::FactoryClass::clone).
     define_attr("parent", &Outer::Inner::FactoryClass::parent).
     define_method<void(Outer::Inner::FactoryClass::*)(Outer::Inner::Ptr<Outer::Inner::FactoryClass>)>("set_parent", &Outer::Inner::FactoryClass::setParent,
       Arg("p")).
-    define_method<int(Outer::Inner::FactoryClass::*)() const>("get_value", &Outer::Inner::FactoryClass::getValue).
-    define_singleton_function<Outer::Inner::Ptr<Outer::Inner::FactoryClass>(*)()>("create", &Outer::Inner::FactoryClass::create);
+    define_method<int(Outer::Inner::FactoryClass::*)() const>("get_value", &Outer::Inner::FactoryClass::getValue);
 
   Rice::Data_Type<Outer::Inner::OuterWithFactory> rb_cOuterInnerOuterWithFactory = define_class_under<Outer::Inner::OuterWithFactory>(rb_mOuterInner, "OuterWithFactory").
     define_constructor(Constructor<Outer::Inner::OuterWithFactory>()).

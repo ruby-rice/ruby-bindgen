@@ -5,9 +5,9 @@ inline Rice::Data_Type<cv::Vec3<T>> Vec3_instantiate(Rice::Module parent, const 
     define_constructor(Constructor<cv::Vec3<T>>()).
     define_constructor(Constructor<cv::Vec3<T>, T, T, T>(),
       Arg("x"), Arg("y"), Arg("z")).
-    define_attr("data", &cv::Vec3<T>::data, Rice::AttrAccess::Read).
     template define_singleton_function<cv::Vec3<T>(*)(T)>("all", &cv::Vec3<T>::all,
-      Arg("value"));
+      Arg("value")).
+    define_attr("data", &cv::Vec3<T>::data, Rice::AttrAccess::Read);
 }
 
 template<typename T>

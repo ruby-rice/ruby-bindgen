@@ -13,9 +13,9 @@ void Init_DefaultValues()
     define_constructor(Constructor<cv::Range>()).
     define_constructor(Constructor<cv::Range, int, int>(),
       Arg("start"), Arg("end")).
+    define_singleton_function<cv::Range(*)()>("all", &cv::Range::all).
     define_attr("start", &cv::Range::start).
-    define_attr("end", &cv::Range::end).
-    define_singleton_function<cv::Range(*)()>("all", &cv::Range::all);
+    define_attr("end", &cv::Range::end);
 
   Rice::Data_Type<cv::Mat> rb_cCvMat = define_class_under<cv::Mat>(rb_mCv, "Mat").
     define_constructor(Constructor<cv::Mat>()).
@@ -54,10 +54,10 @@ void Init_DefaultValues()
 
   Rice::Data_Type<ml::SVM> rb_cMlSVM = define_class_under<ml::SVM>(rb_mMl, "SVM").
     define_constructor(Constructor<ml::SVM>()).
-    define_method<bool(ml::SVM::*)(int, ml::ParamGrid)>("train_auto", &ml::SVM::trainAuto,
-      Arg("k_fold") = static_cast<int>(10), Arg("cgrid") = static_cast<ml::ParamGrid>(ml::SVM::getDefaultGrid(ml::SVM::ParamTypes::C))).
     define_singleton_function<ml::ParamGrid(*)(int)>("get_default_grid", &ml::SVM::getDefaultGrid,
-      Arg("param_id"));
+      Arg("param_id")).
+    define_method<bool(ml::SVM::*)(int, ml::ParamGrid)>("train_auto", &ml::SVM::trainAuto,
+      Arg("k_fold") = static_cast<int>(10), Arg("cgrid") = static_cast<ml::ParamGrid>(ml::SVM::getDefaultGrid(ml::SVM::ParamTypes::C)));
 
   Enum<ml::SVM::ParamTypes> rb_cMlSVMParamTypes = define_enum_under<ml::SVM::ParamTypes>("ParamTypes", rb_cMlSVM).
     define_value("C", ml::SVM::ParamTypes::C).

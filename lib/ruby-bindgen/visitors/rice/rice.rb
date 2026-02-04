@@ -119,18 +119,6 @@ module RubyBindgen
         end
       end
 
-      # Visit class children, ensuring static methods come last.
-      # Rice's Forwardable module needs instance methods registered before
-      # static factory methods that return smart pointers.
-      # Visit children in two passes: non-static first, then static.
-      # Static methods must come last because Rice's Forwardable module needs
-      # instance methods registered before static factory methods that return smart pointers.
-      def visit_children_two_pass(cursor, exclude_kinds: nil, only_kinds: nil)
-        children = visit_children(cursor, exclude_kinds: exclude_kinds || Set.new, only_kinds: only_kinds, only_static: false)
-        children += visit_children(cursor, exclude_kinds: exclude_kinds || Set.new, only_kinds: only_kinds, only_static: true)
-        children
-      end
-
       def visit_start
         # Clear caches from previous runs
         @class_template_typedefs = {}
@@ -304,8 +292,8 @@ module RubyBindgen
 
         end
 
-        children += visit_children_two_pass(cursor,
-                                           exclude_kinds: [:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl])
+        children += visit_children(cursor,
+                                   exclude_kinds: Set[:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl])
 
         children_content = merge_children(children, :indentation => 2, :separator => ".\n", terminator: ";\n", :strip => true)
 
@@ -431,9 +419,9 @@ module RubyBindgen
       end
 
       def visit_class_template_builder(cursor)
-        children = visit_children_two_pass(cursor,
-                                           only_kinds: [:cursor_cxx_method, :cursor_constructor, :cursor_field_decl, :cursor_variable,
-                                                        :cursor_enum_decl, :cursor_conversion_function])
+        children = visit_children(cursor,
+                                   only_kinds: [:cursor_cxx_method, :cursor_constructor, :cursor_field_decl, :cursor_variable,
+                                                :cursor_enum_decl, :cursor_conversion_function])
 
         # If no children (all methods deprecated/skipped), don't generate builder
         if children.empty?
@@ -1923,7 +1911,7 @@ module RubyBindgen
         [content, has_builders]
       end
 
-      def visit_children(cursor, exclude_kinds: Set.new, only_kinds: nil, only_static: nil)
+      def visit_children(cursor, exclude_kinds: Set.new, only_kinds: nil)
         results = Array.new
         cursor.each(false) do |child_cursor, parent_cursor|
           if child_cursor.location.in_system_header?
@@ -1963,18 +1951,6 @@ module RubyBindgen
 
           if only_kinds && !only_kinds.include?(child_kind)
             next :continue
-          end
-
-          # Filter by static if requested
-          # Non-methods are only visited when only_static is false (first pass)
-          # Methods are filtered by their static status
-          if !only_static.nil?
-            if child_kind == :cursor_cxx_method
-              next :continue if only_static != child_cursor.static?
-            else
-              # Non-methods only in the non-static pass
-              next :continue if only_static
-            end
           end
 
           visit_method = "visit_#{child_kind.to_s.delete_prefix("cursor_").underscore}".to_sym
