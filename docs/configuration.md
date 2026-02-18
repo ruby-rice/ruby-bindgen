@@ -27,7 +27,7 @@ input: /path/to/headers
 # Path to the output directory for generated bindings (can be relative to this config file)
 output: /path/to/output
 
-# Binding format: "Rice" (C++) or "FFI" (C)
+# Binding format: "Rice" (C++), "FFI" (C), or "CMake" (CMakeLists.txt)
 format: Rice
 
 # Glob patterns for header files to process
@@ -75,7 +75,7 @@ clang:
 |--------|-------------|
 | `input` | Directory containing the header files to parse. Can be absolute or relative to the config file location. |
 | `output` | Directory where generated binding files will be written. Can be absolute or relative to the config file location. |
-| `format` | Type of bindings to generate: `Rice` for C++ or `FFI` for C. |
+| `format` | Type of bindings to generate: `Rice` for C++, `FFI` for C, or `CMake` for CMakeLists.txt generation. |
 
 **Note:** Relative paths for `input` and `output` are resolved from the config file's directory, not the current working directory. This makes configs portable across different machines.
 

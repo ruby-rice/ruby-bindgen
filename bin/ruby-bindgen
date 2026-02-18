@@ -107,7 +107,7 @@ module RubyBindGen
         raise "Output path must be a directory: #{@config[:output]}"
       end
 
-      unless %w[FFI Rice].include?(@config[:format])
+      unless %w[FFI Rice CMake].include?(@config[:format])
         raise "Format must be 'FFI' or 'Rice', got: #{@config[:format]}"
       end
 
