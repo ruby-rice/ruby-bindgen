@@ -2,6 +2,7 @@ require 'ffi/clang'
 
 require 'ruby-bindgen/refinements/translation_unit'
 require 'ruby-bindgen/refinements/cursor'
+require 'ruby-bindgen/refinements/source_range'
 require 'ruby-bindgen/refinements/string'
 require 'ruby-bindgen/refinements/type'
 

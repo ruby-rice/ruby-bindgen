@@ -1,3 +1,5 @@
+require 'set'
+
 module FFI
   module Clang
     class Cursor
@@ -74,6 +76,22 @@ module FFI
           return child if kinds.include?(child.kind)
         end
         nil
+      end
+
+      # Monkey patch to use Set for faster lookup and support block/enumerator.
+      # See https://github.com/ioquatix/ffi-clang/pull/99
+      def find_by_kind(recurse, *kinds, &block)
+        unless (recurse == nil || recurse == true || recurse == false)
+          raise("Recurse parameter must be nil or a boolean value. Value was: #{recurse}")
+        end
+
+        return enum_for(__method__, recurse, *kinds) unless block_given?
+
+        kinds_set = kinds.to_set
+
+        self.each(recurse) do |child, parent|
+          yield child if kinds_set.include?(child.kind)
+        end
       end
     end
   end
