@@ -1,0 +1,39 @@
+[project]
+
+site_name = "ruby-bindgen"
+site_description = "Generate Ruby bindings from C and C++ header files"
+site_url = "https://ruby-bindgen.github.io/ruby-bindgen/"
+
+repo_name = "ruby-bindgen/ruby-bindgen"
+repo_url = "https://github.com/ruby-bindgen/ruby-bindgen"
+
+nav = [
+  { "Home" = "index.md" },
+  { "C Bindings" = "c_bindings.md" },
+  { "C++ Bindings" = "cpp_bindings.md" },
+  { "Operators" = "operators.md" },
+]
+
+[project.theme]
+
+variant = "classic"
+
+[[project.theme.palette]]
+scheme = "default"
+primary = "teal"
+accent = "teal"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+primary = "teal"
+accent = "teal"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+[project.markdown_extensions.tables]
+
+[project.markdown_extensions.pymdownx.highlight]
+
+[project.markdown_extensions.pymdownx.superfences]
