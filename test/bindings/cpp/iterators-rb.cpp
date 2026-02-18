@@ -23,6 +23,14 @@ void Init_Iterators()
 {
   Module rb_mIter = define_module("Iter");
 
+  Rice::Data_Type<iter::DictValue> rb_cIterDictValue = define_class_under<iter::DictValue>(rb_mIter, "DictValue").
+    define_constructor(Constructor<iter::DictValue>()).
+    define_attr("value", &iter::DictValue::value);
+
+  Rice::Data_Type<iter::Dict> rb_cIterDict = define_class_under<iter::Dict>(rb_mIter, "Dict").
+    define_constructor(Constructor<iter::Dict>()).
+    define_iterator<std::map<iter::String, iter::DictValue>::const_iterator(iter::Dict::*)() const>(&iter::Dict::begin, &iter::Dict::end, "each_const");
+
   Rice::Data_Type<iter::Pixel> rb_cIterPixel = define_class_under<iter::Pixel>(rb_mIter, "Pixel").
     define_constructor(Constructor<iter::Pixel>()).
     define_constructor(Constructor<iter::Pixel, int, int, int>(),

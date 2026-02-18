@@ -1,9 +1,32 @@
 #include <vector>
 #include <iterator>
 #include <cstddef>
+#include <map>
+#include <string>
 
 namespace iter
 {
+  // Typedef that should be qualified in iterator template arguments
+  // Similar to cv::String being a typedef for std::string
+  typedef std::string String;
+
+  // A simple value type for the map
+  class DictValue
+  {
+  public:
+    DictValue();
+    int value;
+  };
+
+  // Class with iterator returning std::map<String, DictValue>::const_iterator
+  // The "String" should be qualified to "iter::String" in the generated binding
+  class Dict
+  {
+  public:
+    Dict();
+    std::map<String, DictValue>::const_iterator begin() const;
+    std::map<String, DictValue>::const_iterator end() const;
+  };
   class Pixel
   {
   public:

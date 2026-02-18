@@ -36,6 +36,7 @@ module RubyBindgen
         @namespaces = Set.new
         @classes = Hash.new  # Maps cruby_name -> C++ type for Data_Type<T> declarations
         @typedef_map = Hash.new
+        @typedef_simple_names = Hash.new  # Maps simple typedef names to qualified names (e.g., "String" -> "cv::String")
         @type_name_map = Hash.new  # Maps simple type names to qualified names
         @auto_generated_bases = Set.new
         @skip_symbols = skip_symbols
@@ -660,6 +661,17 @@ module RubyBindgen
         if type
           collect_type_qualifications(type, qualifications)
           collect_type_qualifications(type.canonical, qualifications)
+        end
+
+        # Also look up unqualified names in @type_name_map (typedefs and class templates).
+        # This handles cases like std::map<String, Value> where libclang's template_argument_type
+        # returns the canonical type (std::string) instead of the typedef name (String).
+        # Extract potential unqualified type names (not preceded by ::) and look them up.
+        spelling.scan(/(?<![:\w])([A-Z_a-z]\w*)(?!\w)/) do |match|
+          simple_name = match[0]
+          next if qualifications.key?(simple_name)  # Already have qualification from type
+          qualified_name = @type_name_map[simple_name]
+          qualifications[simple_name] = qualified_name if qualified_name && simple_name != qualified_name
         end
 
         # Apply qualifications to the spelling
@@ -2004,6 +2016,17 @@ module RubyBindgen
             # Prefer non-std typedefs over std ones (e.g., cv::String over std::string)
             if existing.nil? || (existing.qualified_name.start_with?("std::") && !child.qualified_name.start_with?("std::"))
               @typedef_map[canonical] = child
+            end
+            # Also add to type_name_map for qualifying unqualified names in type spellings
+            # (e.g., "String" -> "cv::String" for std::map<String, Value>::iterator)
+            simple_name = child.spelling
+            qualified_name = child.qualified_name
+            if simple_name != qualified_name && !simple_name.empty?
+              # Prefer non-std over std (consistent with typedef_map preference)
+              existing_qualified = @type_name_map[simple_name]
+              if existing_qualified.nil? || (existing_qualified.start_with?("std::") && !qualified_name.start_with?("std::"))
+                @type_name_map[simple_name] = qualified_name
+              end
             end
           when :cursor_class_template
             # Only collect class templates for typename pattern qualification
