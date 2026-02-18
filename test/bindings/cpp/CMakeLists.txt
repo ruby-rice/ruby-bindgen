@@ -1,86 +1,77 @@
-# =============================================================================
-# CMakeLists.txt - Compiles generated Rice bindings to verify they're valid C++
-# =============================================================================
-
-# -----------------------------------------------------------------------------
-# CMake Version and C++ Standard
-# -----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.26)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# -----------------------------------------------------------------------------
-# Project Definition
-# -----------------------------------------------------------------------------
-project("rice_bindings_test" LANGUAGES CXX)
+project("test_project" LANGUAGES CXX)
 
-# -----------------------------------------------------------------------------
-# Create Object Library (compile only, no linking)
-# -----------------------------------------------------------------------------
-# We use OBJECT library to verify the generated code compiles without
-# needing to link into a full extension.
+# Create the Extension Library
+if (MSVC)
+  add_library(${CMAKE_PROJECT_NAME} SHARED)
+else ()
+  add_library(${CMAKE_PROJECT_NAME} MODULE)
+endif ()
 
-add_library(${CMAKE_PROJECT_NAME} OBJECT)
-
-# -----------------------------------------------------------------------------
-# Fetch Rice from Local Source
-# -----------------------------------------------------------------------------
-# Using local Rice source for latest FindRuby.cmake
-
+# Fetch Rice from GitHub
 include(FetchContent)
 
 FetchContent_Declare(
   rice
-  SOURCE_DIR c:/Source/rice
+  GIT_REPOSITORY https://github.com/ruby-rice/rice.git
+  GIT_TAG master
 )
 FetchContent_MakeAvailable(rice)
 
-# -----------------------------------------------------------------------------
 # Configure Ruby Detection
-# -----------------------------------------------------------------------------
-# Rice provides an enhanced FindRuby.cmake that creates proper CMake targets.
-
 list(PREPEND CMAKE_MODULE_PATH "${rice_SOURCE_DIR}")
 
-# -----------------------------------------------------------------------------
-# Find Ruby Installation
-# -----------------------------------------------------------------------------
+# Find Ruby
 find_package(Ruby REQUIRED)
 
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
   Ruby::Module
 )
 
-# -----------------------------------------------------------------------------
 # Link to Rice
-# -----------------------------------------------------------------------------
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
   Rice::Rice
 )
 
-# -----------------------------------------------------------------------------
-# Include Directories for Test Headers
-# -----------------------------------------------------------------------------
-# Add the headers directory so we can find the original C++ headers being wrapped
+# Configure Extension Output
+get_target_property(RUBY_EXT_SUFFIX Ruby::Ruby INTERFACE_RUBY_EXTENSION_SUFFIX)
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../headers/cpp
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
+  PREFIX ""
+  SUFFIX "${RUBY_EXT_SUFFIX}"
+  OUTPUT_NAME "test_project"
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN ON
+  WINDOWS_EXPORT_ALL_SYMBOLS OFF
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../lib/${Ruby_VERSION_MAJOR}.${Ruby_VERSION_MINOR}"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../lib"
 )
 
-# -----------------------------------------------------------------------------
-# Source Files
-# -----------------------------------------------------------------------------
-# Generated binding files - update this list when adding new test headers
+# Subdirectories
 
+# Sources
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-  classes-rb.cpp
-  constructors-rb.cpp
-  default_values-rb.cpp
-  enums-rb.cpp
-  functions-rb.cpp
-  inheritance-rb.cpp
-  iterators-rb.cpp
- # operators-rb.cpp
-  templates-rb.cpp
+  "buffers-rb.cpp"
+  "classes-rb.cpp"
+  "constructors-rb.cpp"
+  "cross_file_derived-rb.cpp"
+  "default_values-rb.cpp"
+  "enum-rb.cpp"
+  "enums-rb.cpp"
+  "filtering-rb.cpp"
+  "function-rb.cpp"
+  "functions-rb.cpp"
+  "incomplete_types-rb.cpp"
+  "inheritance-rb.cpp"
+  "iterators-rb.cpp"
+  "operators-rb.cpp"
+  "overloads-rb.cpp"
+  "template_defaults-rb.cpp"
+  "template_inheritance-rb.cpp"
+  "templates-rb.cpp"
+  "test-class-rb.cpp"
 )
