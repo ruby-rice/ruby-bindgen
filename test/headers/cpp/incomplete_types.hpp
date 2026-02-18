@@ -3,6 +3,7 @@
 // 2. External opaque types from other headers (like CUDA types)
 // 3. C-style opaque typedef declarations (like CvCapture, CvVideoWriter from OpenCV)
 
+#include <cstddef>
 #include <cstdint>
 
 // External opaque types (like CUstream_st, CUevent_st from CUDA)
