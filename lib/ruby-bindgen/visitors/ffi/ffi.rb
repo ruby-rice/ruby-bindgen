@@ -98,7 +98,7 @@ module RubyBindgen
 
       def visit_callback(name, parameters, type)
         parameter_types = parameters.map do |parameter|
-          if !parameter.find_by_kind(false, :cursor_type_ref).empty? && parameter.type.is_a?(::FFI::Clang::Types::Pointer)
+          if parameter.find_first_by_kind(false, :cursor_type_ref) && parameter.type.is_a?(::FFI::Clang::Types::Pointer)
             ":pointer"
           else
             figure_ffi_type(parameter.type, :callback)
