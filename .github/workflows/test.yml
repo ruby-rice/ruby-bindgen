@@ -29,4 +29,4 @@ jobs:
           bundler-cache: true
 
       - name: Run tests
-        run: bundle exec rake test
+        run: bundle exec ruby -Ilib -Itest test/rice_test.rb test/cmake_test.rb

@@ -1,66 +1,73 @@
-cmake_minimum_required (VERSION 3.26)
-
-project("<%= project %>")
+cmake_minimum_required(VERSION 3.26)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library (${CMAKE_PROJECT_NAME} SHARED)
-set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES SUFFIX ".so")
+project("<%= project %>" LANGUAGES CXX)
 
-if (MINGW)
-  target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC -ftemplate-backtrace-limit=0)
-  target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC -Wa,-mbig-obj)
-  # https://github.com/doxygen/doxygen/issues/9269#issuecomment-1094975328
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-  add_compile_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
-  add_compile_definitions(CVAPI_EXPORTS)
-  target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC /bigobj)
-
-  # The default of /EHsc crashes Ruby when calling longjmp with optimizations on (/O2)
-  string(REGEX REPLACE "/EHsc" "/EHs" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME})
-  set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY VS_DEBUGGER_COMMAND $<$<CONFIG:DEBUG>:\$(ProjectDir))
-
-  #  set(OpenCV_ROOT "${VCPKG_INSTALLED_DIR}/x64-windows/share/opencv4")
-  #target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Source/vcpkg/installed/x64-windows/include")
-  #target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.41.34120/include")
-  #target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Program Files (x86)/Windows Kits/10/include/10.0.22621.0/ucrt")
-  #target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/lib/clang/17/include")
-  #target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/include")
-  #target_link_directories(${CMAKE_PROJECT_NAME} PUBLIC "C:/Source/vcpkg/installed/x64-windows/debug/lib")
-
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC -ftemplate-backtrace-limit=0)
-  target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC -Wa,-mbig-obj)
+# Create the Extension Library
+if (MSVC)
+  add_library(${CMAKE_PROJECT_NAME} SHARED)
+else ()
+  add_library(${CMAKE_PROJECT_NAME} MODULE)
 endif ()
 
+# Fetch Rice from GitHub
+include(FetchContent)
+
+FetchContent_Declare(
+  rice
+  GIT_REPOSITORY https://github.com/ruby-rice/rice.git
+  GIT_TAG master
+)
+FetchContent_MakeAvailable(rice)
+
+# Configure Ruby Detection
+list(PREPEND CMAKE_MODULE_PATH "${rice_SOURCE_DIR}")
+
 # Find Ruby
-#find_package(Ruby REQUIRED)
-include("c:/Source/Rice/FindRuby.cmake")
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${Ruby_INCLUDE_DIR} ${Ruby_CONFIG_INCLUDE_DIR})
-target_link_libraries(${CMAKE_PROJECT_NAME} ${Ruby_LIBRARY})
+find_package(Ruby REQUIRED)
 
-# Add include for Rice
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC "<%= rice_include_path %>")
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
+  Ruby::Module
+)
 
-# OpenCv
-find_package(OpenCV CONFIG REQUIRED)
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(${CMAKE_PROJECT_NAME} ${OpenCV_LIBS})
+# Link to Rice
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
+  Rice::Rice
+)
+
+# Include Directories
+<% include_dirs.each do |dir| -%>
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+  "<%= dir %>"
+)
+<% end -%>
+
+# Configure Extension Output
+get_target_property(RUBY_EXT_SUFFIX Ruby::Ruby INTERFACE_RUBY_EXTENSION_SUFFIX)
+
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
+  PREFIX ""
+  SUFFIX "${RUBY_EXT_SUFFIX}"
+  OUTPUT_NAME "<%= project %>"
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN ON
+  WINDOWS_EXPORT_ALL_SYMBOLS OFF
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../lib/${Ruby_VERSION_MAJOR}.${Ruby_VERSION_MINOR}"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../lib"
+)
 
 # Subdirectories
 <% directories.each do |directory| -%>
-add_subdirectory ("<%= directory.relative_path_from(directory.parent) %>")
+add_subdirectory("<%= directory.relative_path_from(directory.parent) %>")
 <% end -%>
 
 # Sources
 <% if !files.empty? -%>
-target_sources(${CMAKE_PROJECT_NAME} PUBLIC
-  <% files.each do |file| -%>
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+<% files.each do |file| -%>
   "<%= file.relative_path_from(file.parent) %>"
-  <% end -%>
+<% end -%>
 )
 <% end -%>

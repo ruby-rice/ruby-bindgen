@@ -1,11 +1,12 @@
 module RubyBindgen
 	module Visitors
 		class CMake
-			attr_reader :project, :outputter
+			attr_reader :project, :outputter, :include_dirs
 
-			def initialize(project, outputter)
-				@project = project
+			def initialize(outputter, project = nil, include_dirs: [])
+				@project = project&.gsub(/-/, '_')
 				@outputter = outputter
+				@include_dirs = include_dirs
 			end
 
 			def render_template(template, local_variables = {})
@@ -24,16 +25,15 @@ module RubyBindgen
 			end
 
 			def create_project(path)
-				rice_include_path = File.expand_path(File.join(Gem.find_files("rice").first, "..", "..", "include"))
 				# Create top level CMakeLists.txt
-				directories = path.children.find_all do |path|
-					path.directory?
+				directories = path.children.find_all do |child|
+					child.directory? && child.basename.to_s[0] != "." && child.basename.to_s != "build"
 				end
 
 				files = path.glob("*-rb.cpp")
 
-				content = render_template("project", :rice_include_path => rice_include_path,
-																	:project => self.project, :directories => directories, :files => files)
+				content = render_template("project",
+																	:project => self.project, :directories => directories, :files => files, :include_dirs => self.include_dirs)
 				self.outputter.write("CMakeLists.txt", content)
 			end
 
@@ -41,6 +41,7 @@ module RubyBindgen
 				path.children.each do |child|
 					next unless child.directory?
 					next if child.basename.to_s[0] == "."
+					next if child.basename.to_s == "build"
 
 					directories = child.children.find_all do |path|
 						path.directory?
@@ -52,8 +53,7 @@ module RubyBindgen
 					content = render_template("directory",
 																		:project => self.project, :directories => directories, :files => files)
 					relative_path = child.relative_path_from(self.outputter.base_path)
-					#
-					# self.outputter.write(File.join(relative_path, "CMakeLists.txt"), content)
+					self.outputter.write(File.join(relative_path, "CMakeLists.txt"), content)
 
 					self.create_directories(child)
 				end
@@ -61,7 +61,7 @@ module RubyBindgen
 
 			def visit_start
 				pathname = Pathname.new(self.outputter.base_path)
-				#create_project(pathname)
+				create_project(pathname)
 				create_directories(pathname)
 			end
 

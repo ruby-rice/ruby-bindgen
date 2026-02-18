@@ -37,6 +37,11 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
   Rice::Rice
 )
 
+# Include Directories
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../headers/cpp"
+)
+
 # Configure Extension Output
 get_target_property(RUBY_EXT_SUFFIX Ruby::Ruby INTERFACE_RUBY_EXTENSION_SUFFIX)
 
