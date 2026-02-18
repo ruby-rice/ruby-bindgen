@@ -69,6 +69,19 @@ module FFI
         result
       end
 
+      # Monkey patch to handle extern "C" linkage spec in qualified names.
+      # See https://github.com/ioquatix/ffi-clang/pull/97
+      def qualified_name
+        if self.semantic_parent.kind == :cursor_invalid_file
+          raise(ArgumentError, "Invalid semantic parent: #{self}")
+        end
+        if self.kind == :cursor_linkage_spec
+          return self.semantic_parent.qualified_name
+        end
+        result = self.semantic_parent.qualified_name
+        result && !result.empty? ? "#{result}::#{self.spelling}" : self.spelling
+      end
+
       # Find first child cursor matching any of the given kinds.
       # Short-circuits on first match to avoid building full array.
       def find_first_by_kind(recurse, *kinds)

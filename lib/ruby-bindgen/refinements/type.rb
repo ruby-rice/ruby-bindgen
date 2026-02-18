@@ -8,6 +8,21 @@ module FFI
   module Clang
     module Types
       class Type
+        # Monkey patch to expose template argument methods.
+        # See https://github.com/ioquatix/ffi-clang/pull/93
+        unless method_defined?(:num_template_arguments)
+          Lib.attach_function :get_num_template_arguments, :clang_Type_getNumTemplateArguments, [Lib::CXType.by_value], :int
+          Lib.attach_function :get_template_argument_as_type, :clang_Type_getTemplateArgumentAsType, [Lib::CXType.by_value, :uint], Lib::CXType.by_value
+
+          def template_argument_type(index)
+            Type.create Lib.get_template_argument_as_type(@type, index), @translation_unit
+          end
+
+          def num_template_arguments
+            Lib.get_num_template_arguments(@type)
+          end
+        end
+
         # Returns the type spelling with full namespace qualification.
         #
         # Combines the declaration's qualified_name (which has the namespace) with
