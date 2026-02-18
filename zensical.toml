@@ -2,7 +2,7 @@
 
 site_name = "ruby-bindgen"
 site_description = "Generate Ruby bindings from C and C++ header files"
-site_url = "https://ruby-bindgen.github.io/ruby-bindgen/"
+site_url = "https://ruby-rice.github.io/ruby-bindgen/"
 
 repo_name = "ruby-bindgen/ruby-bindgen"
 repo_url = "https://github.com/ruby-bindgen/ruby-bindgen"
