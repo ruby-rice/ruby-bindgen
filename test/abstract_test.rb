@@ -2,9 +2,10 @@ require 'bundler/setup'
 require 'minitest/autorun'
 require 'yaml'
 
-# Load platform-specific bindings config
-def load_bindings_config
-  config_path = File.join(__dir__, 'headers', 'bindings.yaml')
+# Load platform-specific bindings config from a directory.
+# Matches the production config format (see docs/configuration.md).
+def load_bindings_config(config_dir)
+  config_path = File.join(config_dir, 'bindings.yaml')
   return {} unless File.exist?(config_path)
 
   config = YAML.safe_load(File.read(config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
@@ -14,27 +15,27 @@ def load_bindings_config
 
   result = {}
 
-  # Extract libclang path for this toolchain
-  if config['libclang']&.is_a?(Hash) && config['libclang'][toolchain]
-    result[:libclang] = config['libclang'][toolchain]
-  elsif config['libclang']&.is_a?(String)
-    result[:libclang] = config['libclang']
-  end
-
-  # Extract clang_args for this toolchain
-  if config['clang_args']&.is_a?(Hash) && config['clang_args'][toolchain]
-    result[:clang_args] = config['clang_args'][toolchain]
-  elsif config['clang_args']&.is_a?(Array)
-    result[:clang_args] = config['clang_args']
+  toolchain_config = config[toolchain]
+  if toolchain_config.is_a?(Hash)
+    result[:libclang] = toolchain_config['libclang'] if toolchain_config['libclang']
+    if toolchain_config['args']
+      result[:clang_args] = toolchain_config['args'].map do |arg|
+        # Resolve relative -I paths relative to config directory (same as production resolve_path)
+        arg.start_with?('-I') ? "-I#{File.expand_path(arg[2..], config_dir)}" : arg
+      end
+    end
   end
 
   result
 end
 
 # Set up libclang path from config
-bindings_config = load_bindings_config
-if bindings_config[:libclang]
-  ENV["LIBCLANG"] = bindings_config[:libclang]
+%w[cpp c c/clang-c].each do |dir|
+  config = load_bindings_config(File.join(__dir__, 'headers', dir))
+  if config[:libclang]
+    ENV["LIBCLANG"] = config[:libclang]
+    break
+  end
 end
 
 # Add refinements directory to load path to make it easier to test locally built extensions
@@ -56,15 +57,11 @@ class AbstractTest < Minitest::Test
   end
 
   def create_parser(header, args = nil)
-    # Load platform-specific clang args if not provided
     if args.nil?
-      config = load_bindings_config
+      config_dir = File.join(__dir__, "headers", File.dirname(header))
+      config = load_bindings_config(config_dir)
       args = config[:clang_args]
     end
-    # Add test headers root to include path so relative includes work
-    # e.g., for "c/clang-c/index.h", add test/headers/c so #include "clang-c/BuildSystem.h" resolves
-    headers_root = File.join(__dir__, "headers", header.split('/').first)
-    args = Array(args) + ["-I#{headers_root}"]
     RubyBindgen::Parser.new(self.create_inputter(header), args)
   end
 
@@ -85,4 +82,3 @@ class AbstractTest < Minitest::Test
     end
   end
 end
-

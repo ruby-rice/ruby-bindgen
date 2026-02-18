@@ -80,8 +80,8 @@ module Index
     :cx_cursor_exception_specification_kind_no_throw, 9
   )
 
-  attach_variable :CXIndex, :CXIndex, :int
-  attach_function :clang_dispose_index, :clang_disposeIndex, [:pointer], :int
+  attach_function :clang_create_index, :clang_createIndex, [:int, :int], :pointer
+  attach_function :clang_dispose_index, :clang_disposeIndex, [:pointer], :void
 
   CXChoice = enum(
     :cx_choice_default, 0,
@@ -108,29 +108,24 @@ module Index
            :invocation_emission_path, :string
   end
 
-  attach_variable :CXIndex, :CXIndex, :int
-  attach_function :clang_cx_index_set_global_options, :clang_CXIndex_setGlobalOptions, [:pointer, :uint], :int
-  attach_function :clang_cx_index_get_global_options, :clang_CXIndex_getGlobalOptions, [:pointer], :int
-  attach_function :clang_cx_index_set_invocation_emission_path_option, :clang_CXIndex_setInvocationEmissionPathOption, [:pointer, :string], :int
-  attach_function :clang_is_file_multiple_include_guarded, :clang_isFileMultipleIncludeGuarded, [:pointer, :int], :int
-  attach_variable :CXFile, :CXFile, :int
-  attach_function :clang_get_file_contents, :clang_getFileContents, [:pointer, :int, :pointer], :pointer
-  attach_variable :CXSourceLocation, :CXSourceLocation, :int
-  attach_variable :CXSourceLocation, :CXSourceLocation, :int
-  attach_variable :CXSourceRangeList, :CXSourceRangeList, :int
-  attach_variable :CXSourceRangeList, :CXSourceRangeList, :int
-  attach_function :clang_get_num_diagnostics, :clang_getNumDiagnostics, [:pointer], :int
-  attach_variable :CXDiagnostic, :CXDiagnostic, :int
-  attach_variable :CXDiagnosticSet, :CXDiagnosticSet, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXTranslationUnit, :CXTranslationUnit, :int
-  attach_variable :CXTranslationUnit, :CXTranslationUnit, :int
-
-  CXErrorCode = enum(
-
-  )
-
-  attach_function :clang_create_translation_unit2, :clang_createTranslationUnit2, [:pointer, :string, :pointer], :int
+  attach_function :clang_create_index_with_options, :clang_createIndexWithOptions, [CXIndexOptions.by_ref], :pointer
+  attach_function :clang_cx_index_set_global_options, :clang_CXIndex_setGlobalOptions, [:pointer, :uint], :void
+  attach_function :clang_cx_index_get_global_options, :clang_CXIndex_getGlobalOptions, [:pointer], :uint
+  attach_function :clang_cx_index_set_invocation_emission_path_option, :clang_CXIndex_setInvocationEmissionPathOption, [:pointer, :string], :void
+  attach_function :clang_is_file_multiple_include_guarded, :clang_isFileMultipleIncludeGuarded, [:pointer, :pointer], :uint
+  attach_function :clang_get_file, :clang_getFile, [:pointer, :string], :pointer
+  attach_function :clang_get_file_contents, :clang_getFileContents, [:pointer, :pointer, :pointer], :string
+  attach_function :clang_get_location, :clang_getLocation, [:pointer, :pointer, :uint, :uint], CXSourceLocation.by_value
+  attach_function :clang_get_location_for_offset, :clang_getLocationForOffset, [:pointer, :pointer, :uint], CXSourceLocation.by_value
+  attach_function :clang_get_skipped_ranges, :clang_getSkippedRanges, [:pointer, :pointer], CXSourceRangeList.by_ref
+  attach_function :clang_get_all_skipped_ranges, :clang_getAllSkippedRanges, [:pointer], CXSourceRangeList.by_ref
+  attach_function :clang_get_num_diagnostics, :clang_getNumDiagnostics, [:pointer], :uint
+  attach_function :clang_get_diagnostic, :clang_getDiagnostic, [:pointer, :uint], :pointer
+  attach_function :clang_get_diagnostic_set_from_tu, :clang_getDiagnosticSetFromTU, [:pointer], :pointer
+  attach_function :clang_get_translation_unit_spelling, :clang_getTranslationUnitSpelling, [:pointer], CXString.by_value
+  attach_function :clang_create_translation_unit_from_source_file, :clang_createTranslationUnitFromSourceFile, [:pointer, :string, :int, :pointer, :uint, CXUnsavedFile.by_ref], :pointer
+  attach_function :clang_create_translation_unit, :clang_createTranslationUnit, [:pointer, :string], :pointer
+  attach_function :clang_create_translation_unit2, :clang_createTranslationUnit2, [:pointer, :string, :pointer], CXErrorCode
 
   CXTranslationUnitFlags = enum(
     :cx_translation_unit_none, 0,
@@ -152,16 +147,16 @@ module Index
     :cx_translation_unit_retain_excluded_conditional_blocks, 32768
   )
 
-  attach_function :clang_default_editing_translation_unit_options, :clang_defaultEditingTranslationUnitOptions, [], :int
-  attach_variable :CXTranslationUnit, :CXTranslationUnit, :int
-  attach_function :clang_parse_translation_unit2, :clang_parseTranslationUnit2, [:pointer, :string, :pointer, :int, CXUnsavedFile.by_ref, :uint, :uint, :pointer], :int
-  attach_function :clang_parse_translation_unit2_full_argv, :clang_parseTranslationUnit2FullArgv, [:pointer, :string, :pointer, :int, CXUnsavedFile.by_ref, :uint, :uint, :pointer], :int
+  attach_function :clang_default_editing_translation_unit_options, :clang_defaultEditingTranslationUnitOptions, [], :uint
+  attach_function :clang_parse_translation_unit, :clang_parseTranslationUnit, [:pointer, :string, :pointer, :int, CXUnsavedFile.by_ref, :uint, :uint], :pointer
+  attach_function :clang_parse_translation_unit2, :clang_parseTranslationUnit2, [:pointer, :string, :pointer, :int, CXUnsavedFile.by_ref, :uint, :uint, :pointer], CXErrorCode
+  attach_function :clang_parse_translation_unit2_full_argv, :clang_parseTranslationUnit2FullArgv, [:pointer, :string, :pointer, :int, CXUnsavedFile.by_ref, :uint, :uint, :pointer], CXErrorCode
 
   CXSaveTranslationUnitFlags = enum(
     :cx_save_translation_unit_none, 0
   )
 
-  attach_function :clang_default_save_options, :clang_defaultSaveOptions, [:pointer], :int
+  attach_function :clang_default_save_options, :clang_defaultSaveOptions, [:pointer], :uint
 
   CXSaveError = enum(
     :cx_save_error_none, 0,
@@ -171,14 +166,14 @@ module Index
   )
 
   attach_function :clang_save_translation_unit, :clang_saveTranslationUnit, [:pointer, :string, :uint], :int
-  attach_function :clang_suspend_translation_unit, :clang_suspendTranslationUnit, [:pointer], :int
-  attach_function :clang_dispose_translation_unit, :clang_disposeTranslationUnit, [:pointer], :int
+  attach_function :clang_suspend_translation_unit, :clang_suspendTranslationUnit, [:pointer], :uint
+  attach_function :clang_dispose_translation_unit, :clang_disposeTranslationUnit, [:pointer], :void
 
   CXReparseFlags = enum(
     :cx_reparse_none, 0
   )
 
-  attach_function :clang_default_reparse_options, :clang_defaultReparseOptions, [:pointer], :int
+  attach_function :clang_default_reparse_options, :clang_defaultReparseOptions, [:pointer], :uint
   attach_function :clang_reparse_translation_unit, :clang_reparseTranslationUnit, [:pointer, :uint, CXUnsavedFile.by_ref, :uint], :int
 
   CXTUResourceUsageKind = enum(
@@ -202,7 +197,7 @@ module Index
     :cxtu_resource_usage_last, 14
   )
 
-  attach_function :clang_get_tu_resource_usage_name, :clang_getTUResourceUsageName, [CXTUResourceUsageKind], :pointer
+  attach_function :clang_get_tu_resource_usage_name, :clang_getTUResourceUsageName, [CXTUResourceUsageKind], :string
 
   class CXTUResourceUsageEntry < FFI::Struct
     layout :kind, CXTUResourceUsageKind,
@@ -215,11 +210,11 @@ module Index
            :entries, CXTUResourceUsageEntry.ptr
   end
 
-  attach_variable :CXTUResourceUsage, :CXTUResourceUsage, :int
-  attach_function :clang_dispose_cxtu_resource_usage, :clang_disposeCXTUResourceUsage, [CXTUResourceUsage.by_value], :int
-  attach_variable :CXTargetInfo, :CXTargetInfo, :int
-  attach_function :clang_target_info_dispose, :clang_TargetInfo_dispose, [:pointer], :int
-  attach_variable :CXString, :CXString, :int
+  attach_function :clang_get_cxtu_resource_usage, :clang_getCXTUResourceUsage, [:pointer], CXTUResourceUsage.by_value
+  attach_function :clang_dispose_cxtu_resource_usage, :clang_disposeCXTUResourceUsage, [CXTUResourceUsage.by_value], :void
+  attach_function :clang_get_translation_unit_target_info, :clang_getTranslationUnitTargetInfo, [:pointer], :pointer
+  attach_function :clang_target_info_dispose, :clang_TargetInfo_dispose, [:pointer], :void
+  attach_function :clang_target_info_get_triple, :clang_TargetInfo_getTriple, [:pointer], CXString.by_value
   attach_function :clang_target_info_get_pointer_width, :clang_TargetInfo_getPointerWidth, [:pointer], :int
 
   CXCursorKind = enum(
@@ -521,23 +516,23 @@ module Index
            :data, [:pointer, 3]
   end
 
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_function :clang_equal_cursors, :clang_equalCursors, [CXCursor.by_value, CXCursor.by_value], :int
+  attach_function :clang_get_null_cursor, :clang_getNullCursor, [], CXCursor.by_value
+  attach_function :clang_get_translation_unit_cursor, :clang_getTranslationUnitCursor, [:pointer], CXCursor.by_value
+  attach_function :clang_equal_cursors, :clang_equalCursors, [CXCursor.by_value, CXCursor.by_value], :uint
   attach_function :clang_cursor_is_null, :clang_Cursor_isNull, [CXCursor.by_value], :int
-  attach_function :clang_hash_cursor, :clang_hashCursor, [CXCursor.by_value], :int
-  attach_function :clang_get_cursor_kind, :clang_getCursorKind, [CXCursor.by_value], :int
-  attach_function :clang_is_declaration, :clang_isDeclaration, [CXCursorKind], :int
-  attach_function :clang_is_invalid_declaration, :clang_isInvalidDeclaration, [CXCursor.by_value], :int
-  attach_function :clang_is_reference, :clang_isReference, [CXCursorKind], :int
-  attach_function :clang_is_expression, :clang_isExpression, [CXCursorKind], :int
-  attach_function :clang_is_statement, :clang_isStatement, [CXCursorKind], :int
-  attach_function :clang_is_attribute, :clang_isAttribute, [CXCursorKind], :int
-  attach_function :clang_cursor_has_attrs, :clang_Cursor_hasAttrs, [CXCursor.by_value], :int
-  attach_function :clang_is_invalid, :clang_isInvalid, [CXCursorKind], :int
-  attach_function :clang_is_translation_unit, :clang_isTranslationUnit, [CXCursorKind], :int
-  attach_function :clang_is_preprocessing, :clang_isPreprocessing, [CXCursorKind], :int
-  attach_function :clang_is_unexposed, :clang_isUnexposed, [CXCursorKind], :int
+  attach_function :clang_hash_cursor, :clang_hashCursor, [CXCursor.by_value], :uint
+  attach_function :clang_get_cursor_kind, :clang_getCursorKind, [CXCursor.by_value], CXCursorKind
+  attach_function :clang_is_declaration, :clang_isDeclaration, [CXCursorKind], :uint
+  attach_function :clang_is_invalid_declaration, :clang_isInvalidDeclaration, [CXCursor.by_value], :uint
+  attach_function :clang_is_reference, :clang_isReference, [CXCursorKind], :uint
+  attach_function :clang_is_expression, :clang_isExpression, [CXCursorKind], :uint
+  attach_function :clang_is_statement, :clang_isStatement, [CXCursorKind], :uint
+  attach_function :clang_is_attribute, :clang_isAttribute, [CXCursorKind], :uint
+  attach_function :clang_cursor_has_attrs, :clang_Cursor_hasAttrs, [CXCursor.by_value], :uint
+  attach_function :clang_is_invalid, :clang_isInvalid, [CXCursorKind], :uint
+  attach_function :clang_is_translation_unit, :clang_isTranslationUnit, [CXCursorKind], :uint
+  attach_function :clang_is_preprocessing, :clang_isPreprocessing, [CXCursorKind], :uint
+  attach_function :clang_is_unexposed, :clang_isUnexposed, [CXCursorKind], :uint
 
   CXLinkageKind = enum(
     :cx_linkage_invalid, 0,
@@ -547,7 +542,7 @@ module Index
     :cx_linkage_external, 4
   )
 
-  attach_function :clang_get_cursor_linkage, :clang_getCursorLinkage, [CXCursor.by_value], :int
+  attach_function :clang_get_cursor_linkage, :clang_getCursorLinkage, [CXCursor.by_value], CXLinkageKind
 
   CXVisibilityKind = enum(
     :cx_visibility_invalid, 0,
@@ -556,21 +551,21 @@ module Index
     :cx_visibility_default, 3
   )
 
-  attach_function :clang_get_cursor_visibility, :clang_getCursorVisibility, [CXCursor.by_value], :int
-  attach_function :clang_get_cursor_availability, :clang_getCursorAvailability, [CXCursor.by_value], :int
+  attach_function :clang_get_cursor_visibility, :clang_getCursorVisibility, [CXCursor.by_value], CXVisibilityKind
+  attach_function :clang_get_cursor_availability, :clang_getCursorAvailability, [CXCursor.by_value], CXAvailabilityKind
 
   class CXPlatformAvailability < FFI::Struct
-    layout :platform, :int,
+    layout :platform, CXString,
            :introduced, CXVersion,
            :deprecated, CXVersion,
            :obsoleted, CXVersion,
            :unavailable, :int,
-           :message, :int
+           :message, CXString
   end
 
-  attach_function :clang_get_cursor_platform_availability, :clang_getCursorPlatformAvailability, [CXCursor.by_value, :pointer, :pointer, :pointer, :pointer, CXPlatformAvailability.by_ref, :int], :int
-  attach_function :clang_dispose_cx_platform_availability, :clang_disposeCXPlatformAvailability, [CXPlatformAvailability.by_ref], :int
-  attach_variable :CXCursor, :CXCursor, :int
+  attach_function :clang_get_cursor_platform_availability, :clang_getCursorPlatformAvailability, [CXCursor.by_value, :pointer, CXString.by_ref, :pointer, CXString.by_ref, CXPlatformAvailability.by_ref, :int], :int
+  attach_function :clang_dispose_cx_platform_availability, :clang_disposeCXPlatformAvailability, [CXPlatformAvailability.by_ref], :void
+  attach_function :clang_cursor_get_var_decl_initializer, :clang_Cursor_getVarDeclInitializer, [CXCursor.by_value], CXCursor.by_value
   attach_function :clang_cursor_has_var_decl_global_storage, :clang_Cursor_hasVarDeclGlobalStorage, [CXCursor.by_value], :int
   attach_function :clang_cursor_has_var_decl_external_storage, :clang_Cursor_hasVarDeclExternalStorage, [CXCursor.by_value], :int
 
@@ -581,7 +576,7 @@ module Index
     :cx_language_c_plus_plus, 3
   )
 
-  attach_function :clang_get_cursor_language, :clang_getCursorLanguage, [CXCursor.by_value], :int
+  attach_function :clang_get_cursor_language, :clang_getCursorLanguage, [CXCursor.by_value], CXLanguageKind
 
   CXTLSKind = enum(
     :cxtls_none, 0,
@@ -589,25 +584,25 @@ module Index
     :cxtls_static, 2
   )
 
-  attach_function :clang_get_cursor_tls_kind, :clang_getCursorTLSKind, [CXCursor.by_value], :int
-  attach_variable :CXTranslationUnit, :CXTranslationUnit, :int
+  attach_function :clang_get_cursor_tls_kind, :clang_getCursorTLSKind, [CXCursor.by_value], CXTLSKind
+  attach_function :clang_cursor_get_translation_unit, :clang_Cursor_getTranslationUnit, [CXCursor.by_value], :pointer
 
   class CXCursorSetImpl < FFI::Struct
   end
 
   typedef CXCursorSetImpl.ptr, :cx_cursor_set
-  attach_variable :CXCursorSet, :CXCursorSet, :int
-  attach_function :clang_dispose_cx_cursor_set, :clang_disposeCXCursorSet, [:pointer], :int
-  attach_function :clang_cx_cursor_set_contains, :clang_CXCursorSet_contains, [:pointer, CXCursor.by_value], :int
-  attach_function :clang_cx_cursor_set_insert, :clang_CXCursorSet_insert, [:pointer, CXCursor.by_value], :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_function :clang_get_overridden_cursors, :clang_getOverriddenCursors, [CXCursor.by_value, :pointer, :pointer], :int
-  attach_function :clang_dispose_overridden_cursors, :clang_disposeOverriddenCursors, [CXCursor.by_ref], :int
-  attach_variable :CXFile, :CXFile, :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_variable :CXSourceLocation, :CXSourceLocation, :int
-  attach_variable :CXSourceRange, :CXSourceRange, :int
+  attach_function :clang_create_cx_cursor_set, :clang_createCXCursorSet, [], :pointer
+  attach_function :clang_dispose_cx_cursor_set, :clang_disposeCXCursorSet, [:pointer], :void
+  attach_function :clang_cx_cursor_set_contains, :clang_CXCursorSet_contains, [:pointer, CXCursor.by_value], :uint
+  attach_function :clang_cx_cursor_set_insert, :clang_CXCursorSet_insert, [:pointer, CXCursor.by_value], :uint
+  attach_function :clang_get_cursor_semantic_parent, :clang_getCursorSemanticParent, [CXCursor.by_value], CXCursor.by_value
+  attach_function :clang_get_cursor_lexical_parent, :clang_getCursorLexicalParent, [CXCursor.by_value], CXCursor.by_value
+  attach_function :clang_get_overridden_cursors, :clang_getOverriddenCursors, [CXCursor.by_value, :pointer, :pointer], :void
+  attach_function :clang_dispose_overridden_cursors, :clang_disposeOverriddenCursors, [CXCursor.by_ref], :void
+  attach_function :clang_get_included_file, :clang_getIncludedFile, [CXCursor.by_value], :pointer
+  attach_function :clang_get_cursor, :clang_getCursor, [:pointer, CXSourceLocation.by_value], CXCursor.by_value
+  attach_function :clang_get_cursor_location, :clang_getCursorLocation, [CXCursor.by_value], CXSourceLocation.by_value
+  attach_function :clang_get_cursor_extent, :clang_getCursorExtent, [CXCursor.by_value], CXSourceRange.by_value
 
   CXTypeKind = enum(
     :cx_type_invalid, 0,
@@ -758,7 +753,7 @@ module Index
     :cx_calling_conv_preserve_all, 15,
     :cx_calling_conv_a_arch64_vector_call, 16,
     :cx_calling_conv_swift_async, 17,
-    :cx_calling_conv_a_arch64_svepcs, 18,
+    :cx_calling_conv_a_arch_64svepcs, 18,
     :cx_calling_conv_m68k_rtd, 19,
     :cx_calling_conv_preserve_none, 20,
     :cx_calling_conv_riscv_vector_call, 21,
@@ -771,16 +766,16 @@ module Index
            :data, [:pointer, 2]
   end
 
-  attach_variable :CXType, :CXType, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXType, :CXType, :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_get_enum_constant_decl_value, :clang_getEnumConstantDeclValue, [CXCursor.by_value], :int
-  attach_function :clang_get_enum_constant_decl_unsigned_value, :clang_getEnumConstantDeclUnsignedValue, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_bit_field, :clang_Cursor_isBitField, [CXCursor.by_value], :int
+  attach_function :clang_get_cursor_type, :clang_getCursorType, [CXCursor.by_value], CXType.by_value
+  attach_function :clang_get_type_spelling, :clang_getTypeSpelling, [CXType.by_value], CXString.by_value
+  attach_function :clang_get_typedef_decl_underlying_type, :clang_getTypedefDeclUnderlyingType, [CXCursor.by_value], CXType.by_value
+  attach_function :clang_get_enum_decl_integer_type, :clang_getEnumDeclIntegerType, [CXCursor.by_value], CXType.by_value
+  attach_function :clang_get_enum_constant_decl_value, :clang_getEnumConstantDeclValue, [CXCursor.by_value], :long_long
+  attach_function :clang_get_enum_constant_decl_unsigned_value, :clang_getEnumConstantDeclUnsignedValue, [CXCursor.by_value], :ulong_long
+  attach_function :clang_cursor_is_bit_field, :clang_Cursor_isBitField, [CXCursor.by_value], :uint
   attach_function :clang_get_field_decl_bit_width, :clang_getFieldDeclBitWidth, [CXCursor.by_value], :int
   attach_function :clang_cursor_get_num_arguments, :clang_Cursor_getNumArguments, [CXCursor.by_value], :int
-  attach_variable :CXCursor, :CXCursor, :int
+  attach_function :clang_cursor_get_argument, :clang_Cursor_getArgument, [CXCursor.by_value, :uint], CXCursor.by_value
 
   CXTemplateArgumentKind = enum(
     :cx_template_argument_kind_null, 0,
@@ -796,47 +791,47 @@ module Index
   )
 
   attach_function :clang_cursor_get_num_template_arguments, :clang_Cursor_getNumTemplateArguments, [CXCursor.by_value], :int
-  attach_function :clang_cursor_get_template_argument_kind, :clang_Cursor_getTemplateArgumentKind, [CXCursor.by_value, :uint], :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_cursor_get_template_argument_value, :clang_Cursor_getTemplateArgumentValue, [CXCursor.by_value, :uint], :int
-  attach_function :clang_cursor_get_template_argument_unsigned_value, :clang_Cursor_getTemplateArgumentUnsignedValue, [CXCursor.by_value, :uint], :int
-  attach_function :clang_equal_types, :clang_equalTypes, [CXType.by_value, CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_is_const_qualified_type, :clang_isConstQualifiedType, [CXType.by_value], :int
-  attach_function :clang_cursor_is_macro_function_like, :clang_Cursor_isMacroFunctionLike, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_macro_builtin, :clang_Cursor_isMacroBuiltin, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_function_inlined, :clang_Cursor_isFunctionInlined, [CXCursor.by_value], :int
-  attach_function :clang_is_volatile_qualified_type, :clang_isVolatileQualifiedType, [CXType.by_value], :int
-  attach_function :clang_is_restrict_qualified_type, :clang_isRestrictQualifiedType, [CXType.by_value], :int
-  attach_function :clang_get_address_space, :clang_getAddressSpace, [CXType.by_value], :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXType, :CXType, :int
-  attach_variable :CXType, :CXType, :int
-  attach_variable :CXType, :CXType, :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_function :clang_get_function_type_calling_conv, :clang_getFunctionTypeCallingConv, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
+  attach_function :clang_cursor_get_template_argument_kind, :clang_Cursor_getTemplateArgumentKind, [CXCursor.by_value, :uint], CXTemplateArgumentKind
+  attach_function :clang_cursor_get_template_argument_type, :clang_Cursor_getTemplateArgumentType, [CXCursor.by_value, :uint], CXType.by_value
+  attach_function :clang_cursor_get_template_argument_value, :clang_Cursor_getTemplateArgumentValue, [CXCursor.by_value, :uint], :long_long
+  attach_function :clang_cursor_get_template_argument_unsigned_value, :clang_Cursor_getTemplateArgumentUnsignedValue, [CXCursor.by_value, :uint], :ulong_long
+  attach_function :clang_equal_types, :clang_equalTypes, [CXType.by_value, CXType.by_value], :uint
+  attach_function :clang_get_canonical_type, :clang_getCanonicalType, [CXType.by_value], CXType.by_value
+  attach_function :clang_is_const_qualified_type, :clang_isConstQualifiedType, [CXType.by_value], :uint
+  attach_function :clang_cursor_is_macro_function_like, :clang_Cursor_isMacroFunctionLike, [CXCursor.by_value], :uint
+  attach_function :clang_cursor_is_macro_builtin, :clang_Cursor_isMacroBuiltin, [CXCursor.by_value], :uint
+  attach_function :clang_cursor_is_function_inlined, :clang_Cursor_isFunctionInlined, [CXCursor.by_value], :uint
+  attach_function :clang_is_volatile_qualified_type, :clang_isVolatileQualifiedType, [CXType.by_value], :uint
+  attach_function :clang_is_restrict_qualified_type, :clang_isRestrictQualifiedType, [CXType.by_value], :uint
+  attach_function :clang_get_address_space, :clang_getAddressSpace, [CXType.by_value], :uint
+  attach_function :clang_get_typedef_name, :clang_getTypedefName, [CXType.by_value], CXString.by_value
+  attach_function :clang_get_pointee_type, :clang_getPointeeType, [CXType.by_value], CXType.by_value
+  attach_function :clang_get_unqualified_type, :clang_getUnqualifiedType, [CXType.by_value], CXType.by_value
+  attach_function :clang_get_non_reference_type, :clang_getNonReferenceType, [CXType.by_value], CXType.by_value
+  attach_function :clang_get_type_declaration, :clang_getTypeDeclaration, [CXType.by_value], CXCursor.by_value
+  attach_function :clang_get_decl_obj_c_type_encoding, :clang_getDeclObjCTypeEncoding, [CXCursor.by_value], CXString.by_value
+  attach_function :clang_type_get_obj_c_encoding, :clang_Type_getObjCEncoding, [CXType.by_value], CXString.by_value
+  attach_function :clang_get_type_kind_spelling, :clang_getTypeKindSpelling, [CXTypeKind], CXString.by_value
+  attach_function :clang_get_function_type_calling_conv, :clang_getFunctionTypeCallingConv, [CXType.by_value], CXCallingConv
+  attach_function :clang_get_result_type, :clang_getResultType, [CXType.by_value], CXType.by_value
   attach_function :clang_get_exception_specification_type, :clang_getExceptionSpecificationType, [CXType.by_value], :int
   attach_function :clang_get_num_arg_types, :clang_getNumArgTypes, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_type_get_num_obj_c_protocol_refs, :clang_Type_getNumObjCProtocolRefs, [CXType.by_value], :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_function :clang_type_get_num_obj_c_type_args, :clang_Type_getNumObjCTypeArgs, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_is_function_type_variadic, :clang_isFunctionTypeVariadic, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
+  attach_function :clang_get_arg_type, :clang_getArgType, [CXType.by_value, :uint], CXType.by_value
+  attach_function :clang_type_get_obj_c_object_base_type, :clang_Type_getObjCObjectBaseType, [CXType.by_value], CXType.by_value
+  attach_function :clang_type_get_num_obj_c_protocol_refs, :clang_Type_getNumObjCProtocolRefs, [CXType.by_value], :uint
+  attach_function :clang_type_get_obj_c_protocol_decl, :clang_Type_getObjCProtocolDecl, [CXType.by_value, :uint], CXCursor.by_value
+  attach_function :clang_type_get_num_obj_c_type_args, :clang_Type_getNumObjCTypeArgs, [CXType.by_value], :uint
+  attach_function :clang_type_get_obj_c_type_arg, :clang_Type_getObjCTypeArg, [CXType.by_value, :uint], CXType.by_value
+  attach_function :clang_is_function_type_variadic, :clang_isFunctionTypeVariadic, [CXType.by_value], :uint
+  attach_function :clang_get_cursor_result_type, :clang_getCursorResultType, [CXCursor.by_value], CXType.by_value
   attach_function :clang_get_cursor_exception_specification_type, :clang_getCursorExceptionSpecificationType, [CXCursor.by_value], :int
-  attach_function :clang_is_pod_type, :clang_isPODType, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_get_num_elements, :clang_getNumElements, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_get_array_size, :clang_getArraySize, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_type_is_transparent_tag_typedef, :clang_Type_isTransparentTagTypedef, [CXType.by_value], :int
+  attach_function :clang_is_pod_type, :clang_isPODType, [CXType.by_value], :uint
+  attach_function :clang_get_element_type, :clang_getElementType, [CXType.by_value], CXType.by_value
+  attach_function :clang_get_num_elements, :clang_getNumElements, [CXType.by_value], :long_long
+  attach_function :clang_get_array_element_type, :clang_getArrayElementType, [CXType.by_value], CXType.by_value
+  attach_function :clang_get_array_size, :clang_getArraySize, [CXType.by_value], :long_long
+  attach_function :clang_type_get_named_type, :clang_Type_getNamedType, [CXType.by_value], CXType.by_value
+  attach_function :clang_type_is_transparent_tag_typedef, :clang_Type_isTransparentTagTypedef, [CXType.by_value], :uint
 
   CXTypeNullabilityKind = enum(
     :cx_type_nullability_non_null, 0,
@@ -846,7 +841,7 @@ module Index
     :cx_type_nullability_nullable_result, 4
   )
 
-  attach_function :clang_type_get_nullability, :clang_Type_getNullability, [CXType.by_value], :int
+  attach_function :clang_type_get_nullability, :clang_Type_getNullability, [CXType.by_value], CXTypeNullabilityKind
 
   CXTypeLayoutError = enum(
     :cx_type_layout_error_invalid, -1,
@@ -857,16 +852,16 @@ module Index
     :cx_type_layout_error_undeduced, -6
   )
 
-  attach_function :clang_type_get_align_of, :clang_Type_getAlignOf, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_type_get_size_of, :clang_Type_getSizeOf, [CXType.by_value], :int
-  attach_function :clang_type_get_offset_of, :clang_Type_getOffsetOf, [CXType.by_value, :string], :int
-  attach_variable :CXType, :CXType, :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_cursor_get_offset_of_field, :clang_Cursor_getOffsetOfField, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_anonymous, :clang_Cursor_isAnonymous, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_anonymous_record_decl, :clang_Cursor_isAnonymousRecordDecl, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_inline_namespace, :clang_Cursor_isInlineNamespace, [CXCursor.by_value], :int
+  attach_function :clang_type_get_align_of, :clang_Type_getAlignOf, [CXType.by_value], :long_long
+  attach_function :clang_type_get_class_type, :clang_Type_getClassType, [CXType.by_value], CXType.by_value
+  attach_function :clang_type_get_size_of, :clang_Type_getSizeOf, [CXType.by_value], :long_long
+  attach_function :clang_type_get_offset_of, :clang_Type_getOffsetOf, [CXType.by_value, :string], :long_long
+  attach_function :clang_type_get_modified_type, :clang_Type_getModifiedType, [CXType.by_value], CXType.by_value
+  attach_function :clang_type_get_value_type, :clang_Type_getValueType, [CXType.by_value], CXType.by_value
+  attach_function :clang_cursor_get_offset_of_field, :clang_Cursor_getOffsetOfField, [CXCursor.by_value], :long_long
+  attach_function :clang_cursor_is_anonymous, :clang_Cursor_isAnonymous, [CXCursor.by_value], :uint
+  attach_function :clang_cursor_is_anonymous_record_decl, :clang_Cursor_isAnonymousRecordDecl, [CXCursor.by_value], :uint
+  attach_function :clang_cursor_is_inline_namespace, :clang_Cursor_isInlineNamespace, [CXCursor.by_value], :uint
 
   CXRefQualifierKind = enum(
     :cx_ref_qualifier_none, 0,
@@ -875,9 +870,9 @@ module Index
   )
 
   attach_function :clang_type_get_num_template_arguments, :clang_Type_getNumTemplateArguments, [CXType.by_value], :int
-  attach_variable :CXType, :CXType, :int
-  attach_function :clang_type_get_cxx_ref_qualifier, :clang_Type_getCXXRefQualifier, [CXType.by_value], :int
-  attach_function :clang_is_virtual_base, :clang_isVirtualBase, [CXCursor.by_value], :int
+  attach_function :clang_type_get_template_argument_as_type, :clang_Type_getTemplateArgumentAsType, [CXType.by_value, :uint], CXType.by_value
+  attach_function :clang_type_get_cxx_ref_qualifier, :clang_Type_getCXXRefQualifier, [CXType.by_value], CXRefQualifierKind
+  attach_function :clang_is_virtual_base, :clang_isVirtualBase, [CXCursor.by_value], :uint
 
   CXCXXAccessSpecifier = enum(
     :cx_cxx_invalid_access_specifier, 0,
@@ -886,7 +881,7 @@ module Index
     :cx_cxx_private, 3
   )
 
-  attach_function :clang_get_cxx_access_specifier, :clang_getCXXAccessSpecifier, [CXCursor.by_value], :int
+  attach_function :clang_get_cxx_access_specifier, :clang_getCXXAccessSpecifier, [CXCursor.by_value], CXCXXAccessSpecifier
 
   CXStorageClass = enum(
     :cx_sc_invalid, 0,
@@ -899,10 +894,10 @@ module Index
     :cx_sc_register, 7
   )
 
-  attach_function :clang_cursor_get_storage_class, :clang_Cursor_getStorageClass, [CXCursor.by_value], :int
-  attach_function :clang_get_num_overloaded_decls, :clang_getNumOverloadedDecls, [CXCursor.by_value], :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_variable :CXType, :CXType, :int
+  attach_function :clang_cursor_get_storage_class, :clang_Cursor_getStorageClass, [CXCursor.by_value], CXStorageClass
+  attach_function :clang_get_num_overloaded_decls, :clang_getNumOverloadedDecls, [CXCursor.by_value], :uint
+  attach_function :clang_get_overloaded_decl, :clang_getOverloadedDecl, [CXCursor.by_value, :uint], CXCursor.by_value
+  attach_function :clang_get_ib_outlet_collection_type, :clang_getIBOutletCollectionType, [CXCursor.by_value], CXType.by_value
 
   CXChildVisitResult = enum(
     :cx_child_visit_break, 0,
@@ -911,22 +906,22 @@ module Index
   )
 
   callback :cx_cursor_visitor, [], CXChildVisitResult
-  attach_function :clang_visit_children, :clang_visitChildren, [CXCursor.by_value, :pointer, :pointer], :int
+  attach_function :clang_visit_children, :clang_visitChildren, [CXCursor.by_value, :pointer, :pointer], :uint
 
   class CXChildVisitResult < FFI::Struct
   end
 
   typedef CXChildVisitResult.ptr, :cx_cursor_visitor_block
-  attach_function :clang_visit_children_with_block, :clang_visitChildrenWithBlock, [CXCursor.by_value, :pointer], :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXSourceRange, :CXSourceRange, :int
+  attach_function :clang_visit_children_with_block, :clang_visitChildrenWithBlock, [CXCursor.by_value, :pointer], :uint
+  attach_function :clang_get_cursor_usr, :clang_getCursorUSR, [CXCursor.by_value], CXString.by_value
+  attach_function :clang_construct_usr_obj_c_class, :clang_constructUSR_ObjCClass, [:string], CXString.by_value
+  attach_function :clang_construct_usr_obj_c_category, :clang_constructUSR_ObjCCategory, [:string, :string], CXString.by_value
+  attach_function :clang_construct_usr_obj_c_protocol, :clang_constructUSR_ObjCProtocol, [:string], CXString.by_value
+  attach_function :clang_construct_usr_obj_c_ivar, :clang_constructUSR_ObjCIvar, [:string, CXString.by_value], CXString.by_value
+  attach_function :clang_construct_usr_obj_c_method, :clang_constructUSR_ObjCMethod, [:string, :uint, CXString.by_value], CXString.by_value
+  attach_function :clang_construct_usr_obj_c_property, :clang_constructUSR_ObjCProperty, [:string, CXString.by_value], CXString.by_value
+  attach_function :clang_get_cursor_spelling, :clang_getCursorSpelling, [CXCursor.by_value], CXString.by_value
+  attach_function :clang_cursor_get_spelling_name_range, :clang_Cursor_getSpellingNameRange, [CXCursor.by_value, :uint, :uint], CXSourceRange.by_value
   typedef :pointer, :cx_printing_policy
 
   CXPrintingPolicyProperty = enum(
@@ -959,19 +954,19 @@ module Index
     :cx_printing_policy_last_property, 25
   )
 
-  attach_function :clang_printing_policy_get_property, :clang_PrintingPolicy_getProperty, [:pointer, CXPrintingPolicyProperty], :int
-  attach_function :clang_printing_policy_set_property, :clang_PrintingPolicy_setProperty, [:pointer, CXPrintingPolicyProperty, :uint], :int
-  attach_variable :CXPrintingPolicy, :CXPrintingPolicy, :int
-  attach_function :clang_printing_policy_dispose, :clang_PrintingPolicy_dispose, [:pointer], :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_function :clang_is_cursor_definition, :clang_isCursorDefinition, [CXCursor.by_value], :int
-  attach_variable :CXCursor, :CXCursor, :int
+  attach_function :clang_printing_policy_get_property, :clang_PrintingPolicy_getProperty, [:pointer, CXPrintingPolicyProperty], :uint
+  attach_function :clang_printing_policy_set_property, :clang_PrintingPolicy_setProperty, [:pointer, CXPrintingPolicyProperty, :uint], :void
+  attach_function :clang_get_cursor_printing_policy, :clang_getCursorPrintingPolicy, [CXCursor.by_value], :pointer
+  attach_function :clang_printing_policy_dispose, :clang_PrintingPolicy_dispose, [:pointer], :void
+  attach_function :clang_get_cursor_pretty_printed, :clang_getCursorPrettyPrinted, [CXCursor.by_value, :pointer], CXString.by_value
+  attach_function :clang_get_cursor_display_name, :clang_getCursorDisplayName, [CXCursor.by_value], CXString.by_value
+  attach_function :clang_get_cursor_referenced, :clang_getCursorReferenced, [CXCursor.by_value], CXCursor.by_value
+  attach_function :clang_get_cursor_definition, :clang_getCursorDefinition, [CXCursor.by_value], CXCursor.by_value
+  attach_function :clang_is_cursor_definition, :clang_isCursorDefinition, [CXCursor.by_value], :uint
+  attach_function :clang_get_canonical_cursor, :clang_getCanonicalCursor, [CXCursor.by_value], CXCursor.by_value
   attach_function :clang_cursor_get_obj_c_selector_index, :clang_Cursor_getObjCSelectorIndex, [CXCursor.by_value], :int
   attach_function :clang_cursor_is_dynamic_call, :clang_Cursor_isDynamicCall, [CXCursor.by_value], :int
-  attach_variable :CXType, :CXType, :int
+  attach_function :clang_cursor_get_receiver_type, :clang_Cursor_getReceiverType, [CXCursor.by_value], CXType.by_value
 
   CXObjCPropertyAttrKind = enum(
     :cx_obj_c_property_attr_noattr, 0,
@@ -990,9 +985,9 @@ module Index
     :cx_obj_c_property_attr_class, 4096
   )
 
-  attach_function :clang_cursor_get_obj_c_property_attributes, :clang_Cursor_getObjCPropertyAttributes, [CXCursor.by_value, :uint], :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
+  attach_function :clang_cursor_get_obj_c_property_attributes, :clang_Cursor_getObjCPropertyAttributes, [CXCursor.by_value, :uint], :uint
+  attach_function :clang_cursor_get_obj_c_property_getter_name, :clang_Cursor_getObjCPropertyGetterName, [CXCursor.by_value], CXString.by_value
+  attach_function :clang_cursor_get_obj_c_property_setter_name, :clang_Cursor_getObjCPropertySetterName, [CXCursor.by_value], CXString.by_value
 
   CXObjCDeclQualifierKind = enum(
     :cx_obj_c_decl_qualifier_none, 0,
@@ -1004,45 +999,45 @@ module Index
     :cx_obj_c_decl_qualifier_oneway, 32
   )
 
-  attach_function :clang_cursor_get_obj_c_decl_qualifiers, :clang_Cursor_getObjCDeclQualifiers, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_obj_c_optional, :clang_Cursor_isObjCOptional, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_variadic, :clang_Cursor_isVariadic, [CXCursor.by_value], :int
-  attach_function :clang_cursor_is_external_symbol, :clang_Cursor_isExternalSymbol, [CXCursor.by_value, :pointer, :pointer, :pointer], :int
-  attach_variable :CXSourceRange, :CXSourceRange, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXStringSet, :CXStringSet, :int
-  attach_variable :CXStringSet, :CXStringSet, :int
+  attach_function :clang_cursor_get_obj_c_decl_qualifiers, :clang_Cursor_getObjCDeclQualifiers, [CXCursor.by_value], :uint
+  attach_function :clang_cursor_is_obj_c_optional, :clang_Cursor_isObjCOptional, [CXCursor.by_value], :uint
+  attach_function :clang_cursor_is_variadic, :clang_Cursor_isVariadic, [CXCursor.by_value], :uint
+  attach_function :clang_cursor_is_external_symbol, :clang_Cursor_isExternalSymbol, [CXCursor.by_value, CXString.by_ref, CXString.by_ref, :pointer], :uint
+  attach_function :clang_cursor_get_comment_range, :clang_Cursor_getCommentRange, [CXCursor.by_value], CXSourceRange.by_value
+  attach_function :clang_cursor_get_raw_comment_text, :clang_Cursor_getRawCommentText, [CXCursor.by_value], CXString.by_value
+  attach_function :clang_cursor_get_brief_comment_text, :clang_Cursor_getBriefCommentText, [CXCursor.by_value], CXString.by_value
+  attach_function :clang_cursor_get_mangling, :clang_Cursor_getMangling, [CXCursor.by_value], CXString.by_value
+  attach_function :clang_cursor_get_cxx_manglings, :clang_Cursor_getCXXManglings, [CXCursor.by_value], CXStringSet.by_ref
+  attach_function :clang_cursor_get_obj_c_manglings, :clang_Cursor_getObjCManglings, [CXCursor.by_value], CXStringSet.by_ref
   typedef :pointer, :cx_module
-  attach_variable :CXModule, :CXModule, :int
-  attach_variable :CXModule, :CXModule, :int
-  attach_variable :CXFile, :CXFile, :int
-  attach_variable :CXModule, :CXModule, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
+  attach_function :clang_cursor_get_module, :clang_Cursor_getModule, [CXCursor.by_value], :pointer
+  attach_function :clang_get_module_for_file, :clang_getModuleForFile, [:pointer, :pointer], :pointer
+  attach_function :clang_module_get_ast_file, :clang_Module_getASTFile, [:pointer], :pointer
+  attach_function :clang_module_get_parent, :clang_Module_getParent, [:pointer], :pointer
+  attach_function :clang_module_get_name, :clang_Module_getName, [:pointer], CXString.by_value
+  attach_function :clang_module_get_full_name, :clang_Module_getFullName, [:pointer], CXString.by_value
   attach_function :clang_module_is_system, :clang_Module_isSystem, [:pointer], :int
-  attach_function :clang_module_get_num_top_level_headers, :clang_Module_getNumTopLevelHeaders, [:pointer, :pointer], :int
-  attach_variable :CXFile, :CXFile, :int
-  attach_function :clang_cxx_constructor_is_converting_constructor, :clang_CXXConstructor_isConvertingConstructor, [CXCursor.by_value], :int
-  attach_function :clang_cxx_constructor_is_copy_constructor, :clang_CXXConstructor_isCopyConstructor, [CXCursor.by_value], :int
-  attach_function :clang_cxx_constructor_is_default_constructor, :clang_CXXConstructor_isDefaultConstructor, [CXCursor.by_value], :int
-  attach_function :clang_cxx_constructor_is_move_constructor, :clang_CXXConstructor_isMoveConstructor, [CXCursor.by_value], :int
-  attach_function :clang_cxx_field_is_mutable, :clang_CXXField_isMutable, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_defaulted, :clang_CXXMethod_isDefaulted, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_deleted, :clang_CXXMethod_isDeleted, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_pure_virtual, :clang_CXXMethod_isPureVirtual, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_static, :clang_CXXMethod_isStatic, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_virtual, :clang_CXXMethod_isVirtual, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_copy_assignment_operator, :clang_CXXMethod_isCopyAssignmentOperator, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_move_assignment_operator, :clang_CXXMethod_isMoveAssignmentOperator, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_explicit, :clang_CXXMethod_isExplicit, [CXCursor.by_value], :int
-  attach_function :clang_cxx_record_is_abstract, :clang_CXXRecord_isAbstract, [CXCursor.by_value], :int
-  attach_function :clang_enum_decl_is_scoped, :clang_EnumDecl_isScoped, [CXCursor.by_value], :int
-  attach_function :clang_cxx_method_is_const, :clang_CXXMethod_isConst, [CXCursor.by_value], :int
-  attach_function :clang_get_template_cursor_kind, :clang_getTemplateCursorKind, [CXCursor.by_value], :int
-  attach_variable :CXCursor, :CXCursor, :int
-  attach_variable :CXSourceRange, :CXSourceRange, :int
+  attach_function :clang_module_get_num_top_level_headers, :clang_Module_getNumTopLevelHeaders, [:pointer, :pointer], :uint
+  attach_function :clang_module_get_top_level_header, :clang_Module_getTopLevelHeader, [:pointer, :pointer, :uint], :pointer
+  attach_function :clang_cxx_constructor_is_converting_constructor, :clang_CXXConstructor_isConvertingConstructor, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_constructor_is_copy_constructor, :clang_CXXConstructor_isCopyConstructor, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_constructor_is_default_constructor, :clang_CXXConstructor_isDefaultConstructor, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_constructor_is_move_constructor, :clang_CXXConstructor_isMoveConstructor, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_field_is_mutable, :clang_CXXField_isMutable, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_defaulted, :clang_CXXMethod_isDefaulted, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_deleted, :clang_CXXMethod_isDeleted, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_pure_virtual, :clang_CXXMethod_isPureVirtual, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_static, :clang_CXXMethod_isStatic, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_virtual, :clang_CXXMethod_isVirtual, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_copy_assignment_operator, :clang_CXXMethod_isCopyAssignmentOperator, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_move_assignment_operator, :clang_CXXMethod_isMoveAssignmentOperator, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_explicit, :clang_CXXMethod_isExplicit, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_record_is_abstract, :clang_CXXRecord_isAbstract, [CXCursor.by_value], :uint
+  attach_function :clang_enum_decl_is_scoped, :clang_EnumDecl_isScoped, [CXCursor.by_value], :uint
+  attach_function :clang_cxx_method_is_const, :clang_CXXMethod_isConst, [CXCursor.by_value], :uint
+  attach_function :clang_get_template_cursor_kind, :clang_getTemplateCursorKind, [CXCursor.by_value], CXCursorKind
+  attach_function :clang_get_specialized_cursor_template, :clang_getSpecializedCursorTemplate, [CXCursor.by_value], CXCursor.by_value
+  attach_function :clang_get_cursor_reference_name_range, :clang_getCursorReferenceNameRange, [CXCursor.by_value, :uint, :uint], CXSourceRange.by_value
 
   CXNameRefFlags = enum(
     :cx_name_range_want_qualifier, 1,
@@ -1063,19 +1058,19 @@ module Index
            :ptr_data, :pointer
   end
 
-  attach_variable :CXToken, :CXToken, :int
-  attach_variable :CXTokenKind, :CXTokenKind, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXSourceLocation, :CXSourceLocation, :int
-  attach_variable :CXSourceRange, :CXSourceRange, :int
-  attach_function :clang_tokenize, :clang_tokenize, [:pointer, :int, :pointer, :pointer], :int
-  attach_function :clang_annotate_tokens, :clang_annotateTokens, [:pointer, CXToken.by_ref, :uint, CXCursor.by_ref], :int
-  attach_function :clang_dispose_tokens, :clang_disposeTokens, [:pointer, CXToken.by_ref, :uint], :int
-  attach_variable :CXString, :CXString, :int
-  attach_function :clang_get_definition_spelling_and_extent, :clang_getDefinitionSpellingAndExtent, [CXCursor.by_value, :pointer, :pointer, :pointer, :pointer, :pointer, :pointer], :int
-  attach_function :clang_enable_stack_traces, :clang_enableStackTraces, [], :int
+  attach_function :clang_get_token, :clang_getToken, [:pointer, CXSourceLocation.by_value], CXToken.by_ref
+  attach_function :clang_get_token_kind, :clang_getTokenKind, [CXToken.by_value], CXTokenKind
+  attach_function :clang_get_token_spelling, :clang_getTokenSpelling, [:pointer, CXToken.by_value], CXString.by_value
+  attach_function :clang_get_token_location, :clang_getTokenLocation, [:pointer, CXToken.by_value], CXSourceLocation.by_value
+  attach_function :clang_get_token_extent, :clang_getTokenExtent, [:pointer, CXToken.by_value], CXSourceRange.by_value
+  attach_function :clang_tokenize, :clang_tokenize, [:pointer, CXSourceRange.by_value, :pointer, :pointer], :void
+  attach_function :clang_annotate_tokens, :clang_annotateTokens, [:pointer, CXToken.by_ref, :uint, CXCursor.by_ref], :void
+  attach_function :clang_dispose_tokens, :clang_disposeTokens, [:pointer, CXToken.by_ref, :uint], :void
+  attach_function :clang_get_cursor_kind_spelling, :clang_getCursorKindSpelling, [CXCursorKind], CXString.by_value
+  attach_function :clang_get_definition_spelling_and_extent, :clang_getDefinitionSpellingAndExtent, [CXCursor.by_value, :pointer, :pointer, :pointer, :pointer, :pointer, :pointer], :void
+  attach_function :clang_enable_stack_traces, :clang_enableStackTraces, [], :void
   callback :clang_executeOnThread_fn_callback, [:pointer], :void
-  attach_function :clang_execute_on_thread, :clang_executeOnThread, [:clang_executeOnThread_fn_callback, :pointer, :uint], :int
+  attach_function :clang_execute_on_thread, :clang_executeOnThread, [:clang_executeOnThread_fn_callback, :pointer, :uint], :void
   typedef :pointer, :cx_completion_string
 
   class CXCompletionResult < FFI::Struct
@@ -1107,25 +1102,25 @@ module Index
     :cx_completion_chunk_vertical_space, 20
   )
 
-  attach_function :clang_get_completion_chunk_kind, :clang_getCompletionChunkKind, [:pointer, :uint], :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXCompletionString, :CXCompletionString, :int
-  attach_function :clang_get_num_completion_chunks, :clang_getNumCompletionChunks, [:pointer], :int
-  attach_function :clang_get_completion_priority, :clang_getCompletionPriority, [:pointer], :int
-  attach_function :clang_get_completion_availability, :clang_getCompletionAvailability, [:pointer], :int
-  attach_function :clang_get_completion_num_annotations, :clang_getCompletionNumAnnotations, [:pointer], :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXCompletionString, :CXCompletionString, :int
+  attach_function :clang_get_completion_chunk_kind, :clang_getCompletionChunkKind, [:pointer, :uint], CXCompletionChunkKind
+  attach_function :clang_get_completion_chunk_text, :clang_getCompletionChunkText, [:pointer, :uint], CXString.by_value
+  attach_function :clang_get_completion_chunk_completion_string, :clang_getCompletionChunkCompletionString, [:pointer, :uint], :pointer
+  attach_function :clang_get_num_completion_chunks, :clang_getNumCompletionChunks, [:pointer], :uint
+  attach_function :clang_get_completion_priority, :clang_getCompletionPriority, [:pointer], :uint
+  attach_function :clang_get_completion_availability, :clang_getCompletionAvailability, [:pointer], CXAvailabilityKind
+  attach_function :clang_get_completion_num_annotations, :clang_getCompletionNumAnnotations, [:pointer], :uint
+  attach_function :clang_get_completion_annotation, :clang_getCompletionAnnotation, [:pointer, :uint], CXString.by_value
+  attach_function :clang_get_completion_parent, :clang_getCompletionParent, [:pointer, :pointer], CXString.by_value
+  attach_function :clang_get_completion_brief_comment, :clang_getCompletionBriefComment, [:pointer], CXString.by_value
+  attach_function :clang_get_cursor_completion_string, :clang_getCursorCompletionString, [CXCursor.by_value], :pointer
 
   class CXCodeCompleteResults < FFI::Struct
     layout :results, CXCompletionResult.ptr,
            :num_results, :uint
   end
 
-  attach_function :clang_get_completion_num_fix_its, :clang_getCompletionNumFixIts, [CXCodeCompleteResults.by_ref, :uint], :int
-  attach_variable :CXString, :CXString, :int
+  attach_function :clang_get_completion_num_fix_its, :clang_getCompletionNumFixIts, [CXCodeCompleteResults.by_ref, :uint], :uint
+  attach_function :clang_get_completion_fix_it, :clang_getCompletionFixIt, [CXCodeCompleteResults.by_ref, :uint, :uint, CXSourceRange.by_ref], CXString.by_value
 
   CXCodeCompleteFlags = enum(
     :cx_code_complete_include_macros, 1,
@@ -1163,20 +1158,20 @@ module Index
     :cx_completion_context_unknown, 8388607
   )
 
-  attach_function :clang_default_code_complete_options, :clang_defaultCodeCompleteOptions, [], :int
-  attach_variable :CXCodeCompleteResults, :CXCodeCompleteResults, :int
-  attach_function :clang_sort_code_completion_results, :clang_sortCodeCompletionResults, [CXCompletionResult.by_ref, :uint], :int
-  attach_function :clang_dispose_code_complete_results, :clang_disposeCodeCompleteResults, [CXCodeCompleteResults.by_ref], :int
-  attach_function :clang_code_complete_get_num_diagnostics, :clang_codeCompleteGetNumDiagnostics, [CXCodeCompleteResults.by_ref], :int
-  attach_variable :CXDiagnostic, :CXDiagnostic, :int
-  attach_function :clang_code_complete_get_contexts, :clang_codeCompleteGetContexts, [CXCodeCompleteResults.by_ref], :int
-  attach_function :clang_code_complete_get_container_kind, :clang_codeCompleteGetContainerKind, [CXCodeCompleteResults.by_ref, :pointer], :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_variable :CXString, :CXString, :int
-  attach_function :clang_toggle_crash_recovery, :clang_toggleCrashRecovery, [:uint], :int
+  attach_function :clang_default_code_complete_options, :clang_defaultCodeCompleteOptions, [], :uint
+  attach_function :clang_code_complete_at, :clang_codeCompleteAt, [:pointer, :string, :uint, :uint, CXUnsavedFile.by_ref, :uint, :uint], CXCodeCompleteResults.by_ref
+  attach_function :clang_sort_code_completion_results, :clang_sortCodeCompletionResults, [CXCompletionResult.by_ref, :uint], :void
+  attach_function :clang_dispose_code_complete_results, :clang_disposeCodeCompleteResults, [CXCodeCompleteResults.by_ref], :void
+  attach_function :clang_code_complete_get_num_diagnostics, :clang_codeCompleteGetNumDiagnostics, [CXCodeCompleteResults.by_ref], :uint
+  attach_function :clang_code_complete_get_diagnostic, :clang_codeCompleteGetDiagnostic, [CXCodeCompleteResults.by_ref, :uint], :pointer
+  attach_function :clang_code_complete_get_contexts, :clang_codeCompleteGetContexts, [CXCodeCompleteResults.by_ref], :ulong_long
+  attach_function :clang_code_complete_get_container_kind, :clang_codeCompleteGetContainerKind, [CXCodeCompleteResults.by_ref, :pointer], CXCursorKind
+  attach_function :clang_code_complete_get_container_usr, :clang_codeCompleteGetContainerUSR, [CXCodeCompleteResults.by_ref], CXString.by_value
+  attach_function :clang_code_complete_get_obj_c_selector, :clang_codeCompleteGetObjCSelector, [CXCodeCompleteResults.by_ref], CXString.by_value
+  attach_function :clang_get_clang_version, :clang_getClangVersion, [], CXString.by_value
+  attach_function :clang_toggle_crash_recovery, :clang_toggleCrashRecovery, [:uint], :void
   callback :cx_inclusion_visitor, [], :void
-  attach_function :clang_get_inclusions, :clang_getInclusions, [:pointer, :pointer, :pointer], :int
+  attach_function :clang_get_inclusions, :clang_getInclusions, [:pointer, :pointer, :pointer], :void
 
   CXEvalResultKind = enum(
     :cx_eval_int, 1,
@@ -1189,28 +1184,28 @@ module Index
   )
 
   typedef :pointer, :cx_eval_result
-  attach_variable :CXEvalResult, :CXEvalResult, :int
-  attach_variable :CXEvalResultKind, :CXEvalResultKind, :int
+  attach_function :clang_cursor_evaluate, :clang_Cursor_Evaluate, [CXCursor.by_value], :pointer
+  attach_function :clang_eval_result_get_kind, :clang_EvalResult_getKind, [:pointer], CXEvalResultKind
   attach_function :clang_eval_result_get_as_int, :clang_EvalResult_getAsInt, [:pointer], :int
-  attach_function :clang_eval_result_get_as_long_long, :clang_EvalResult_getAsLongLong, [:pointer], :int
-  attach_function :clang_eval_result_is_unsigned_int, :clang_EvalResult_isUnsignedInt, [:pointer], :int
-  attach_function :clang_eval_result_get_as_unsigned, :clang_EvalResult_getAsUnsigned, [:pointer], :int
-  attach_function :clang_eval_result_get_as_double, :clang_EvalResult_getAsDouble, [:pointer], :int
-  attach_function :clang_eval_result_get_as_str, :clang_EvalResult_getAsStr, [:pointer], :pointer
-  attach_function :clang_eval_result_dispose, :clang_EvalResult_dispose, [:pointer], :int
+  attach_function :clang_eval_result_get_as_long_long, :clang_EvalResult_getAsLongLong, [:pointer], :long_long
+  attach_function :clang_eval_result_is_unsigned_int, :clang_EvalResult_isUnsignedInt, [:pointer], :uint
+  attach_function :clang_eval_result_get_as_unsigned, :clang_EvalResult_getAsUnsigned, [:pointer], :ulong_long
+  attach_function :clang_eval_result_get_as_double, :clang_EvalResult_getAsDouble, [:pointer], :double
+  attach_function :clang_eval_result_get_as_str, :clang_EvalResult_getAsStr, [:pointer], :string
+  attach_function :clang_eval_result_dispose, :clang_EvalResult_dispose, [:pointer], :void
   typedef :pointer, :cx_remapping
-  attach_variable :CXRemapping, :CXRemapping, :int
-  attach_variable :CXRemapping, :CXRemapping, :int
-  attach_function :clang_remap_get_num_files, :clang_remap_getNumFiles, [:pointer], :int
-  attach_function :clang_remap_get_filenames, :clang_remap_getFilenames, [:pointer, :uint, :pointer, :pointer], :int
-  attach_function :clang_remap_dispose, :clang_remap_dispose, [:pointer], :int
+  attach_function :clang_get_remappings, :clang_getRemappings, [:string], :pointer
+  attach_function :clang_get_remappings_from_file_list, :clang_getRemappingsFromFileList, [:pointer, :uint], :pointer
+  attach_function :clang_remap_get_num_files, :clang_remap_getNumFiles, [:pointer], :uint
+  attach_function :clang_remap_get_filenames, :clang_remap_getFilenames, [:pointer, :uint, CXString.by_ref, CXString.by_ref], :void
+  attach_function :clang_remap_dispose, :clang_remap_dispose, [:pointer], :void
 
   CXVisitorResult = enum(
     :cx_visit_break, 0,
     :cx_visit_continue, 1
   )
 
-  callback :CXCursorAndRangeVisitor_visit_callback, [:pointer, CXCursor.by_value, :int], CXVisitorResult
+  callback :CXCursorAndRangeVisitor_visit_callback, [:pointer, CXCursor.by_value, CXSourceRange.by_value], CXVisitorResult
 
   class CXCursorAndRangeVisitor < FFI::Struct
     layout :context, :pointer,
@@ -1223,15 +1218,15 @@ module Index
     :cx_result_visit_break, 2
   )
 
-  attach_variable :CXResult, :CXResult, :int
-  attach_variable :CXResult, :CXResult, :int
+  attach_function :clang_find_references_in_file, :clang_findReferencesInFile, [CXCursor.by_value, :pointer, CXCursorAndRangeVisitor.by_value], CXResult
+  attach_function :clang_find_includes_in_file, :clang_findIncludesInFile, [:pointer, :pointer, CXCursorAndRangeVisitor.by_value], CXResult
 
   class CXCursorAndRangeVisitorBlock < FFI::Struct
   end
 
   typedef CXCursorAndRangeVisitorBlock.ptr, :cx_cursor_and_range_visitor_block
-  attach_variable :CXResult, :CXResult, :int
-  attach_variable :CXResult, :CXResult, :int
+  attach_function :clang_find_references_in_file_with_block, :clang_findReferencesInFileWithBlock, [CXCursor.by_value, :pointer, :pointer], CXResult
+  attach_function :clang_find_includes_in_file_with_block, :clang_findIncludesInFileWithBlock, [:pointer, :pointer, :pointer], CXResult
   typedef :pointer, :cx_idx_client_file
   typedef :pointer, :cx_idx_client_entity
   typedef :pointer, :cx_idx_client_container
@@ -1245,14 +1240,14 @@ module Index
   class CXIdxIncludedFileInfo < FFI::Struct
     layout :hash_loc, CXIdxLoc,
            :filename, :string,
-           :file, :int,
+           :file, :pointer,
            :is_import, :int,
            :is_angled, :int,
            :is_module_import, :int
   end
 
   class CXIdxImportedASTFileInfo < FFI::Struct
-    layout :file, :int,
+    layout :file, :pointer,
            :module, :pointer,
            :loc, CXIdxLoc,
            :is_implicit, :int
@@ -1442,8 +1437,8 @@ module Index
   end
 
   callback :IndexerCallbacks_abortQuery_callback, [:pointer, :pointer], :int
-  callback :IndexerCallbacks_diagnostic_callback, [:pointer, :int, :pointer], :void
-  callback :IndexerCallbacks_enteredMainFile_callback, [:pointer, :int, :pointer], :pointer
+  callback :IndexerCallbacks_diagnostic_callback, [:pointer, :pointer, :pointer], :void
+  callback :IndexerCallbacks_enteredMainFile_callback, [:pointer, :pointer, :pointer], :pointer
   callback :IndexerCallbacks_ppIncludedFile_callback, [:pointer, :pointer], :pointer
   callback :IndexerCallbacks_importedASTFile_callback, [:pointer, :pointer], :pointer
   callback :IndexerCallbacks_startedTranslationUnit_callback, [:pointer, :pointer], :pointer
@@ -1462,20 +1457,20 @@ module Index
   end
 
   attach_function :clang_index_is_entity_obj_c_container_kind, :clang_index_isEntityObjCContainerKind, [CXIdxEntityKind], :int
-  attach_variable :CXIdxObjCContainerDeclInfo, :CXIdxObjCContainerDeclInfo, :int
-  attach_variable :CXIdxObjCInterfaceDeclInfo, :CXIdxObjCInterfaceDeclInfo, :int
-  attach_variable :CXIdxObjCCategoryDeclInfo, :CXIdxObjCCategoryDeclInfo, :int
-  attach_variable :CXIdxObjCProtocolRefListInfo, :CXIdxObjCProtocolRefListInfo, :int
-  attach_variable :CXIdxObjCPropertyDeclInfo, :CXIdxObjCPropertyDeclInfo, :int
-  attach_variable :CXIdxIBOutletCollectionAttrInfo, :CXIdxIBOutletCollectionAttrInfo, :int
-  attach_variable :CXIdxCXXClassDeclInfo, :CXIdxCXXClassDeclInfo, :int
-  attach_variable :CXIdxClientContainer, :CXIdxClientContainer, :int
-  attach_function :clang_index_set_client_container, :clang_index_setClientContainer, [CXIdxContainerInfo.by_ref, :pointer], :int
-  attach_variable :CXIdxClientEntity, :CXIdxClientEntity, :int
-  attach_function :clang_index_set_client_entity, :clang_index_setClientEntity, [CXIdxEntityInfo.by_ref, :pointer], :int
+  attach_function :clang_index_get_obj_c_container_decl_info, :clang_index_getObjCContainerDeclInfo, [CXIdxDeclInfo.by_ref], CXIdxObjCContainerDeclInfo.by_ref
+  attach_function :clang_index_get_obj_c_interface_decl_info, :clang_index_getObjCInterfaceDeclInfo, [CXIdxDeclInfo.by_ref], CXIdxObjCInterfaceDeclInfo.by_ref
+  attach_function :clang_index_get_obj_c_category_decl_info, :clang_index_getObjCCategoryDeclInfo, [CXIdxDeclInfo.by_ref], CXIdxObjCCategoryDeclInfo.by_ref
+  attach_function :clang_index_get_obj_c_protocol_ref_list_info, :clang_index_getObjCProtocolRefListInfo, [CXIdxDeclInfo.by_ref], CXIdxObjCProtocolRefListInfo.by_ref
+  attach_function :clang_index_get_obj_c_property_decl_info, :clang_index_getObjCPropertyDeclInfo, [CXIdxDeclInfo.by_ref], CXIdxObjCPropertyDeclInfo.by_ref
+  attach_function :clang_index_get_ib_outlet_collection_attr_info, :clang_index_getIBOutletCollectionAttrInfo, [CXIdxAttrInfo.by_ref], CXIdxIBOutletCollectionAttrInfo.by_ref
+  attach_function :clang_index_get_cxx_class_decl_info, :clang_index_getCXXClassDeclInfo, [CXIdxDeclInfo.by_ref], CXIdxCXXClassDeclInfo.by_ref
+  attach_function :clang_index_get_client_container, :clang_index_getClientContainer, [CXIdxContainerInfo.by_ref], :pointer
+  attach_function :clang_index_set_client_container, :clang_index_setClientContainer, [CXIdxContainerInfo.by_ref, :pointer], :void
+  attach_function :clang_index_get_client_entity, :clang_index_getClientEntity, [CXIdxEntityInfo.by_ref], :pointer
+  attach_function :clang_index_set_client_entity, :clang_index_setClientEntity, [CXIdxEntityInfo.by_ref, :pointer], :void
   typedef :pointer, :cx_index_action
-  attach_variable :CXIndexAction, :CXIndexAction, :int
-  attach_function :clang_index_action_dispose, :clang_IndexAction_dispose, [:pointer], :int
+  attach_function :clang_index_action_create, :clang_IndexAction_create, [:pointer], :pointer
+  attach_function :clang_index_action_dispose, :clang_IndexAction_dispose, [:pointer], :void
 
   CXIndexOptFlags = enum(
     :cx_index_opt_none, 0,
@@ -1489,10 +1484,10 @@ module Index
   attach_function :clang_index_source_file, :clang_indexSourceFile, [:pointer, :pointer, IndexerCallbacks.by_ref, :uint, :uint, :string, :pointer, :int, CXUnsavedFile.by_ref, :uint, :pointer, :uint], :int
   attach_function :clang_index_source_file_full_argv, :clang_indexSourceFileFullArgv, [:pointer, :pointer, IndexerCallbacks.by_ref, :uint, :uint, :string, :pointer, :int, CXUnsavedFile.by_ref, :uint, :pointer, :uint], :int
   attach_function :clang_index_translation_unit, :clang_indexTranslationUnit, [:pointer, :pointer, IndexerCallbacks.by_ref, :uint, :uint, :pointer], :int
-  attach_function :clang_index_loc_get_file_location, :clang_indexLoc_getFileLocation, [CXIdxLoc.by_value, :pointer, :pointer, :pointer, :pointer, :pointer], :int
-  attach_variable :CXSourceLocation, :CXSourceLocation, :int
+  attach_function :clang_index_loc_get_file_location, :clang_indexLoc_getFileLocation, [CXIdxLoc.by_value, :pointer, :pointer, :pointer, :pointer, :pointer], :void
+  attach_function :clang_index_loc_get_cx_source_location, :clang_indexLoc_getCXSourceLocation, [CXIdxLoc.by_value], CXSourceLocation.by_value
   callback :cx_field_visitor, [], CXVisitorResult
-  attach_function :clang_type_visit_fields, :clang_Type_visitFields, [CXType.by_value, :pointer, :pointer], :int
+  attach_function :clang_type_visit_fields, :clang_Type_visitFields, [CXType.by_value, :pointer, :pointer], :uint
 
   CXBinaryOperatorKind = enum(
     :cx_binary_operator_invalid, 0,
@@ -1531,8 +1526,8 @@ module Index
     :cx_binary_operator_comma, 33
   )
 
-  attach_variable :CXString, :CXString, :int
-  attach_function :clang_get_cursor_binary_operator_kind, :clang_getCursorBinaryOperatorKind, [CXCursor.by_value], :int
+  attach_function :clang_get_binary_operator_kind_spelling, :clang_getBinaryOperatorKindSpelling, [CXBinaryOperatorKind], CXString.by_value
+  attach_function :clang_get_cursor_binary_operator_kind, :clang_getCursorBinaryOperatorKind, [CXCursor.by_value], CXBinaryOperatorKind
 
   CXUnaryOperatorKind = enum(
     :cx_unary_operator_invalid, 0,
@@ -1552,6 +1547,6 @@ module Index
     :cx_unary_operator_coawait, 14
   )
 
-  attach_variable :CXString, :CXString, :int
-  attach_function :clang_get_cursor_unary_operator_kind, :clang_getCursorUnaryOperatorKind, [CXCursor.by_value], :int
+  attach_function :clang_get_unary_operator_kind_spelling, :clang_getUnaryOperatorKindSpelling, [CXUnaryOperatorKind], CXString.by_value
+  attach_function :clang_get_cursor_unary_operator_kind, :clang_getCursorUnaryOperatorKind, [CXCursor.by_value], CXUnaryOperatorKind
 end

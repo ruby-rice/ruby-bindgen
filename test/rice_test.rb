@@ -69,23 +69,7 @@ class RiceTest < AbstractTest
 
   def test_iterators
     header = "cpp/iterators.hpp"
-    # Need system includes to parse std::vector
-    if RUBY_PLATFORM =~ /mingw|mswin|cygwin/
-      args = [
-        "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.44.35207/include",
-        "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt",
-        "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/lib/clang/20/include",
-        "-xc++"
-      ]
-    else
-      # Linux/WSL - need to explicitly set clang resource dir for libclang
-      clang_version = `clang --version`[/clang version (\d+)/, 1]
-      args = [
-        "-I/usr/lib/clang/#{clang_version}/include",
-        "-xc++"
-      ]
-    end
-    parser = create_parser(header, args)
+    parser = create_parser(header)
     visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
     parser.generate(visitor)
     validate_result(visitor.outputter)
@@ -127,23 +111,7 @@ class RiceTest < AbstractTest
 
   def test_buffers
     header = "cpp/buffers.hpp"
-    # Need system includes to parse cstddef for size_t
-    if RUBY_PLATFORM =~ /mingw|mswin|cygwin/
-      args = [
-        "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.44.35207/include",
-        "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt",
-        "-IC:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/lib/clang/20/include",
-        "-xc++"
-      ]
-    else
-      # Linux/WSL - need to explicitly set clang resource dir for libclang
-      clang_version = `clang --version`[/clang version (\d+)/, 1]
-      args = [
-        "-I/usr/lib/clang/#{clang_version}/include",
-        "-xc++"
-      ]
-    end
-    parser = create_parser(header, args)
+    parser = create_parser(header)
     visitor = create_visitor(RubyBindgen::Visitors::Rice, header)
     parser.generate(visitor)
     validate_result(visitor.outputter)

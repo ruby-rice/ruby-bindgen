@@ -193,9 +193,9 @@ module Sqlite3
   attach_function :sqlite3_get_table, :sqlite3_get_table, [Sqlite3.by_ref, :string, :pointer, :pointer, :pointer, :pointer], :int
   attach_function :sqlite3_free_table, :sqlite3_free_table, [:pointer], :void
   attach_function :sqlite3_mprintf, :sqlite3_mprintf, [:string], :string
-  attach_function :sqlite3_vmprintf, :sqlite3_vmprintf, [:string, :int], :string
+  attach_function :sqlite3_vmprintf, :sqlite3_vmprintf, [:string, :varargs], :string
   attach_function :sqlite3_snprintf, :sqlite3_snprintf, [:int, :string, :string], :string
-  attach_function :sqlite3_vsnprintf, :sqlite3_vsnprintf, [:int, :string, :string, :int], :string
+  attach_function :sqlite3_vsnprintf, :sqlite3_vsnprintf, [:int, :string, :string, :varargs], :string
   attach_function :sqlite3_malloc, :sqlite3_malloc, [:int], :pointer
   attach_function :sqlite3_malloc64, :sqlite3_malloc64, [:ulong_long], :pointer
   attach_function :sqlite3_realloc, :sqlite3_realloc, [:pointer, :int], :pointer
@@ -595,7 +595,7 @@ module Sqlite3
   attach_function :sqlite3_str_new, :sqlite3_str_new, [Sqlite3.by_ref], Sqlite3Str.by_ref
   attach_function :sqlite3_str_finish, :sqlite3_str_finish, [Sqlite3Str.by_ref], :string
   attach_function :sqlite3_str_appendf, :sqlite3_str_appendf, [Sqlite3Str.by_ref, :string], :void
-  attach_function :sqlite3_str_vappendf, :sqlite3_str_vappendf, [Sqlite3Str.by_ref, :string, :int], :void
+  attach_function :sqlite3_str_vappendf, :sqlite3_str_vappendf, [Sqlite3Str.by_ref, :string, :varargs], :void
   attach_function :sqlite3_str_append, :sqlite3_str_append, [Sqlite3Str.by_ref, :string, :int], :void
   attach_function :sqlite3_str_appendall, :sqlite3_str_appendall, [Sqlite3Str.by_ref, :string], :void
   attach_function :sqlite3_str_appendchar, :sqlite3_str_appendchar, [Sqlite3Str.by_ref, :int, :char], :void
