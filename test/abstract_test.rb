@@ -61,6 +61,10 @@ class AbstractTest < Minitest::Test
       config = load_bindings_config
       args = config[:clang_args]
     end
+    # Add test headers root to include path so relative includes work
+    # e.g., for "c/clang-c/index.h", add test/headers/c so #include "clang-c/BuildSystem.h" resolves
+    headers_root = File.join(__dir__, "headers", header.split('/').first)
+    args = Array(args) + ["-I#{headers_root}"]
     RubyBindgen::Parser.new(self.create_inputter(header), args)
   end
 
