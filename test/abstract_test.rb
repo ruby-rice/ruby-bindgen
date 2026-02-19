@@ -1,35 +1,11 @@
 require 'bundler/setup'
 require 'minitest/autorun'
-require 'yaml'
 
-# Load platform-specific bindings config from a directory.
-# Matches the production config format (see docs/configuration.md).
-def load_bindings_config(config_dir)
-  config_path = File.join(config_dir, 'bindings.yaml')
-  config = YAML.safe_load(File.read(config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
-
-  # Select toolchain: clang-cl for MSVC (mswin), clang for everything else (Linux/Mac/MinGW)
-  toolchain = RUBY_PLATFORM =~ /mswin/ ? 'clang-cl' : 'clang'
-
-  result = {}
-
-  toolchain_config = config[toolchain]
-  if toolchain_config.is_a?(Hash)
-    result[:libclang] = toolchain_config['libclang'] if toolchain_config['libclang']
-    if toolchain_config['args']
-      result[:clang_args] = toolchain_config['args'].map do |arg|
-        # Resolve relative -I paths relative to config directory (same as production resolve_path)
-        arg.start_with?('-I') ? "-I#{File.expand_path(arg[2..], config_dir)}" : arg
-      end
-    end
-  end
-
-  result
-end
+require 'ruby-bindgen/config'
 
 # Set up libclang path from config
 %w[cpp c c/clang-c].each do |dir|
-  config = load_bindings_config(File.join(__dir__, 'headers', dir))
+  config = RubyBindgen::Config.new(File.join(__dir__, 'headers', dir, 'bindings.yaml'))
   if config[:libclang]
     ENV["LIBCLANG"] = config[:libclang]
     break
@@ -44,6 +20,10 @@ require 'ruby-bindgen'
 require_relative './test_outputter'
 
 class AbstractTest < Minitest::Test
+  def load_config(config_dir, config_file = 'bindings.yaml')
+    RubyBindgen::Config.new(File.join(config_dir, config_file))
+  end
+
   def create_inputter(header)
     input_path = File.join(__dir__, "headers", File.dirname(header))
     RubyBindgen::Inputter.new(input_path, File.basename(header))
@@ -57,14 +37,17 @@ class AbstractTest < Minitest::Test
   def create_parser(header, args = nil)
     if args.nil?
       config_dir = File.join(__dir__, "headers", File.dirname(header))
-      config = load_bindings_config(config_dir)
+      config = load_config(config_dir)
       args = config[:clang_args]
     end
     RubyBindgen::Parser.new(self.create_inputter(header), args)
   end
 
-  def create_visitor(klass, header, project: nil, **options)
-    klass.new(self.create_outputter(header), project, **options)
+  def create_visitor(klass, header, config = nil, **overrides)
+    config_dir = File.join(__dir__, "headers", File.dirname(header))
+    config ||= load_config(config_dir)
+    overrides.each { |key, value| config[key] = value }
+    klass.new(self.create_outputter(header), config)
   end
 
   def validate_result(outputter)

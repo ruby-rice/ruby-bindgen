@@ -28,10 +28,10 @@ module RubyBindgen
 
       attr_reader :project, :outputter
 
-      def initialize(outputter, project = nil, skip_symbols: [], export_macros: [], include_header: nil)
-        @project = project&.gsub(/-/, '_')
+      def initialize(outputter, config)
+        @project = config[:extension]&.gsub(/-/, '_')
         @outputter = outputter
-        @include_header = include_header
+        @include_header = config[:include]
         @init_names = Hash.new
         @namespaces = Set.new
         @classes = Hash.new  # Maps cruby_name -> C++ type for Data_Type<T> declarations
@@ -39,8 +39,8 @@ module RubyBindgen
         @typedef_simple_names = Hash.new  # Maps simple typedef names to qualified names (e.g., "String" -> "cv::String")
         @type_name_map = Hash.new  # Maps simple type names to qualified names
         @auto_generated_bases = Set.new
-        @skip_symbols = skip_symbols
-        @export_macros = export_macros
+        @skip_symbols = config[:skip_symbols] || []
+        @export_macros = config[:export_macros] || []
         # Non-member operators grouped by target class cruby_name
         @non_member_operators = Hash.new { |h, k| h[k] = [] }
         # Iterators that need std::iterator_traits specialization

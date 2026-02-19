@@ -5,11 +5,11 @@ module RubyBindgen
     class FFI
       attr_reader :library_names, :library_versions, :project, :outputter
 
-      def initialize(outputter, project = nil, library_names: [], library_versions: [])
-        @project = project&.gsub(/-/, '_')
+      def initialize(outputter, config)
+        @project = config[:extension]&.gsub(/-/, '_')
         @outputter = outputter
-        @library_names = library_names
-        @library_versions = library_versions
+        @library_names = config[:library_names] || []
+        @library_versions = config[:library_versions] || []
         @indentation = 0
       end
 

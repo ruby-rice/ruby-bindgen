@@ -102,7 +102,7 @@ class RiceTest < AbstractTest
   def test_filtering
     header = "cpp/filtering.hpp"
     parser = create_parser(header)
-    visitor = create_visitor(RubyBindgen::Visitors::Rice, header,
+    visitor = create_visitor(RubyBindgen::Visitors::Rice, header, nil,
                              export_macros: ["MY_EXPORT"],
                              skip_symbols: ["skippedByName", "alsoSkippedByName", "skippedMethod", "SkippedClass", "SkippedTemplateClass", "SkippedArgType"])
     parser.generate(visitor)

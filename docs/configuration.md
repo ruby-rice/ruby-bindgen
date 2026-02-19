@@ -89,6 +89,7 @@ clang:
 | `skip` | `[]` | Glob patterns specifying which header files to skip. |
 | `export_macros` | `[]` | List of macros that indicate a symbol is exported. Only functions/classes with these macros will be included. |
 | `skip_symbols` | `[]` | List of symbol names to skip. Supports simple names (`versionMajor`), fully qualified names (`cv::ocl::PlatformInfo::versionMajor`), or regex patterns (`/pattern/`). |
+| `include_dirs` | `[]` | List of include directories for the CMake `target_include_directories` directive. These are CMake expressions written directly into `CMakeLists.txt` (e.g., `${CMAKE_CURRENT_SOURCE_DIR}/../headers`). Only used with `format: CMake`. |
 
 ### Compiler Toolchain Options
 

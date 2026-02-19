@@ -1,5 +1,6 @@
 require 'ffi/clang'
 
+require 'ruby-bindgen/config'
 require 'ruby-bindgen/refinements/translation_unit'
 require 'ruby-bindgen/refinements/cursor'
 require 'ruby-bindgen/refinements/source_range'
