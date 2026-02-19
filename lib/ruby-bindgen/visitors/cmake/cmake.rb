@@ -1,12 +1,19 @@
 module RubyBindgen
 	module Visitors
 		class CMake
-			attr_reader :project, :outputter, :include_dirs
+			attr_reader :outputter, :config
 
-			def initialize(outputter, project = nil, include_dirs: [])
-				@project = project&.gsub(/-/, '_')
+			def initialize(outputter, config)
 				@outputter = outputter
-				@include_dirs = include_dirs
+				@config = config
+			end
+
+			def project
+				config[:extension]&.gsub(/-/, '_')
+			end
+
+			def include_dirs
+				config[:include_dirs] || []
 			end
 
 			def render_template(template, local_variables = {})
@@ -59,9 +66,15 @@ module RubyBindgen
 				end
 			end
 
+			def create_presets
+				content = render_template("presets")
+				self.outputter.write("CMakePresets.json", content)
+			end
+
 			def visit_start
 				pathname = Pathname.new(self.outputter.base_path)
 				create_project(pathname)
+				create_presets
 				create_directories(pathname)
 			end
 

@@ -5,10 +5,11 @@ require_relative './abstract_test'
 class CMakeTest < AbstractTest
   def test_cmake
     header = "cpp/classes.hpp"
-    parser = create_parser(header)
-    visitor = create_visitor(RubyBindgen::Visitors::CMake, header, project: "test_project",
-                             include_dirs: ["${CMAKE_CURRENT_SOURCE_DIR}/../../headers/cpp"])
-    parser.generate(visitor)
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir, 'bindings_cmake.yaml')
+    outputter = create_outputter(header)
+    visitor = RubyBindgen::Visitors::CMake.new(outputter, config)
+    visitor.visit_start
     validate_result(visitor.outputter)
   end
 end
