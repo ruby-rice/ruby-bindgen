@@ -6,8 +6,6 @@ require 'yaml'
 # Matches the production config format (see docs/configuration.md).
 def load_bindings_config(config_dir)
   config_path = File.join(config_dir, 'bindings.yaml')
-  return {} unless File.exist?(config_path)
-
   config = YAML.safe_load(File.read(config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
 
   # Select toolchain: clang-cl for MSVC (mswin), clang for everything else (Linux/Mac/MinGW)

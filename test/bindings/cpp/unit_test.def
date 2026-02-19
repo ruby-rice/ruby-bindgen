@@ -1,4 +1,0 @@
-LIBRARY unit_test
-
-EXPORTS
-  Init_unit_test
