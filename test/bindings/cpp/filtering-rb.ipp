@@ -15,3 +15,4 @@ inline Rice::Data_Type<Outer::Wrapper<T>> Wrapper_instantiate(Rice::Module paren
       std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("obj"));
 }
 
+

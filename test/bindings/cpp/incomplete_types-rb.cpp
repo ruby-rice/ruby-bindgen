@@ -152,4 +152,5 @@ void Init_IncompleteTypes()
     define_constructor(Constructor<Outer::Inner::DeleterUser>()).
     define_attr("deleter_a", &Outer::Inner::DeleterUser::deleterA).
     define_method<Outer::Inner::Deleter<ExternalOpaqueB>(Outer::Inner::DeleterUser::*)()>("get_deleter_b", &Outer::Inner::DeleterUser::getDeleterB);
+
 }

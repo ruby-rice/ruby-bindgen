@@ -26,4 +26,5 @@ void Init_Constructors()
       Arg("other"));
 
   Rice::Data_Type<TemplateConstructor<int>> rb_cTemplateConstructorInt = TemplateConstructor_instantiate<int>(Rice::Module(rb_cObject), "TemplateConstructorInt");
+
 }

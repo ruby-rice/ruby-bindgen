@@ -17,4 +17,5 @@ void Init_CrossFileBase()
     define_constructor(Constructor<CrossFile::Point2d>()).
     define_constructor(Constructor<CrossFile::Point2d, double, double>(),
       Arg("x"), Arg("y"));
+
 }

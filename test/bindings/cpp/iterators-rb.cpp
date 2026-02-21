@@ -13,6 +13,7 @@ namespace std
     using pointer = iter::Pixel*;
     using reference = iter::Pixel&;
   };
+
 }
 
 using namespace Rice;
@@ -104,4 +105,5 @@ void Init_Iterators()
     define_iterator<std::vector<iter::Pixel>::const_iterator(iter::VectorBitmap::*)() const noexcept>(&iter::VectorBitmap::begin, &iter::VectorBitmap::end, "each_const").
     define_iterator<std::vector<iter::Pixel>::reverse_iterator(iter::VectorBitmap::*)() noexcept>(&iter::VectorBitmap::rbegin, &iter::VectorBitmap::rend, "each_reverse").
     define_iterator<std::vector<iter::Pixel>::const_reverse_iterator(iter::VectorBitmap::*)() const noexcept>(&iter::VectorBitmap::rbegin, &iter::VectorBitmap::rend, "each_reverse_const");
+
 }

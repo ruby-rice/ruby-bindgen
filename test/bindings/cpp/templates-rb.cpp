@@ -54,4 +54,5 @@ void Init_Templates()
   Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = Wrapper_instantiate<Tests::lowercase_type>(rb_mTests, "WrappedLowercase");
 
   Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = Mat__instantiate<float>(rb_mTests, "Mat1f");
+
 }

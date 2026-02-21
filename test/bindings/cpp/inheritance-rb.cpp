@@ -3,6 +3,8 @@
 
 using namespace Rice;
 
+
+
 void Init_Inheritance()
 {
   Enum<NotificationType> rb_cNotificationType = define_enum<NotificationType>("NotificationType").
@@ -18,4 +20,5 @@ void Init_Inheritance()
 
   Rice::Data_Type<PushNotification> rb_cPushNotification = define_class<PushNotification, Notification>("PushNotification").
     define_method<std::string(PushNotification::*)()>("message", &PushNotification::message);
+
 }

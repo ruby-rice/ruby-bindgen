@@ -126,4 +126,5 @@ void Init_DefaultValues()
   Rice::Data_Type<outer::Matcher> rb_cOuterMatcher = define_class_under<outer::Matcher>(rb_mOuter, "Matcher").
     define_constructor(Constructor<outer::Matcher, outer::inner::IndexParams*>(),
       Arg("params") = static_cast<outer::inner::IndexParams*>(outer::makePtr<outer::inner::IndexParams>()));
+
 }

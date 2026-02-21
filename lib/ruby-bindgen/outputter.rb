@@ -20,9 +20,20 @@ module RubyBindgen
       path = self.output_path(relative_path)
       FileUtils.mkdir_p(File.dirname(path))
       File.open(path, "wb") do |file|
-        file << content
+        file << cleanup_whitespace(content)
       end
       @output_paths << path
+    end
+
+    private
+
+    # Clean up whitespace issues in generated content:
+    # - Collapse multiple consecutive blank lines to single blank line
+    # - Remove blank lines before closing braces
+    def cleanup_whitespace(content)
+      content = content.gsub(/\n{3,}/, "\n\n")
+      content = content.gsub(/\n\n(\s*\})/, "\n\\1")
+      content
     end
   end
 end

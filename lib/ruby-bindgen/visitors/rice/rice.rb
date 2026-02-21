@@ -198,7 +198,6 @@ module RubyBindgen
           STDOUT << "  Writing: " << rice_ipp << "\n"
           ipp_content = render_cursor(cursor, "translation_unit.ipp",
                                       :class_templates => class_templates)
-          ipp_content = cleanup_whitespace(ipp_content)
           self.outputter.write(rice_ipp, ipp_content)
         end
 
@@ -212,15 +211,12 @@ module RubyBindgen
                                 :rice_header => rice_header,
                                 :incomplete_iterators => @incomplete_iterators,
                                 :rice_ipp => rice_ipp ? File.basename(rice_ipp) : nil)
-        content = cleanup_whitespace(content)
         self.outputter.write(rice_cpp, content)
 
         # Render header file
         STDOUT << "  Writing: " << rice_header << "\n"
         # Compute relative path from translation unit directory to the include header
-        tu_dir = Pathname.new(File.dirname(rice_header))
-        include_path = Pathname.new(rice_include_header)
-        relative_include = include_path.relative_path_from(tu_dir).to_s
+        relative_include = Pathname.new(rice_include_header).relative_path_from(File.dirname(relative_path)).to_s
         content = render_cursor(cursor, "translation_unit.hpp",
                                 :init_name => init_name,
                                 :rice_include_header => relative_include)
@@ -1870,17 +1866,6 @@ module RubyBindgen
           # Don't add indentation to blank lines
           line.strip.empty? ? line : " " * indentation + line
         end.join
-      end
-
-      # Clean up whitespace issues in generated content:
-      # - Collapse multiple consecutive blank lines to single blank line
-      # - Remove blank lines before closing braces
-      def cleanup_whitespace(content)
-        # Collapse 2+ consecutive blank lines to single blank line
-        content = content.gsub(/\n{3,}/, "\n\n")
-        # Remove blank line before closing brace
-        content = content.gsub(/\n\n(\s*\})/, "\n\\1")
-        content
       end
 
       def render_cursor(cursor, template, local_variables = {})

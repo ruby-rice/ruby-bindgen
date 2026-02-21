@@ -3,6 +3,8 @@
 
 using namespace Rice;
 
+
+
 void Init_Overloads()
 {
   Module rb_mOuter = define_module("Outer");
@@ -35,4 +37,5 @@ void Init_Overloads()
       Arg("m")).
     define_singleton_function<Outer::Inner::KernelArg(*)(int, int)>("read_only", &Outer::Inner::KernelArg::ReadOnly,
       Arg("m"), Arg("wscale"));
+
 }

@@ -7,3 +7,4 @@ inline Rice::Data_Type<CrossFile::DerivedVector<T, N>> DerivedVector_instantiate
       Arg("other"));
 }
 
+

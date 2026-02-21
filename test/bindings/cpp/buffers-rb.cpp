@@ -3,6 +3,8 @@
 
 using namespace Rice;
 
+
+
 void Init_Buffers()
 {
   Module rb_mBufferNS = define_module("BufferNS");
@@ -105,4 +107,5 @@ void Init_Buffers()
       Arg("callback"), ArgBuffer("user_data")).
     define_method<void(EventHandler::*)(bool (*)(const char*))>("set_validator", &EventHandler::setValidator,
       Arg("validate"));
+
 }

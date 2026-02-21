@@ -3,6 +3,8 @@
 
 using namespace Rice;
 
+
+
 void Init_Functions()
 {
   define_global_function<void(*)(float)>("some_function", &someFunction,
@@ -65,4 +67,5 @@ void Init_Functions()
     define_constructor(Constructor<Logger>()).
     define_singleton_function<void(*)(int)>("set_level", &Logger::setLevel,
       Arg("level"));
+
 }

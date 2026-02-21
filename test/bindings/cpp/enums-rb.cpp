@@ -3,6 +3,8 @@
 
 using namespace Rice;
 
+
+
 void Init_Enums()
 {
   Enum<Color> rb_cColor = define_enum<Color>("Color").
@@ -57,4 +59,5 @@ void Init_Enums()
 
   rb_mMyNamespace.define_module_function<const char*(*)(MyNamespace::Season)>("season_name", &MyNamespace::seasonName,
     Arg("season"));
+
 }

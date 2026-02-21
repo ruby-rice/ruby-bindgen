@@ -134,4 +134,5 @@ void Init_Classes()
     define_constructor(Constructor<Outer::AffineFeature2D>()).
     define_method<void(Outer::AffineFeature2D::*)(int, int&, int) const>("detect", &Outer::AffineFeature2D::detect,
       Arg("image"), Arg("keypoints"), Arg("mask"));
+
 }

@@ -44,4 +44,5 @@ void Init_TemplateInheritance()
   Rice::Data_Type<Tests::Mat_<unsigned char>> rb_cMat1b = Mat__instantiate<unsigned char>(rb_mTests, "Mat1b");
 
   Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = Mat__instantiate<float>(rb_mTests, "Mat1f");
+
 }
