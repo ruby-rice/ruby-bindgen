@@ -181,7 +181,7 @@ module Proj
            :version, :string,
            :searchpath, :string,
            :paths, :pointer,
-           :path_count, :ulong_long
+           :path_count, :ulong
   end
 
   class PJ_PROJ_INFO < FFI::Struct
@@ -247,8 +247,8 @@ module Proj
   )
 
   callback :PROJ_FILE_API_open_cbk_callback, [:pointer, :string, PROJ_OPEN_ACCESS, :pointer], PROJ_FILE_HANDLE.by_ref
-  callback :PROJ_FILE_API_read_cbk_callback, [:pointer, :pointer, :pointer, :ulong_long, :pointer], :ulong_long
-  callback :PROJ_FILE_API_write_cbk_callback, [:pointer, :pointer, :pointer, :ulong_long, :pointer], :ulong_long
+  callback :PROJ_FILE_API_read_cbk_callback, [:pointer, :pointer, :pointer, :ulong, :pointer], :ulong
+  callback :PROJ_FILE_API_write_cbk_callback, [:pointer, :pointer, :pointer, :ulong, :pointer], :ulong
   callback :PROJ_FILE_API_seek_cbk_callback, [:pointer, :pointer, :long_long, :int, :pointer], :int
   callback :PROJ_FILE_API_tell_cbk_callback, [:pointer, :pointer, :pointer], :ulong_long
   callback :PROJ_FILE_API_close_cbk_callback, [:pointer, :pointer, :pointer], :void
@@ -280,7 +280,7 @@ module Proj
   callback :proj_network_open_cbk_type, [], PROJ_NETWORK_HANDLE.by_ref
   callback :proj_network_close_cbk_type, [], :void
   callback :proj_network_get_header_value_cbk_type, [], :pointer
-  callback :proj_network_read_range_type, [], :ulong_long
+  callback :proj_network_read_range_type, [], :ulong
   attach_function :proj_context_set_network_callbacks, :proj_context_set_network_callbacks, [PjCtx.by_ref, :pointer, :pointer, :pointer, :pointer, :pointer], :int
   attach_function :proj_context_set_enable_network, :proj_context_set_enable_network, [PjCtx.by_ref, :int], :int
   attach_function :proj_context_is_network_enabled, :proj_context_is_network_enabled, [PjCtx.by_ref], :int
@@ -319,8 +319,8 @@ module Proj
   attach_function :proj_degree_output, :proj_degree_output, [PJconsts.by_ref, PJ_DIRECTION], :int
   attach_function :proj_trans, :proj_trans, [PJconsts.by_ref, PJ_DIRECTION, PJ_COORD.by_value], PJ_COORD.by_value
   attach_function :proj_trans_get_last_used_operation, :proj_trans_get_last_used_operation, [PJconsts.by_ref], PJconsts.by_ref
-  attach_function :proj_trans_array, :proj_trans_array, [PJconsts.by_ref, PJ_DIRECTION, :ulong_long, PJ_COORD.by_ref], :int
-  attach_function :proj_trans_generic, :proj_trans_generic, [PJconsts.by_ref, PJ_DIRECTION, :pointer, :ulong_long, :ulong_long, :pointer, :ulong_long, :ulong_long, :pointer, :ulong_long, :ulong_long, :pointer, :ulong_long, :ulong_long], :ulong_long
+  attach_function :proj_trans_array, :proj_trans_array, [PJconsts.by_ref, PJ_DIRECTION, :ulong, PJ_COORD.by_ref], :int
+  attach_function :proj_trans_generic, :proj_trans_generic, [PJconsts.by_ref, PJ_DIRECTION, :pointer, :ulong, :ulong, :pointer, :ulong, :ulong, :pointer, :ulong, :ulong, :pointer, :ulong, :ulong], :ulong
   attach_function :proj_trans_bounds, :proj_trans_bounds, [PjCtx.by_ref, PJconsts.by_ref, PJ_DIRECTION, :double, :double, :double, :double, :pointer, :pointer, :pointer, :pointer, :int], :int
   attach_function :proj_coord, :proj_coord, [:double, :double, :double, :double], PJ_COORD.by_value
   attach_function :proj_roundtrip, :proj_roundtrip, [PJconsts.by_ref, PJ_DIRECTION, :int, PJ_COORD.by_ref], :double
@@ -349,7 +349,7 @@ module Proj
   attach_function :proj_torad, :proj_torad, [:double], :double
   attach_function :proj_todeg, :proj_todeg, [:double], :double
   attach_function :proj_dmstor, :proj_dmstor, [:string, :pointer], :double
-  attach_function :proj_rtodms2, :proj_rtodms2, [:string, :ulong_long, :double, :int, :int], :string
+  attach_function :proj_rtodms2, :proj_rtodms2, [:string, :ulong, :double, :int, :int], :string
   attach_function :proj_cleanup, :proj_cleanup, [], :void
   typedef :pointer, :proj_string_list
 
@@ -482,7 +482,7 @@ module Proj
 
   class PROJ_CRS_LIST_PARAMETERS < FFI::Struct
     layout :types, :pointer,
-           :types_count, :ulong_long,
+           :types_count, :ulong,
            :crs_area_of_use_contains_bbox, :int,
            :bbox_valid, :int,
            :west_lon_degree, :double,
@@ -523,7 +523,7 @@ module Proj
   attach_function :proj_uom_get_info_from_database, :proj_uom_get_info_from_database, [PjCtx.by_ref, :string, :string, :pointer, :pointer, :pointer], :int
   attach_function :proj_grid_get_info_from_database, :proj_grid_get_info_from_database, [PjCtx.by_ref, :string, :pointer, :pointer, :pointer, :pointer, :pointer, :pointer], :int
   attach_function :proj_clone, :proj_clone, [PjCtx.by_ref, PJconsts.by_ref], PJconsts.by_ref
-  attach_function :proj_create_from_name, :proj_create_from_name, [PjCtx.by_ref, :string, :string, :pointer, :ulong_long, :int, :ulong_long, :pointer], PJ_OBJ_LIST.by_ref
+  attach_function :proj_create_from_name, :proj_create_from_name, [PjCtx.by_ref, :string, :string, :pointer, :ulong, :int, :ulong, :pointer], PJ_OBJ_LIST.by_ref
   attach_function :proj_get_type, :proj_get_type, [PJconsts.by_ref], PJ_TYPE
   attach_function :proj_is_deprecated, :proj_is_deprecated, [PJconsts.by_ref], :int
   attach_function :proj_get_non_deprecated, :proj_get_non_deprecated, [PjCtx.by_ref, PJconsts.by_ref], PJ_OBJ_LIST.by_ref
