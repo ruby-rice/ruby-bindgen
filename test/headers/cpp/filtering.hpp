@@ -3,7 +3,11 @@
 // 2. Export macros - only include functions with specified macros
 // 3. Skip functions - explicitly skip certain function names
 
-#define MY_EXPORT __attribute__((visibility("default")))
+#if defined(_MSC_VER)
+  #define MY_EXPORT __declspec(dllexport)
+#else
+  #define MY_EXPORT __attribute__((visibility("default")))
+#endif
 
 namespace Outer
 {
@@ -18,10 +22,10 @@ namespace Outer
   // --- Deprecated Tests ---
 
   // Deprecated function - should be SKIPPED
-  __attribute__((deprecated)) void deprecatedFunction();
+  [[deprecated]] void deprecatedFunction();
 
   // Deprecated with message - should be SKIPPED
-  __attribute__((deprecated("use newFunction instead"))) void deprecatedWithMessage();
+  [[deprecated("use newFunction instead")]] void deprecatedWithMessage();
 
   // Non-deprecated function - should be INCLUDED
   MY_EXPORT void normalFunction();
@@ -50,7 +54,7 @@ namespace Outer
     MyClass();
 
     // Deprecated method - should be SKIPPED
-    __attribute__((deprecated)) void oldMethod();
+    [[deprecated]] void oldMethod();
 
     // Normal method - should be INCLUDED
     void newMethod();
@@ -68,7 +72,7 @@ namespace Outer
   {
   public:
     // Deprecated constructor - should be SKIPPED
-    __attribute__((deprecated)) ClassWithDeprecatedConstructor(int old_param);
+    [[deprecated]] ClassWithDeprecatedConstructor(int old_param);
 
     // Non-deprecated constructor - should be INCLUDED
     ClassWithDeprecatedConstructor(int param1, int param2);
@@ -153,9 +157,9 @@ namespace Outer
   class DeprecatedTemplate
   {
   public:
-    __attribute__((deprecated)) DeprecatedTemplate();
-    __attribute__((deprecated)) void deprecatedMethod1();
-    __attribute__((deprecated)) void deprecatedMethod2();
+    [[deprecated]] DeprecatedTemplate();
+    [[deprecated]] void deprecatedMethod1();
+    [[deprecated]] void deprecatedMethod2();
   };
 
   typedef DeprecatedTemplate<int> DeprecatedTemplateInt;
@@ -170,7 +174,7 @@ namespace Outer
     ClassWithDeprecatedConversion();
 
     // Deprecated conversion operator - should be SKIPPED
-    __attribute__((deprecated)) operator OtherClass&();
+    [[deprecated]] operator OtherClass&();
 
     // Non-deprecated conversion operator - should be INCLUDED
     operator int() const;
