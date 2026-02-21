@@ -1,5 +1,9 @@
 format: Rice
 
+# In tests, each test method sets match: to specify which header(s) to process.
+# This mirrors how bin/ruby-bindgen uses match patterns from the config.
+match:
+
 clang-cl:
   libclang: C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/Llvm/x64/bin/libclang.dll
   args:

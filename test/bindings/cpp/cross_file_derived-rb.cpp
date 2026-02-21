@@ -1,5 +1,6 @@
 #include <cross_file_derived.hpp>
 #include "cross_file_derived-rb.hpp"
+#include "cross_file_base-rb.ipp"
 
 using namespace Rice;
 

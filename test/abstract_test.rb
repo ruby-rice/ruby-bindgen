@@ -24,30 +24,23 @@ class AbstractTest < Minitest::Test
     RubyBindgen::Config.new(File.join(config_dir, config_file))
   end
 
-  def create_inputter(header)
-    input_path = File.join(__dir__, "headers", File.dirname(header))
-    RubyBindgen::Inputter.new(input_path, File.basename(header))
-  end
-
-  def create_outputter(header)
-    output_path = File.join(__dir__, "bindings", File.dirname(header))
+  def create_outputter(subdir)
+    output_path = File.join(__dir__, "bindings", subdir)
     RubyBindgen::TestOutputter.new(output_path)
   end
 
-  def create_parser(header, args = nil)
-    if args.nil?
-      config_dir = File.join(__dir__, "headers", File.dirname(header))
-      config = load_config(config_dir)
-      args = config[:clang_args]
-    end
-    RubyBindgen::Parser.new(self.create_inputter(header), args)
-  end
-
-  def create_visitor(klass, header, config = nil, **overrides)
-    config_dir = File.join(__dir__, "headers", File.dirname(header))
-    config ||= load_config(config_dir)
+  def run_rice_test(match, **overrides)
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = Array(match)
     overrides.each { |key, value| config[key] = value }
-    klass.new(self.create_outputter(header), config)
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    parser = RubyBindgen::Parser.new(inputter, config[:clang_args] || [])
+    outputter = create_outputter("cpp")
+    visitor = RubyBindgen::Visitors::Rice.new(outputter, config)
+    parser.generate(visitor)
+    validate_result(visitor.outputter)
   end
 
   def validate_result(outputter)
