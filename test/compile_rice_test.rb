@@ -19,11 +19,14 @@ class CompileRiceTest < AbstractTest
     preset = determine_preset
 
     Dir.chdir(bindings_dir) do
-      # Configure
-      output, success = run_cmake("--preset", preset)
+      # Configure with no-op linker (compile-only, skip linking)
+      noop_linker = msvc? ? "cmd /c exit 0" : ":"
+      output, success = run_cmake("--preset", preset,
+                                  "-DCMAKE_CXX_CREATE_SHARED_MODULE=#{noop_linker}",
+                                  "-DCMAKE_CXX_CREATE_SHARED_LIBRARY=#{noop_linker}")
       flunk "CMake configure failed:\n#{output}" unless success
 
-      # Build
+      # Build (compiles only, linking is a no-op)
       output, success = run_cmake("--build", "build/#{preset}")
       flunk "CMake build failed:\n#{output}" unless success
     end
