@@ -6,8 +6,8 @@ namespace Internal
       public:
         Data();
         Data(char* type);
-        int Rows;
-        int Columns;
+        int rows;
+        int columns;
         int getRows();
         int getColumns();
     };

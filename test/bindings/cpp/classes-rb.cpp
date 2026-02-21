@@ -72,7 +72,7 @@ void Init_Classes()
     define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int>(),
       Arg("size"), Arg("type")).
     define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int, void*, Outer::Inner::GpuMatND::StepArray>(),
-      Arg("size"), Arg("type"), ArgBuffer("data"), Arg("step") = static_cast<Outer::Inner::GpuMatND::StepArray>(Outer::Inner::GpuMatND::defaultStepArray()));
+      Arg("size"), Arg("type"), ArgBuffer("data"), Arg("step") = Outer::Inner::GpuMatND::defaultStepArray());
 
   Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream").
     define_constructor(Constructor<Outer::Inner::Stream>()).

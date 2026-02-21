@@ -951,7 +951,15 @@ module RubyBindgen
             if copyable_type?(param.type)
               # Use type_spelling to get fully qualified type name
               qualified_type = type_spelling(param.type)
-              result << " = static_cast<#{qualified_type}>(#{default_value})"
+              # Can't static_cast to array types (e.g., using StepArray = int[3])
+              decl = param.type.declaration
+              is_array_alias = (decl.kind == :cursor_type_alias_decl || decl.kind == :cursor_typedef_decl) &&
+                               [:type_constant_array, :type_incomplete_array].include?(decl.underlying_type.canonical.kind)
+              if is_array_alias
+                result << " = #{default_value}"
+              else
+                result << " = static_cast<#{qualified_type}>(#{default_value})"
+              end
             end
           end
           result
@@ -1117,9 +1125,10 @@ module RubyBindgen
         return spelling if typedef_info[:names].empty?
 
         result = spelling.dup
+        qualified_parent = typedef_info[:qualified_parent]
         typedef_info[:names].each do |name|
-          # Replace unqualified typedef names (not preceded by :: or word char)
-          result = result.gsub(/(?<![:\w])#{Regexp.escape(name)}(?![:\w])/, "#{typedef_info[:qualified_parent]}::#{name}")
+          unqualified = /(?<![:\w])#{Regexp.escape(name)}(?![:\w])/
+          result = result.gsub(unqualified, "typename #{qualified_parent}::#{name}")
         end
 
         result

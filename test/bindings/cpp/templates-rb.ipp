@@ -5,8 +5,8 @@ inline Rice::Data_Type<Internal::Data<Rows, Columns>> Data_instantiate(Rice::Mod
     define_constructor(Constructor<Internal::Data<Rows, Columns>>()).
     define_constructor(Constructor<Internal::Data<Rows, Columns>, char*>(),
       Arg("type")).
-    define_attr("rows", &Internal::Data<Rows, Columns>::Rows).
-    define_attr("columns", &Internal::Data<Rows, Columns>::Columns).
+    define_attr("rows", &Internal::Data<Rows, Columns>::rows).
+    define_attr("columns", &Internal::Data<Rows, Columns>::columns).
     template define_method<int(Internal::Data<Rows, Columns>::*)()>("get_rows", &Internal::Data<Rows, Columns>::getRows).
     template define_method<int(Internal::Data<Rows, Columns>::*)()>("get_columns", &Internal::Data<Rows, Columns>::getColumns);
 }
