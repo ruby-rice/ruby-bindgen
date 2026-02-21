@@ -47,6 +47,8 @@ module RubyBindgen
         @incomplete_iterators = Hash.new
         # Template classes with no bindable content (all methods deprecated/skipped)
         @empty_builders = Set.new
+        # Maps builder function name -> -rb.ipp basename (persists across files for cross-file deps)
+        @builder_ipps = {}
       end
 
       # Check if a type's spelling contains a skipped symbol.
@@ -154,16 +156,15 @@ module RubyBindgen
         @auto_generated_bases.clear
         @non_member_operators.clear
         @incomplete_iterators.clear
-
         cursor = translation_unit.cursor
 
         # Build typedef map only (type_name_map no longer needed)
         build_typedef_map(cursor)
 
         # Figure out relative paths for generated header and cpp file
-        basename = "#{File.basename(relative_path, ".*")}-rb"
-        rice_header = File.join(File.dirname(relative_path), "#{basename}.hpp")
-        rice_cpp = File.join(File.dirname(relative_path), "#{basename}.cpp")
+        @basename = "#{File.basename(relative_path, ".*")}-rb"
+        rice_header = File.join(File.dirname(relative_path), "#{@basename}.hpp")
+        rice_cpp = File.join(File.dirname(relative_path), "#{@basename}.cpp")
 
         # Track init names - use relative path to avoid conflicts (e.g., core/version vs dnn/version)
         path_parts = Pathname.new(relative_path).each_filename.to_a
@@ -173,13 +174,13 @@ module RubyBindgen
         init_name = dir_part.empty? ? "Init_#{filename}" : "Init_#{dir_part}_#{filename}"
         @init_names[rice_header] = init_name
 
-        includes = Array.new
+        @includes = Array.new
         # Get includes. First any includes the source hpp file has
-        #includes = translation_unit.includes
+        #@includes = translation_unit.includes
         # Then the hpp file
-        includes << "#include <#{relative_path}>"
+        @includes << "#include <#{relative_path}>"
         # Then the rice generated header file
-        includes << "#include \"#{File.basename(rice_header)}\""
+        @includes << "#include \"#{@basename}.hpp\""
 
         class_templates, has_builders = render_class_templates(cursor)
         content = render_children(cursor, :indentation => 2)
@@ -193,12 +194,10 @@ module RubyBindgen
         # Generate .ipp file if builders exist (for reusability without duplicate Init symbols)
         rice_ipp = nil
         if has_builders
-          rice_ipp = File.join(File.dirname(relative_path), "#{basename}.ipp")
+          rice_ipp = File.join(File.dirname(relative_path), "#{@basename}.ipp")
           STDOUT << "  Writing: " << rice_ipp << "\n"
           ipp_content = render_cursor(cursor, "translation_unit.ipp",
-                                      :class_templates => class_templates,
-                                      :includes => includes,
-                                      :incomplete_iterators => @incomplete_iterators)
+                                      :class_templates => class_templates)
           ipp_content = cleanup_whitespace(ipp_content)
           self.outputter.write(rice_ipp, ipp_content)
         end
@@ -208,7 +207,7 @@ module RubyBindgen
         content = render_cursor(cursor, "translation_unit.cpp",
                                 :class_templates => class_templates,
                                 :content => content,
-                                :includes => includes,
+                                :includes => @includes,
                                 :init_name => init_name,
                                 :rice_header => rice_header,
                                 :incomplete_iterators => @incomplete_iterators,
@@ -432,7 +431,7 @@ module RubyBindgen
 
         # TODO: Calling get_base_spelling crashes libclang on certain templates.
         # Fix the instantiate functions by hand for now.
-        # base_spelling = get_base_spelling(cursor)
+        #base_spelling = get_base_spelling(cursor)
         base_spelling = nil
 
         template_parameter_kinds = [:cursor_template_type_parameter,
@@ -452,6 +451,10 @@ module RubyBindgen
         # Build fully qualified type using template params (e.g., Tests::Matrix<T, Rows, Columns>)
         param_names = template_parameters.map(&:spelling).join(", ")
         fully_qualified_type = "#{cursor.qualified_name}<#{param_names}>"
+
+        # Track builder for cross-file dependency detection
+        builder_name = "#{cursor.spelling}_instantiate"
+        @builder_ipps[builder_name] = "#{@basename}.ipp"
 
         children_content = merge_children(children, :indentation => 4, :separator => ".\n",
                                                     :terminator => ";", :strip => true)
@@ -1658,6 +1661,13 @@ module RubyBindgen
         end
 
         template_specialization = type_spelling(underlying_type)
+
+        # Check if the template's _instantiate builder was generated in a different file
+        builder_name = "#{cursor_template.spelling}_instantiate"
+        builder_ipp = @builder_ipps[builder_name]
+        if builder_ipp && builder_ipp != "#{@basename}.ipp"
+          @includes << "#include \"#{builder_ipp}\""
+        end
 
         @classes[cursor.cruby_name] = template_specialization
         result + self.render_cursor(cursor, "class_template_specialization",
