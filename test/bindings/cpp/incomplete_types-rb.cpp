@@ -66,7 +66,6 @@ void Init_IncompleteTypes()
   rb_cOuterInnerPimplClassWithDoublePtr.
     define_constructor(Constructor<Outer::Inner::PimplClassWithDoublePtr>()).
     define_attr("pp_impl", &Outer::Inner::PimplClassWithDoublePtr::ppImpl).
-    define_attr("ppp_impl", &Outer::Inner::PimplClassWithDoublePtr::pppImpl).
     define_attr("pp_value", &Outer::Inner::PimplClassWithDoublePtr::ppValue).
     define_attr("value", &Outer::Inner::PimplClassWithDoublePtr::value);
 

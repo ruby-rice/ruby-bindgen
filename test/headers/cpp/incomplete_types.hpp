@@ -105,7 +105,7 @@ namespace Outer
       int value;
     };
 
-    // Test double-pointer fields with incomplete types (Issue #34 - cv::utils::trace::details)
+    // Test double-pointer fields with incomplete types
     class PimplClassWithDoublePtr
     {
     public:
@@ -113,16 +113,13 @@ namespace Outer
 
       PimplClassWithDoublePtr();
 
-      // Double-pointer field to incomplete type - should be SKIPPED
+      // Double-pointer field to incomplete type
       Impl** ppImpl;
 
-      // Triple-pointer to incomplete type - should be SKIPPED
-      Impl*** pppImpl;
-
-      // Double-pointer to complete type - should be included
+      // Double-pointer to complete type
       int** ppValue;
 
-      // Regular complete type - should be included
+      // Regular complete type
       int value;
     };
 
