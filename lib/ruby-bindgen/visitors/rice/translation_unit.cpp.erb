@@ -1,4 +1,4 @@
-<%- includes.each do |include| -%>
+<%- includes.reject { |inc| inc.include?('.ipp') }.each do |include| -%>
 <%= include %>
 <%- end -%>
 <%- unless incomplete_iterators.empty? -%>
@@ -23,6 +23,9 @@ namespace std
 
 using namespace Rice;
 
+<%- includes.select { |inc| inc.include?('.ipp') }.each do |include| -%>
+<%= include %>
+<%- end -%>
 <%- if rice_ipp -%>
 #include "<%= rice_ipp %>"
 <%- else -%>
