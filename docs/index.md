@@ -7,7 +7,7 @@ Wrapping C and C++ libraries by hand is a long, arduous task. For large, complex
 As an example, there used to be hand-crafted Ruby [bindings](https://github.com/ruby-opencv/ruby-opencv) for [OpenCV](https://opencv.org/). However, they were based on the C API which was subsequently remove by the OpenCV project. `ruby-bindgen` was used to create new [bindings](https://github.com/cfis/opencv-ruby) based on the new C++ API. The bindings wrap over [1,000](https://cfis.github.io/opencv-ruby/) C++ classes and almost [10,000](https://cfis.github.io/opencv-ruby/) method calls. Imagine having to do that by hand!
 
 ## Ecosystem
-`ruby-bindgen` is one part of the C/C++ to Ruby toolchain.
+`ruby-bindgen` is part of the C/C++ to Ruby toolchain.
 
 ```mermaid
 flowchart TD
