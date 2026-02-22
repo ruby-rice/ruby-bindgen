@@ -130,7 +130,6 @@ module RubyBindgen
       def visit_end
         create_rice_include_header
         create_project_files
-        create_def_file
       end
 
       # Returns the path to the Rice include header (user-specified or auto-generated)
@@ -1854,16 +1853,6 @@ module RubyBindgen
         self.outputter.write(rice_cpp, content)
       end
 
-      def create_def_file
-        return unless @project
-
-        # Create def file to export Init function
-        def_name = "#{project}.def"
-        init_function = "Init_#{project}"
-
-        content = render_template("project.def", :init_function => init_function)
-        self.outputter.write(def_name, content)
-      end
 
       def figure_method(cursor)
         name = cursor.kind.to_s.delete_prefix("cursor_")
