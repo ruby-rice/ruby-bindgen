@@ -97,15 +97,6 @@ end
 - Forward declarations - Opaque struct types handled correctly
 - Global variables - Exported variables via [`attach_variable`](https://www.rubydoc.info/gems/ffi/FFI/Library#attach_variable-instance_method)
 
-## Naming Conventions
-
-`ruby-bindgen` follows Ruby naming conventions:
-
-- Module names: `UpperCamelCase` (from library name)
-- Struct/Union names: `UpperCamelCase`
-- Function names: `snake_case`
-- Enum values: `snake_case` symbols
-
 ## Examples
 
 The test suite includes bindings generated from some popular C libraries:

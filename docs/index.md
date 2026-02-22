@@ -96,3 +96,14 @@ Finally generate bindings by running the command:
 ```bash
 ruby-bindgen config.yaml
 ```
+
+## Naming Conventions
+
+`ruby-bindgen` follows Ruby naming conventions for both C and C++ bindings:
+
+- Class/Module names: `UpperCamelCase`
+- Constants: `UPPER_CASE`
+- Methods/Functions: `snake_case`
+- Enum values: `snake_case` symbols (FFI) or scoped constants (Rice)
+
+In addition, methods that return boolean values have `?` appended to their names and `is_` removed if present. For example, `is_open` becomes `open?`.
