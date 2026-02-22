@@ -24,14 +24,7 @@ export_macros:
 
 ## Skip Symbols
 
-Skip specific symbols by name, qualified name, or regex:
-
-```yaml
-skip_symbols:
-  - internalFunc                    # Simple name
-  - cv::internal::helper            # Qualified name
-  - /cv::dnn::.*Layer::init.*/      # Regex pattern
-```
+See [`skip_symbols`](../configuration.md#skip-symbols) in the configuration documentation.
 
 ## Automatic Skipping
 

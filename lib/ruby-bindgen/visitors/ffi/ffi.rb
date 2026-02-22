@@ -10,7 +10,21 @@ module RubyBindgen
         @outputter = outputter
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
+        @skip_symbols = config[:skip_symbols] || []
         @indentation = 0
+      end
+
+      # Check if a cursor should be skipped based on skip_symbols config.
+      # Supports simple names and regex patterns (strings wrapped in /).
+      def skip_symbol?(cursor)
+        @skip_symbols.any? do |skip|
+          if skip.start_with?('/') && skip.end_with?('/')
+            pattern = Regexp.new(skip[1..-2])
+            pattern.match?(cursor.spelling)
+          else
+            cursor.spelling == skip
+          end
+        end
       end
 
       def visit_start
@@ -108,6 +122,8 @@ module RubyBindgen
       end
 
       def visit_enum_decl(cursor)
+        return if skip_symbol?(cursor)
+
         children = render_children(cursor, indentation: 2, separator: ",\n", strip: true)
         self.render_cursor(cursor, "enum_decl", :children => children)
       end
@@ -117,6 +133,8 @@ module RubyBindgen
       end
 
       def visit_function(cursor)
+        return if skip_symbol?(cursor)
+
         result = Array.new
         parameter_types = cursor.find_by_kind(false, :cursor_parm_decl).map do |parameter|
           callback_name = "#{cursor.spelling}_#{parameter.spelling}_callback"
@@ -137,6 +155,7 @@ module RubyBindgen
 
       def visit_struct(cursor)
         return if cursor.forward_declaration?
+        return if skip_symbol?(cursor)
 
         result = Array.new
 
@@ -180,6 +199,8 @@ module RubyBindgen
       end
 
       def visit_typedef_decl(cursor)
+        return if skip_symbol?(cursor)
+
         case cursor.underlying_type.kind
           when :type_elaborated
             # If this is a struct or a union or enum we have already rendered it
@@ -194,6 +215,7 @@ module RubyBindgen
 
       def visit_union(cursor)
         return if cursor.forward_declaration?
+        return if skip_symbol?(cursor)
 
         result = Array.new
 
@@ -223,6 +245,8 @@ module RubyBindgen
       end
 
       def visit_variable(cursor)
+        return if skip_symbol?(cursor)
+
         self.render_cursor(cursor, "variable")
       end
 

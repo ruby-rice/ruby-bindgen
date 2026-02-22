@@ -23,6 +23,12 @@ class FfiTest < AbstractTest
     run_ffi_test("sqlite3.h", library_names: ["sqlite3"], library_versions: [])
   end
 
+  def test_filtering
+    run_ffi_test("filtering.h",
+      library_names: ["filtering"], library_versions: [],
+      skip_symbols: ["skippedFunction", "alsoSkipped", "/internal_helper.*/", "SkippedStruct", "SkippedEnum", "SkippedTypedef"])
+  end
+
   private
 
   def run_ffi_test(match, **overrides)
