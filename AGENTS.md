@@ -1,7 +1,7 @@
 # Agent Instructions
 
 ## About ruby-bindgen
-For ruby-bindgen features and capabilities, see [docs/features.md](docs/features.md).
+For ruby-bindgen features and capabilities, see the `docs/` directory (classes, methods, enums, templates, default_values, filtering, include_header, operators, iterators).
 For configuration options, see [docs/configuration.md](docs/configuration.md).
 
 ## Key Files

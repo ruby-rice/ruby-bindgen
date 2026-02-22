@@ -1,6 +1,6 @@
 # Iterators
 
-`ruby-bindgen` automatically generates Rice `define_iterator` calls for C++ classes that expose iterator methods. This provides Ruby's `Enumerable` module support for C++ containers.
+`ruby-bindgen` automatically generates Rice `define_iterator` calls for C++ classes that expose iterator methods. This provides Ruby's `Enumerable` module support for C++ containers. For details on how Rice bridges C++ iterators to Ruby, see the Rice [Iterators](https://ruby-rice.github.io/4.x/bindings/iterators/) documentation.
 
 ## Automatic Iterator Detection
 

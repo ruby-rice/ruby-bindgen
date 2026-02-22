@@ -1,165 +1,98 @@
 # ruby-bindgen
 
-Automatically generate Ruby bindings from C and C++ header files.
+Wrapping C and C++ libraries by hand is a long, arduous task. For large, complex libraries it can take months. As a result, many C/C++ libraries are either never exposed to Ruby or their bindings quickly become outdated, especially in scientific and technical domains.
 
-Writing Ruby bindings for C++ libraries by hand is tedious and error-prone. A library like OpenCV has thousands of classes, methods, and functions. Creating bindings manually would take months of work and be difficult to maintain as the library evolves. ruby-bindgen automates this process, turning weeks of work into hours.
+`ruby-bindgen` and its ecosystem solve this problem by automating binding generation. For simpler libraries, it should be able to generate fully working bindings while complex libraries may require some [customization](cpp/customizing.md).
+
+As an example, there used to be hand-crafted Ruby [bindings](https://github.com/ruby-opencv/ruby-opencv) for [OpenCV](https://opencv.org/). However, they were based on the C API which was subsequently remove by the OpenCV project. `ruby-bindgen` was used to create new [bindings](https://github.com/cfis/opencv-ruby) based on the new C++ API. The bindings wrap over [1,000](https://cfis.github.io/opencv-ruby/) C++ classes and almost [10,000](https://cfis.github.io/opencv-ruby/) method calls. Imagine having to do that by hand!
 
 ## Ecosystem
+`ruby-bindgen` is one part of the C/C++ to Ruby toolchain.
 
-ruby-bindgen is part of a toolchain for wrapping C++ libraries for Ruby:
+```mermaid
+flowchart TD
+  H["C/C++ headers"] --> CL["ffi-clang"]
+  CL --> RB["ruby-bindgen"]
+  RB --> F["C (ffi)"]
+  RB --> R["C++ (Rice)"]
+  RB --> C["Build (CMake)"]
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            C++ Library                                  │
-│                         (headers + source)                              │
-└─────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         Clang / ffi-clang                               │
-│                        (parse C++ headers)                              │
-└─────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           ruby-bindgen                                  │
-│                    (generate Rice binding code)                         │
-└─────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              Rice                                       │
-│            (type conversion, memory management, introspection)          │
-└─────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         CMake / Build System                            │
-│                        (compile the extension)                          │
-└─────────────────────────────────────────────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            Ruby Gem                                     │
-│                    (compiled extension + RBS types)                     │
-└─────────────────────────────────────────────────────────────────────────┘
+  click CL "https://github.com/ioquatix/ffi-clang" "ffi-clang"
+  click RB "https://github.com/ruby-rice/ruby-bindgen" "ruby-bindgen"
+  click R "https://github.com/ruby-rice/rice" "Rice"
+  click F "https://github.com/ffi/ffi" "FFI"
+  click C "https://cmake.org/" "CMake"
 ```
 
-### Toolchain Components
+The components of the toolchain include:
 
-| Component | Purpose |
-|-----------|---------|
-| **[Clang](https://clang.llvm.org/)** | C/C++ compiler providing libclang for parsing |
-| **[ffi-clang](https://github.com/ioquatix/ffi-clang)** | Ruby bindings to libclang for AST traversal |
-| **ruby-bindgen** | Walks the AST and generates binding code |
-| **[Rice](https://github.com/ruby-rice/rice)** | C++ library for type conversion, memory management, and Ruby integration |
-| **[CMake](https://cmake.org/)** | Build system for compiling native extensions |
+- [ffi-clang](https://github.com/ioquatix/ffi-clang) - exposes [libclang](https://clang.llvm.org/) parsing APIs to Ruby.
+- [ruby-bindgen](https://github.com/ruby-rice/ruby-bindgen) - generates bindings.
+- [FFI](https://github.com/ffi/ffi) - enables direct C library calls from Ruby without compiling a C extension.
+- [Rice](https://github.com/ruby-rice/rice) - handles C++/Ruby type conversion and native extension integration.
+- [CMake](https://cmake.org/) - builds generated Rice wrappers into loadable extension binaries.
 
-## Binding Formats
+## Installation
 
-ruby-bindgen supports two output formats:
+To install `ruby-bindgen` run the following command:
 
-| Format | Library | Use Case |
-|--------|---------|----------|
-| **Rice** | [Rice](https://github.com/ruby-rice/rice) | C++ libraries |
-| **FFI** | [FFI](https://github.com/ffi/ffi) | C libraries |
+```console
+gem install ruby-bindgen
+```
 
-If a library provides both C and C++ APIs, prefer the C API. It's simpler to wrap and more stable across releases.
+## Getting Started
 
-## What to Expect
+`ruby-bindgen` is driven by a [configuration](configuration.md) file. To get started, first decide what type of library you are wrapping:
 
-ruby-bindgen aims to generate compilable code that handles 90-95% of the work. For many libraries, the generated bindings compile and work with minimal changes.
+```mermaid
+flowchart TD
+  A{"C or C++?"}
+  A -->|C| B["FFI"]
+  A -->|C++| C["Rice"]
+  C --> D{"CMake or<br/>extconf.rb?"}
+  D -->|CMake| E["CMake"]
+  D -->|extconf.rb| F["Done"]
+  B --> F
+  E --> F
 
-Occasional manual adjustments may be needed:
-- Adding an `#include` for a type used in a method signature
-- Renaming a Ruby method to better fit conventions
-- Adding problematic symbols to `skip_symbols`
-- Custom `Type<T>` specializations for complex template types
+  click B "c_bindings.md" "C Bindings"
+  click C "cpp/cpp_bindings.md" "C++ Bindings"
+  click E "cmake_bindings.md" "CMake Bindings"
+  click D "https://ruby-rice.github.io/4.x/packaging/extconf/" "Rice extconf.rb packaging"
+```
 
-See [C++ Bindings](cpp_bindings.md#what-to-expect) for details.
+If a library provides both C and C++ APIs, use the C API! It is usually simpler to wrap and maintain and does not require users to compile extensions.
 
-After generating bindings, see Rice's packaging docs: [CMake](https://ruby-rice.github.io/4.x/packaging/cmake/) for building, [RBS](https://ruby-rice.github.io/4.x/packaging/rbs/) for type signatures, [Documentation](https://ruby-rice.github.io/4.x/packaging/documentation/) for API docs, and [Registries](https://ruby-rice.github.io/4.x/ruby_api/registries/) for introspection.
+Once you have decided the format, create a simple [configuration](configuration.md) file and set its `format` field to `FFI`, `Rice` or `CMake`. In addition, specify an `extension` name, the `input` path to header files and the `output` path for generated bindings.
 
-## Documentation
-
-- [Configuration](configuration.md) - YAML configuration file format and options
-- [Features](features.md) - Comprehensive list of supported C++ features
-- [C Bindings](c_bindings.md) - FFI bindings for C libraries
-- [C++ Bindings](cpp_bindings.md) - Rice bindings for C++ libraries
-- [Iterators](iterators.md) - Iterator support details
-- [Operators](operators.md) - Operator overloading support
-
-## Quick Start
-
-1. Create a YAML configuration file:
+For example:
 
 ```yaml
 extension: my_extension
 input: /path/to/headers
 output: /path/to/output
-format: Rice
+format: Rice     # or FFI/CMake
 
 match:
-  - "**/*.hpp"
+  - "**/*.hpp"   # or "**/*.h" for C headers
 
-clang_args:
-  - -I/path/to/includes
-  - -std=c++17
-  - -xc++
+clang:
+  args:
+    - -I/path/to/includes
+    - -xc++      # omit for C libraries
 ```
+See [Configuration](configuration.md) for all options.
 
-2. Run ruby-bindgen:
+For much more details, jump to the documentation page for each format:
+
+| Format    | Next Step                           |
+|-----------|-------------------------------------|
+| **FFI**   | [C Bindings](c_bindings.md)         |
+| **Rice**  | [C++ Bindings](cpp/cpp_bindings.md)     |
+| **CMake** | [CMake Bindings](cmake_bindings.md) |
+
+Finally generate bindings by running the command:
 
 ```bash
 ruby-bindgen config.yaml
 ```
-
-See [Configuration](configuration.md) for full documentation of all options.
-
-## Example: OpenCV Bindings
-
-Ruby-bindgen was used to create C++ bindings for the [OpenCV](https://github.com/opencv/opencv) library. OpenCV is a large library with complex C++ patterns, making it a good test case.
-
-```yaml
-extension: opencv_ruby
-
-input: /path/to/opencv/include/opencv4
-output: /path/to/opencv-ruby/ext
-format: Rice
-
-# Custom header with cv::Ptr<T> type support
-include: opencv_ruby_include.hpp
-
-match:
-  - opencv2/**/*.hpp
-
-skip:
-  - opencv2/core/opencl/**/*
-  - opencv2/cudalegacy/**/*.hpp
-  - opencv2/**/*.inl*
-
-# Only wrap exported functions
-export_macros:
-  - CV_EXPORTS
-  - CV_EXPORTS_W
-
-# Skip problematic symbols
-skip_symbols:
-  - cv::ocl::PlatformInfo::versionMajor
-  - cv::ocl::PlatformInfo::versionMinor
-  - /cv::dnn::.*Layer::init.*/
-
-clang_args:
-  - -I/usr/include/c++/11
-  - -I/path/to/opencv/include/opencv4
-  - -std=c++17
-  - -xc++
-```
-
-The output directory structure matches the input - ruby-bindgen automatically creates necessary subdirectories.
-
-## Similar Work
-
-* [ffi_gen](https://github.com/ffi/ffi_gen) - Unmaintained bindings generator for C
-* [rbind](https://github.com/D-Alex/rbind) - Gem with custom C++ parser
-* [Magnus](https://github.com/matsadler/magnus) - Bindings generator for Rust

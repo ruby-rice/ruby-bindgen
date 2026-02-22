@@ -38,7 +38,7 @@ module RubyBindGen
 
         Generates Ruby bindings for C and C++ libraries using a YAML configuration file.
 
-        See documentation for config file format: https://github.com/user/ruby-bindgen/docs/configuration.md
+        See documentation for config file format: https://github.com/ruby-rice/ruby-bindgen/blob/main/docs/configuration.md
 
         Options:
           -h, --help    Show this help message
@@ -65,7 +65,7 @@ module RubyBindGen
       end
 
       unless %w[FFI Rice CMake].include?(@config[:format])
-        raise "Format must be 'FFI' or 'Rice', got: #{@config[:format]}"
+        raise "Format must be 'FFI', 'Rice', or 'CMake', got: #{@config[:format]}"
       end
 
       # Validate extension name is a valid C/C++ identifier (if provided)

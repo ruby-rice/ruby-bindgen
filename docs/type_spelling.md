@@ -1,6 +1,12 @@
-# Type Spelling in ruby-bindgen
+# Type Spelling in `ruby-bindgen`
 
-This document explains why generating correct, fully-qualified C++ type spellings from libclang is inherently complex, and how ruby-bindgen addresses that complexity.
+This document explains why generating correct, fully-qualified C++ type spellings from libclang is inherently complex, and how `ruby-bindgen` addresses that complexity.
+
+## TL;DR
+
+- There is no single libclang API that always returns the right C++ spelling for code generation.
+- Canonical types are often semantically correct but syntactically wrong for generated bindings.
+- `ruby-bindgen` reconstructs type spellings based on cursor kind and context, with canonicalization only as a fallback.
 
 The objective is **not** to compute a canonical or normalized type. The objective is to emit a C++ spelling that:
 
@@ -10,7 +16,7 @@ The objective is **not** to compute a canonical or normalized type. The objectiv
 
 ## The Problem
 
-When generating Rice bindings, ruby-bindgen must emit fully-qualified C++ type names that are valid in generated code.
+When generating Rice bindings, `ruby-bindgen` must emit fully-qualified C++ type names that are valid in generated code.
 
 For example:
 
@@ -52,7 +58,7 @@ Filtering these reliably is not possible without reconstructing the original spe
 
 > “What is this type semantically?”
 
-ruby-bindgen must answer:
+`ruby-bindgen` must answer:
 
 > “How must this type be written so that user code compiles correctly and reflects the original API?”
 
@@ -71,9 +77,9 @@ libclang exposes several partial representations of a type, each optimized for a
 
 No single API preserves both **spelling fidelity** and **correct qualification**.
 
-## ruby-bindgen’s Strategy
+## `ruby-bindgen`’s Strategy
 
-ruby-bindgen does not attempt to normalize all types through a single representation.
+`ruby-bindgen` does not attempt to normalize all types through a single representation.
 
 Instead, `type_spelling` reconstructs the correct spelling **based on cursor kind and context**, using canonical information only as a constrained fallback.
 
@@ -125,7 +131,7 @@ Concrete types and template instantiations.
 
 ## The `@type_name_map`
 
-During translation unit processing, ruby-bindgen builds a map from simple identifiers to fully-qualified names:
+During translation unit processing, `ruby-bindgen` builds a map from simple identifiers to fully-qualified names:
 
 ```ruby
 {
@@ -157,17 +163,17 @@ Clang’s C++ API (`libTooling`) provides:
 
 However:
 
-- ruby-bindgen uses `ffi-clang`, which exposes only libclang’s C API
+- `ruby-bindgen` uses `ffi-clang`, which exposes only libclang’s C API
 - libclang is designed for IDEs and static analysis tools, not code generation
 - Reimplementing spelling logic is unavoidable in this environment
 
-ruby-bindgen’s type spelling logic exists specifically to bridge this gap.
+`ruby-bindgen`’s type spelling logic exists specifically to bridge this gap.
 
 ## Summary
 
 There is no single libclang call that can produce correct C++ type spellings in all cases.
 
-The complexity in ruby-bindgen is inherent:
+The complexity in `ruby-bindgen` is inherent:
 
 - C++ has typedefs, aliases, templates, dependent types, and contextual name lookup
 - libclang exposes these differently depending on cursor kind

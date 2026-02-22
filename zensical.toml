@@ -10,13 +10,34 @@ repo_url = "https://github.com/ruby-bindgen/ruby-bindgen"
 nav = [
   { "Home" = "index.md" },
   { "C Bindings" = "c_bindings.md" },
-  { "C++ Bindings" = "cpp_bindings.md" },
-  { "Operators" = "operators.md" },
+  { "C++ Bindings" = [
+    { "Overview" = "cpp/cpp_bindings.md" },
+    { "Filtering" = "cpp/filtering.md" },
+    { "Classes" = "cpp/classes.md" },
+    { "Enums" = "cpp/enums.md" },
+    { "Templates" = "cpp/templates.md" },
+    { "Operators" = "cpp/operators.md" },
+    { "Iterators" = "cpp/iterators.md" },
+    { "Buffers" = "cpp/buffers.md" },
+    { "Customizing" = "cpp/customizing.md" },
+  ]},
+  { "CMake Bindings" = "cmake_bindings.md" },
+  { "Configuration" = "configuration.md" },
+  { "Updating Bindings" = "updating_bindings.md" },
+  { "Known Limitations" = "limitations.md" },
+  { "Prior Art" = "prior_art.md" },
+  { "Architecture" = "architecture.md" },
 ]
 
 [project.theme]
 
 variant = "classic"
+
+features = [
+  "navigation.top",
+  "search.highlight",
+  "content.code.copy",
+]
 
 [[project.theme.palette]]
 scheme = "default"
@@ -37,3 +58,6 @@ toggle.name = "Switch to light mode"
 [project.markdown_extensions.pymdownx.highlight]
 
 [project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }
+]
