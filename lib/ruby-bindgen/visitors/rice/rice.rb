@@ -176,7 +176,7 @@ module RubyBindgen
         init_name = dir_part.empty? ? "Init_#{filename}" : "Init_#{dir_part}_#{filename}"
         @init_names[rice_header] = init_name
 
-        @includes = Array.new
+        @includes = Set.new
         # Get includes. First any includes the source hpp file has
         #@includes = translation_unit.includes
         # Then the hpp file
