@@ -35,8 +35,8 @@ module Filtering
 
   ffi_lib self.search_names
 
-  attach_function :included_function, :includedFunction, [:int], :int
-  attach_function :keep_this_function, :keepThisFunction, [:double, :double], :double
+  attach_function :exported_function, :exportedFunction, [:int], :int
+  attach_function :another_exported, :anotherExported, [:double, :double], :double
 
   class IncludedStruct < FFI::Struct
     layout :x, :int,

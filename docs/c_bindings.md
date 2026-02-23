@@ -144,6 +144,13 @@ This generates search names like `libproj.so.25`, `libproj.so.22`, etc. on Linux
 
 If `library_versions` is omitted, only the unversioned name is searched. This works on most systems where the package manager creates an unversioned symlink (e.g., `libproj.so` → `libproj.so.25`).
 
+## Filtering
+
+`ruby-bindgen` can filter which symbols are included in the generated bindings:
+
+- [`skip_symbols`](configuration.md#skip-symbols) - Skip specific functions, structs, enums, or typedefs by name or regex pattern
+- [`export_macros`](configuration.md#export-macros) - Only include functions marked with specific visibility macros
+
 ## Usage Tips
 
 Since C is procedural rather than object-oriented, you may want to wrap the generated FFI bindings in Ruby classes to provide a more idiomatic API:

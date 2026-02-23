@@ -1,25 +1,38 @@
-// Test cases for FFI skip_symbols filtering
+// Test cases for FFI filtering:
+// 1. Export macros - only include functions with specified macros
+// 2. Skip symbols - explicitly skip certain symbol names
 
-// --- Functions ---
+#if defined(_MSC_VER)
+  #define MY_EXPORT __declspec(dllexport)
+#else
+  #define MY_EXPORT __attribute__((visibility("default")))
+#endif
 
-// Normal function - should be INCLUDED
-int includedFunction(int x);
+// --- Export Macro Tests ---
+
+// Exported function - should be INCLUDED when export_macros contains MY_EXPORT
+MY_EXPORT int exportedFunction(int x);
+
+// Non-exported function - should be SKIPPED when export_macros is set
+void internalFunction(int x);
+
+// Another exported function - should be INCLUDED
+MY_EXPORT double anotherExported(double a, double b);
+
+// --- Skip Symbol Tests ---
 
 // Function to skip by name - should be SKIPPED
-void skippedFunction(int x);
+MY_EXPORT void skippedFunction(int x);
 
 // Another function to skip by name - should be SKIPPED
-int alsoSkipped(double y);
+MY_EXPORT int alsoSkipped(double y);
 
 // Function to skip by regex - should be SKIPPED
-void internal_helper_init(void);
-
-// Normal function - should be INCLUDED
-double keepThisFunction(double a, double b);
+MY_EXPORT void internal_helper_init(void);
 
 // --- Structs ---
 
-// Normal struct - should be INCLUDED
+// Normal struct - should be INCLUDED (export macros only filter functions)
 struct IncludedStruct
 {
     int x;

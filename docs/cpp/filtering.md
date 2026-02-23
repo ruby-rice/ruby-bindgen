@@ -4,23 +4,7 @@
 
 ## Export Macros
 
-The `export_macros` option filters functions based on the presence of specific macros in the source code. This is particularly useful for libraries like OpenCV that use macros to control symbol visibility.
-
-When specified, only functions whose source text contains at least one of the listed macros will be included in the bindings. This prevents linker errors from trying to wrap internal functions that aren't exported from the shared library.
-
-```yaml
-export_macros:
-  - CV_EXPORTS
-  - CV_EXPORTS_W
-```
-
-### Common Library Macros
-
-| Library | Export Macros |
-|---------|--------------|
-| OpenCV | `CV_EXPORTS`, `CV_EXPORTS_W`, `CV_EXPORTS_W_SIMPLE` |
-| Qt | `Q_DECL_EXPORT`, `Q_CORE_EXPORT` |
-| Boost | `BOOST_*_DECL` |
+See [`export_macros`](../configuration.md#export-macros) in the configuration documentation.
 
 ## Skip Symbols
 

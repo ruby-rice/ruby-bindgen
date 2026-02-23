@@ -13,7 +13,7 @@ However, complex libraries may require some customization. Customizations fall i
 Some issues are best solved via the [configuration](../configuration.md) file rather than editing generated code:
 
 - Skip symbols: Functions that cause linker errors or aren’t meant for external use can be added to [`skip_symbols`](../configuration.md#skip-symbols)
-- Export macros: Use [`export_macros`](filtering.md#export-macros) to limit bindings to exported symbols, preventing linker errors from internal functions
+- Export macros: Use [`export_macros`](../configuration.md#export-macros) to limit bindings to exported symbols, preventing linker errors from internal functions
 
 ## Refinements
 

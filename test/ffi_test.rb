@@ -26,6 +26,7 @@ class FfiTest < AbstractTest
   def test_filtering
     run_ffi_test("filtering.h",
       library_names: ["filtering"], library_versions: [],
+      export_macros: ["MY_EXPORT"],
       skip_symbols: ["skippedFunction", "alsoSkipped", "/internal_helper.*/", "SkippedStruct", "SkippedEnum", "SkippedTypedef"])
   end
 

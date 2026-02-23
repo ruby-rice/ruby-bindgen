@@ -11,6 +11,7 @@ module RubyBindgen
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
         @skip_symbols = config[:skip_symbols] || []
+        @export_macros = config[:export_macros] || []
         @indentation = 0
       end
 
@@ -24,6 +25,20 @@ module RubyBindgen
           else
             cursor.spelling == skip
           end
+        end
+      end
+
+      # Check if cursor has one of the required export macros in its source text.
+      # When export_macros is empty, all symbols pass (no filtering).
+      def has_export_macro?(cursor)
+        return true if @export_macros.empty?
+
+        begin
+          source_text = cursor.extent.text
+          return true if source_text.nil?
+          @export_macros.any? { |macro| source_text.include?(macro) }
+        rescue
+          true
         end
       end
 
@@ -134,6 +149,7 @@ module RubyBindgen
 
       def visit_function(cursor)
         return if skip_symbol?(cursor)
+        return unless has_export_macro?(cursor)
 
         result = Array.new
         parameter_types = cursor.find_by_kind(false, :cursor_parm_decl).map do |parameter|

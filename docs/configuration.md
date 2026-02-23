@@ -27,6 +27,7 @@ These options apply to all formats.
 | `match`         | `["**/*.{h,hpp}"]` | Glob patterns specifying which header files to process. |
 | `skip`          | `[]`               | Glob patterns specifying which header files to skip. |
 | `skip_symbols`  | `[]`               | List of symbol names to skip. Supports simple names, fully qualified names, or regex patterns. See [Skip Symbols](#skip-symbols). |
+| `export_macros` | `[]`               | List of macros that indicate a function is exported. When set, only functions whose source text contains one of these macros are included. See [Export Macros](#export-macros). |
 
 ## C (FFI) Options
 
@@ -41,7 +42,6 @@ These options apply to all formats.
 |-----------------|----------------|-------------|
 | `extension`     | none           | Name of the Ruby extension. Used for the `Init_` function name. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{extension}-rb.cpp`, `{extension}-rb.hpp`). When omitted, only per-file bindings are generated. |
 | `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/cpp_bindings.md#include-header). |
-| `export_macros` | `[]`           | List of macros that indicate a symbol is exported. See [Export Macros](cpp/filtering.md#export-macros). |
 
 ## CMake Options
 
@@ -162,3 +162,23 @@ Regex patterns are enclosed in forward slashes (`/pattern/`) and are matched aga
 - Deprecated functions (marked with `__attribute__((deprecated))`)
 - Internal functions (names ending with `_`)
 - Methods returning pointers to incomplete types (pimpl pattern)
+
+## Export Macros
+
+The `export_macros` option filters functions based on the presence of specific macros in the source code. This is useful for libraries that use macros to control symbol visibility.
+
+When specified, only functions whose source text contains at least one of the listed macros will be included in the bindings. This prevents linker errors from trying to wrap internal functions that aren't exported from the shared library.
+
+```yaml
+export_macros:
+  - CV_EXPORTS
+  - CV_EXPORTS_W
+```
+
+### Common Library Macros
+
+| Library | Export Macros |
+|---------|--------------|
+| OpenCV | `CV_EXPORTS`, `CV_EXPORTS_W`, `CV_EXPORTS_W_SIMPLE` |
+| Qt | `Q_DECL_EXPORT`, `Q_CORE_EXPORT` |
+| Boost | `BOOST_*_DECL` |
