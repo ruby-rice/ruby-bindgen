@@ -35,9 +35,3 @@ This page lists related projects and adjacent tools that influenced, overlap wit
 - Project: [rb-sys](https://github.com/oxidize-rb/rb-sys)
 - Scope: Rust bindings for the Ruby C API
 - Notes: Provides low-level Rust bindings to Ruby, auto-generated from `ruby.h` using rust-bindgen.
-
-### Rutie
-
-- Project: [rutie](https://github.com/danielpclark/rutie)
-- Scope: Rust crate for Ruby bindings
-- Notes: An alternative to Magnus for writing Ruby extensions in Rust.
