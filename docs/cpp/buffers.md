@@ -10,8 +10,3 @@ void getMinMax(double* min, double* max);        // Out parameters via ArgBuffer
 int* createBuffer(int size);                     // ReturnBuffer
 void processArrays(float** matrices, int count); // Double pointer via ArgBuffer
 ```
-
-This enables Ruby code to:
-- Pass buffers of data to C++ functions
-- Use out parameters for returning values
-- Work with arrays of pointers

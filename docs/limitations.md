@@ -7,9 +7,9 @@ This page summarizes current limitations and constraints in `ruby-bindgen`.
 - Correct parsing depends on accurate `clang`/`clang-cl` include and language arguments.
 - Some libraries still require manual post-generation adjustments.
 
-## C++ (Rice) Generation
+## Rice Generation
 
-- Generated code is not guaranteed to compile without manual fixes for all libraries.
+- Generated code may not compile without manual fixes.
 - Default argument reconstruction is heuristic and can fail for complex C++ expressions.
 - Some APIs need explicit skipping via `skip_symbols` to avoid compile/link failures.
 - Functions/methods with unsupported signatures may be skipped (for example variadic callables).
@@ -23,13 +23,4 @@ This page summarizes current limitations and constraints in `ruby-bindgen`.
 
 ## FFI Generation
 
-- Intended for C APIs. C++ class semantics are not represented in FFI output.
 - Runtime loading depends on correct `library_names` / `library_versions` and system loader paths.
-
-## Scope
-
-`ruby-bindgen` optimizes for automating most wrapping work, then letting users handle edge cases via:
-
-- configuration filters (`skip`, `skip_symbols`, `export_macros`)
-- refinement files
-- targeted manual updates for problematic generated code

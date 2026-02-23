@@ -1,65 +1,8 @@
 # Architecture
 
-This page describes how `ruby-bindgen` is implemented.
+`ruby-bindgen` uses [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html), via [ffi-clang](https://github.com/ioquatix/ffi-clang), to parse C and C++ header files.
 
-## Processing Pipeline
-
-``` mermaid
-flowchart LR
-    subgraph Input
-        H["C/C++ headers"]
-        Y["bindings.yaml"]
-    end
-
-    subgraph Parsing
-        FC["ffi-clang"]
-        AST["Cursor-based AST"]
-        FC --> AST
-    end
-
-    subgraph "Code Generation (Rice/FFI)"
-        V1["AST Visitor"]
-        ERB1["ERB templates"]
-        V1 --> ERB1
-    end
-
-    subgraph "Code Generation (CMake)"
-        FS["Scan output dir for *-rb.cpp"]
-        V2["CMake visitor"]
-        ERB2["ERB templates"]
-        FS --> V2
-        V2 --> ERB2
-    end
-
-    subgraph Output
-        F["Generated files"]
-    end
-
-    H --> FC
-    Y --> V1
-    AST --> V1
-    Y --> V2
-    ERB1 --> F
-    ERB2 --> F
-```
-
-## Libclang and ffi-clang
-
-`ruby-bindgen` uses [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html), Clang's C API for parsing C and C++ source code. Libclang provides a stable, high-level interface to Clang's parser without requiring the full compiler. It parses headers and produces an abstract syntax tree (AST).
-
-[ffi-clang](https://github.com/ioquatix/ffi-clang) is a Ruby gem that wraps libclang using Ruby FFI, making the C API accessible from Ruby. It exposes libclang's cursor-based traversal model directly.
-
-### Cursor-Based AST
-
-Libclang represents the AST as a hierarchy of **cursors**. Each cursor is a node in the tree representing a declaration, statement, or expression. A cursor has:
-
-- **Kind** - what the node represents (`class_decl`, `cxx_method`, `enum_decl`, `function_decl`, etc.)
-- **Spelling** - the name of the declaration
-- **Type** - the C++ type associated with the cursor
-- **Location** - source file and line number
-- **Children** - nested cursors (methods inside classes, parameters inside functions, etc.)
-
-For example, parsing this header:
+Libclang represents the [Abstract Syntax Tree (AST)](https://en.wikipedia.org/wiki/Abstract_syntax_tree) as a hierarchy of cursors. Each cursor is a node representing a declaration, statement, or expression. For example, parsing this header:
 
 ```cpp
 namespace cv {
@@ -84,21 +27,113 @@ namespace (cv)
         └── cxx_method (empty)
 ```
 
-`ruby-bindgen` walks this tree and generates binding code for each cursor.
+For C and C++ bindings, `ruby-bindgen` uses the [visitor pattern](https://en.wikipedia.org/wiki/Visitor_pattern) to walk this tree. Each cursor kind is dispatched to a corresponding `visit_*` method (e.g., `visit_class_decl`, `visit_cxx_method`), which generates binding code via ERB templates.
+
+``` mermaid
+flowchart TD
+    subgraph Input
+        H["C/C++ headers"]
+        Y["bindings.yaml"]
+    end
+
+    subgraph Parsing
+        FC["ffi-clang"]
+        AST["AST"]
+        FC --> AST
+    end
+
+    subgraph "Code Generation"
+        V1["Visitor"]
+        ERB1["ERB templates"]
+        V1 --> ERB1
+    end
+
+    subgraph Output
+        F["Rice/FFI files"]
+    end
+
+    H --> FC
+    Y --> V1
+    AST --> V1
+    ERB1 --> F
+```
+
+For CMake bindings, `ruby-bindgen` runs as a second pass, scanning the output directory for previously generated `*-rb.cpp` files.
+
+``` mermaid
+flowchart TD
+    subgraph Input
+        Y["bindings.yaml"]
+        S["*-rb.cpp"]
+    end
+
+    subgraph "Code Generation"
+        V2["CMake visitor"]
+        ERB2["ERB templates"]
+        V2 --> ERB2
+    end
+
+    subgraph Output
+        F["CMakeLists.txt / CMakePresets.json"]
+    end
+
+    Y --> V2
+    S --> V2
+    ERB2 --> F
+```
+
+## Source Layout
+
+The [key classes](#key-classes) live under `lib/ruby-bindgen/`. Each output format (Rice, FFI, CMake) has its own directory under `visitors/` containing both the visitor implementation and its ERB templates.
+
+```
+lib/ruby-bindgen/
+├── config.rb                  # YAML config loading
+├── inputter.rb                # Header file discovery
+├── outputter.rb               # File writing with cleanup
+├── parser.rb                  # ffi-clang AST parsing
+├── namer.rb                   # C++ → Ruby name conversion
+├── version.rb
+├── refinements/               # Extensions to ffi-clang classes
+│   ├── cursor.rb
+│   ├── type.rb
+│   ├── translation_unit.rb
+│   ├── string.rb
+│   └── source_range.rb
+└── visitors/
+    ├── rice/                  # C++ Rice binding generator
+    │   ├── rice.rb            # Visitor (~2100 lines)
+    │   └── *.erb              # ERB templates
+    ├── ffi/                   # C FFI binding generator
+    │   ├── ffi.rb             # Visitor
+    │   └── *.erb              # ERB templates
+    └── cmake/                 # CMake build file generator
+        ├── cmake.rb           # Visitor
+        └── *.erb              # ERB templates
+```
+
+Most visitor methods delegate to ERB templates for code generation. Each template receives the current cursor and any visitor state as local variables, and outputs a string of generated code.
+
+For example, the Rice visitor's `cxx_method.erb` template generates a `define_method` call:
+
+```cpp
+define_method<<%= method_signature(cursor) %>("<%= cursor.ruby_name %>", &<%= cursor.qualified_name %>,
+  <%= arguments(cursor) %>).
+```
 
 ## Key Classes
 
 ### Config
 
-`Config` loads the YAML configuration file and resolves platform-specific settings. It detects whether to use `clang:` or `clang-cl:` based on `RUBY_PLATFORM`, resolves relative paths against the config file's directory, and provides hash-like access to all configuration values.
+The `Config` class loads the YAML configuration file and resolves platform-specific settings. It detects whether to use `clang:` or `clang-cl:` based on `RUBY_PLATFORM`, resolves relative paths against the config file's directory, and provides hash-like access to all configuration values.
 
 ### Inputter
 
-`Inputter` discovers header files to process. Given a base directory and glob patterns from the config (`match:` and `skip:`), it iterates over matching files and yields both absolute and relative paths.
+The `Inputter` class discovers header files to process. Given a base directory and glob patterns from the config (`match:` and `skip:`), it iterates over matching files and yields both absolute and relative paths.
 
 ### Parser
 
-`Parser` wraps ffi-clang's `Index` and drives the processing loop:
+The `Parser` class wraps ffi-clang's `Index` and drives the processing loop:
 
 ```ruby
 def generate(visitor)
@@ -120,116 +155,9 @@ Parse options include `:skip_function_bodies` (we only need declarations, not im
 
 ### Outputter
 
-`Outputter` writes generated files to the output directory. It tracks all written paths and applies whitespace cleanup (removing excessive blank lines and blank lines before closing braces) to keep the output tidy.
+The `Outputter` class writes generated files to the output directory. It tracks all written paths and applies whitespace cleanup (removing excessive blank lines and blank lines before closing braces) to keep the output tidy.
 
-## Visitor Pattern
-
-The core of `ruby-bindgen` is the **visitor pattern**. Rice and FFI visitors traverse AST cursors and generate code per cursor kind. The CMake visitor is different: it generates files by scanning previously generated `*-rb.cpp` files in the output directory.
-
-### How Cursors Map to Visitor Methods
-
-When processing a cursor's children, the visitor calls `figure_method` to map cursor kinds to visitor method names:
-
-| Cursor Kind | Visitor Method |
-|------------|----------------|
-| `:cursor_class_decl`, `:cursor_struct` | `visit_class_decl` |
-| `:cursor_cxx_method` | `visit_cxx_method` |
-| `:cursor_constructor` | `visit_constructor` |
-| `:cursor_enum_decl` | `visit_enum_decl` |
-| `:cursor_function` | `visit_function` |
-| `:cursor_field_decl` | `visit_field_decl` |
-| `:cursor_namespace` | `visit_namespace` |
-| `:cursor_typedef_decl` | `visit_typedef_decl` |
-| `:cursor_type_alias_decl` | `visit_type_alias_decl` |
-| `:cursor_union` | `visit_union` |
-| `:cursor_variable` | `visit_variable` |
-| `:cursor_conversion_function` | `visit_conversion_function` |
-
-Cursors that don't map to a visitor method (e.g., access specifiers, friend declarations) are skipped.
-
-This mapping applies to AST-driven visitors (Rice/FFI). CMake generation does not use cursor-kind dispatch.
-
-### Traversal
-
-The visitor traverses the AST recursively. `visit_children` iterates over a cursor's children, calling the appropriate `visit_*` method for each one. `render_children` does the same but collects the generated code strings and joins them. `merge_children` concatenates all child output into a single string.
-
-Each `visit_*` method typically:
-1. Checks whether the cursor should be skipped (system header, skip list, deprecated, etc.)
-2. Calls `render_template` to generate code from an ERB template
-3. Returns the generated code string
-
-### Filtering
-
-Before generating code for a cursor, the visitor applies several filters:
-
-- **Location** - skip cursors from system headers or files outside the input directory
-- **Access** - skip private and protected members
-- **skip_symbols** - user-configured list of names, qualified names, or regex patterns to skip
-- **export_macros** - if configured, only include functions whose source contains the specified macros
-- **Deprecated** - skip functions marked with `__attribute__((deprecated))`
-- **Incomplete types** - skip methods returning pointers to forward-declared types
-
-## ERB Templates
-
-Most visitor methods delegate to ERB templates for code generation. Each template receives the current cursor and any visitor state as local variables, and outputs a string of generated code.
-
-For example, the Rice visitor's `cxx_method.erb` template generates a `define_method` call:
-
-```cpp
-define_method<<%= method_signature(cursor) %>("<%= cursor.ruby_name %>", &<%= cursor.qualified_name %>,
-  <%= arguments(cursor) %>).
-```
-
-### Template Organization
-
-Each visitor has its own template directory:
-
-**Rice** (`visitors/rice/*.erb`) - 30 templates generating C++ code:
-- `translation_unit.cpp.erb` / `.hpp.erb` / `.ipp.erb` - per-file wrapper files
-- `class.erb` - `Rice::Data_Type<>` class definitions
-- `constructor.erb` - `.define_constructor()` calls
-- `cxx_method.erb` - `.define_method()` calls
-- `enum_decl.erb` - `define_enum()` calls
-- `function.erb` - `define_module_function()` calls
-- `field_decl.erb` - `.define_attr()` calls
-- `class_template.erb` / `class_template_specialization.erb` - template handling
-- `project.cpp.erb` / `.hpp.erb` - master project files
-- Operator templates for `[]`, binary, unary, and inspect operators
-
-**FFI** (`visitors/ffi/*.erb`) - 10 templates generating Ruby code:
-- `translation_unit.erb` - Ruby module wrapper
-- `function.erb` - `attach_function` calls
-- `struct.erb` / `union.erb` - `FFI::Struct` / `FFI::Union` layout definitions
-- `enum_decl.erb` - `enum` definitions
-- `typedef_decl.erb` - type aliases
-- `callback.erb` - `callback` definitions
-
-**CMake** (`visitors/cmake/*.erb`) - 3 templates:
-- `project.erb` - top-level `CMakeLists.txt`
-- `directory.erb` - per-subdirectory `CMakeLists.txt`
-- `presets.erb` - `CMakePresets.json`
-
-### CMake Visitor Specifics
-
-Unlike Rice and FFI, the CMake visitor's `visit_translation_unit` is intentionally empty. It generates output in `visit_start` by:
-
-1. Scanning the output directory tree for `*-rb.cpp` files
-2. Rendering top-level and per-directory `CMakeLists.txt`
-3. Rendering `CMakePresets.json`
-
-This is why CMake is typically run as a second pass after Rice generation.
-
-## Refinements to ffi-clang
-
-`ruby-bindgen` extends ffi-clang's classes using Ruby refinements in `lib/ruby-bindgen/refinements/`:
-
-- **Cursor** - adds `ruby_name`, `cruby_name`, `qualified_name`, `class_name_cpp`, and methods for finding children by kind
-- **Type** - adds `fully_qualified_spelling` for reconstructing C++ type names with proper namespace qualification and template arguments
-- **TranslationUnit** - adds `includes` to extract `#include` directives
-- **String** - adds `camelize` and `underscore` for name conversion
-- **SourceRange** - adds `text` for extracting source text from a range
-
-## Namer
+### Namer
 
 The `Namer` class converts C++ names to Ruby conventions:
 
@@ -242,42 +170,31 @@ The `Namer` class converts C++ names to Ruby conventions:
 - Conversion operators like `operator int()` map to `to_i`, `operator string()` to `to_s`
 - C variable names for Rice classes use the `rb_c` prefix (e.g., `rb_cCvMat`)
 
+## Refinements to ffi-clang
+
+`ruby-bindgen` extends ffi-clang's classes using Ruby refinements in `lib/ruby-bindgen/refinements/`:
+
+- **Cursor** - adds `ruby_name`, `cruby_name`, `qualified_name`, `class_name_cpp`, and methods for finding children by kind
+- **Type** - adds `fully_qualified_spelling` for reconstructing C++ type names with proper namespace qualification and template arguments
+- **TranslationUnit** - adds `includes` to extract `#include` directives
+- **String** - adds `camelize` and `underscore` for name conversion
+- **SourceRange** - adds `text` for extracting source text from a range
+
 ## Rice Visitor Details
 
 The Rice visitor is the most complex (~2100 lines) because C++ has the most features to handle. Some notable aspects:
 
+### Traversal
+
+The visitor traverses the AST recursively. Each cursor kind is dispatched to a `visit_*` method (e.g., `visit_class_decl`, `visit_cxx_method`) which checks whether the cursor should be skipped and, if not, renders an ERB template to generate the binding code.
+
+### Filtering
+
+Before generating code for a cursor, the visitor applies several filters. See [filtering](cpp/filtering.md) for details.
+
 ### Template Handling
 
-C++ class templates require special treatment. When `ruby-bindgen` encounters a typedef or using declaration that instantiates a template:
-
-```cpp
-template<typename T>
-class Point
-{
-    T x, y;
-};
-
-typedef Point<int> Point2i;
-```
-
-It generates an [`_instantiate` function](cpp/templates.md#template-instantiate-files-ipp) in a `.ipp` file that can instantiate the template for any type:
-
-```cpp
-template<typename T>
-Rice::Data_Type<Point_<T>> Point__instantiate(Rice::Module parent, const char* name) {
-  return Rice::define_class_under<Point_<T>>(parent, name).
-    define_attr("x", &Point_<T>::x).
-    define_attr("y", &Point_<T>::y);
-}
-```
-
-And then calls it from the `.cpp` file:
-
-```cpp
-Rice::Data_Type<Point_<int>> rb_cPoint2i = Point__instantiate<int>(rb_mRoot, "Point2i");
-```
-
-This allows the same `_instantiate` function to be reused across translation units when a template is instantiated with different types in different files.
+C++ class templates require special treatment. See [templates](cpp/templates.md) for details.
 
 ### Type Spelling
 
@@ -299,30 +216,3 @@ Libclang provides limited information about default argument values. `ruby-bindg
 Arg("value") = static_cast<const cv::Scalar&>(cv::Scalar())
 ```
 
-## Source Layout
-
-```
-lib/ruby-bindgen/
-├── config.rb                  # YAML config loading
-├── inputter.rb                # Header file discovery
-├── outputter.rb               # File writing with cleanup
-├── parser.rb                  # ffi-clang AST parsing
-├── namer.rb                   # C++ → Ruby name conversion
-├── version.rb
-├── refinements/               # Extensions to ffi-clang classes
-│   ├── cursor.rb
-│   ├── type.rb
-│   ├── translation_unit.rb
-│   ├── string.rb
-│   └── source_range.rb
-└── visitors/
-    ├── rice/                  # C++ Rice binding generator
-    │   ├── rice.rb            # Visitor (~2100 lines)
-    │   └── *.erb              # 29 ERB templates
-    ├── ffi/                   # C FFI binding generator
-    │   ├── ffi.rb             # Visitor
-    │   └── *.erb              # 10 ERB templates
-    └── cmake/                 # CMake build file generator
-        ├── cmake.rb           # Visitor
-        └── *.erb              # 3 ERB templates
-```

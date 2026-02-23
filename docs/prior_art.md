@@ -10,15 +10,11 @@ This page lists related projects and adjacent tools that influenced, overlap wit
 - Scope: Multi-language binding generator for C and C++
 - Notes: Generates bindings for many languages including Ruby, Python, Java, and Go. Uses its own interface definition files rather than parsing headers directly. The most established tool in this space — active since 1996.
 
-## C
-
 ### ffi_gen
 
 - Project: [ffi_gen](https://github.com/ffi/ffi_gen)
 - Scope: Generate Ruby FFI wrappers for C APIs
 - Notes: Has not been updated in over a decade and includes liblang findings versus using [ffi-clang](https://github.com/ioquatix/ffi-clang).
-
-## C++
 
 ### rbind
 

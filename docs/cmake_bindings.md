@@ -1,14 +1,8 @@
 # CMake Bindings
 
-The `CMake` format generates `CMakeLists.txt` and `CMakePresets.json` files for building Rice C++ bindings. This is typically run as a second pass after generating the Rice binding source files.
+The `CMake` format generates `CMakeLists.txt` and `CMakePresets.json` files for building Rice C++ bindings. This is run as a second pass after generating the Rice binding source files.
 
-## Usage
-
-The CMake format scans the output directory for `*-rb.cpp` files produced by the Rice format and generates:
-
-- **`CMakeLists.txt`** (top-level) - Project configuration with Rice fetching, Ruby detection, and source file listing
-- **`CMakeLists.txt`** (per subdirectory) - Source file listing for each subdirectory
-- **`CMakePresets.json`** - Build presets for Linux, macOS, MSVC, MinGW, and Clang on Windows (debug and release variants)
+Rice supports building extensions with either [extconf.rb](https://ruby-rice.github.io/4.x/packaging/extconf.rb/) or [CMake](https://ruby-rice.github.io/4.x/packaging/cmake/). While `extconf.rb` works for simple bindings, CMake is vastly superior for anything more complex — it provides better cross-platform support, dependency management, and build configuration.
 
 ## Configuration
 
@@ -16,37 +10,17 @@ The CMake format scans the output directory for `*-rb.cpp` files produced by the
 format: CMake
 extension: my_extension
 
-# CMake expressions for target_include_directories
 include_dirs:
   - "${CMAKE_CURRENT_SOURCE_DIR}/../headers"
 ```
 
-### Options
+See [configuration](configuration.md) for details on all options.
 
-| Option | Description |
-|--------|-------------|
-| `extension` | Project name used in `project()` and target name. Required. |
-| `include_dirs` | List of include directory expressions added via `target_include_directories`. These are written directly into CMakeLists.txt, so CMake variables like `${CMAKE_CURRENT_SOURCE_DIR}` work. |
-
-## Generated CMakeLists.txt
-
-The top-level `CMakeLists.txt` includes:
-
-- C++17 standard requirement
-- Rice fetched from GitHub via `FetchContent`
-- Ruby detection via `find_package(Ruby)`
-- Library target (SHARED on MSVC, MODULE elsewhere)
-- Extension output configuration (correct suffix, visibility settings)
-- All `*-rb.cpp` source files
-
-## Workflow
+## Usage
 
 Generate bindings in two passes:
 
 ```bash
-# Ensure output directory exists
-mkdir -p /path/to/output
-
 # 1. Generate Rice C++ source files
 ruby-bindgen rice_config.yaml
 
@@ -62,9 +36,41 @@ cmake --preset linux-debug    # or msvc-debug, macos-debug, etc.
 cmake --build build/linux-debug
 ```
 
-## Build Presets
+## Output
 
-The generated `CMakePresets.json` includes presets for all major platforms:
+The CMake format scans the output directory for `*-rb.cpp` files and generates:
+
+``` mermaid
+flowchart LR
+    subgraph Input
+        CF["cmake_config.yaml"]
+        S1["*-rb.cpp"]
+    end
+
+    CF & S1 --> RB["ruby-bindgen"]
+
+    subgraph "CMake Output"
+        C1["CMakeLists.txt"]
+        C2["CMakePresets.json"]
+    end
+
+    RB --> C1 & C2
+```
+
+### Top Level
+
+The top-level `CMakeLists.txt` is a complete project file that configures the entire build:
+
+- C++17 standard requirement
+- Rice fetched from GitHub via `FetchContent`
+- Ruby detection via `find_package(Ruby)`
+- Library target (SHARED on MSVC, MODULE elsewhere)
+- Extension output configuration (correct suffix, visibility settings)
+- Subdirectory includes and `*-rb.cpp` source file listing
+
+For a well-documented example, see the [BitmapPlusPlus-ruby CMakeLists.txt](https://github.com/ruby-rice/BitmapPlusPlus-ruby/blob/main/ext/CMakeLists.txt). For details on how Rice uses CMake, see the Rice [CMake](https://ruby-rice.github.io/4.x/packaging/cmake/) documentation.
+
+The top-level directory also gets a `CMakePresets.json` with build presets for all major platforms. For an example, see the [BitmapPlusPlus-ruby CMakePresets.json](https://github.com/ruby-rice/BitmapPlusPlus-ruby/blob/main/ext/CMakePresets.json). For details, see the Rice [CMakePresets.json](https://ruby-rice.github.io/4.x/packaging/cmake/#cmakepresetsjson) documentation.
 
 | Preset | Platform | Compiler |
 |--------|----------|----------|
@@ -74,4 +80,19 @@ The generated `CMakePresets.json` includes presets for all major platforms:
 | `mingw-debug` / `mingw-release` | Windows | MinGW GCC |
 | `clang-windows-debug` / `clang-windows-release` | Windows | clang-cl |
 
-All presets use Ninja as the build generator and include appropriate compiler flags for each platform (visibility settings, debug info, optimization levels).
+All presets use [Ninja](https://ninja-build.org/) as the build generator and include appropriate compiler flags for each platform (visibility settings, debug info, optimization levels).
+
+### Subdirectories
+
+Each subdirectory containing `*-rb.cpp` files gets a minimal `CMakeLists.txt` that lists its source files and any nested subdirectories:
+
+```cmake
+# Subdirectories
+add_subdirectory("hal")
+
+# Sources
+target_sources(${CMAKE_PROJECT_NAME} PUBLIC
+  "matrix-rb.cpp"
+  "image-rb.cpp"
+)
+```

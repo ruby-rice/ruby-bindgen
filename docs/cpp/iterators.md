@@ -89,18 +89,6 @@ namespace std
 }
 ```
 
-### How It Works
-
-`ruby-bindgen` detects incomplete iterators by:
-
-1. Checking if the iterator class defines the required typedefs (`value_type`, `reference`, `pointer`, `difference_type`, `iterator_category`)
-2. If any are missing, it infers the types from the iterator's `operator*()` return type
-3. The generated traits specialization is placed at the top of the output file, before the Rice bindings code
-
-### Const Iterators
-
-`ruby-bindgen` also detects const iterators by examining the `operator*()` return type. If it returns a const reference, the generated `reference` typedef will be `const T&` instead of `T&`.
-
 ## Examples
 
 See [test/headers/cpp/iterators.hpp](../test/headers/cpp/iterators.hpp) for example iterator classes, including both complete and incomplete iterators. The generated bindings are in [test/bindings/cpp/iterators-rb.cpp](../test/bindings/cpp/iterators-rb.cpp).
