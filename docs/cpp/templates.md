@@ -7,13 +7,19 @@
 `ruby-bindgen` generates bindings for template class instantiations created via `typedef` or `using` statements:
 
 ```cpp
-template<typename T> class Point_ { T x, y; };
-typedef Point_<int> Point2i;
-using Point2f = Point_<float>;
+template<typename T>
+class Point
+{
+    T x, y;
+};
+
+typedef Point<int> Point2i;
+using Point2f = Point<float>;
 ```
 
 Generated bindings correctly handle:
-- Fully qualified template arguments (`cv::Point_<int>` not `Point_<int>`)
+
+- Fully qualified template arguments (`cv::Point<int>` not `Point<int>`)
 - Base class inheritance chains for templates
 - Auto-generation of base class bindings when no typedef exists
 
@@ -31,7 +37,9 @@ Unqualified type names in template arguments are automatically qualified:
 When a class inherits from a template instantiation, the base class binding is auto-generated if no typedef exists:
 
 ```cpp
-class PlaneWarper : public WarperBase<PlaneProjector> {};
+class PlaneWarper : public WarperBase<PlaneProjector>
+{
+};
 // Auto-generates WarperBasePlaneProjector binding
 ```
 
@@ -39,24 +47,21 @@ class PlaneWarper : public WarperBase<PlaneProjector> {};
 
 For template typedefs with base classes, the entire inheritance chain is resolved and generated in the correct order.
 
-## Generated Files
+> **Warning:** Template class `_instantiate` functions do not currently include base class information due to a libclang crash when resolving base classes on certain templates. If your template class inherits from a base class, you will need to fix the generated `_instantiate` function by hand to add the base class parameter.
 
-For each input header (e.g., `mat.hpp`), `ruby-bindgen` generates up to three output files:
-
-| File | Purpose | Always Generated? |
-|------|---------|-------------------|
-| `mat-rb.hpp` | Declarations (Init function prototype) | Yes |
-| `mat-rb.cpp` | Implementation (Init function body, class registrations) | Yes |
-| `mat-rb.ipp` | Template `_instantiate` functions for class templates | Only when templates exist |
-
-### Template Instantiate Files (.ipp)
+## Template Instantiate Files (.ipp)
 
 When a header contains class templates with specializations (via `typedef` or `using`), `ruby-bindgen` generates reusable `_instantiate` template functions. These are placed in a separate `.ipp` file to enable reuse without duplicate symbol errors.
 
 **Example**: For `templates.hpp` containing:
 
 ```cpp
-template<typename T> class Matrix { ... };
+template<typename T>
+class Matrix
+{
+    ...
+};
+
 typedef Matrix<float> Matrixf;
 ```
 
@@ -103,35 +108,3 @@ void Init_Mat_Refinements()
     Mat__instantiate<double>(rb_mCv, "Mat1d");
 }
 ```
-
-### Files Without Templates
-
-Headers containing only regular classes (no class templates) generate only `.hpp` and `.cpp` files. The `.cpp` file contains includes and the Init function inline:
-
-```cpp
-// inheritance-rb.cpp (no .ipp needed)
-#include <inheritance.hpp>
-#include "inheritance-rb.hpp"
-
-using namespace Rice;
-
-void Init_Inheritance()
-{
-  // Class registrations...
-}
-```
-
-## Generated File Names
-
-### Init Function Names
-
-Each generated file has an `Init_` function. To avoid conflicts when multiple files have the same name in different directories (e.g., `core/version.hpp` and `dnn/version.hpp`), the function name includes the directory path:
-
-| File Path | Init Function |
-|-----------|---------------|
-| `version.hpp` | `Init_Version` |
-| `core/version.hpp` | `Init_Core_Version` |
-| `dnn/version.hpp` | `Init_Dnn_Version` |
-| `core/hal/interface.hpp` | `Init_Core_Hal_Interface` |
-
-The top-level directory is always removed to avoid overly long names (e.g., `opencv2/calib3d.hpp` becomes `Init_Calib3d`, and `opencv2/core/version.hpp` becomes `Init_Core_Version`).

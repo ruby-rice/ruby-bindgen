@@ -63,10 +63,6 @@ For template base class inheritance, see [Templates](templates.md#template-base-
 
 ## Methods
 
-### Callbacks
-
-`ruby-bindgen` understands C-style callbacks and generates the appropriate Rice [callback code](https://ruby-rice.github.io/4.x/bindings/callbacks/).
-
 ### Overloaded Methods
 
 Overloaded methods are automatically detected and generate explicit type signatures:
@@ -97,6 +93,10 @@ Template parameter conversions in class templates use generic names (`to_ptr`, `
 
 For a complete table of conversion type mappings, see the [Operators](operators.md#conversion-operators) page.
 
+### Callbacks
+
+`ruby-bindgen` understands C-style callbacks and generates the appropriate Rice [callback code](https://ruby-rice.github.io/4.x/bindings/callbacks/).
+
 ### Safe Bool Idiom
 
 Pre-C++11 "safe bool idiom" using typedef to member function pointer is automatically skipped:
@@ -126,12 +126,6 @@ class Quat {
     static constexpr T EPS = 1e-6;
     Quat(T eps = EPS);  // -> cv::Quat<T>::EPS
 };
-```
-
-Items in the global namespace (like `stdout`) are not prefixed with `::` to avoid breaking macros:
-
-```cpp
-void print(FILE* f = stdout);  // stdout, not ::stdout
 ```
 
 Default parameter values are only generated for copyable types. `ruby-bindgen` detects non-copyable types via private copy constructors, deleted copy constructors (`= delete`), or inherited inaccessible copy constructors:

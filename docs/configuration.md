@@ -10,24 +10,24 @@ For end-to-end examples, see [C Bindings](c_bindings.md), [C++ Bindings](cpp/cpp
 
 ## Required Options
 
-| Option   | Description                                                                                                                |
-|----------|----------------------------------------------------------------------------------------------------------------------------|
-| `input`  | Directory containing the header files to parse. Can be absolute or relative to the config file location.                   |
-| `output` | Existing directory where generated binding files will be written. Can be absolute or relative to the config file location. |
-| `format` | Type of bindings to generate: `Rice` for C++, `FFI` for C, or `CMake` for CMakeLists.txt generation.                       |
+| Option   | Description                                                                                                       |
+|----------|-------------------------------------------------------------------------------------------------------------------|
+| `input`  | Directory containing the header files to parse. Can be absolute or relative to the config file location.          |
+| `output` | Directory where generated binding files will be written. Can be absolute or relative to the config file location. |
+| `format` | Type of bindings to generate: `Rice` for C++, `FFI` for C, or `CMake` for CMakeLists.txt. |
 
-**Note:** Relative paths for `input` and `output` are resolved from the config file's directory, not the current working directory. This makes configs portable across different machines.
+Relative paths for `input` and `output` are resolved from the config file's directory, not the current working directory. This makes configs portable across different machines.
 
 ## Common Options
 
 These options apply to all formats.
 
-| Option          | Default            | Description |
-|-----------------|--------------------|-------------|
-| `match`         | `["**/*.{h,hpp}"]` | Glob patterns specifying which header files to process. |
-| `skip`          | `[]`               | Glob patterns specifying which header files to skip. |
-| `skip_symbols`  | `[]`               | List of symbol names to skip. Supports simple names, fully qualified names, or regex patterns. See [Skip Symbols](#skip-symbols). |
-| `export_macros` | `[]`               | List of macros that indicate a function is exported. When set, only functions whose source text contains one of these macros are included. See [Export Macros](#export-macros). |
+| Option          | Default            | Description                                                                               |
+|-----------------|--------------------|-------------------------------------------------------------------------------------------|
+| `match`         | `["**/*.{h,hpp}"]` | Array of glob pattern specifying which header files to process.                           |
+| `skip`          | `[]`               | Array of glob pattern specifying which header files to skip.                              |
+| `skip_symbols`  | `[]`               | Array of symbols names to skip.  See [Skip Symbols](#skip-symbols).                       |
+| `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
 
 ## C (FFI) Options
 
@@ -139,9 +139,10 @@ The `skip_symbols` option is useful when:
 - Functions cause linker errors due to missing symbols
 
 You can specify symbols using:
-- **Simple names**: `versionMajor` - skips all symbols with this name
-- **Fully qualified names**: `cv::ocl::PlatformInfo::versionMajor` - skips only that specific symbol
-- **Regex patterns**: `/pattern/` - skips symbols matching the regex
+
+- Simple names: `versionMajor` - skips all symbols with this name
+- Fully qualified names: `cv::ocl::PlatformInfo::versionMajor` - skips only that specific symbol
+- Regex patterns: `/pattern/` - skips symbols matching the regex
 
 ```yaml
 skip_symbols:
@@ -159,6 +160,7 @@ Regex patterns are enclosed in forward slashes (`/pattern/`) and are matched aga
 - Handling template specializations
 
 `ruby-bindgen` automatically skips:
+
 - Deprecated functions (marked with `__attribute__((deprecated))`)
 - Internal functions (names ending with `_`)
 - Methods returning pointers to incomplete types (pimpl pattern)

@@ -64,6 +64,19 @@ The `.cpp` file defines that `Init_` function with the actual Rice bindings code
 
 The `.ipp` file is only generated when the header declares template classes. It contains one `_instantiate` function per template class that can be used to instantiate the template. The `-rb.ipp` files can be reused across translated units. See [Templates](templates.md#template-instantiate-files-ipp) for details.
 
+### Init Function Names
+
+Each generated file has an `Init_` function. To avoid conflicts when multiple files have the same name in different directories (e.g., `core/version.hpp` and `dnn/version.hpp`), the function name includes the directory path:
+
+| File Path | Init Function |
+|-----------|---------------|
+| `version.hpp` | `Init_Version` |
+| `core/version.hpp` | `Init_Core_Version` |
+| `dnn/version.hpp` | `Init_Dnn_Version` |
+| `core/hal/interface.hpp` | `Init_Core_Hal_Interface` |
+
+The top-level directory is always removed to avoid overly long names (e.g., `opencv2/calib3d.hpp` becomes `Init_Calib3d`, and `opencv2/core/version.hpp` becomes `Init_Core_Version`).
+
 ### Project Files
 
 When you set the `extension` option in your configuration, `ruby-bindgen` also generates project-level wrapper files that tie everything together:

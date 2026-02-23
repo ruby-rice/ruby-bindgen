@@ -5,7 +5,10 @@
 ## Scoped Enums (enum class)
 
 ```cpp
-enum class Color { Red, Green, Blue };
+enum class Color
+{
+    Red, Green, Blue
+};
 ```
 
 Generates a Rice enum with properly scoped values.
@@ -15,8 +18,12 @@ Generates a Rice enum with properly scoped values.
 Unscoped enums in namespaces have values at namespace scope:
 
 ```cpp
-namespace cv {
-    enum BorderType { BORDER_CONSTANT, BORDER_REPLICATE };
+namespace cv
+{
+    enum BorderType
+    {
+        BORDER_CONSTANT, BORDER_REPLICATE
+    };
 }
 // Values are cv::BORDER_CONSTANT, not cv::BorderType::BORDER_CONSTANT
 ```
@@ -24,8 +31,12 @@ namespace cv {
 Unscoped enums inside classes have values qualified with the enum name:
 
 ```cpp
-class Buffer {
-    enum Target { ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER };
+class Buffer
+{
+    enum Target
+    {
+        ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER
+    };
 };
 // Values are Buffer::Target::ARRAY_BUFFER
 ```

@@ -7,7 +7,8 @@
 C++ allows operators to be defined as non-member (free) functions. Ruby doesn't have the concept of non-member functions — all methods belong to a class. Therefore, `ruby-bindgen` automatically converts non-member operators to instance methods on the first argument's class:
 
 ```cpp
-class Matrix {
+class Matrix
+{
 public:
     int rows, cols;
 };
@@ -18,8 +19,30 @@ Matrix& operator-=(Matrix& a, const Matrix& b);
 Matrix& operator*=(Matrix& a, double scalar);
 ```
 
+`ruby-bindgen` generates:
+
+```cpp
+rb_cMatrix.
+    define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
+    {
+      self += other;
+      return self;
+    }).
+    define_method("assign_minus", [](Matrix& self, const Matrix& other) -> Matrix&
+    {
+      self -= other;
+      return self;
+    }).
+    define_method("assign_multiply", [](Matrix& self, double other) -> Matrix&
+    {
+      self *= other;
+      return self;
+    });
+```
+
+Ruby usage:
+
 ```ruby
-# Generated Ruby bindings
 matrix1 = Matrix.new
 matrix2 = Matrix.new
 
@@ -41,18 +64,36 @@ MatExpr operator+(const Mat& m);   // Unary plus
 
 ```cpp
 rb_cMat.
-    define_method("~", [](const Mat& self) -> MatExpr { return ~self; }).
-    define_method("-@", [](const Mat& self) -> MatExpr { return -self; }).
-    define_method("+@", [](const Mat& self) -> MatExpr { return +self; });
+    define_method("~", [](const Mat& self) -> MatExpr
+    {
+      return ~self;
+    }).
+    define_method("-@", [](const Mat& self) -> MatExpr
+    {
+      return -self;
+    }).
+    define_method("+@", [](const Mat& self) -> MatExpr
+    {
+      return +self;
+    });
 ```
 
-### Streaming Operators
+Ruby usage:
 
-The `<<` operator is commonly used for two different purposes in C++:
+```ruby
+mat = Mat.new
+result = ~mat   # Bitwise NOT
+result = -mat   # Negation
+result = +mat   # Unary plus
+```
 
-1. **Output streaming** (`std::ostream& operator<<(std::ostream&, const T&)`) — `ruby-bindgen` converts these to `inspect` methods on the streamed class.
+### Streaming Operator
 
-2. **Other streaming** (e.g., `FileStorage& operator<<(FileStorage&, const T&)`) — `ruby-bindgen` converts these to `<<` instance methods.
+The `<<` operator is often used for stream-like semantics in C++. `ruby-bindgen` handles two cases:
+
+1. **Output streaming** (`std::ostream& operator<<(std::ostream&, const T&)`) — converted to `inspect` methods on the streamed class.
+
+2. **Other streaming** (e.g., `FileStorage& operator<<(FileStorage&, const T&)`) — converted to `<<` instance methods.
 
 ```cpp
 // Output streaming - generates inspect method on Printable

@@ -251,8 +251,13 @@ The Rice visitor is the most complex (~2100 lines) because C++ has the most feat
 C++ class templates require special treatment. When `ruby-bindgen` encounters a typedef or using declaration that instantiates a template:
 
 ```cpp
-template<typename T> class Point_ { T x, y; };
-typedef Point_<int> Point2i;
+template<typename T>
+class Point
+{
+    T x, y;
+};
+
+typedef Point<int> Point2i;
 ```
 
 It generates an [`_instantiate` function](cpp/templates.md#template-instantiate-files-ipp) in a `.ipp` file that can instantiate the template for any type:

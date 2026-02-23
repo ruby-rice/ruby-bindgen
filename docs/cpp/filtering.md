@@ -19,19 +19,8 @@ The following are automatically skipped:
 - **Variadic**: Functions with `...` parameters
 - **Deleted**: Methods marked `= delete`
 - **Private/Protected**: Non-public members
+- **Template functions**: Non-member function templates (e.g., `template<typename T> void func()`)
 - **Anonymous namespaces**: Internal implementation details
-
-## Incomplete Types (Pimpl Pattern)
-
-Methods returning pointers or references to forward-declared types are automatically skipped:
-
-```cpp
-class MyClass {
-    class Impl;  // Forward declaration
-    Impl* getImpl();      // Skipped - returns pointer to incomplete type
-    Impl& getImplRef();   // Skipped - returns reference to incomplete type
-};
-```
 
 ## std:: Typedefs
 
@@ -41,22 +30,3 @@ Typedefs to `std::` types are skipped since Rice handles them automatically:
 typedef std::string String;  // Skipped - Rice handles std::string
 ```
 
-## Namespace Handling
-
-### Inline Namespaces
-
-Versioned inline namespaces (like `cv::dnn::dnn4_v20241223`) are handled transparently.
-
-### Linkage Specifications
-
-`extern "C"` blocks don't affect qualified names:
-
-```cpp
-extern "C" {
-    typedef unsigned short ushort;  // Correctly qualified, not "::::ushort"
-}
-```
-
-### Anonymous Namespaces
-
-Anonymous namespaces are skipped entirely - they contain internal implementation details with internal linkage.

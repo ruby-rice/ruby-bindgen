@@ -21,6 +21,8 @@ define_class_under<Bitmap>(rb_mModule, "Bitmap").
     define_iterator<PixelIterator(Bitmap::*)()>(&Bitmap::begin, &Bitmap::end, "each");
 ```
 
+**Note:** If a class only defines `begin() const` and `end() const` (without non-const versions), the generated method will be `each_const`. This is technically correct but not ideal since Ruby conventions expect `each`. A future improvement may alias `each` to `each_const` in this case.
+
 ## Multiple Iterator Types
 
 `ruby-bindgen` handles classes with multiple iterator types, such as const iterators, reverse iterators, and const reverse iterators:
@@ -54,13 +56,15 @@ error C2039: 'value_type': is not a member of 'std::iterator_traits<MyIterator>'
 
 ```cpp
 // Iterator WITHOUT proper std::iterator_traits
-class IncompleteIterator {
+class IncompleteIterator
+{
 public:
     IncompleteIterator() : ptr_(nullptr) {}
     explicit IncompleteIterator(Pixel* p) : ptr_(p) {}
     Pixel& operator*() const { return *ptr_; }
     IncompleteIterator& operator++() { ++ptr_; return *this; }
     bool operator!=(const IncompleteIterator& other) const { return ptr_ != other.ptr_; }
+
 private:
     Pixel* ptr_;
     // NOTE: Missing value_type, reference, pointer, difference_type, iterator_category
