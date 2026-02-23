@@ -21,7 +21,7 @@ define_class_under<Bitmap>(rb_mModule, "Bitmap").
     define_iterator<PixelIterator(Bitmap::*)()>(&Bitmap::begin, &Bitmap::end, "each");
 ```
 
-**Note:** If a class only defines `begin() const` and `end() const` (without non-const versions), the generated method will be `each_const`. This is technically correct but not ideal since Ruby conventions expect `each`. A future improvement may alias `each` to `each_const` in this case.
+**Note:** If a class only defines `begin() const` and `end() const` (without non-const versions), the generated method will be `each_const`. Since Ruby conventions expect `each`, `ruby-bindgen` automatically aliases `each` to `each_const` in this case.
 
 ## Multiple Iterator Types
 

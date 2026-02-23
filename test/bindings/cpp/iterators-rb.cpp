@@ -32,6 +32,8 @@ void Init_Iterators()
     define_constructor(Constructor<iter::Dict>()).
     define_iterator<std::map<iter::String, iter::DictValue>::const_iterator(iter::Dict::*)() const>(&iter::Dict::begin, &iter::Dict::end, "each_const");
 
+  Rice::detail::protect(rb_alias, rb_cIterDict, rb_intern("each"), rb_intern("each_const"));
+
   Rice::Data_Type<iter::Pixel> rb_cIterPixel = define_class_under<iter::Pixel>(rb_mIter, "Pixel").
     define_constructor(Constructor<iter::Pixel>()).
     define_constructor(Constructor<iter::Pixel, int, int, int>(),

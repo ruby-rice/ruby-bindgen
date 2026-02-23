@@ -45,6 +45,8 @@ module RubyBindgen
         @non_member_operators = Hash.new { |h, k| h[k] = [] }
         # Iterators that need std::iterator_traits specialization
         @incomplete_iterators = Hash.new
+        # Iterator names per class (for aliasing each_const -> each)
+        @class_iterator_names = Hash.new { |h, k| h[k] = Set.new }
         # Template classes with no bindable content (all methods deprecated/skipped)
         @empty_builders = Set.new
         # Maps builder function name -> -rb.ipp basename (persists across files for cross-file deps)
@@ -155,6 +157,7 @@ module RubyBindgen
         @auto_generated_bases.clear
         @non_member_operators.clear
         @incomplete_iterators.clear
+        @class_iterator_names.clear
         cursor = translation_unit.cursor
 
         # Build typedef map only (type_name_map no longer needed)
@@ -312,6 +315,12 @@ module RubyBindgen
                                      :auto_generated_base => auto_generated_base,
                                      :incomplete_classes => incomplete_classes_content,
                                      :children => children_content)
+
+        # Alias each_const to each if the class only has const iterators
+        iterator_names = @class_iterator_names[cursor.cruby_name]
+        if iterator_names.include?("each_const") && !iterator_names.include?("each")
+          result << render_template("iterator_alias", :cruby_name => cursor.cruby_name)
+        end
 
         # Define any complete embedded classes and structs
         cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct) do |child_cursor|
@@ -1315,6 +1324,8 @@ module RubyBindgen
                             # We don't care about end methods (end, cend, rend, crend)
                             return
                         end
+
+        @class_iterator_names[cursor.semantic_parent.cruby_name] << iterator_name
 
         begin_method = cursor.spelling
         end_method = begin_method.sub("begin", "end")
