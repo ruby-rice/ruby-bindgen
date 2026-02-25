@@ -47,21 +47,46 @@ module FFI
           # Already fully qualified
           return spelling if spelling.include?('::') && spelling.start_with?(qualified.split('::').first)
 
-          # Combine qualified namespace with template args from spelling
           const_prefix = self.const_qualified? ? "const " : ""
           bare_spelling = spelling.sub(/^const\s+/, '')
 
+          # Separate base name from template arguments
           if bare_spelling.include?('<')
-            # Preserve template arguments from spelling
-            template_args = bare_spelling[/<.*/] || ''
+            template_args = bare_spelling[/<.*/]
             base_spelling = bare_spelling.sub(/<.*/, '')
-            if qualified.end_with?(base_spelling)
-              "#{const_prefix}#{qualified}#{template_args}"
-            else
-              "#{const_prefix}#{bare_spelling}"
-            end
-          elsif qualified.end_with?(bare_spelling)
-            "#{const_prefix}#{qualified}"
+          else
+            template_args = ''
+            base_spelling = bare_spelling
+          end
+
+          # Find the namespace prefix from qualified_name that the spelling is missing.
+          #
+          # We split both the spelling and qualified_name into :: components, then
+          # find where the spelling's first component appears in qualified_name.
+          # Everything before that match point is the missing prefix.
+          #
+          # This handles C++ versioned inline namespaces. OpenCV uses macros like:
+          #
+          #   namespace cv { namespace dnn {
+          #     namespace dnn4_v20241223 { class Net { ... }; }
+          #     using namespace dnn4_v20241223;
+          #   }}
+          #
+          # The programmer writes "dnn::Net" and libclang's qualified_name returns
+          # "cv::dnn::dnn4_v20241223::Net". A naive end_with?("dnn::Net") fails
+          # because the versioned component sits between "dnn" and "Net".
+          #
+          # By finding "dnn" at index 1 of ["cv", "dnn", "dnn4_v20241223", "Net"],
+          # we know the missing prefix is "cv" and produce "cv::dnn::Net".
+          base_parts = base_spelling.split('::')
+          qualified_parts = qualified.split('::')
+          match_idx = qualified_parts.index(base_parts.first)
+
+          if match_idx && match_idx > 0
+            prefix = qualified_parts[0...match_idx].join('::')
+            "#{const_prefix}#{prefix}::#{bare_spelling}"
+          elsif qualified.end_with?(base_spelling)
+            "#{const_prefix}#{qualified}#{template_args}"
           else
             "#{const_prefix}#{bare_spelling}"
           end

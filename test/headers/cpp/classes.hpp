@@ -218,4 +218,29 @@ namespace Outer
     // Override one variant
     virtual void detect(int image, int& keypoints, int mask) const override;
   };
+
+  // Test cross-namespace type qualification in method parameters.
+  // When a method takes a type from a sibling namespace with partial qualification
+  // (e.g., "Sibling::Target" instead of "Outer::Sibling::Target"), the generated
+  // code must use the fully qualified name.
+  // This reproduces the cv::mcc::CCheckerDetector::setNet(dnn::Net) bug where
+  // the parameter type was generated as "dnn::Net" instead of "cv::dnn::Net".
+  namespace Sibling
+  {
+    class Target
+    {
+    public:
+      int value;
+    };
+  }
+
+  namespace Other
+  {
+    class User
+    {
+    public:
+      void take_target(Sibling::Target t);
+      Sibling::Target return_target();
+    };
+  }
 }

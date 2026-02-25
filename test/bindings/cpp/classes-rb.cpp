@@ -135,4 +135,18 @@ void Init_Classes()
     define_method<void(Outer::AffineFeature2D::*)(int, int&, int) const>("detect", &Outer::AffineFeature2D::detect,
       Arg("image"), Arg("keypoints"), Arg("mask"));
 
+  Module rb_mOuterSibling = define_module_under(rb_mOuter, "Sibling");
+
+  Rice::Data_Type<Outer::Sibling::Target> rb_cOuterSiblingTarget = define_class_under<Outer::Sibling::Target>(rb_mOuterSibling, "Target").
+    define_constructor(Constructor<Outer::Sibling::Target>()).
+    define_attr("value", &Outer::Sibling::Target::value);
+
+  Module rb_mOuterOther = define_module_under(rb_mOuter, "Other");
+
+  Rice::Data_Type<Outer::Other::User> rb_cOuterOtherUser = define_class_under<Outer::Other::User>(rb_mOuterOther, "User").
+    define_constructor(Constructor<Outer::Other::User>()).
+    define_method<void(Outer::Other::User::*)(Outer::Sibling::Target)>("take_target", &Outer::Other::User::take_target,
+      Arg("t")).
+    define_method<Outer::Sibling::Target(Outer::Other::User::*)()>("return_target", &Outer::Other::User::return_target);
+
 }

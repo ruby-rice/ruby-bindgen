@@ -65,6 +65,10 @@ class RiceTest < AbstractTest
     run_rice_test("template_defaults.hpp")
   end
 
+  def test_inline_namespaces
+    run_rice_test("inline_namespaces.hpp")
+  end
+
   def test_cross_file_typedef
     # Tests that typedefs from included headers are found when generating
     # base classes. DerivedVector4d inherits from BaseMatrix<double, 4>,
