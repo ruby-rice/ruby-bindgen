@@ -10,7 +10,7 @@ If a library provides a C API then use it!
 
 ## Configuration
 
-First create a configuration file named `bindings.yaml`:
+First create a configuration file named `ffi-bindings.yaml`:
 
 ```yaml
 input: ./include
@@ -33,7 +33,7 @@ Then to generate bindings run:
 
 ```bash
 mkdir -p ./lib/generated
-ruby-bindgen bindings.yaml
+ruby-bindgen ffi-bindings.yaml
 ```
 
 ## Output

@@ -6,7 +6,7 @@ Minimal end-to-end examples for each output format.
 
 Reference project (fully automated Rice bindings): [BitmapPlusPlus-ruby](https://ruby-rice.github.io/BitmapPlusPlus-ruby/)
 
-`bindings.yaml`:
+`rice-bindings.yaml`:
 
 ```yaml
 project: sample_ext
@@ -28,7 +28,7 @@ Run:
 
 ```bash
 mkdir -p ./ext/generated
-ruby-bindgen bindings.yaml
+ruby-bindgen rice-bindings.yaml
 ```
 
 Output:
@@ -38,7 +38,7 @@ Output:
 
 ## FFI (C)
 
-`bindings.yaml`:
+`ffi-bindings.yaml`:
 
 ```yaml
 input: ./include
@@ -64,7 +64,7 @@ Run:
 
 ```bash
 mkdir -p ./lib/generated
-ruby-bindgen bindings.yaml
+ruby-bindgen ffi-bindings.yaml
 ```
 
 Output:
@@ -74,7 +74,7 @@ Output:
 
 Generate Rice code first, then CMake files.
 
-`rice.yaml`:
+`rice-bindings.yaml`:
 
 ```yaml
 project: sample_ext
@@ -90,7 +90,7 @@ clang:
     - -xc++
 ```
 
-`cmake.yaml`:
+`cmake-bindings.yaml`:
 
 ```yaml
 project: sample_ext
@@ -106,8 +106,8 @@ Run:
 
 ```bash
 mkdir -p ./ext/generated
-ruby-bindgen rice.yaml
-ruby-bindgen cmake.yaml
+ruby-bindgen rice-bindings.yaml
+ruby-bindgen cmake-bindings.yaml
 ```
 
 Then build:

@@ -22,10 +22,10 @@ Generate bindings in two passes:
 
 ```bash
 # 1. Generate Rice C++ source files
-ruby-bindgen rice_config.yaml
+ruby-bindgen rice-bindings.yaml
 
 # 2. Generate CMake build files
-ruby-bindgen cmake_config.yaml
+ruby-bindgen cmake-bindings.yaml
 ```
 
 Then build:
@@ -36,6 +36,10 @@ cmake --preset linux-debug    # or msvc-debug, macos-debug, etc.
 cmake --build build/linux-debug
 ```
 
+## Skipping Files
+
+The CMake config supports a `skip` option to exclude specific `*-rb.cpp` files from the generated `CMakeLists.txt`. However, in most cases it's better to add skip patterns to your Rice/FFI config instead — that way the problematic files are never generated, and CMake won't find them to include. The CMake `skip` is useful as a quick fix when you have stale generated files on disk that you don't want to recompile.
+
 ## Output
 
 The CMake format scans the output directory for `*-rb.cpp` files and generates:
@@ -43,7 +47,7 @@ The CMake format scans the output directory for `*-rb.cpp` files and generates:
 ``` mermaid
 flowchart LR
     subgraph Input
-        CF["cmake_config.yaml"]
+        CF["cmake-bindings.yaml"]
         S1["*-rb.cpp"]
     end
 

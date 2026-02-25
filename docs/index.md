@@ -94,7 +94,7 @@ For much more details, jump to the documentation page for each format:
 Finally generate bindings by running the command:
 
 ```bash
-ruby-bindgen config.yaml
+ruby-bindgen rice-bindings.yaml
 ```
 
 ## Naming Conventions

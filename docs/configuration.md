@@ -3,7 +3,7 @@
 `ruby-bindgen` uses a YAML configuration file to specify how bindings should be generated. This approach keeps your build configuration versioned and reproducible.
 
 ```bash
-ruby-bindgen config.yaml
+ruby-bindgen rice-bindings.yaml
 ```
 
 For end-to-end examples, see [C Bindings](c_bindings.md), [C++ Bindings](cpp/cpp_bindings.md), and [CMake Bindings](cmake_bindings.md).
@@ -25,7 +25,7 @@ These options apply to all formats.
 | Option          | Default            | Description                                                                               |
 |-----------------|--------------------|-------------------------------------------------------------------------------------------|
 | `match`         | `["**/*.{h,hpp}"]` | Array of glob pattern specifying which header files to process.                           |
-| `skip`          | `[]`               | Array of glob pattern specifying which header files to skip.                              |
+| `skip`          | `[]`               | Array of glob patterns specifying which files to skip. For Rice/FFI, these match header file paths. For CMake, these match generated `*-rb.cpp` file paths. In most cases, it's better to add skips to the Rice/FFI config so the files are never generated, rather than skipping them in CMake after the fact. |
 | `skip_symbols`  | `[]`               | Array of symbols names to skip.  See [Skip Symbols](#skip-symbols).                       |
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
 

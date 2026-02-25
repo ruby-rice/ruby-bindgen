@@ -41,14 +41,14 @@ For typedef-related issues, use `cross_file_base.hpp` and `cross_file_derived.hp
 
 ## Regenerate opencv-ruby bindings
 
-See `/mnt/c/Source/opencv-ruby/ext/bindings.yaml` for the full configuration. Use the match field to configure what *.h/*.hpp files are processed and thus generate bindings for.
+See `/mnt/c/Source/opencv-ruby/ext/rice-bindings.yaml` for the full configuration. Use the match field to configure what *.h/*.hpp files are processed and thus generate bindings for.
 
 ```bash
 cd /mnt/c/Source/ruby-bindgen
 
 # 1. Generate Rice C++ source files
-bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/bindings.yaml
+bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/rice-bindings.yaml
 
 # 2. Generate CMake build files (must run after Rice generation)
-bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/cmake.yaml
+bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/cmake-bindings.yaml
 ```

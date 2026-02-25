@@ -10,7 +10,7 @@ For more complex libraries, like [OpenCV](https://github.com/opencv/opencv), som
 
 ## Configuration
 
-Below is an example `bindings.yaml` configuration file:
+Below is an example `rice-bindings.yaml` configuration file:
 
 ```yaml
 project: my_extension
@@ -31,7 +31,7 @@ clang:
 To generate bindings run:
 
 ```bash
-ruby-bindgen bindings.yaml
+ruby-bindgen rice-bindings.yaml
 ```
 
 ## Output
@@ -44,7 +44,7 @@ For every C++ header file, `ruby-bindgen` generates a .hpp and .cpp file. These 
 flowchart LR
     subgraph Input
         H1["matrix.hpp"]
-        CF["bindings.yaml"]
+        CF["rice-bindings.yaml"]
     end
 
     H1 & CF --> RB["ruby-bindgen"]
@@ -84,7 +84,7 @@ When you set the `project` option in your configuration, `ruby-bindgen` also gen
 ```mermaid
 flowchart LR
     subgraph Input
-        CF["bindings.yaml"]
+        CF["rice-bindings.yaml"]
     end
 
     CF --> RB["ruby-bindgen"]
