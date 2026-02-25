@@ -1022,6 +1022,11 @@ module RubyBindgen
                                [:type_constant_array, :type_incomplete_array].include?(decl.underlying_type.canonical.kind)
               if is_array_alias
                 result << " = #{default_value}"
+              elsif default_value == '{}'
+                # Braced-init-list {} can't be used with static_cast (especially to
+                # reference types). Use the canonical type for direct construction.
+                base_type = qualified_type.sub(/\bconst\s+/, '').sub(/\s*&\s*$/, '')
+                result << " = static_cast<#{qualified_type}>(#{base_type}{})"
               else
                 result << " = static_cast<#{qualified_type}>(#{default_value})"
               end

@@ -67,6 +67,16 @@ namespace cv
   void render(const Rect_<double>& wndRect = Rect_<double>(0.0, 0.0, 1.0, 1.0));
 }
 
+// Test braced-init-list {} as default value
+// Like cv::cudacodec::createVideoReader(const String& filename, const std::vector<int>& sourceParams = {})
+// Can't static_cast<const std::vector<int>&>({}) — must construct the type explicitly
+#include <vector>
+
+namespace cv
+{
+  void processItems(const std::vector<int>& items = {});
+}
+
 // Test global namespace items - should NOT be prefixed with ::
 // Global variables like stdout are often macros that break with :: prefix
 #include <cstdio>

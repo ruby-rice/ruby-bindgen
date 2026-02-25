@@ -37,6 +37,9 @@ void Init_DefaultValues()
   rb_mCv.define_module_function<void(*)(const cv::Rect_<double>&)>("render", &cv::render,
     Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(cv::Rect_<double>(0.0, 0.0, 1.0, 1.0)));
 
+  rb_mCv.define_module_function<void(*)(const std::vector<int>&)>("process_items", &cv::processItems,
+    Arg("items") = static_cast<const std::vector<int>&>(std::vector<int>{}));
+
   Module rb_mIo = define_module("Io");
 
   rb_mIo.define_module_function<void(*)(FILE*)>("print_to", &io::print_to,
