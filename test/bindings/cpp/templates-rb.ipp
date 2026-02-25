@@ -98,3 +98,12 @@ inline Rice::Data_Type<Tests::Mat_<_Tp>> Mat__instantiate(Rice::Module parent, c
       Arg("rows"), Arg("cols"), std::conditional_t<std::is_fundamental_v<_Tp>, ArgBuffer, Arg>("data"));
 }
 
+template<typename T>
+inline Rice::Data_Type<Tests::SmartPtr<T>> SmartPtr_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::SmartPtr<T>>(parent, name).
+    define_constructor(Constructor<Tests::SmartPtr<T>>()).
+    define_constructor(Constructor<Tests::SmartPtr<T>, T*>(),
+      std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("p"));
+}
+

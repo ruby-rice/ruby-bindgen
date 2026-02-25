@@ -1671,8 +1671,16 @@ module RubyBindgen
           # Resolve the base class to its instantiated form (e.g., PtrStep<unsigned char>)
           base_spelling = resolve_base_instantiation(cursor, underlying_type)
 
-          # Ensure the base class is generated before this class
-          if base_spelling
+          # Ensure the base class is generated before this class.
+          # Skip std:: base classes — Rice handles standard library types automatically.
+          # This prevents walking libstdc++ internals (e.g., cv::Ptr<T> inherits from
+          # std::shared_ptr<T> → std::__shared_ptr<T> → std::__shared_ptr_access<T>).
+          # Also check the base template's own namespace since resolve_base_instantiation
+          # may incorrectly use the derived class's namespace (e.g., "cv::shared_ptr").
+          base_template_decl = base_ref.find_first_by_kind(false, :cursor_type_ref, :cursor_template_ref)&.referenced
+          base_in_std = base_spelling&.start_with?("std::") ||
+                        base_template_decl&.qualified_name&.start_with?("std::")
+          if base_spelling && !base_in_std
             base_typedef = @typedef_map[base_spelling]
             if base_typedef
               # Base has a typedef - check if it has been generated yet

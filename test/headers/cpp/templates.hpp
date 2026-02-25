@@ -1,3 +1,5 @@
+#include <memory>
+
 namespace Internal
 {
     template<int Rows, int Columns>
@@ -178,4 +180,24 @@ namespace Tests
     };
 
     typedef Mat_<float> Mat1f;
+
+    // Test that template classes inheriting from std:: types don't generate
+    // bindings for std:: internals. Mimics OpenCV's cv::Ptr<T> which inherits
+    // from std::shared_ptr<T>. On libstdc++, shared_ptr has internal base
+    // classes (__shared_ptr, __shared_ptr_access) that should NOT be emitted.
+    template<typename T>
+    struct SmartPtr : public std::shared_ptr<T>
+    {
+        SmartPtr() : std::shared_ptr<T>() {}
+        SmartPtr(T* p) : std::shared_ptr<T>(p) {}
+    };
+
+    class Target
+    {
+    public:
+        int value;
+        int getValue() const;
+    };
+
+    typedef SmartPtr<Target> TargetPtr;
 }

@@ -55,4 +55,11 @@ void Init_Templates()
 
   Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = Mat__instantiate<float>(rb_mTests, "Mat1f");
 
+  Rice::Data_Type<Tests::Target> rb_cTestsTarget = define_class_under<Tests::Target>(rb_mTests, "Target").
+    define_constructor(Constructor<Tests::Target>()).
+    define_attr("value", &Tests::Target::value).
+    define_method<int(Tests::Target::*)() const>("get_value", &Tests::Target::getValue);
+
+  Rice::Data_Type<Tests::SmartPtr<Tests::Target>> rb_cTargetPtr = SmartPtr_instantiate<Tests::Target>(rb_mTests, "TargetPtr");
+
 }
