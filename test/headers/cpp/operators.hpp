@@ -85,6 +85,33 @@ private:
     int data[10];
 };
 
+// Test subscript operator with namespaced return type.
+// The operator[] template needs to fully qualify the value type in []=.
+// This catches the cv::detail::tracking::tbm::Track bug where TrackedObject
+// was not qualified in the generated []=  lambda.
+namespace subscript
+{
+    class Element
+    {
+    public:
+        int id;
+        Element() : id(0) {}
+        Element(int i) : id(i) {}
+    };
+
+    class Container
+    {
+    public:
+        Container() {}
+
+        Element& operator[](int index);
+        const Element& operator[](int index) const;
+
+    private:
+        Element data[10];
+    };
+}
+
 // Test conversion to namespaced types
 namespace conv
 {

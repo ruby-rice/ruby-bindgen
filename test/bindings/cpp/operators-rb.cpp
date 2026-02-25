@@ -82,7 +82,7 @@ void Init_Operators()
       Arg("arg_0")).
     define_method<int&(Operators::*)(int)>("[]", &Operators::operator[],
       Arg("index")).
-    define_method("[]=", [](Operators&self, int index, int & value)
+    define_method("[]=", [](Operators&self, int index, int& value)
     {
         self[index] = value;
     }).
@@ -105,6 +105,25 @@ void Init_Operators()
     {
       return self;
     });
+
+  Module rb_mSubscript = define_module("Subscript");
+
+  Rice::Data_Type<subscript::Element> rb_cSubscriptElement = define_class_under<subscript::Element>(rb_mSubscript, "Element").
+    define_attr("id", &subscript::Element::id).
+    define_constructor(Constructor<subscript::Element>()).
+    define_constructor(Constructor<subscript::Element, int>(),
+      Arg("i"));
+
+  Rice::Data_Type<subscript::Container> rb_cSubscriptContainer = define_class_under<subscript::Container>(rb_mSubscript, "Container").
+    define_constructor(Constructor<subscript::Container>()).
+    define_method<subscript::Element&(subscript::Container::*)(int)>("[]", &subscript::Container::operator[],
+      Arg("index")).
+    define_method("[]=", [](subscript::Container&self, int index, subscript::Element& value)
+    {
+        self[index] = value;
+    }).
+    define_method<const subscript::Element&(subscript::Container::*)(int) const>("[]", &subscript::Container::operator[],
+      Arg("index"));
 
   Module rb_mConv = define_module("Conv");
 

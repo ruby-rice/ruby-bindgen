@@ -172,8 +172,9 @@ module RubyBindgen
 
         # Figure out relative paths for generated header and cpp file
         @basename = "#{File.basename(relative_path, ".*")}-rb"
-        rice_header = File.join(File.dirname(relative_path), "#{@basename}.hpp")
-        rice_cpp = File.join(File.dirname(relative_path), "#{@basename}.cpp")
+        @relative_dir = File.dirname(relative_path)
+        rice_header = File.join(@relative_dir, "#{@basename}.hpp")
+        rice_cpp = File.join(@relative_dir, "#{@basename}.cpp")
 
         # Track init names - use relative path to avoid conflicts (e.g., core/version vs dnn/version)
         path_parts = Pathname.new(relative_path).each_filename.to_a
@@ -463,9 +464,11 @@ module RubyBindgen
         param_names = template_parameters.map(&:spelling).join(", ")
         fully_qualified_type = "#{cursor.qualified_name}<#{param_names}>"
 
-        # Track builder for cross-file dependency detection
+        # Track builder for cross-file dependency detection.
+        # Store the full relative path (e.g., "opencv2/core/cvstd_wrapper-rb.ipp")
+        # so consumers in different directories can compute the correct include path.
         builder_name = "#{cursor.spelling}_instantiate"
-        @builder_ipps[builder_name] = "#{@basename}.ipp"
+        @builder_ipps[builder_name] = File.join(@relative_dir, "#{@basename}.ipp")
 
         children_content = merge_children(children, :indentation => 4, :separator => ".\n",
                                                     :terminator => ";", :strip => true)
@@ -1700,8 +1703,11 @@ module RubyBindgen
         # Check if the template's _instantiate builder was generated in a different file
         builder_name = "#{cursor_template.spelling}_instantiate"
         builder_ipp = @builder_ipps[builder_name]
-        if builder_ipp && builder_ipp != "#{@basename}.ipp"
-          @includes << "#include \"#{builder_ipp}\""
+        current_ipp = File.join(@relative_dir, "#{@basename}.ipp")
+        if builder_ipp && builder_ipp != current_ipp
+          # Compute relative path from current file's directory to the ipp file
+          ipp_relative = Pathname.new(builder_ipp).relative_path_from(Pathname.new(@relative_dir)).to_s
+          @includes << "#include \"#{ipp_relative}\""
         end
 
         @classes[cursor.cruby_name] = template_specialization
