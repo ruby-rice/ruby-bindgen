@@ -44,27 +44,5 @@ module RubyBindgen
         Dir.glob(search)
       end.flatten.uniq
     end
-
-    # def directory_files(directory)
-    #   raise(ArgumentError, "No block given") unless block_given?
-    #   raise(ArgumentError, "Must specify directory: #{directory}") unless File.directory?(directory)
-    #
-    #   self.each(directory) do |path, relative_path|
-    #     if File.dirname(path) == directory
-    #       yield path, relative_path
-    #     end
-    #   end
-    # end
-    #
-    # def directories(directory)
-    #   raise(ArgumentError, "No block given") unless block_given?
-    #   raise(ArgumentError, "Must specify directory: #{directory}") unless File.directory?(directory)
-    #
-    #   self.each(directory) do |path, relative_path|
-    #     if File.directory?(path) && File.dirname(path) == directory
-    #       yield path, relative_path
-    #     end
-    #   end
-    # end
   end
 end

@@ -1,18 +1,25 @@
-require 'erb'
-
 module RubyBindgen
-  module Visitors
-    class FFI
-      attr_reader :library_names, :library_versions, :project, :outputter
+  module Generators
+    class FFI < Generator
+      attr_reader :library_names, :library_versions
 
-      def initialize(outputter, config)
-        @project = config[:extension]&.gsub(/-/, '_')
-        @outputter = outputter
+      def self.template_dir
+        __dir__
+      end
+
+      def initialize(inputter, outputter, config)
+        super(inputter, outputter, config)
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
         @skip_symbols = config[:skip_symbols] || []
         @export_macros = config[:export_macros] || []
         @indentation = 0
+      end
+
+      def generate
+        clang_args = @config[:clang_args] || []
+        parser = RubyBindgen::Parser.new(@inputter, clang_args)
+        parser.generate(self)
       end
 
       # Check if a cursor should be skipped based on skip_symbols config.
@@ -394,18 +401,6 @@ module RubyBindgen
 
       def render_cursor(cursor, template, local_variables = {})
         render_template(template, local_variables.merge(:cursor => cursor))
-      end
-
-      def render_template(template, local_variables = {})
-        template_path = File.join(__dir__, "#{template}.erb")
-        template_content = File.read(template_path)
-        template = ERB.new(template_content, :trim_mode => '-')
-        template.filename = template_path # This allows debase to stop at breakpoints in templates!
-        b = self.binding
-        local_variables.each do |key, value|
-          b.local_variable_set(key, value)
-        end
-        template.result(b)
       end
 
       def render_callback(name, parameter_types, result_type)

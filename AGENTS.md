@@ -6,8 +6,9 @@ For configuration options, see [docs/configuration.md](docs/configuration.md).
 
 ## Key Files
 
-- `lib/ruby-bindgen/visitors/rice/rice.rb` - Main visitor that walks the AST
-- `lib/ruby-bindgen/visitors/rice/*.erb` - ERB templates that generate Rice C++ code
+- `lib/ruby-bindgen/generators/generator.rb` - Base class for all generators
+- `lib/ruby-bindgen/generators/rice/rice.rb` - Rice generator that walks the AST
+- `lib/ruby-bindgen/generators/rice/*.erb` - ERB templates that generate Rice C++ code
 - `test/headers/cpp/*.hpp` - Test input headers
 - `test/bindings/cpp/*-rb.cpp` - Expected output (golden files)
 

@@ -36,11 +36,10 @@ class AbstractTest < Minitest::Test
     overrides.each { |key, value| config[key] = value }
 
     inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
-    parser = RubyBindgen::Parser.new(inputter, config[:clang_args] || [])
     outputter = create_outputter("cpp")
-    visitor = RubyBindgen::Visitors::Rice.new(outputter, config)
-    parser.generate(visitor)
-    validate_result(visitor.outputter)
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+    generator.generate
+    validate_result(generator.outputter)
   end
 
   def validate_result(outputter)

@@ -1,8 +1,8 @@
 require 'set'
 
 module RubyBindgen
-  module Visitors
-    class Rice
+  module Generators
+    class Rice < Generator
       CURSOR_LITERALS = [:cursor_integer_literal, :cursor_floating_literal,
                          :cursor_imaginary_literal, :cursor_string_literal,
                          :cursor_character_literal, :cursor_cxx_bool_literal_expr,
@@ -26,11 +26,12 @@ module RubyBindgen
         :type_nullptr
       ].freeze
 
-      attr_reader :project, :outputter
+      def self.template_dir
+        __dir__
+      end
 
-      def initialize(outputter, config)
-        @project = config[:extension]&.gsub(/-/, '_')
-        @outputter = outputter
+      def initialize(inputter, outputter, config)
+        super(inputter, outputter, config)
         @include_header = config[:include]
         @init_names = Hash.new
         @namespaces = Set.new
@@ -51,6 +52,12 @@ module RubyBindgen
         @empty_builders = Set.new
         # Maps builder function name -> -rb.ipp basename (persists across files for cross-file deps)
         @builder_ipps = {}
+      end
+
+      def generate
+        clang_args = @config[:clang_args] || []
+        parser = RubyBindgen::Parser.new(@inputter, clang_args)
+        parser.generate(self)
       end
 
       # Check if a type's spelling contains a skipped symbol.
@@ -1879,18 +1886,6 @@ module RubyBindgen
 
       def render_cursor(cursor, template, local_variables = {})
         render_template(template, local_variables.merge(:cursor => cursor))
-      end
-
-      def render_template(template, local_variables = {})
-        template_path = File.join(__dir__, "#{template}.erb")
-        template_content = File.read(template_path)
-        template = ERB.new(template_content, :trim_mode => '-')
-        template.filename = template_path # This allows debase to stop at breakpoints in templates!
-        b = self.binding
-        local_variables.each do |key, value|
-          b.local_variable_set(key, value)
-        end
-        template.result(b)
       end
 
       # Returns [content, has_builders] where has_builders indicates if any builder templates were generated
