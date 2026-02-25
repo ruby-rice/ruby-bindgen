@@ -9,7 +9,7 @@ module RubyBindgen
         @inputter = inputter
         @outputter = outputter
         @config = config
-        @project = config[:extension]&.gsub(/-/, '_')
+        @project = config[:project]&.gsub(/-/, '_')
       end
 
       def project

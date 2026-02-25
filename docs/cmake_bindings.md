@@ -8,7 +8,7 @@ Rice supports building extensions with either [extconf.rb](https://ruby-rice.git
 
 ```yaml
 format: CMake
-extension: my_extension
+project: my_extension
 
 include_dirs:
   - "${CMAKE_CURRENT_SOURCE_DIR}/../headers"
@@ -56,6 +56,10 @@ flowchart LR
 
     RB --> C1 & C2
 ```
+
+### Project Files (requires `project`)
+
+When the `project` option is set, `ruby-bindgen` generates the root `CMakeLists.txt` and `CMakePresets.json`. When `project` is omitted, these files are **not** generated — only subdirectory `CMakeLists.txt` files are produced. This is useful when you want to create and manage the root project files yourself and only regenerate subdirectory files on subsequent runs.
 
 ### Top Level
 

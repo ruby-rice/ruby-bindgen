@@ -9,7 +9,7 @@ Reference project (fully automated Rice bindings): [BitmapPlusPlus-ruby](https:/
 `bindings.yaml`:
 
 ```yaml
-extension: sample_ext
+project: sample_ext
 input: ./include
 output: ./ext/generated
 format: Rice
@@ -34,7 +34,7 @@ ruby-bindgen bindings.yaml
 Output:
 - One `*-rb.cpp` and `*-rb.hpp` per header
 - Optional `*-rb.ipp` files when template `_instantiate` functions are generated
-- Project files when `extension` is set (`sample_ext-rb.cpp`, `sample_ext-rb.hpp`)
+- Project files when `project` is set (`sample_ext-rb.cpp`, `sample_ext-rb.hpp`)
 
 ## FFI (C)
 
@@ -77,7 +77,7 @@ Generate Rice code first, then CMake files.
 `rice.yaml`:
 
 ```yaml
-extension: sample_ext
+project: sample_ext
 input: ./include
 output: ./ext/generated
 format: Rice
@@ -93,7 +93,7 @@ clang:
 `cmake.yaml`:
 
 ```yaml
-extension: sample_ext
+project: sample_ext
 input: ./include
 output: ./ext/generated
 format: CMake

@@ -70,9 +70,9 @@ module RubyBindGen
         raise "Output path must be a directory: #{@config[:output]}"
       end
 
-      # Validate extension name is a valid C/C++ identifier (if provided)
-      if @config[:extension] && !@config[:extension].match?(/\A[A-Za-z_][A-Za-z0-9_]*\z/)
-        raise "Extension name must be a valid C/C++ identifier: #{@config[:extension]}"
+      # Validate project name is a valid C/C++ identifier (if provided)
+      if @config[:project] && !@config[:project].match?(/\A[A-Za-z_][A-Za-z0-9_]*\z/)
+        raise "Project name must be a valid C/C++ identifier: #{@config[:project]}"
       end
     end
 

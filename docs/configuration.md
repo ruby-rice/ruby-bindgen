@@ -40,14 +40,14 @@ These options apply to all formats.
 
 | Option          | Default        | Description |
 |-----------------|----------------|-------------|
-| `extension`     | none           | Name of the Ruby extension. Used for the `Init_` function name. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{extension}-rb.cpp`, `{extension}-rb.hpp`). When omitted, only per-file bindings are generated. |
+| `project`       | none           | Project name for the Ruby extension. Used for the `Init_` function name and project wrapper file names. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{project}-rb.cpp`, `{project}-rb.hpp`). When omitted, only per-file bindings are generated. |
 | `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/cpp_bindings.md#include-header). |
 
 ## CMake Options
 
 | Option         | Default | Description |
 |----------------|---------|-------------|
-| `extension`    | none    | Project name used in `project()` and target name. Required. |
+| `project`      | none    | Project name used in the CMake `project()` command and build target name. When provided, generates the root `CMakeLists.txt` (with project setup, Rice fetch, Ruby detection) and `CMakePresets.json`. When omitted, only subdirectory `CMakeLists.txt` files are generated — useful when you manage the root project files yourself. |
 | `include_dirs` | `[]`    | List of include directory expressions added via `target_include_directories`. These are CMake expressions written directly into `CMakeLists.txt` (e.g., `${CMAKE_CURRENT_SOURCE_DIR}/../headers`). |
 
 ## Compiler Toolchain

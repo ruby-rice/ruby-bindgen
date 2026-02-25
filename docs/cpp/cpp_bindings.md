@@ -13,7 +13,7 @@ For more complex libraries, like [OpenCV](https://github.com/opencv/opencv), som
 Below is an example `bindings.yaml` configuration file:
 
 ```yaml
-extension: my_extension
+project: my_extension
 input: ./include
 output: ./ext/generated
 format: Rice
@@ -79,7 +79,7 @@ The top-level directory is always removed to avoid overly long names (e.g., `ope
 
 ### Project Files
 
-When you set the `extension` option in your configuration, `ruby-bindgen` also generates project-level wrapper files that tie everything together:
+When you set the `project` option in your configuration, `ruby-bindgen` also generates project-level wrapper files that tie everything together:
 
 ```mermaid
 flowchart LR
@@ -102,7 +102,7 @@ flowchart LR
 * `my_extension-rb.cpp` defines `Init_MyExtension`, which calls each per-header `Init_` function (e.g., `Init_Matrix`, `Init_Image`, `Init_Filter`)
 * `rice_include.hpp` is the default [include header](#include-header) that all generated translation units include
 
-To suppress project file generation, omit the `extension` option from your configuration. This is useful when you want to manage the top-level init function yourself.
+To suppress project file generation, omit the `project` option from your configuration. This is useful when you want to manage the top-level init function yourself.
 
 ## Include Header
 

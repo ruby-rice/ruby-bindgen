@@ -40,17 +40,19 @@ module RubyBindgen
         end
         child_dirs_of.each_value(&:sort!)
 
-        # Root CMakeLists.txt
-        content = render_template("project",
-                                  :project => self.project,
-                                  :directories => child_dirs_of["."],
-                                  :files => files_by_dir["."].sort,
-                                  :include_dirs => self.include_dirs)
-        self.outputter.write("CMakeLists.txt", content)
+        if @project
+          # Root CMakeLists.txt
+          content = render_template("project",
+                                    :project => self.project,
+                                    :directories => child_dirs_of["."],
+                                    :files => files_by_dir["."].sort,
+                                    :include_dirs => self.include_dirs)
+          self.outputter.write("CMakeLists.txt", content)
 
-        # Presets
-        content = render_template("presets")
-        self.outputter.write("CMakePresets.json", content)
+          # Presets
+          content = render_template("presets")
+          self.outputter.write("CMakePresets.json", content)
+        end
 
         # Subdirectory CMakeLists.txt files
         all_dirs.sort.each do |dir|

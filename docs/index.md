@@ -63,12 +63,12 @@ flowchart TD
 
 If a library provides both C and C++ APIs, use the C API! It is usually simpler to wrap and maintain and does not require users to compile extensions.
 
-Once you have decided the format, create a simple [configuration](configuration.md) file and set its `format` field to `FFI`, `Rice` or `CMake`. In addition, specify an `extension` name, the `input` path to header files and the `output` path for generated bindings.
+Once you have decided the format, create a simple [configuration](configuration.md) file and set its `format` field to `FFI`, `Rice` or `CMake`. In addition, specify a `project` name, the `input` path to header files and the `output` path for generated bindings.
 
 For example:
 
 ```yaml
-extension: my_extension
+project: my_extension
 input: /path/to/headers
 output: /path/to/output
 format: Rice     # or FFI/CMake
