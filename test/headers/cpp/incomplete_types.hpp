@@ -5,6 +5,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <unordered_map>
+#include <vector>
 
 // External opaque types (like CUstream_st, CUevent_st from CUDA)
 // These are forward-declared structs that are never fully defined
@@ -304,6 +306,54 @@ namespace Outer
 
       // Method returning template with external opaque type
       Deleter<ExternalOpaqueB> getDeleterB();
+    };
+
+    // =========================================================================
+    // Test that size_t is preserved in template arguments (not resolved to
+    // unsigned long / unsigned long long).
+    // Mimics cv::detail::tracking::tbm::ITrackerByMatching::tracks() which
+    // returns std::unordered_map<size_t, std::vector<cv::Point>>.
+    // The canonical type resolves size_t to unsigned long (on Linux) which
+    // breaks on MSVC where size_t is unsigned long long.
+    // =========================================================================
+    class Marker
+    {
+    public:
+      int x, y;
+    };
+
+    class SizeTInTemplateArgs
+    {
+    public:
+      // Return type has size_t as a template argument — must preserve size_t,
+      // not resolve to unsigned long or unsigned long long
+      std::unordered_map<size_t, std::vector<Marker>> getTrackedObjects() const;
+    };
+
+    // =========================================================================
+    // Test that nested class names in template arguments get fully qualified.
+    // Mimics cv::LMSolver with nested Callback class used as
+    // cv::Ptr<cv::LMSolver::Callback>. The spelling has "Solver::Callback"
+    // but canonical has the full "Outer::Inner::Solver::Callback" qualification.
+    // =========================================================================
+    template<typename T>
+    class Holder
+    {
+    public:
+      T* ptr;
+      Holder() : ptr(nullptr) {}
+    };
+
+    class Solver
+    {
+    public:
+      class Callback
+      {
+      public:
+        virtual bool compute(double* param) const;
+      };
+
+      static Holder<Solver::Callback> create(const Holder<Callback>& cb, int maxIters);
     };
   }
 }

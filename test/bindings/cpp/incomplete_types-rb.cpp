@@ -152,4 +152,25 @@ void Init_IncompleteTypes()
     define_attr("deleter_a", &Outer::Inner::DeleterUser::deleterA).
     define_method<Outer::Inner::Deleter<ExternalOpaqueB>(Outer::Inner::DeleterUser::*)()>("get_deleter_b", &Outer::Inner::DeleterUser::getDeleterB);
 
+  Rice::Data_Type<Outer::Inner::Marker> rb_cOuterInnerMarker = define_class_under<Outer::Inner::Marker>(rb_mOuterInner, "Marker").
+    define_constructor(Constructor<Outer::Inner::Marker>()).
+    define_attr("x", &Outer::Inner::Marker::x).
+    define_attr("y", &Outer::Inner::Marker::y);
+
+  Rice::Data_Type<Outer::Inner::SizeTInTemplateArgs> rb_cOuterInnerSizeTInTemplateArgs = define_class_under<Outer::Inner::SizeTInTemplateArgs>(rb_mOuterInner, "SizeTInTemplateArgs").
+    define_constructor(Constructor<Outer::Inner::SizeTInTemplateArgs>()).
+    define_method<std::unordered_map<std::size_t, std::vector<Outer::Inner::Marker>>(Outer::Inner::SizeTInTemplateArgs::*)() const>("get_tracked_objects", &Outer::Inner::SizeTInTemplateArgs::getTrackedObjects);
+
+  Rice::Data_Type<Outer::Inner::Holder<Outer::Inner::Solver::Callback>> rb_cOuterInnerHolderOuterInnerSolverCallback = Holder_instantiate<Outer::Inner::Solver::Callback>(rb_mOuterInner, "HolderOuterInnerSolverCallback");
+
+  Rice::Data_Type<Outer::Inner::Solver> rb_cOuterInnerSolver = define_class_under<Outer::Inner::Solver>(rb_mOuterInner, "Solver").
+    define_constructor(Constructor<Outer::Inner::Solver>()).
+    define_singleton_function<Outer::Inner::Holder<Outer::Inner::Solver::Callback>(*)(const Outer::Inner::Holder<Outer::Inner::Solver::Callback>&, int)>("create", &Outer::Inner::Solver::create,
+      Arg("cb"), Arg("max_iters"));
+
+  Rice::Data_Type<Outer::Inner::Solver::Callback> rb_cOuterInnerSolverCallback = define_class_under<Outer::Inner::Solver::Callback>(rb_cOuterInnerSolver, "Callback").
+    define_constructor(Constructor<Outer::Inner::Solver::Callback>()).
+    define_method<bool(Outer::Inner::Solver::Callback::*)(double*) const>("compute", &Outer::Inner::Solver::Callback::compute,
+      ArgBuffer("param"));
+
 }

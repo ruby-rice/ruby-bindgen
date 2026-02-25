@@ -737,6 +737,42 @@ module RubyBindgen
         end
       end
 
+      # Use canonical spelling for better qualification but restore any typedef names
+      # that canonical resolved to underlying types. For example, canonical resolves
+      # size_t to "unsigned long" (Linux) or "unsigned long long" (MSVC). We want the
+      # better namespace qualification from canonical but need to keep "size_t".
+      def restore_typedefs(base, canonical, type)
+        result = canonical
+        collect_typedef_restorations(type, result)
+        result
+      end
+
+      # Scan template arguments for typedefs whose canonical form differs from their
+      # typedef name. Replace the canonical form back with the typedef name in result.
+      def collect_typedef_restorations(type, result)
+        return if type.nil? || type.kind == :type_invalid
+        return unless type.num_template_arguments > 0
+
+        type.num_template_arguments.times do |i|
+          arg_type = type.template_argument_type(i)
+          next if arg_type.kind == :type_invalid
+
+          # Check if this arg is a typedef whose canonical differs
+          decl = arg_type.declaration
+          if decl.kind == :cursor_typedef_decl || decl.kind == :cursor_type_alias_decl
+            typedef_name = arg_type.spelling
+            canonical_name = arg_type.canonical.spelling
+            if typedef_name != canonical_name
+              # Replace the resolved canonical form with the original typedef name
+              result.gsub!(canonical_name, typedef_name)
+            end
+          end
+
+          # Recurse into nested template arguments
+          collect_typedef_restorations(arg_type, result)
+        end
+      end
+
       # Get qualified C++ class name for use in templates
       # Qualifies any template arguments that need namespace prefixes
       def qualified_class_name_cpp(cursor)
@@ -894,7 +930,13 @@ module RubyBindgen
           if base.include?('<') && canonical.include?('<') && !canonical.match?(IMPL_CRUFT)
             base_args = base[/<.*/] || ""
             canonical_args = canonical[/<.*/] || ""
-            base = canonical if canonical_args.count(':') > base_args.count(':')
+            if canonical_args.count(':') > base_args.count(':')
+              # Canonical has better-qualified template args (e.g., cv::LMSolver::Callback
+              # instead of LMSolver::Callback). But canonical also resolves typedefs like
+              # size_t to platform-specific types (unsigned long on Linux, unsigned long long
+              # on MSVC). Restore any typedef names that canonical resolved.
+              base = restore_typedefs(base, canonical, type)
+            end
           end
 
           qualify_template_args(base, type)

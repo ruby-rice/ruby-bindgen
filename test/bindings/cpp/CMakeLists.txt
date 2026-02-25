@@ -71,6 +71,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "functions-rb.cpp"
   "incomplete_types-rb.cpp"
   "inheritance-rb.cpp"
+  "inline_namespaces-rb.cpp"
   "iterators-rb.cpp"
   "operators-rb.cpp"
   "overloads-rb.cpp"
