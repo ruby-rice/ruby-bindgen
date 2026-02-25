@@ -18,7 +18,7 @@ module RubyBindgen
 
       def generate
         clang_args = @config[:clang_args] || []
-        parser = RubyBindgen::Parser.new(@inputter, clang_args)
+        parser = RubyBindgen::Parser.new(@inputter, clang_args, libclang: @config[:libclang])
         parser.generate(self)
       end
 

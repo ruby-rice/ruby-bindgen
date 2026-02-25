@@ -7,9 +7,20 @@ module RubyBindgen
   class Parser
     attr_reader :inputter, :clang_args
 
-    def initialize(inputter, clang_args)
+    def initialize(inputter, clang_args, libclang: nil)
       @inputter = inputter
       @clang_args = clang_args
+
+      # Set libclang path before loading ffi-clang (it reads ENV on load)
+      ENV['LIBCLANG'] = libclang if libclang
+
+      # Lazy-load ffi-clang and its refinements so CMake format doesn't need libclang
+      require 'ffi/clang'
+      require 'ruby-bindgen/refinements/translation_unit'
+      require 'ruby-bindgen/refinements/cursor'
+      require 'ruby-bindgen/refinements/source_range'
+      require 'ruby-bindgen/refinements/type'
+
       @index = FFI::Clang::Index.new(false, true)
     end
 

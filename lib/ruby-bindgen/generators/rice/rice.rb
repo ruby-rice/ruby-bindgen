@@ -56,7 +56,7 @@ module RubyBindgen
 
       def generate
         clang_args = @config[:clang_args] || []
-        parser = RubyBindgen::Parser.new(@inputter, clang_args)
+        parser = RubyBindgen::Parser.new(@inputter, clang_args, libclang: @config[:libclang])
         parser.generate(self)
       end
 
@@ -828,6 +828,11 @@ module RubyBindgen
           "#{const_prefix}#{element_spelling}[]"
         when :type_elaborated
           type_spelling_elaborated(type)
+        when :type_record
+          # Record types (class/struct) may come through without elaborated type wrapper
+          # on some platforms (e.g., clang-cl). Use fully_qualified_spelling to ensure
+          # namespace qualification (e.g., "dnn::Net" → "cv::dnn::Net").
+          type.fully_qualified_spelling
         else
           type.spelling
         end

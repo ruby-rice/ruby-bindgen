@@ -12,7 +12,6 @@ module RubyBindGen
     def initialize
       parse_args
       @config = RubyBindgen::Config.new(@config_path)
-      setup_libclang unless @config[:format] == 'CMake'
       require 'ruby-bindgen'
       validate_config
     end
@@ -43,12 +42,6 @@ module RubyBindGen
         Options:
           -h, --help    Show this help message
       USAGE
-    end
-
-    def setup_libclang
-      if @config[:libclang]
-        ENV['LIBCLANG'] = @config[:libclang]
-      end
     end
 
     def validate_config
