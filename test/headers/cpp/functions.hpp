@@ -51,6 +51,32 @@ namespace arrays
 }
 
 // =============================================================================
+// Non-type template arguments referencing static class members
+// Similar to OpenCV's GPCPatchDescriptor::nFeatures used in Vec<double, nFeatures>
+// =============================================================================
+namespace nontype_args
+{
+  template<typename T, int N>
+  class Container {};
+
+  class Config
+  {
+  public:
+    static constexpr int Size = 8;
+
+    // Bare non-type arg (within the declaring class) - needs full qualification in generated code
+    void process(const Container<double, Size>& data);
+  };
+
+  class User
+  {
+  public:
+    // Partially-qualified non-type arg - Config::Size needs full qualification
+    void use(const Container<double, Config::Size>& data);
+  };
+}
+
+// =============================================================================
 // Variadic functions - should be SKIPPED (cannot be bound to Ruby)
 // =============================================================================
 

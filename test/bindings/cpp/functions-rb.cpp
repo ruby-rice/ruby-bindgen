@@ -77,6 +77,21 @@ void Init_Functions()
   rb_mArrays.define_module_function<void(*)(arrays::Element[])>("process_incomplete_array", &arrays::processIncompleteArray,
     Arg("arr"));
 
+  Module rb_mNontypeArgs = define_module("NontypeArgs");
+
+  Rice::Data_Type<nontype_args::Container<double, nontype_args::Config::Size>> rb_cNontype_argsContainerDoubleNontype_argsConfigSize = define_class_under<nontype_args::Container<double, nontype_args::Config::Size>>(rb_mNontypeArgs, "ContainerDoubleNontypeArgsConfigSize");
+
+  Rice::Data_Type<nontype_args::Config> rb_cNontypeArgsConfig = define_class_under<nontype_args::Config>(rb_mNontypeArgs, "Config").
+    define_constructor(Constructor<nontype_args::Config>()).
+    define_constant("Size", nontype_args::Config::Size).
+    define_method<void(nontype_args::Config::*)(const nontype_args::Container<double, nontype_args::Config::Size>&)>("process", &nontype_args::Config::process,
+      Arg("data"));
+
+  Rice::Data_Type<nontype_args::User> rb_cNontypeArgsUser = define_class_under<nontype_args::User>(rb_mNontypeArgs, "User").
+    define_constructor(Constructor<nontype_args::User>()).
+    define_method<void(nontype_args::User::*)(const nontype_args::Container<double, nontype_args::Config::Size>&)>("use", &nontype_args::User::use,
+      Arg("data"));
+
   Rice::Data_Type<Logger> rb_cLogger = define_class<Logger>("Logger").
     define_constructor(Constructor<Logger>()).
     define_singleton_function<void(*)(int)>("set_level", &Logger::setLevel,

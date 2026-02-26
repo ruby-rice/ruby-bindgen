@@ -375,6 +375,7 @@ module RubyBindgen
 
             # Auto-instantiate if no typedef exists
             instantiated_type = type_spelling(type).sub(/^const\s+/, '')
+            instantiated_type = qualify_class_static_members(instantiated_type, cursor)
             next if @typedef_map[instantiated_type]
 
             code = auto_instantiate_template(decl, instantiated_type, under)
@@ -890,10 +891,14 @@ module RubyBindgen
         case decl.kind
         when :cursor_class_template
           # Class template definition (e.g., template<typename T> class Vec).
-          # Use qualify_dependent_types_in_template_args (NOT qualify_template_args) because
-          # template parameters like "_Tp" shouldn't be looked up in @type_name_map.
+          # Do NOT call qualify_template_args here — template parameters like _Tp
+          # could collide with class names in @type_name_map, and typedef members
+          # like "iterator" need to stay unqualified for qualify_class_template_typedefs
+          # to add the required "typename" keyword later.
           spelling = type.spelling
           qualified = spelling.match(/\w+::/) ? spelling : spelling.sub(decl.spelling, decl.qualified_name)
+
+          # Handle dependent types (typename patterns)
           qualify_dependent_types_in_template_args(qualified)
 
         when :cursor_typedef_decl
@@ -1210,6 +1215,41 @@ module RubyBindgen
         result
       end
 
+      # Qualify bare static const/constexpr member names used as non-type template args.
+      # Within a class like GPCPatchDescriptor, a member can write Vec<double, nFeatures>
+      # but the generated binding code is outside the class, so it needs
+      # Vec<double, GPCPatchDescriptor::nFeatures>. qualify_template_args then handles
+      # qualifying GPCPatchDescriptor to cv::optflow::GPCPatchDescriptor.
+      def qualify_class_static_members(spelling, class_cursor)
+        return spelling unless class_cursor
+
+        parent_kind = class_cursor.kind
+        return spelling unless parent_kind == :cursor_class_decl || parent_kind == :cursor_struct
+
+        @class_static_members ||= {}
+        cache_key = class_cursor.usr
+        member_info = @class_static_members[cache_key] ||= begin
+          names = []
+          class_cursor.each(false) do |child|
+            if child.kind == :cursor_variable
+              names << child.spelling
+            end
+          end
+          { names: names, qualified_parent: class_cursor.qualified_name }
+        end
+
+        return spelling if member_info[:names].empty?
+
+        result = spelling.dup
+        qualified_parent = member_info[:qualified_parent]
+        member_info[:names].each do |name|
+          unqualified = /(?<![:\w])#{Regexp.escape(name)}(?![:\w])/
+          result = result.gsub(unqualified, "#{qualified_parent}::#{name}")
+        end
+
+        result
+      end
+
       def method_signature(cursor)
         param_types = type_spellings(cursor)
         result_type = type_spelling(cursor.type.result_type)
@@ -1218,6 +1258,14 @@ module RubyBindgen
         if cursor.semantic_parent&.kind == :cursor_class_template
           result_type = qualify_class_template_typedefs(result_type, cursor.semantic_parent)
           param_types = param_types.map { |pt| qualify_class_template_typedefs(pt, cursor.semantic_parent) }
+        end
+
+        # Qualify bare static const/constexpr members used as non-type template args
+        # (e.g., nFeatures -> GPCPatchDescriptor::nFeatures)
+        parent = cursor.semantic_parent
+        if parent
+          result_type = qualify_class_static_members(result_type, parent)
+          param_types = param_types.map { |pt| qualify_class_static_members(pt, parent) }
         end
 
         signature = Array.new
@@ -2073,9 +2121,11 @@ module RubyBindgen
       # Build maps for type lookups:
       # - @typedef_map: canonical type spellings -> typedef/using declarations
       #   Includes all files (not just main) because base classes may have typedefs in included headers
-      # - @type_name_map: only class templates for typename qualification (minimal map)
+      # - @type_name_map: simple name -> qualified name for classes, templates, and typedefs
+      #   Used by qualify_template_args to namespace-qualify names in template arguments
       def build_typedef_map(cursor)
-        cursor.find_by_kind(true, :cursor_typedef_decl, :cursor_type_alias_decl, :cursor_class_template) do |child|
+        cursor.find_by_kind(true, :cursor_typedef_decl, :cursor_type_alias_decl,
+                            :cursor_class_template, :cursor_class_decl, :cursor_struct) do |child|
           case child.kind
           when :cursor_typedef_decl, :cursor_type_alias_decl
             # Skip typedefs inside classes/structs (like DataType<T>::value_type)
@@ -2099,8 +2149,10 @@ module RubyBindgen
                 @type_name_map[simple_name] = qualified_name
               end
             end
-          when :cursor_class_template
-            # Only collect class templates for typename pattern qualification
+          when :cursor_class_template, :cursor_class_decl, :cursor_struct
+            # Collect class/struct names for qualifying template arguments.
+            # Needed for non-type template args like Config::Size where Config is a
+            # regular class (not a template) that needs namespace qualification.
             next if child.spelling.empty?
             @type_name_map[child.spelling] ||= child.qualified_name
           end
