@@ -39,10 +39,9 @@ class FfiTest < AbstractTest
     overrides.each { |key, value| config[key] = value }
 
     inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
-    parser = RubyBindgen::Parser.new(inputter, config[:clang_args] || [])
     outputter = create_outputter("c")
-    visitor = RubyBindgen::Visitors::FFI.new(outputter, config)
-    parser.generate(visitor)
-    validate_result(visitor.outputter)
+    generator = RubyBindgen::Generators::FFI.new(inputter, outputter, config)
+    generator.generate
+    validate_result(generator.outputter)
   end
 end
