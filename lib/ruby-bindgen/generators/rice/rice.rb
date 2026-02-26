@@ -37,7 +37,6 @@ module RubyBindgen
         @namespaces = Set.new
         @classes = Hash.new  # Maps cruby_name -> C++ type for Data_Type<T> declarations
         @typedef_map = Hash.new
-        @typedef_simple_names = Hash.new  # Maps simple typedef names to qualified names (e.g., "String" -> "cv::String")
         @type_name_map = Hash.new  # Maps simple type names to qualified names
         @auto_generated_bases = Set.new
         @skip_symbols = config[:skip_symbols] || []
@@ -167,7 +166,7 @@ module RubyBindgen
         @class_iterator_names.clear
         cursor = translation_unit.cursor
 
-        # Build typedef map only (type_name_map no longer needed)
+        # Build maps for typedef lookups and type name qualification
         build_typedef_map(cursor)
 
         # Figure out relative paths for generated header and cpp file
@@ -1648,11 +1647,9 @@ module RubyBindgen
             # Handle ostream << specially - generates inspect method on the second arg's class
             if cursor.spelling.match(/<</) && cursor.type.arg_type(0).spelling.match(/ostream/)
               arg1_non_ref = cursor.type.arg_type(1).non_reference_type
-              # Strip const/volatile qualifiers since typedef_map keys don't include them
-              arg1_canonical = arg1_non_ref.canonical.spelling.gsub(/\b(const|volatile)\s+/, '')
-              arg1_typedef = @typedef_map[arg1_canonical]
-              target_class = arg1_typedef ? arg1_typedef.cruby_name : arg1_non_ref.declaration.cruby_name
-              target_cursor = arg1_typedef || arg1_non_ref.declaration
+              # Use Type#declaration to get the typedef/class cursor directly
+              target_cursor = arg1_non_ref.declaration
+              target_class = target_cursor.cruby_name
               arg_type = type_spelling(cursor.type.arg_type(1))
               grouped[target_class][:cpp_type] ||= qualified_class_name_cpp(target_cursor)
               grouped[target_class][:lines] << render_template("non_member_operator_inspect",
