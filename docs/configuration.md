@@ -42,6 +42,8 @@ These options apply to all formats.
 |-----------------|----------------|-------------|
 | `project`       | none           | Project name for the Ruby extension. Used for the `Init_` function name and project wrapper file names. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{project}-rb.cpp`, `{project}-rb.hpp`). When omitted, only per-file bindings are generated. |
 | `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/cpp_bindings.md#include-header). |
+| `type_mappings` | `[]` | Override generated Ruby class names. Array of `{from, to}` entries where `from` is a string or `/regex/` pattern and `to` is the replacement (supports `\1` capture groups). See [Name Mappings](#name-mappings). |
+| `method_mappings` | `[]` | Override generated Ruby method names. Array of `{from, to}` entries where `from` is a C++ qualified name or `/regex/` pattern and `to` is the Ruby name. See [Name Mappings](#name-mappings). |
 
 ## CMake Options
 
@@ -184,3 +186,49 @@ export_macros:
 | OpenCV | `CV_EXPORTS`, `CV_EXPORTS_W`, `CV_EXPORTS_W_SIMPLE` |
 | Qt | `Q_DECL_EXPORT`, `Q_CORE_EXPORT` |
 | Boost | `BOOST_*_DECL` |
+
+## Name Mappings
+
+ruby-bindgen applies heuristics to convert C++ names to Ruby names — for example, `isEnabled()` becomes `enabled?` and `operator()` becomes `call`. These heuristics sometimes guess wrong. The `method_mappings` and `type_mappings` options let you override the generated names without manual post-generation edits.
+
+Both options use the same pattern syntax as `skip_symbols`: plain strings for exact match, `/pattern/` for regex.
+
+### Type Mappings
+
+Override generated Ruby class names for template instantiations. Supports `\1`, `\2`, etc. capture group substitution in regex replacements.
+
+```yaml
+type_mappings:
+  # OpenCV Matx naming convention: MatxUnsignedChar21 → Matx21b
+  - from: /^MatxUnsignedChar(\d+)$/
+    to: Matx\1b
+  - from: /^MatxUnsignedShort(\d+)$/
+    to: Matx\1w
+  - from: /^MatxShort(\d+)$/
+    to: Matx\1s
+  - from: /^MatxInt(\d+)$/
+    to: Matx\1i
+```
+
+Without these overrides, `Matx<unsigned char, 2, 1>` would generate the Ruby class name `MatxUnsignedChar21`. With the mapping, it becomes `Matx21b`, matching OpenCV's naming convention.
+
+### Method Mappings
+
+Override generated Ruby method names. The `from` field is a C++ name (simple or fully qualified), the `to` field is the desired Ruby name.
+
+```yaml
+method_mappings:
+  # Exact match by qualified name — grab is not a predicate, it grabs a frame
+  - from: cv::VideoCapture::grab
+    to: grab
+  # Override operator() → [] for element/ROI access
+  - from: cv::Mat::operator()
+    to: "[]"
+  - from: cv::UMat::operator()
+    to: "[]"
+  # Override operator() → to_size for MatSize (returns a Size, not element access)
+  - from: cv::MatSize::operator()
+    to: to_size
+```
+
+Without these overrides, ruby-bindgen would generate `grab?` (bool return, no params triggers predicate heuristic) and `call` (default `operator()` mapping).

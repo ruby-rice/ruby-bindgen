@@ -12,6 +12,107 @@ module RubyBindgen
       CURSOR_CLASSES = [:cursor_class_decl, :cursor_class_template, :cursor_struct]
 
       # Fundamental types that should use ArgBuffer/ReturnBuffer when passed/returned as pointers
+      # Mapping of C++ operators to Ruby method names per Rice documentation
+      # Keys use cursor spelling form (e.g., 'operator()') so they share the same
+      # key namespace as user method_mappings.
+      # Values can be:
+      #   - String: direct mapping
+      #   - Proc: called with cursor to determine mapping (for arity-dependent operators)
+      OPERATOR_MAPPINGS = RubyBindgen::NameMapper.new([
+        # Assignment operators - not overridable in Ruby
+        ['operator=', 'assign'],
+        ['operator+=', 'assign_plus'],
+        ['operator-=', 'assign_minus'],
+        ['operator*=', 'assign_multiply'],
+        ['operator/=', 'assign_divide'],
+        ['operator%=', 'assign_modulus'],
+
+        # Bitwise assignment operators - not overridable in Ruby
+        ['operator&=', 'assign_and'],
+        ['operator|=', 'assign_or'],
+        ['operator^=', 'assign_xor'],
+        ['operator<<=', 'assign_left_shift'],
+        ['operator>>=', 'assign_right_shift'],
+
+        # Logical operators - && and || not overridable in Ruby
+        ['operator&&', 'logical_and'],
+        ['operator||', 'logical_or'],
+
+        # Function call operator
+        ['operator()', 'call'],
+
+        # Member access through pointer (arrow operator)
+        ['operator->', 'arrow'],
+
+        # Increment/decrement - arity-dependent (prefix=0 args, postfix=1 arg)
+        ['operator++', ->(cursor) { cursor.type.args_size == 0 ? 'increment' : 'increment_post' }],
+        ['operator--', ->(cursor) { cursor.type.args_size == 0 ? 'decrement' : 'decrement_post' }],
+
+        # Dereference vs multiply - arity-dependent (unary=0 args, binary=1 arg)
+        ['operator*', ->(cursor) { cursor.type.args_size == 0 ? 'dereference' : '*' }],
+
+        # Unary plus/minus vs binary - arity-dependent
+        # Ruby uses +@ and -@ for unary operators, + and - for binary
+        # Member: unary=0 args, binary=1 arg
+        # Non-member: unary=1 arg, binary=2 args (but we check member arity here)
+        ['operator+', ->(cursor) { cursor.type.args_size == 0 ? '+@' : '+' }],
+        ['operator-', ->(cursor) { cursor.type.args_size == 0 ? '-@' : '-' }],
+
+        # Pass-through operators - Ruby supports these directly
+        ['operator/', '/'],
+        ['operator%', '%'],
+        ['operator&', '&'],
+        ['operator|', '|'],
+        ['operator^', '^'],
+        ['operator~', '~'],
+        ['operator<<', '<<'],
+        ['operator>>', '>>'],
+        ['operator==', '=='],
+        ['operator!=', '!='],
+        ['operator<', '<'],
+        ['operator>', '>'],
+        ['operator<=', '<='],
+        ['operator>=', '>='],
+        ['operator!', '!'],
+        ['operator[]', '[]'],
+      ]).freeze
+
+      # Mapping of C++ type names to Ruby conversion method suffixes
+      CONVERSION_TYPE_MAPPINGS = RubyBindgen::NameMapper.new([
+        # Standard integer types
+        ['int', 'i'],
+        ['long', 'l'],
+        ['long long', 'i64'],
+        ['short', 'i16'],
+        ['unsigned int', 'u'],
+        ['unsigned long', 'ul'],
+        ['unsigned long long', 'u64'],
+        ['unsigned short', 'u16'],
+        # Fixed-width integer types
+        ['int8_t', 'i8'],
+        ['int16_t', 'i16'],
+        ['int32_t', 'i32'],
+        ['int64_t', 'i64'],
+        ['uint8_t', 'u8'],
+        ['uint16_t', 'u16'],
+        ['uint32_t', 'u32'],
+        ['uint64_t', 'u64'],
+        # Size type (platform-independent)
+        ['size_t', 'size'],
+        # Floating point types
+        ['float', 'f32'],
+        ['double', 'f'],
+        ['long double', 'ld'],
+        # Other types
+        ['bool', 'bool'],
+        ['std::string', 's'],
+        ['std::__cxx11::basic_string<char>', 's'],
+        ['std::basic_string<char>', 's'],
+        ['basic_string<char>', 's'],
+        ['char *', 's'],
+        ['const char *', 's'],
+      ]).freeze
+
       FUNDAMENTAL_TYPES = [
         :type_void, :type_bool,
         :type_char_u, :type_uchar, :type_char16, :type_char32, :type_char_s,
@@ -39,8 +140,14 @@ module RubyBindgen
         @typedef_map = Hash.new
         @type_name_map = Hash.new  # Maps simple type names to qualified names
         @auto_generated_bases = Set.new
-        @skip_symbols = config[:skip_symbols] || []
+        @skip_symbols = RubyBindgen::NameMapper.from_list(config[:skip_symbols] || [])
         @export_macros = config[:export_macros] || []
+
+        # Build naming tables: merge operator defaults with user config
+        type_mappings = RubyBindgen::NameMapper.from_config(config[:type_mappings] || {})
+        user_method_mappings = RubyBindgen::NameMapper.from_config(config[:method_mappings] || {})
+        method_mappings = OPERATOR_MAPPINGS.merge(user_method_mappings)
+        @namer = RubyBindgen::Namer.new(type_mappings, method_mappings, CONVERSION_TYPE_MAPPINGS)
         # Non-member operators grouped by target class cruby_name
         @non_member_operators = Hash.new { |h, k| h[k] = [] }
         # Iterators that need std::iterator_traits specialization
@@ -56,6 +163,7 @@ module RubyBindgen
       def generate
         clang_args = @config[:clang_args] || []
         parser = RubyBindgen::Parser.new(@inputter, clang_args, libclang: @config[:libclang])
+        ::FFI::Clang::Cursor.namer = @namer
         parser.generate(self)
       end
 
@@ -63,14 +171,14 @@ module RubyBindgen
       # Used to filter out methods/constructors that reference skipped types.
       def type_references_skipped_symbol?(type)
         spelling = type.spelling
-        @skip_symbols.any? do |skip|
-          next false if skip.start_with?('/')  # Skip regex patterns for type checking
+        @skip_symbols.each_exact_key do |skip|
           # Check if the type spelling contains the skipped symbol
           # Also check simple name (last component) since type spelling may omit namespaces
           # e.g., type spelling "const MatCommaInitializer_<_Tp>&" should match "cv::MatCommaInitializer_"
           simple_name = skip.split('::').last
-          spelling.include?(skip) || spelling.include?(simple_name)
+          return true if spelling.include?(skip) || spelling.include?(simple_name)
         end
+        false
       end
 
       # Check if any parameter type of a callable references a skipped symbol.
@@ -83,11 +191,11 @@ module RubyBindgen
       # Check if template arguments string contains any skipped symbol.
       # Used when auto-instantiating templates like cv::DefaultDeleter<CvHaarClassifierCascade>.
       def template_args_reference_skipped_symbol?(template_args)
-        @skip_symbols.any? do |skip|
-          next false if skip.start_with?('/')  # Skip regex patterns for simple string check
+        @skip_symbols.each_exact_key do |skip|
           simple_name = skip.split('::').last.strip
-          template_args.include?(skip) || template_args.include?(simple_name)
+          return true if template_args.include?(skip) || template_args.include?(simple_name)
         end
+        false
       end
 
       # Check if a cursor should be skipped based on skip_symbols config.
@@ -107,27 +215,19 @@ module RubyBindgen
 
         # Extract template arguments from display_name (spelling doesn't include them)
         # e.g., display_name is "DefaultDeleter<CvHaarClassifierCascade>" while spelling is just "DefaultDeleter"
-        template_args = nil
         if match = cursor.display_name.match(/<(.+)>\z/)
-          template_args = match[1]
+          return true if template_args_reference_skipped_symbol?(match[1])
         end
 
-        # Check template arguments for skipped symbols (check once, not per skip_symbol)
-        return true if template_args && template_args_reference_skipped_symbol?(template_args)
+        # Exact or regex match
+        return true if @skip_symbols.match?(cursor.spelling, qualified_name)
 
-        @skip_symbols.any? do |skip|
-          if skip.start_with?('/') && skip.end_with?('/')
-            # Regex pattern
-            pattern = Regexp.new(skip[1..-2])
-            pattern.match?(cursor.spelling) || pattern.match?(qualified_name)
-          else
-            # Exact match or prefix match
-            cursor.spelling == skip ||
-            qualified_name == skip ||
-            qualified_name.start_with?("#{skip}<") ||
-            qualified_name.start_with?("#{skip}::")
-          end
+        # Prefix match (template instantiation or nested name)
+        @skip_symbols.each_exact_key do |skip|
+          return true if qualified_name.start_with?("#{skip}<") ||
+                         qualified_name.start_with?("#{skip}::")
         end
+        false
       end
 
       def visit_start
@@ -1829,7 +1929,9 @@ module RubyBindgen
         template_args = match[1]
         return "" if template_args_reference_skipped_symbol?(template_args)
 
-        cruby_name = "rb_c#{instantiated_type.gsub(/::|<|>|,|\s+/, ' ').split.map(&:capitalize).join}"
+        ruby_class_name = instantiated_type.gsub(/::|<|>|,|\s+/, ' ').split.map(&:capitalize).join
+        ruby_class_name = @namer.apply_type_mappings(ruby_class_name)
+        cruby_name = "rb_c#{ruby_class_name}"
         return "" if @classes.key?(cruby_name)
 
         @classes[cruby_name] = instantiated_type
@@ -1847,7 +1949,7 @@ module RubyBindgen
         args_name = split_template_args(template_arguments).map { |t|
           t.split("::").last.camelize
         }.join
-        base_name + args_name
+        @namer.apply_type_mappings(base_name + args_name)
       end
 
       # Auto-generate a base class definition when no typedef exists for it.

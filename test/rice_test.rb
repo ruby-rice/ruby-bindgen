@@ -69,6 +69,22 @@ class RiceTest < AbstractTest
     run_rice_test("inline_namespaces.hpp")
   end
 
+  def test_mappings
+    run_rice_test("mappings.hpp",
+                  method_mappings: [
+                    {"from" => "cv::VideoCapture::grab", "to" => "grab"},
+                    {"from" => "cv::MatSize::operator()", "to" => "to_size"},
+                    {"from" => "cv::Mat::operator()", "to" => "[]"},
+                    {"from" => "cv::UMat::operator()", "to" => "[]"},
+                    {"from" => "cv::Matx::operator()", "to" => "[]"}
+                  ],
+                  type_mappings: [
+                    {"from" => "/^MatxUChar(\\d+)$/", "to" => "Matx\\1b"},
+                    {"from" => "/^MatxShort(\\d+)$/", "to" => "Matx\\1s"},
+                    {"from" => "/^MatxInt(\\d+)$/", "to" => "Matx\\1i"}
+                  ])
+  end
+
   def test_cross_file_typedef
     # Tests that typedefs from included headers are found when generating
     # base classes. DerivedVector4d inherits from BaseMatrix<double, 4>,

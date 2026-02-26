@@ -1,107 +1,10 @@
 module RubyBindgen
   class Namer
-    # Mapping of C++ operators to Ruby method names per Rice documentation
-    # Values can be:
-    #   - String: direct mapping
-    #   - Proc: called with cursor to determine mapping (for arity-dependent operators)
-    OPERATOR_MAPPINGS = {
-      # Assignment operators - not overridable in Ruby
-      '=' => 'assign',
-      '+=' => 'assign_plus',
-      '-=' => 'assign_minus',
-      '*=' => 'assign_multiply',
-      '/=' => 'assign_divide',
-      '%=' => 'assign_modulus',
-
-      # Bitwise assignment operators - not overridable in Ruby
-      '&=' => 'assign_and',
-      '|=' => 'assign_or',
-      '^=' => 'assign_xor',
-      '<<=' => 'assign_left_shift',
-      '>>=' => 'assign_right_shift',
-
-      # Logical operators - && and || not overridable in Ruby
-      '&&' => 'logical_and',
-      '||' => 'logical_or',
-
-      # Function call operator
-      '()' => 'call',
-
-      # Member access through pointer (arrow operator)
-      '->' => 'arrow',
-
-      # Increment/decrement - arity-dependent (prefix=0 args, postfix=1 arg)
-      '++' => ->(cursor) { cursor.type.args_size == 0 ? 'increment' : 'increment_post' },
-      '--' => ->(cursor) { cursor.type.args_size == 0 ? 'decrement' : 'decrement_post' },
-
-      # Dereference vs multiply - arity-dependent (unary=0 args, binary=1 arg)
-      '*' => ->(cursor) { cursor.type.args_size == 0 ? 'dereference' : '*' },
-
-      # Unary plus/minus vs binary - arity-dependent
-      # Ruby uses +@ and -@ for unary operators, + and - for binary
-      # Member: unary=0 args, binary=1 arg
-      # Non-member: unary=1 arg, binary=2 args (but we check member arity here)
-      '+' => ->(cursor) { cursor.type.args_size == 0 ? '+@' : '+' },
-      '-' => ->(cursor) { cursor.type.args_size == 0 ? '-@' : '-' },
-
-      # Pass-through operators - Ruby supports these directly
-      '/' => '/',
-      '%' => '%',
-      '&' => '&',
-      '|' => '|',
-      '^' => '^',
-      '~' => '~',
-      '<<' => '<<',
-      '>>' => '>>',
-      '==' => '==',
-      '!=' => '!=',
-      '<' => '<',
-      '>' => '>',
-      '<=' => '<=',
-      '>=' => '>=',
-      '!' => '!',
-      '[]' => '[]',
-    }.freeze
-
-    # Mapping of C++ type names to Ruby conversion method suffixes
-    CONVERSION_TYPE_MAPPINGS = {
-      # Standard integer types
-      'int' => 'i',
-      'long' => 'l',
-      'long long' => 'i64',
-      'short' => 'i16',
-      'unsigned int' => 'u',
-      'unsigned long' => 'ul',
-      'unsigned long long' => 'u64',
-      'unsigned short' => 'u16',
-      # Fixed-width integer types
-      'int8_t' => 'i8',
-      'int16_t' => 'i16',
-      'int32_t' => 'i32',
-      'int64_t' => 'i64',
-      'uint8_t' => 'u8',
-      'uint16_t' => 'u16',
-      'uint32_t' => 'u32',
-      'uint64_t' => 'u64',
-      # Size type (platform-independent)
-      'size_t' => 'size',
-      # Floating point types
-      'float' => 'f32',
-      'double' => 'f',
-      'long double' => 'ld',
-      # Other types
-      'bool' => 'bool',
-      'std::string' => 's',
-      'std::__cxx11::basic_string<char>' => 's',
-      'std::basic_string<char>' => 's',
-      'basic_string<char>' => 's',
-      'char *' => 's',
-      'const char *' => 's',
-    }.freeze
-
-    def initialize(strip_prefixes = [], strip_suffixes = [])
-      @strip_prefixes = strip_prefixes
-      @strip_suffixes = strip_suffixes
+    def initialize(type_mappings = NameMapper.new, method_mappings = NameMapper.new,
+                   conversion_mappings = NameMapper.new)
+      @type_mappings = type_mappings
+      @method_mappings = method_mappings
+      @conversion_mappings = conversion_mappings
     end
 
     def ruby(cursor)
@@ -166,6 +69,23 @@ module RubyBindgen
       end
     end
 
+    # Apply type_mappings to a generated Ruby class name.
+    # Returns the mapped name or the original if no mapping matches.
+    def apply_type_mappings(ruby_class_name)
+      @type_mappings.lookup(ruby_class_name) || ruby_class_name
+    end
+
+    # Build fully qualified C++ name from a cursor by walking semantic parents.
+    def build_qualified_name(cursor)
+      qualified_name = cursor.spelling
+      parent = cursor.semantic_parent
+      while parent && !parent.kind.nil? && parent.kind != :cursor_translation_unit
+        qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty?
+        parent = parent.semantic_parent
+      end
+      qualified_name
+    end
+
     private
 
     # Handle conversion functions like operator int(), operator float()
@@ -175,7 +95,7 @@ module RubyBindgen
       type_name = cursor.type.result_type.spelling
 
       # Look up Ruby convention for this type
-      suffix = CONVERSION_TYPE_MAPPINGS[type_name]
+      suffix = @conversion_mappings.lookup(type_name)
       if suffix
         "to_#{suffix}"
       else
@@ -198,9 +118,17 @@ module RubyBindgen
 
     # Handle operators and regular methods
     def ruby_operator_or_method(cursor)
-      spelling = cursor.spelling
+      # Check method_mappings first (includes operator mappings merged by generator)
+      qualified_name = build_qualified_name(cursor)
+      result = @method_mappings.lookup(qualified_name, cursor.spelling)
 
-      # Regular method (not an operator)
+      case result
+      when String then return result
+      when Proc then return result.call(cursor)
+      end
+
+      # No mapping — apply heuristics for non-operators only
+      spelling = cursor.spelling
       unless spelling.start_with?('operator')
         is_bool = cursor.type.result_type.spelling == "bool"
         # Methods starting with "is" prefix (isFoo or is_foo) are predicates
@@ -216,19 +144,8 @@ module RubyBindgen
         end
       end
 
-      # Extract the operator symbol
-      op = spelling.sub(/^operator\s*/, '')
-
-      # Look up in operator mappings
-      mapping = OPERATOR_MAPPINGS[op]
-      case mapping
-      when String
-        mapping
-      when Proc
-        mapping.call(cursor)
-      else
-        raise "Unknown operator: #{op}"
-      end
+      # Unknown operator with no mapping
+      raise "Unknown operator: #{spelling}"
     end
   end
 end

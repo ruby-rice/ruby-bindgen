@@ -5,6 +5,7 @@ require 'ruby-bindgen/inputter'
 require 'ruby-bindgen/outputter'
 
 require 'ruby-bindgen/parser'
+require 'ruby-bindgen/name_mapper'
 require 'ruby-bindgen/namer'
 
 require 'ruby-bindgen/generators/generator'

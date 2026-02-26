@@ -8,7 +8,7 @@ module FFI
       end
 
       def self.namer=(value)
-        @namer = values
+        @namer = value
       end
 
       def ruby_name
