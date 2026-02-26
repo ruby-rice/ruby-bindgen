@@ -37,6 +37,16 @@ void Init_DefaultValues()
   rb_mCv.define_module_function<void(*)(const cv::Rect_<double>&)>("render", &cv::render,
     Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(cv::Rect_<double>(0.0, 0.0, 1.0, 1.0)));
 
+  Module rb_mMultiline = define_module("Multiline");
+
+  Enum<multiline::PerfLevel> rb_cMultilinePerfLevel = define_enum_under<multiline::PerfLevel>("PerfLevel", rb_mMultiline).
+    define_value("SLOW", multiline::PerfLevel::SLOW).
+    define_value("MEDIUM", multiline::PerfLevel::MEDIUM).
+    define_value("FAST", multiline::PerfLevel::FAST);
+
+  rb_mMultiline.define_module_function<void(*)(multiline::PerfLevel)>("configure", &multiline::configure,
+    Arg("level") = static_cast<multiline::PerfLevel>(multiline::PerfLevel::SLOW));
+
   rb_mCv.define_module_function<void(*)(const std::vector<int>&)>("process_items", &cv::processItems,
     Arg("items") = static_cast<const std::vector<int>&>(std::vector<int>{}));
 

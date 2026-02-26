@@ -67,6 +67,18 @@ namespace cv
   void render(const Rect_<double>& wndRect = Rect_<double>(0.0, 0.0, 1.0, 1.0));
 }
 
+// Test multi-line default value where '=' is on a different line than the parameter type
+// Like OpenCV's NvidiaOpticalFlow_1_0::create where the default value wraps:
+//   NVIDIA_OF_PERF_LEVEL perfPreset
+//       = NvidiaOpticalFlow_1_0::NV_OF_PERF_LEVEL_SLOW
+namespace multiline
+{
+  enum class PerfLevel { SLOW = 0, MEDIUM = 1, FAST = 2 };
+
+  void configure(PerfLevel level
+      = PerfLevel::SLOW);
+}
+
 // Test braced-init-list {} as default value
 // Like cv::cudacodec::createVideoReader(const String& filename, const std::vector<int>& sourceParams = {})
 // Can't static_cast<const std::vector<int>&>({}) — must construct the type explicitly

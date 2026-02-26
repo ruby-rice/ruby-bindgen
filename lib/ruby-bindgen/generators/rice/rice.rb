@@ -1063,7 +1063,9 @@ module RubyBindgen
 
         # Extract default value text from param_extent (everything after '=').
         # This gives us the original source text, unaffected by macro expansion.
-        default_text = param_extent.sub(/.*?=\s*/, '')
+        # Use /m flag so '.' matches newlines — the '=' may be on a different line
+        # than the parameter type (e.g., "PERF_LEVEL perfPreset\n        = NV_OF_PERF_LEVEL_SLOW").
+        default_text = param_extent.sub(/.*?=\s*/m, '')
         return nil if default_text.empty?
 
         # Find the default value expression cursor for semantic analysis.
