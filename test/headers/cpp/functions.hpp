@@ -39,6 +39,18 @@ public:
 };
 
 // =============================================================================
+// C-style array parameters - should be namespace-qualified
+// =============================================================================
+namespace arrays
+{
+  class Element {};
+
+  void processArray(Element arr[4]);
+  void processConstArray(const Element arr[4]);
+  void processIncompleteArray(Element arr[]);
+}
+
+// =============================================================================
 // Variadic functions - should be SKIPPED (cannot be bound to Ruby)
 // =============================================================================
 

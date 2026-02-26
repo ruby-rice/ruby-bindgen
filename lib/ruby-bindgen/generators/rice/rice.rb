@@ -861,6 +861,10 @@ module RubyBindgen
           else
             "#{type_spelling(pointee)}*#{ptr_const}"
           end
+        when :type_constant_array
+          element_spelling = type_spelling(type.element_type)
+          const_prefix = type.const_qualified? ? "const " : ""
+          "#{const_prefix}#{element_spelling}[#{type.size}]"
         when :type_incomplete_array
           element_spelling = type_spelling(type.element_type)
           const_prefix = type.const_qualified? ? "const " : ""

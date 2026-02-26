@@ -63,6 +63,20 @@ void Init_Functions()
     define_method<bool(Widget::*)(int)>("try_set", &Widget::trySet,
       Arg("value"));
 
+  Module rb_mArrays = define_module("Arrays");
+
+  Rice::Data_Type<arrays::Element> rb_cArraysElement = define_class_under<arrays::Element>(rb_mArrays, "Element").
+    define_constructor(Constructor<arrays::Element>());
+
+  rb_mArrays.define_module_function<void(*)(arrays::Element[4])>("process_array", &arrays::processArray,
+    Arg("arr"));
+
+  rb_mArrays.define_module_function<void(*)(const arrays::Element[4])>("process_const_array", &arrays::processConstArray,
+    Arg("arr"));
+
+  rb_mArrays.define_module_function<void(*)(arrays::Element[])>("process_incomplete_array", &arrays::processIncompleteArray,
+    Arg("arr"));
+
   Rice::Data_Type<Logger> rb_cLogger = define_class<Logger>("Logger").
     define_constructor(Constructor<Logger>()).
     define_singleton_function<void(*)(int)>("set_level", &Logger::setLevel,
