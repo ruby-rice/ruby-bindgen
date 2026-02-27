@@ -154,10 +154,6 @@ module RubyBindgen
         @incomplete_iterators = Hash.new
         # Iterator names per class (for aliasing each_const -> each)
         @class_iterator_names = Hash.new { |h, k| h[k] = Set.new }
-        # Template classes with no bindable content (all methods deprecated/skipped)
-        @empty_builders = Set.new
-        # Maps builder function name -> -rb.ipp basename (persists across files for cross-file deps)
-        @builder_ipps = {}
       end
 
       def generate
@@ -243,6 +239,13 @@ module RubyBindgen
       # Returns the path to the Rice include header (user-specified or auto-generated)
       def rice_include_header
         @include_header || "#{@project || 'rice'}_include.hpp"
+      end
+
+      # Compute the .ipp path for a template defined in a different file.
+      def ipp_path_for_cursor(cursor)
+        template_file = cursor.file_location.file
+        relative = Pathname.new(template_file).relative_path_from(Pathname.new(@inputter.base_path)).to_s
+        File.join(File.dirname(relative), "#{File.basename(relative, '.*')}-rb.ipp")
       end
 
       # Generate default Rice include header if user didn't specify one
@@ -535,12 +538,6 @@ module RubyBindgen
                                    only_kinds: [:cursor_cxx_method, :cursor_constructor, :cursor_field_decl, :cursor_variable,
                                                 :cursor_enum_decl, :cursor_conversion_function])
 
-        # If no children (all methods deprecated/skipped), don't generate builder
-        if children.empty?
-          @empty_builders.add(cursor.spelling)
-          return ""
-        end
-
         # TODO: Calling get_base_spelling crashes libclang on certain templates.
         # Fix the instantiate functions by hand for now.
         #base_spelling = get_base_spelling(cursor)
@@ -563,12 +560,6 @@ module RubyBindgen
         # Build fully qualified type using template params (e.g., Tests::Matrix<T, Rows, Columns>)
         param_names = template_parameters.map(&:spelling).join(", ")
         fully_qualified_type = "#{cursor.qualified_name}<#{param_names}>"
-
-        # Track builder for cross-file dependency detection.
-        # Store the full relative path (e.g., "opencv2/core/cvstd_wrapper-rb.ipp")
-        # so consumers in different directories can compute the correct include path.
-        builder_name = "#{cursor.spelling}_instantiate"
-        @builder_ipps[builder_name] = File.join(@relative_dir, "#{@basename}.ipp")
 
         children_content = merge_children(children, :indentation => 4, :separator => ".\n",
                                                     :terminator => ";", :strip => true)
@@ -1898,14 +1889,14 @@ module RubyBindgen
 
         template_specialization = type_spelling(underlying_type)
 
-        # Check if the template's _instantiate builder was generated in a different file
-        builder_name = "#{cursor_template.spelling}_instantiate"
-        builder_ipp = @builder_ipps[builder_name]
-        current_ipp = File.join(@relative_dir, "#{@basename}.ipp")
-        if builder_ipp && builder_ipp != current_ipp
-          # Compute relative path from current file's directory to the ipp file
-          ipp_relative = Pathname.new(builder_ipp).relative_path_from(Pathname.new(@relative_dir)).to_s
-          @includes << "#include \"#{ipp_relative}\""
+        # If template is defined in a different file, include its .ipp for the _instantiate builder
+        unless cursor_template.file_location.file == cursor_template.translation_unit.file.name
+          builder_ipp = ipp_path_for_cursor(cursor_template)
+          current_ipp = File.join(@relative_dir, "#{@basename}.ipp")
+          if builder_ipp != current_ipp
+            ipp_relative = Pathname.new(builder_ipp).relative_path_from(Pathname.new(@relative_dir)).to_s
+            @includes << "#include \"#{ipp_relative}\""
+          end
         end
 
         @classes[cursor.cruby_name] = template_specialization

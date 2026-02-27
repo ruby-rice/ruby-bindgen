@@ -7,4 +7,9 @@ inline Rice::Data_Type<CrossFile::DerivedVector<T, N>> DerivedVector_instantiate
       Arg("other"));
 }
 
+template<typename T>
+inline Rice::Data_Type<CrossFile::DataType<T>> DataType_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<CrossFile::DataType<T>>(parent, name);
+}
 

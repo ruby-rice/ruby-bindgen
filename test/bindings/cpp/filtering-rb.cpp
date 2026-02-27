@@ -32,7 +32,7 @@ void Init_Filtering()
     define_method<void(Outer::Wrapper<int>::*)(int*)>("wrap", &Outer::Wrapper<int>::wrap,
       ArgBuffer("obj"));
 
-  Rice::Data_Type<Outer::DeprecatedTemplate<int>> rb_cDeprecatedTemplateInt = define_class_under<Outer::DeprecatedTemplate<int>>(rb_mOuter, "DeprecatedTemplateInt");
+  Rice::Data_Type<Outer::DeprecatedTemplate<int>> rb_cDeprecatedTemplateInt = DeprecatedTemplate_instantiate<int>(rb_mOuter, "DeprecatedTemplateInt");
 
   Rice::Data_Type<Outer::OtherClass> rb_cOuterOtherClass = define_class_under<Outer::OtherClass>(rb_mOuter, "OtherClass").
     define_constructor(Constructor<Outer::OtherClass>());

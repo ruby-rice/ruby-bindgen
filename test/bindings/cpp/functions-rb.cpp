@@ -3,7 +3,7 @@
 
 using namespace Rice;
 
-
+#include "functions-rb.ipp"
 
 void Init_Functions()
 {
@@ -79,7 +79,7 @@ void Init_Functions()
 
   Module rb_mNontypeArgs = define_module("NontypeArgs");
 
-  Rice::Data_Type<nontype_args::Container<double, nontype_args::Config::Size>> rb_cNontype_argsContainerDoubleNontype_argsConfigSize = define_class_under<nontype_args::Container<double, nontype_args::Config::Size>>(rb_mNontypeArgs, "ContainerDoubleNontypeArgsConfigSize");
+  Rice::Data_Type<nontype_args::Container<double, nontype_args::Config::Size>> rb_cNontype_argsContainerDoubleNontype_argsConfigSize = Container_instantiate<double, nontype_args::Config::Size>(rb_mNontypeArgs, "ContainerDoubleNontypeArgsConfigSize");
 
   Rice::Data_Type<nontype_args::Config> rb_cNontypeArgsConfig = define_class_under<nontype_args::Config>(rb_mNontypeArgs, "Config").
     define_constructor(Constructor<nontype_args::Config>()).
