@@ -71,14 +71,14 @@ class RiceTest < AbstractTest
 
   def test_mappings
     run_rice_test("mappings.hpp",
-                  method_mappings: [
+                  rename_methods: [
                     {"from" => "cv::VideoCapture::grab", "to" => "grab"},
                     {"from" => "cv::MatSize::operator()", "to" => "to_size"},
                     {"from" => "cv::Mat::operator()", "to" => "[]"},
                     {"from" => "cv::UMat::operator()", "to" => "[]"},
                     {"from" => "cv::Matx::operator()", "to" => "[]"}
                   ],
-                  type_mappings: [
+                  rename_types: [
                     {"from" => "/^MatxUChar(\\d+)$/", "to" => "Matx\\1b"},
                     {"from" => "/^MatxShort(\\d+)$/", "to" => "Matx\\1s"},
                     {"from" => "/^MatxInt(\\d+)$/", "to" => "Matx\\1i"}

@@ -1,9 +1,9 @@
 module RubyBindgen
   class Namer
-    def initialize(type_mappings = NameMapper.new, method_mappings = NameMapper.new,
+    def initialize(rename_types = NameMapper.new, rename_methods = NameMapper.new,
                    conversion_mappings = NameMapper.new)
-      @type_mappings = type_mappings
-      @method_mappings = method_mappings
+      @rename_types = rename_types
+      @rename_methods = rename_methods
       @conversion_mappings = conversion_mappings
     end
 
@@ -69,10 +69,10 @@ module RubyBindgen
       end
     end
 
-    # Apply type_mappings to a generated Ruby class name.
+    # Apply rename_types to a generated Ruby class name.
     # Returns the mapped name or the original if no mapping matches.
-    def apply_type_mappings(ruby_class_name)
-      @type_mappings.lookup(ruby_class_name) || ruby_class_name
+    def apply_rename_types(ruby_class_name)
+      @rename_types.lookup(ruby_class_name) || ruby_class_name
     end
 
     # Build fully qualified C++ name from a cursor by walking semantic parents.
@@ -118,9 +118,9 @@ module RubyBindgen
 
     # Handle operators and regular methods
     def ruby_operator_or_method(cursor)
-      # Check method_mappings first (includes operator mappings merged by generator)
+      # Check rename_methods first (includes operator mappings merged by generator)
       qualified_name = build_qualified_name(cursor)
-      result = @method_mappings.lookup(qualified_name, cursor.spelling)
+      result = @rename_methods.lookup(qualified_name, cursor.spelling)
 
       case result
       when String then return result

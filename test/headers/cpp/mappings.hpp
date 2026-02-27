@@ -1,12 +1,12 @@
 // =============================================================================
-// Test method_mappings — based on opencv-ruby manual naming fixes
+// Test rename_methods — based on opencv-ruby manual naming fixes
 // =============================================================================
 
 namespace cv
 {
 
 // VideoCapture::grab is bool with no params, so heuristic says "grab?"
-// But it's not a predicate — it grabs a frame. method_mappings overrides to "grab".
+// But it's not a predicate — it grabs a frame. rename_methods overrides to "grab".
 class VideoCapture
 {
 public:
@@ -15,7 +15,7 @@ public:
 };
 
 // MatSize::operator() returns an int, not element access.
-// Default mapping: "call". method_mappings overrides to "to_size".
+// Default mapping: "call". rename_methods overrides to "to_size".
 class MatSize
 {
 public:
@@ -38,9 +38,9 @@ public:
 };
 
 // =============================================================================
-// Test type_mappings — based on OpenCV Matx naming convention
+// Test rename_types — based on OpenCV Matx naming convention
 // Matx<unsigned char, 2, 1> generates "MatxUnsignedChar21" by default.
-// OpenCV convention is "Matx21b". Regex type_mapping fixes this.
+// OpenCV convention is "Matx21b". Regex rename_types fixes this.
 // =============================================================================
 
 template<typename T, int Rows, int Cols>

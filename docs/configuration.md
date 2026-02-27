@@ -42,8 +42,8 @@ These options apply to all formats.
 |-----------------|----------------|-------------|
 | `project`       | none           | Project name for the Ruby extension. Used for the `Init_` function name and project wrapper file names. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{project}-rb.cpp`, `{project}-rb.hpp`). When omitted, only per-file bindings are generated. |
 | `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/cpp_bindings.md#include-header). |
-| `type_mappings` | `[]` | Override generated Ruby class names. Array of `{from, to}` entries where `from` is a string or `/regex/` pattern and `to` is the replacement (supports `\1` capture groups). See [Name Mappings](#name-mappings). |
-| `method_mappings` | `[]` | Override generated Ruby method names. Array of `{from, to}` entries where `from` is a C++ qualified name or `/regex/` pattern and `to` is the Ruby name. See [Name Mappings](#name-mappings). |
+| `rename_types` | `[]` | Override generated Ruby class names. Array of `{from, to}` entries where `from` is a string or `/regex/` pattern and `to` is the replacement (supports `\1` capture groups). See [Name Mappings](#name-mappings). |
+| `rename_methods` | `[]` | Override generated Ruby method names. Array of `{from, to}` entries where `from` is a C++ qualified name or `/regex/` pattern and `to` is the Ruby name. See [Name Mappings](#name-mappings). |
 
 ## CMake Options
 
@@ -189,7 +189,7 @@ export_macros:
 
 ## Name Mappings
 
-ruby-bindgen applies heuristics to convert C++ names to Ruby names — for example, `isEnabled()` becomes `enabled?` and `operator()` becomes `call`. These heuristics sometimes guess wrong. The `method_mappings` and `type_mappings` options let you override the generated names without manual post-generation edits.
+ruby-bindgen applies heuristics to convert C++ names to Ruby names — for example, `isEnabled()` becomes `enabled?` and `operator()` becomes `call`. These heuristics sometimes guess wrong. The `rename_methods` and `rename_types` options let you override the generated names without manual post-generation edits.
 
 Both options use the same pattern syntax as `skip_symbols`: plain strings for exact match, `/pattern/` for regex.
 
@@ -198,7 +198,7 @@ Both options use the same pattern syntax as `skip_symbols`: plain strings for ex
 Override generated Ruby class names for template instantiations. Supports `\1`, `\2`, etc. capture group substitution in regex replacements.
 
 ```yaml
-type_mappings:
+rename_types:
   # OpenCV Matx naming convention: MatxUnsignedChar21 → Matx21b
   - from: /^MatxUnsignedChar(\d+)$/
     to: Matx\1b
@@ -217,7 +217,7 @@ Without these overrides, `Matx<unsigned char, 2, 1>` would generate the Ruby cla
 Override generated Ruby method names. The `from` field is a C++ name (simple or fully qualified), the `to` field is the desired Ruby name.
 
 ```yaml
-method_mappings:
+rename_methods:
   # Exact match by qualified name — grab is not a predicate, it grabs a frame
   - from: cv::VideoCapture::grab
     to: grab

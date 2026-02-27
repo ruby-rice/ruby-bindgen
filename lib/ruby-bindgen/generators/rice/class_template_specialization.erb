@@ -5,7 +5,7 @@
                else
                  template_specialization.gsub(/<.*>/, "").split("::").last.camelize + template_arguments.split(",").map(&:strip).map { |t| t.gsub(/[^a-zA-Z0-9]/, " ").split.map(&:capitalize).join }.join
                end -%>
-<%- ruby_class_name = @namer.apply_type_mappings(raw_name) -%>
+<%- ruby_class_name = @namer.apply_rename_types(raw_name) -%>
 <%- has_instantiate = !@empty_builders.include?(cursor_template.spelling) -%>
 <%- if has_instantiate -%>
 <%- # New pattern: call the instantiate function which handles everything -%>

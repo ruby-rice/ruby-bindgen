@@ -14,7 +14,7 @@ module RubyBindgen
       # Fundamental types that should use ArgBuffer/ReturnBuffer when passed/returned as pointers
       # Mapping of C++ operators to Ruby method names per Rice documentation
       # Keys use cursor spelling form (e.g., 'operator()') so they share the same
-      # key namespace as user method_mappings.
+      # key namespace as user rename_methods.
       # Values can be:
       #   - String: direct mapping
       #   - Proc: called with cursor to determine mapping (for arity-dependent operators)
@@ -144,10 +144,10 @@ module RubyBindgen
         @export_macros = config[:export_macros] || []
 
         # Build naming tables: merge operator defaults with user config
-        type_mappings = RubyBindgen::NameMapper.from_config(config[:type_mappings] || {})
-        user_method_mappings = RubyBindgen::NameMapper.from_config(config[:method_mappings] || {})
-        method_mappings = OPERATOR_MAPPINGS.merge(user_method_mappings)
-        @namer = RubyBindgen::Namer.new(type_mappings, method_mappings, CONVERSION_TYPE_MAPPINGS)
+        rename_types = RubyBindgen::NameMapper.from_config(config[:rename_types] || {})
+        user_rename_methods = RubyBindgen::NameMapper.from_config(config[:rename_methods] || {})
+        rename_methods = OPERATOR_MAPPINGS.merge(user_rename_methods)
+        @namer = RubyBindgen::Namer.new(rename_types, rename_methods, CONVERSION_TYPE_MAPPINGS)
         # Non-member operators grouped by target class cruby_name
         @non_member_operators = Hash.new { |h, k| h[k] = [] }
         # Iterators that need std::iterator_traits specialization
@@ -1930,7 +1930,7 @@ module RubyBindgen
         return "" if template_args_reference_skipped_symbol?(template_args)
 
         ruby_class_name = instantiated_type.gsub(/::|<|>|,|\s+/, ' ').split.map(&:capitalize).join
-        ruby_class_name = @namer.apply_type_mappings(ruby_class_name)
+        ruby_class_name = @namer.apply_rename_types(ruby_class_name)
         cruby_name = "rb_c#{ruby_class_name}"
         return "" if @classes.key?(cruby_name)
 
@@ -1949,7 +1949,7 @@ module RubyBindgen
         args_name = split_template_args(template_arguments).map { |t|
           t.split("::").last.camelize
         }.join
-        @namer.apply_type_mappings(base_name + args_name)
+        @namer.apply_rename_types(base_name + args_name)
       end
 
       # Auto-generate a base class definition when no typedef exists for it.
