@@ -18,7 +18,11 @@ void Init_Filtering()
 
   Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass = define_class_under<Outer::MyClass>(rb_mOuter, "MyClass").
     define_constructor(Constructor<Outer::MyClass>()).
-    define_method<void(Outer::MyClass::*)()>("new_method", &Outer::MyClass::newMethod);
+    define_method<void(Outer::MyClass::*)()>("new_method", &Outer::MyClass::newMethod).
+    define_method<void(Outer::MyClass::*)(int)>("overloaded", &Outer::MyClass::overloaded,
+      Arg("a")).
+    define_method<void(Outer::MyClass::*)(double)>("overloaded", &Outer::MyClass::overloaded,
+      Arg("a"));
 
   Rice::Data_Type<Outer::ClassWithDeprecatedConstructor> rb_cOuterClassWithDeprecatedConstructor = define_class_under<Outer::ClassWithDeprecatedConstructor>(rb_mOuter, "ClassWithDeprecatedConstructor").
     define_constructor(Constructor<Outer::ClassWithDeprecatedConstructor, int, int>(),

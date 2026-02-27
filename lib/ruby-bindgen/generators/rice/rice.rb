@@ -215,8 +215,16 @@ module RubyBindgen
           return true if template_args_reference_skipped_symbol?(match[1])
         end
 
+        # Add signature candidates for overload-specific matching
+        candidates = [cursor.spelling, qualified_name]
+        if cursor.type.respond_to?(:args_size)
+          param_types = (0...cursor.type.args_size).map { |i| cursor.type.arg_type(i).spelling }.join(", ")
+          candidates << "#{cursor.spelling}(#{param_types})"
+          candidates << "#{qualified_name}(#{param_types})"
+        end
+
         # Exact or regex match
-        return true if @skip_symbols.match?(cursor.spelling, qualified_name)
+        return true if @skip_symbols.match?(*candidates)
 
         # Prefix match (template instantiation or nested name)
         @skip_symbols.each_exact_key do |skip|

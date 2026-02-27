@@ -144,14 +144,28 @@ You can specify symbols using:
 
 - Simple names: `versionMajor` - skips all symbols with this name
 - Fully qualified names: `cv::ocl::PlatformInfo::versionMajor` - skips only that specific symbol
+- Signatures: `cv::Mat_::zeros(int, const int *)` - skips only the overload with matching parameter types
 - Regex patterns: `/pattern/` - skips symbols matching the regex
 
 ```yaml
 skip_symbols:
   - versionMajor                           # Skips all symbols named "versionMajor"
   - cv::ocl::PlatformInfo::versionMinor    # Skips only this specific method
+  - "cv::Mat_::zeros(int, const int *)"    # Skips only this overload (others remain)
   - /cv::dnn::.*Layer::init.*/             # Regex: skips all init* methods on any Layer class
 ```
+
+### Overload-Specific Skipping
+
+When a function has multiple overloads but only some cause problems (e.g., linker errors), you can target a specific overload by appending its parameter types in parentheses:
+
+```yaml
+skip_symbols:
+  - cv::Mat_::zeros                        # Skips ALL overloads of zeros
+  - "cv::Mat_::zeros(int, const int *)"    # Skips only zeros(int ndims, const int* sz)
+```
+
+The parameter types must match the canonical clang type spelling exactly (e.g., `const int *` not `const int*` or `int const *`).
 
 ### Regex Patterns
 

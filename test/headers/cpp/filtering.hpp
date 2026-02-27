@@ -64,6 +64,12 @@ namespace Outer
 
     // Internal method (underscore suffix) - should be SKIPPED
     void internal_();
+
+    // --- Overload-specific skip tests ---
+    // Only the (int, const int*) overload should be SKIPPED
+    void overloaded(int a);                  // INCLUDED
+    void overloaded(int a, const int* data); // SKIPPED by signature
+    void overloaded(double a);               // INCLUDED
   };
 
   // --- Class with deprecated constructor ---
