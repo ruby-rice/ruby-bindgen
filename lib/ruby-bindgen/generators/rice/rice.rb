@@ -522,9 +522,11 @@ module RubyBindgen
       end
 
       def visit_class_template_builder(cursor)
-        children = visit_children(cursor,
-                                   only_kinds: [:cursor_cxx_method, :cursor_constructor, :cursor_field_decl, :cursor_variable,
-                                                :cursor_enum_decl, :cursor_conversion_function])
+        children_content = render_children(cursor,
+                                          only_kinds: [:cursor_cxx_method, :cursor_constructor, :cursor_field_decl, :cursor_variable,
+                                                       :cursor_enum_decl, :cursor_conversion_function],
+                                          indentation: 4, separator: ".\n",
+                                          terminator: ";", strip: true)
 
         # TODO: Calling get_base_spelling crashes libclang on certain templates.
         # Fix the instantiate functions by hand for now.
@@ -548,9 +550,6 @@ module RubyBindgen
         # Build fully qualified type using template params (e.g., Tests::Matrix<T, Rows, Columns>)
         param_names = template_parameters.map(&:spelling).join(", ")
         fully_qualified_type = "#{cursor.qualified_name}<#{param_names}>"
-
-        children_content = merge_children(children, :indentation => 4, :separator => ".\n",
-                                                    :terminator => ";", :strip => true)
 
         # Determine containing module
         under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
@@ -2191,8 +2190,9 @@ module RubyBindgen
         children
       end
 
-      def render_children(cursor, indentation: 0, separator: "\n", terminator: "", strip: false, exclude_kinds: Set.new)
-        children = visit_children(cursor)
+      def render_children(cursor, indentation: 0, separator: "\n", terminator: "", strip: false,
+                          exclude_kinds: Set.new, only_kinds: nil)
+        children = visit_children(cursor, exclude_kinds: exclude_kinds, only_kinds: only_kinds)
         merge_children(children, indentation: indentation, separator: separator, terminator: terminator, strip: strip)
       end
 
