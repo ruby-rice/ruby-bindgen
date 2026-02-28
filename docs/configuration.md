@@ -44,6 +44,7 @@ These options apply to all formats.
 | `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/cpp_bindings.md#include-header). |
 | `rename_types` | `[]` | Override generated Ruby class names. Array of `{from, to}` entries where `from` is a string or `/regex/` pattern and `to` is the replacement (supports `\1` capture groups). See [Name Mappings](#name-mappings). |
 | `rename_methods` | `[]` | Override generated Ruby method names. Array of `{from, to}` entries where `from` is a C++ qualified name or `/regex/` pattern and `to` is the Ruby name. See [Name Mappings](#name-mappings). |
+| `version_macro` | none | C preprocessor macro used for version guards. When set, symbols with `action: version` are wrapped in `#if VERSION_MACRO >= version` / `#endif`. See [Version Guards](#version-guards). |
 
 ## CMake Options
 
@@ -162,6 +163,30 @@ symbols:
   - name: /cv::dnn::.*Layer::init.*/             # Regex: skips all init* methods on any Layer class
     action: skip
 ```
+
+### Version Action
+
+Use `action: version` to wrap a symbol in a preprocessor version guard. This requires the `version_macro` option to be set. The `version` field specifies the minimum version value.
+
+```yaml
+version_macro: CV_VERSION
+symbols:
+  - name: cv::Foo::baz
+    action: version
+    version: "40100"
+  - name: /cv::cuda::.*/
+    action: version
+    version: "40500"
+```
+
+This generates:
+```cpp
+#if CV_VERSION >= 40100
+  .define_method("baz", &cv::Foo::baz)
+#endif
+```
+
+See [Version Guards](version_guards.md) for a full guide.
 
 ### Overload-Specific Skipping
 

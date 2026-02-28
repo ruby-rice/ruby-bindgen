@@ -5,7 +5,7 @@ module RubyBindgen
       @regex = []
       entries.each do |entry|
         key = entry["name"]
-        value = { action: entry["action"]&.to_sym }
+        value = { action: entry["action"]&.to_sym, version: entry["version"] }
         if key.start_with?('/') && key.end_with?('/')
           @regex << [Regexp.new(key[1..-2]), value]
         else
@@ -58,6 +58,12 @@ module RubyBindgen
     def skip?(cursor)
       result = lookup(build_candidates(cursor))
       result && result[:action] == :skip
+    end
+
+    # Returns the version guard value for a cursor, or nil if not version-guarded.
+    def version(cursor)
+      result = lookup(build_candidates(cursor))
+      result[:version] if result && result[:action] == :version
     end
   end
 end
