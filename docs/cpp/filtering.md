@@ -6,9 +6,9 @@
 
 See [`export_macros`](../configuration.md#export-macros) in the configuration documentation.
 
-## Skip Symbols
+## Symbols
 
-See [`skip_symbols`](../configuration.md#skip-symbols) in the configuration documentation.
+See [`symbols`](../configuration.md#symbols) in the configuration documentation.
 
 ## Automatic Skipping
 

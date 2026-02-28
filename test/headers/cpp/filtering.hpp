@@ -88,7 +88,7 @@ namespace Outer
 
   // --- Skipped Class Tests ---
 
-  // This class will be in skip_symbols list - should be SKIPPED entirely
+  // This class will be in symbols list - should be SKIPPED entirely
   class MY_EXPORT SkippedClass
   {
   public:
@@ -98,7 +98,7 @@ namespace Outer
 
   // --- Skipped Template Class Tests ---
 
-  // Template class in skip_symbols - builder should NOT be generated
+  // Template class in symbols - builder should NOT be generated
   template<typename T>
   class SkippedTemplateClass
   {
@@ -119,7 +119,7 @@ namespace Outer
   {
   public:
     UsesSkippedType();
-    // This constructor should be skipped because SkippedTemplateClass is in skip_symbols
+    // This constructor should be skipped because SkippedTemplateClass is in symbols
     UsesSkippedType(const SkippedTemplateClass<T>& skipped);
     void normalMethod();
   };
@@ -140,7 +140,7 @@ namespace Outer
     void wrap(T* obj);
   };
 
-  // This specialization should be SKIPPED because SkippedArgType is in skip_symbols
+  // This specialization should be SKIPPED because SkippedArgType is in symbols
   template<> class MY_EXPORT Wrapper<SkippedArgType>
   {
   public:

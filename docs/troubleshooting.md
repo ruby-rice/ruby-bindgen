@@ -102,7 +102,7 @@ Common causes:
 - Symbols declared in headers but not exported by the library
 
 Fix:
-- Use `skip_symbols` for problematic APIs
+- Use `symbols` with `action: skip` for problematic APIs
 - Add refinement files for custom behavior
 - See [Updating Bindings](updating_bindings.md) for durable maintenance workflows
 

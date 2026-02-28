@@ -11,7 +11,7 @@ module RubyBindgen
         super(inputter, outputter, config)
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
-        @skip_symbols = config[:skip_symbols] || []
+        @symbols = RubyBindgen::Symbols.new(config[:symbols] || [])
         @export_macros = config[:export_macros] || []
         @indentation = 0
       end
@@ -20,19 +20,6 @@ module RubyBindgen
         clang_args = @config[:clang_args] || []
         parser = RubyBindgen::Parser.new(@inputter, clang_args, libclang: @config[:libclang])
         parser.generate(self)
-      end
-
-      # Check if a cursor should be skipped based on skip_symbols config.
-      # Supports simple names and regex patterns (strings wrapped in /).
-      def skip_symbol?(cursor)
-        @skip_symbols.any? do |skip|
-          if skip.start_with?('/') && skip.end_with?('/')
-            pattern = Regexp.new(skip[1..-2])
-            pattern.match?(cursor.spelling)
-          else
-            cursor.spelling == skip
-          end
-        end
       end
 
       # Check if cursor has one of the required export macros in its source text.
@@ -144,7 +131,7 @@ module RubyBindgen
       end
 
       def visit_enum_decl(cursor)
-        return if skip_symbol?(cursor)
+        return if @symbols.skip?(cursor)
 
         children = render_children(cursor, indentation: 2, separator: ",\n", strip: true)
         self.render_cursor(cursor, "enum_decl", :children => children)
@@ -155,7 +142,7 @@ module RubyBindgen
       end
 
       def visit_function(cursor)
-        return if skip_symbol?(cursor)
+        return if @symbols.skip?(cursor)
         return unless has_export_macro?(cursor)
 
         result = Array.new
@@ -178,7 +165,7 @@ module RubyBindgen
 
       def visit_struct(cursor)
         return if cursor.forward_declaration?
-        return if skip_symbol?(cursor)
+        return if @symbols.skip?(cursor)
 
         result = Array.new
 
@@ -222,7 +209,7 @@ module RubyBindgen
       end
 
       def visit_typedef_decl(cursor)
-        return if skip_symbol?(cursor)
+        return if @symbols.skip?(cursor)
 
         case cursor.underlying_type.kind
           when :type_elaborated
@@ -238,7 +225,7 @@ module RubyBindgen
 
       def visit_union(cursor)
         return if cursor.forward_declaration?
-        return if skip_symbol?(cursor)
+        return if @symbols.skip?(cursor)
 
         result = Array.new
 
@@ -268,7 +255,7 @@ module RubyBindgen
       end
 
       def visit_variable(cursor)
-        return if skip_symbol?(cursor)
+        return if @symbols.skip?(cursor)
 
         self.render_cursor(cursor, "variable")
       end

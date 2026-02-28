@@ -26,7 +26,7 @@ These options apply to all formats.
 |-----------------|--------------------|-------------------------------------------------------------------------------------------|
 | `match`         | `["**/*.{h,hpp}"]` | Array of glob pattern specifying which header files to process.                           |
 | `skip`          | `[]`               | Array of glob patterns specifying which files to skip. For Rice/FFI, these match header file paths. For CMake, these match generated `*-rb.cpp` file paths. In most cases, it's better to add skips to the Rice/FFI config so the files are never generated, rather than skipping them in CMake after the fact. |
-| `skip_symbols`  | `[]`               | Array of symbols names to skip.  See [Skip Symbols](#skip-symbols).                       |
+| `symbols`       | `[]`               | Array of symbol objects with per-symbol actions. See [Symbols](#symbols).                  |
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
 
 ## C (FFI) Options
@@ -132,15 +132,19 @@ C:\Program Files\Microsoft Visual Studio\2022\...\VC\Tools\Llvm\x64\bin\libclang
 C:\Program Files\LLVM\bin\libclang.dll
 ```
 
-## Skip Symbols
+## Symbols
 
-The `skip_symbols` option is useful when:
+The `symbols` option is an array of objects that let you control per-symbol behavior. Each entry has a `name` and an `action`.
+
+### Skip Action
+
+Use `action: skip` to exclude symbols from bindings. This is useful when:
 
 - Functions have export macros but still aren't available (build configuration issues)
 - Functions are internal/private APIs not meant for external use
 - Functions cause linker errors due to missing symbols
 
-You can specify symbols using:
+The `name` field supports:
 
 - Simple names: `versionMajor` - skips all symbols with this name
 - Fully qualified names: `cv::ocl::PlatformInfo::versionMajor` - skips only that specific symbol
@@ -148,11 +152,15 @@ You can specify symbols using:
 - Regex patterns: `/pattern/` - skips symbols matching the regex
 
 ```yaml
-skip_symbols:
-  - versionMajor                           # Skips all symbols named "versionMajor"
-  - cv::ocl::PlatformInfo::versionMinor    # Skips only this specific method
-  - "cv::Mat_::zeros(int, const int *)"    # Skips only this overload (others remain)
-  - /cv::dnn::.*Layer::init.*/             # Regex: skips all init* methods on any Layer class
+symbols:
+  - name: versionMajor                           # Skips all symbols named "versionMajor"
+    action: skip
+  - name: cv::ocl::PlatformInfo::versionMinor    # Skips only this specific method
+    action: skip
+  - name: "cv::Mat_::zeros(int, const int *)"    # Skips only this overload (others remain)
+    action: skip
+  - name: /cv::dnn::.*Layer::init.*/             # Regex: skips all init* methods on any Layer class
+    action: skip
 ```
 
 ### Overload-Specific Skipping
@@ -160,9 +168,11 @@ skip_symbols:
 When a function has multiple overloads but only some cause problems (e.g., linker errors), you can target a specific overload by appending its parameter types in parentheses:
 
 ```yaml
-skip_symbols:
-  - cv::Mat_::zeros                        # Skips ALL overloads of zeros
-  - "cv::Mat_::zeros(int, const int *)"    # Skips only zeros(int ndims, const int* sz)
+symbols:
+  - name: cv::Mat_::zeros                        # Skips ALL overloads of zeros
+    action: skip
+  - name: "cv::Mat_::zeros(int, const int *)"    # Skips only zeros(int ndims, const int* sz)
+    action: skip
 ```
 
 The parameter types must match the canonical clang type spelling exactly (e.g., `const int *` not `const int*` or `int const *`).
@@ -205,7 +215,7 @@ export_macros:
 
 ruby-bindgen applies heuristics to convert C++ names to Ruby names — for example, `isEnabled()` becomes `enabled?` and `operator()` becomes `call`. These heuristics sometimes guess wrong. The `rename_methods` and `rename_types` options let you override the generated names without manual post-generation edits.
 
-Both options use the same pattern syntax as `skip_symbols`: plain strings for exact match, `/pattern/` for regex.
+Both options use the same pattern syntax as `symbols` names: plain strings for exact match, `/pattern/` for regex.
 
 ### Type Mappings
 

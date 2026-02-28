@@ -54,7 +54,13 @@ class RiceTest < AbstractTest
   def test_filtering
     run_rice_test("filtering.hpp",
                   export_macros: ["MY_EXPORT"],
-                  skip_symbols: ["skippedByName", "alsoSkippedByName", "skippedMethod", "SkippedClass", "SkippedTemplateClass", "SkippedArgType", "Outer::MyClass::overloaded(int, const int *)"])
+                  symbols: [{"name" => "skippedByName", "action" => "skip"},
+                            {"name" => "alsoSkippedByName", "action" => "skip"},
+                            {"name" => "skippedMethod", "action" => "skip"},
+                            {"name" => "SkippedClass", "action" => "skip"},
+                            {"name" => "SkippedTemplateClass", "action" => "skip"},
+                            {"name" => "SkippedArgType", "action" => "skip"},
+                            {"name" => "Outer::MyClass::overloaded(int, const int *)", "action" => "skip"}])
   end
 
   def test_buffers

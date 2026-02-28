@@ -27,7 +27,12 @@ class FfiTest < AbstractTest
     run_ffi_test("filtering.h",
       library_names: ["filtering"], library_versions: [],
       export_macros: ["MY_EXPORT"],
-      skip_symbols: ["skippedFunction", "alsoSkipped", "/internal_helper.*/", "SkippedStruct", "SkippedEnum", "SkippedTypedef"])
+      symbols: [{"name" => "skippedFunction", "action" => "skip"},
+                {"name" => "alsoSkipped", "action" => "skip"},
+                {"name" => "/internal_helper.*/", "action" => "skip"},
+                {"name" => "SkippedStruct", "action" => "skip"},
+                {"name" => "SkippedEnum", "action" => "skip"},
+                {"name" => "SkippedTypedef", "action" => "skip"}])
   end
 
   private

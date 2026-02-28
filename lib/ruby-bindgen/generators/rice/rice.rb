@@ -140,7 +140,7 @@ module RubyBindgen
         @typedef_map = Hash.new
         @type_name_map = Hash.new  # Maps simple type names to qualified names
         @auto_generated_bases = Set.new
-        @skip_symbols = RubyBindgen::NameMapper.from_list(config[:skip_symbols] || [])
+        @symbols = RubyBindgen::Symbols.new(config[:symbols] || [])
         @export_macros = config[:export_macros] || []
 
         # Build naming tables: merge operator defaults with user config
@@ -167,7 +167,7 @@ module RubyBindgen
       # Used to filter out methods/constructors that reference skipped types.
       def type_references_skipped_symbol?(type)
         spelling = type.spelling
-        @skip_symbols.each_exact_key do |skip|
+        @symbols.each do |skip|
           # Check if the type spelling contains the skipped symbol
           # Also check simple name (last component) since type spelling may omit namespaces
           # e.g., type spelling "const MatCommaInitializer_<_Tp>&" should match "cv::MatCommaInitializer_"
@@ -187,47 +187,27 @@ module RubyBindgen
       # Check if template arguments string contains any skipped symbol.
       # Used when auto-instantiating templates like cv::DefaultDeleter<CvHaarClassifierCascade>.
       def template_args_reference_skipped_symbol?(template_args)
-        @skip_symbols.each_exact_key do |skip|
+        @symbols.each do |skip|
           simple_name = skip.split('::').last.strip
           return true if template_args.include?(skip) || template_args.include?(simple_name)
         end
         false
       end
 
-      # Check if a cursor should be skipped based on skip_symbols config.
-      # Supports simple names, fully qualified names, and regex patterns (strings starting with /).
-      # Examples:
-      #   - "versionMajor" - matches method name
-      #   - "cv::ocl::PlatformInfo::versionMajor" - matches fully qualified name
-      #   - "/cv::dnn::.*::Layer::init.*/" - regex pattern
+      # Check if a cursor should be skipped based on symbols config.
+      # Adds Rice-specific template-argument and prefix matching on top of basic lookup.
       def skip_symbol?(cursor)
-        # Build fully qualified name
-        qualified_name = cursor.spelling
-        parent = cursor.semantic_parent
-        while parent && !parent.kind.nil? && parent.kind != :cursor_translation_unit
-          qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty?
-          parent = parent.semantic_parent
-        end
+        return true if @symbols.skip?(cursor)
 
-        # Extract template arguments from display_name (spelling doesn't include them)
-        # e.g., display_name is "DefaultDeleter<CvHaarClassifierCascade>" while spelling is just "DefaultDeleter"
-        if match = cursor.display_name.match(/<(.+)>\z/)
+        # Check template arguments from display_name
+        # e.g., display_name "DefaultDeleter<CvHaarClassifierCascade>" while spelling is just "DefaultDeleter"
+        if (match = cursor.display_name.match(/<(.+)>\z/))
           return true if template_args_reference_skipped_symbol?(match[1])
         end
 
-        # Add signature candidates for overload-specific matching
-        candidates = [cursor.spelling, qualified_name]
-        if cursor.type.respond_to?(:args_size)
-          param_types = (0...cursor.type.args_size).map { |i| cursor.type.arg_type(i).spelling }.join(", ")
-          candidates << "#{cursor.spelling}(#{param_types})"
-          candidates << "#{qualified_name}(#{param_types})"
-        end
-
-        # Exact or regex match
-        return true if @skip_symbols.match?(*candidates)
-
         # Prefix match (template instantiation or nested name)
-        @skip_symbols.each_exact_key do |skip|
+        qualified_name = @symbols.build_candidates(cursor)[1]
+        @symbols.each do |skip|
           return true if qualified_name.start_with?("#{skip}<") ||
                          qualified_name.start_with?("#{skip}::")
         end
@@ -1481,7 +1461,7 @@ module RubyBindgen
         # Infer traits from operator* return type
         # Use recursive iteration to find inherited methods from base classes
         # Note: Iterators without operator* (like OpenCV's SparseMatConstIterator which uses node())
-        # cannot have traits auto-generated. Add them to skip_symbols in the config.
+        # cannot have traits auto-generated. Add them to symbols with action: skip in the config.
         value_type = nil
         value_type_decl = nil
         decl.each do |child, _|
@@ -1831,7 +1811,7 @@ module RubyBindgen
         # Handle template case. For example:
         #   typedef Point_<int> Point2i;
         if cursor_template_ref
-          # Skip if the template class is in skip_symbols
+          # Skip if the template class is in symbols
           return if skip_symbol?(cursor_template_ref.referenced)
 
           visit_template_specialization(cursor, cursor_template_ref.referenced, cursor.underlying_type)
@@ -2128,7 +2108,7 @@ module RubyBindgen
             next :continue
           end
 
-          # Skip if explicitly listed in skip_symbols
+          # Skip if explicitly listed in symbols
           if skip_symbol?(class_template_cursor)
             next :continue
           end

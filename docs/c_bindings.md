@@ -148,7 +148,7 @@ If `library_versions` is omitted, only the unversioned name is searched. This wo
 
 `ruby-bindgen` can filter which symbols are included in the generated bindings:
 
-- [`skip_symbols`](configuration.md#skip-symbols) - Skip specific functions, structs, enums, or typedefs by name or regex pattern
+- [`symbols`](configuration.md#symbols) - Skip specific functions, structs, enums, or typedefs by name or regex pattern
 - [`export_macros`](configuration.md#export-macros) - Only include functions marked with specific visibility macros
 
 ## Usage Tips
