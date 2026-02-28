@@ -13,23 +13,20 @@ Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %
 <%- end -%>
 
 <%= incomplete_classes -%>
-<%- unless children.empty? -%>
+<%- unless children == ";" -%>
 
-<%= cursor.cruby_name %>.
-<%= children -%>
+<%= cursor.cruby_name %><%= children -%>
 <%- end -%>
 <%- else -%>
 <%# No incomplete classes - single statement -%>
-<%- line_terminator = children.empty? ? ";" : "." -%>
 <%= auto_generated_base -%>
 <%- if under && base -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= children -%>
 <%- elsif under -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= children -%>
 <%- elsif base -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= children -%>
 <%- else -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= line_terminator %>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= children -%>
 <%- end -%>
-<%= children -%>
 <%- end -%>

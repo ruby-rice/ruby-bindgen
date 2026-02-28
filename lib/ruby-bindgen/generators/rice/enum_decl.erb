@@ -1,7 +1,6 @@
 <%- if cursor.anonymous? -%>
 <%- elsif under -%>
-Enum<<%= cursor.qualified_display_name %>> <%= cursor.cruby_name %> = define_enum_under<<%= cursor.qualified_display_name %>>("<%= cursor.ruby_name %>", <%= under.cruby_name %>).
+Enum<<%= cursor.qualified_display_name %>> <%= cursor.cruby_name %> = define_enum_under<<%= cursor.qualified_display_name %>>("<%= cursor.ruby_name %>", <%= under.cruby_name %>)<%= children -%>
 <%- else -%>
-Enum<<%= cursor.qualified_display_name %>> <%= cursor.cruby_name %> = define_enum<<%= cursor.qualified_display_name %>>("<%= cursor.ruby_name %>").
+Enum<<%= cursor.qualified_display_name %>> <%= cursor.cruby_name %> = define_enum<<%= cursor.qualified_display_name %>>("<%= cursor.ruby_name %>")<%= children -%>
 <%- end -%>
-<%= children -%>

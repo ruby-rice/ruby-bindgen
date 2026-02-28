@@ -19,7 +19,9 @@ module RubyBindgen
     def build_candidates(cursor)
       qualified_name = cursor.spelling
       parent = cursor.semantic_parent
-      while parent && !parent.kind.nil? && parent.kind != :cursor_translation_unit
+      while parent && !parent.kind.nil? &&
+            parent.kind != :cursor_translation_unit &&
+            !parent.kind.to_s.start_with?("cursor_invalid")
         qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty?
         parent = parent.semantic_parent
       end

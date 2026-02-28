@@ -142,6 +142,7 @@ module RubyBindgen
         @auto_generated_bases = Set.new
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || [])
         @export_macros = config[:export_macros] || []
+        @version_macro = config[:version_macro]
 
         # Build naming tables: merge operator defaults with user config
         rename_types = RubyBindgen::NameMapper.from_config(config[:rename_types] || {})
@@ -355,7 +356,7 @@ module RubyBindgen
         # Skip explicitly listed symbols
         return if skip_symbol?(cursor)
 
-        result = Array.new
+        result = Hash.new { |h, k| h[k] = [] }
 
         # Determine containing module
         under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
@@ -375,23 +376,20 @@ module RubyBindgen
         end
 
         # Visit children
-        children = Array.new
+        versions = visit_children(cursor,
+                                  exclude_kinds: Set[:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl])
 
         # Are there any constructors? If not, C++ will define one implicitly
         # (but not for incomplete/opaque types which can't be instantiated)
         constructors = cursor.find_by_kind(false, :cursor_constructor)
         if !cursor.abstract? && !cursor.opaque_declaration? && constructors.none?
-          children << self.render_template("constructor",
-                                         :cursor => cursor,
-                                         :signature => self.constructor_signature(cursor),
-                                         :args => [])
-
+          versions[nil].unshift(self.render_template("constructor",
+                                                     :cursor => cursor,
+                                                     :signature => self.constructor_signature(cursor),
+                                                     :args => []))
         end
 
-        children += visit_children(cursor,
-                                   exclude_kinds: Set[:cursor_class_decl, :cursor_struct, :cursor_enum_decl, :cursor_typedef_decl])
-
-        children_content = merge_children(children, :indentation => 2, :separator => ".\n", terminator: ";\n", :strip => true)
+        children_content = merge_children(versions, indentation: 2, chain: true, terminate: true, strip: true)
 
         # Collect forward-declared (incomplete) inner classes
         # They must be registered with Rice before the parent class methods use them
@@ -401,15 +399,15 @@ module RubyBindgen
           next unless child_cursor.opaque_declaration?
           incomplete_classes << visit_incomplete_class(child_cursor, cursor)
         end
-        incomplete_classes_content = merge_children(incomplete_classes, :separator => "\n")
+        incomplete_classes_content = merge_children({ nil => incomplete_classes })
 
         # Auto-instantiate any class templates used as parameter types
         auto_instantiated = auto_instantiate_parameter_templates(cursor, under)
-        result << auto_instantiated unless auto_instantiated.empty?
+        result[nil] << auto_instantiated unless auto_instantiated.empty?
 
         # Render class
         @classes[cursor.cruby_name] = qualified_class_name_cpp(cursor)
-        result << self.render_cursor(cursor, "class", :under => under, :base => base,
+        result[nil] << self.render_cursor(cursor, "class", :under => under, :base => base,
                                      :auto_generated_base => auto_generated_base,
                                      :incomplete_classes => incomplete_classes_content,
                                      :children => children_content)
@@ -417,20 +415,22 @@ module RubyBindgen
         # Alias each_const to each if the class only has const iterators
         iterator_names = @class_iterator_names[cursor.cruby_name]
         if iterator_names.include?("each_const") && !iterator_names.include?("each")
-          result << render_template("iterator_alias", :cruby_name => cursor.cruby_name)
+          result[nil] << render_template("iterator_alias", :cruby_name => cursor.cruby_name)
         end
 
         # Define any complete embedded classes and structs
         cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
           next if child_cursor.opaque_declaration?
-          result << visit_class_decl(child_cursor)
+          version = @symbols.version(child_cursor)
+          result[version] << visit_class_decl(child_cursor)
         end
 
         # Define any embedded enums
         cursor.find_by_kind(false, :cursor_enum_decl) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
-          result << visit_enum_decl(child_cursor)
+          version = @symbols.version(child_cursor)
+          result[version] << visit_enum_decl(child_cursor)
         end
 
         merge_children(result)
@@ -473,7 +473,7 @@ module RubyBindgen
           end
         end
 
-        merge_children(result, :separator => "\n")
+        merge_children({ nil => result })
       end
 
       # Visit a forward-declared (incomplete) inner class.
@@ -525,8 +525,8 @@ module RubyBindgen
         children_content = render_children(cursor,
                                           only_kinds: [:cursor_cxx_method, :cursor_constructor, :cursor_field_decl, :cursor_variable,
                                                        :cursor_enum_decl, :cursor_conversion_function],
-                                          indentation: 4, separator: ".\n",
-                                          terminator: ";", strip: true)
+                                          indentation: 4, chain: true,
+                                          terminate: true, strip: true)
 
         # TODO: Calling get_base_spelling crashes libclang on certain templates.
         # Fix the instantiate functions by hand for now.
@@ -562,7 +562,7 @@ module RubyBindgen
                                      :base_spelling => base_spelling,
                                      :children => children_content)
 
-        merge_children(result, indentation: 0, separator: ".\n", strip: false)
+        merge_children({ nil => result })
       end
 
       # Check if cursor has one of the required export macros in its source text
@@ -1591,22 +1591,18 @@ module RubyBindgen
 
       def visit_enum_decl(cursor)
         return if CURSOR_CLASSES.include?(cursor.semantic_parent.kind) && !cursor.public?
+
         if cursor.anonymous? && cursor.semantic_parent.kind == :cursor_class_template
-          indentation = 0
-          separator = ".\n"
-          terminator = ""
+          # Return array of individual constants so the parent class template chains them
+          versions = visit_children(cursor)
+          return versions.values.flatten.map(&:strip)
         elsif cursor.anonymous?
-          indentation = 0
-          separator = ";\n"
-          terminator = ";\n"
-        else
-          indentation = 2
-          separator = ".\n"
-          terminator = ";\n"
+          children = render_children(cursor, strip: true)
+          return self.render_cursor(cursor, "enum_decl", :under => nil, :children => children)
         end
 
         under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
-        children = render_children(cursor, indentation: indentation, separator: separator, terminator: terminator, strip: true)
+        children = render_children(cursor, indentation: 2, chain: true, terminate: true, strip: true)
         self.render_cursor(cursor, "enum_decl", :under => under, :children => children)
       end
 
@@ -1789,8 +1785,8 @@ module RubyBindgen
           # Use variable for locally-defined classes, Data_Type<T>() for cross-file references
           class_ref = @classes.key?(cruby_name) ? cruby_name : "Data_Type<#{cpp_type}>()"
           # Join with method chaining, indented 4 spaces (2 for function body + 2 for method chain)
-          content = merge_children(lines, :indentation => 4, :separator => ".\n", :strip => true)
-          result << "#{class_ref}.\n#{content};"
+          content = merge_children({ nil => lines }, indentation: 4, chain: true, terminate: true, strip: true)
+          result << "#{class_ref}#{content}"
         end
         result.join("\n  \n  ")
       end
@@ -2014,7 +2010,7 @@ module RubyBindgen
           end
         end
 
-        children = render_children(cursor, indentation: 2, separator: ".\n")
+        children = render_children(cursor, indentation: 2, chain: true, terminate: true)
         result << self.render_cursor(cursor, "union", :children => children)
         result.join("\n")
       end
@@ -2086,7 +2082,7 @@ module RubyBindgen
       end
 
       # Returns [content, has_builders] where has_builders indicates if any builder templates were generated
-      def render_class_templates(cursor, indentation: 0, separator: "\n", strip: false)
+      def render_class_templates(cursor, indentation: 0, strip: false)
         results = Array.new
         cursor.find_by_kind(true, :cursor_class_template) do |class_template_cursor|
           if class_template_cursor.private? || class_template_cursor.protected?
@@ -2114,13 +2110,13 @@ module RubyBindgen
 
           results << visit_class_template_builder(class_template_cursor)
         end
-        content = merge_children(results, :indentation => indentation, :separator => separator, :strip => strip)
+        content = merge_children({ nil => results }, indentation: indentation, strip: strip)
         has_builders = !results.empty? && !content.strip.empty?
         [content, has_builders]
       end
 
       def visit_children(cursor, exclude_kinds: Set.new, only_kinds: nil)
-        results = Array.new
+        versions = Hash.new { |h, k| h[k] = [] }
         cursor.each(false) do |child_cursor, parent_cursor|
           if child_cursor.location.in_system_header?
             next :continue
@@ -2164,36 +2160,49 @@ module RubyBindgen
           visit_method = "visit_#{child_kind.to_s.delete_prefix("cursor_").underscore}".to_sym
           if self.respond_to?(visit_method)
             content = self.send(visit_method, child_cursor)
+            version = @symbols.version(child_cursor)
             case content
               when Array
-                results += content
+                versions[version] += content
               when String
-                results << content
+                versions[version] << content
             end
           end
           next :continue
         end
-        results
+        versions
       end
 
-      def merge_children(children, indentation: 0, separator: "\n", terminator: "", strip: false)
-        return "" if children.empty?
-
-        children = children.map do |line|
-          strip ? line.rstrip : line
+      def merge_children(versions, indentation: 0, chain: false, terminate: false, strip: false)
+        lines = versions.keys.sort_by { |key| key.to_s }.each_with_object([]) do |version, result|
+          next unless versions[version]&.any?
+          result << "#if #{@version_macro} >= #{version}" if version
+          versions[version].each do |line|
+            line = line.rstrip if strip
+            line = ".#{line}" if chain
+            result << line
+          end
+          result << "#endif" if version
         end
 
-        # Join together templates
-        children = children.join(separator) + terminator
-        children = add_indentation(children, indentation) if indentation > 0
+        if lines.empty?
+          return terminate ? ";" : ""
+        end
 
-        children
+        result = lines.join("\n")
+        if terminate
+          result += chain ? "\n;" : ";"
+        end
+
+        result = add_indentation(result, indentation) if indentation > 0
+        result = "\n" + result if chain || terminate
+        result
       end
 
-      def render_children(cursor, indentation: 0, separator: "\n", terminator: "", strip: false,
+      def render_children(cursor, indentation: 0, chain: false, terminate: false, strip: false,
                           exclude_kinds: Set.new, only_kinds: nil)
-        children = visit_children(cursor, exclude_kinds: exclude_kinds, only_kinds: only_kinds)
-        merge_children(children, indentation: indentation, separator: separator, terminator: terminator, strip: strip)
+        versions = visit_children(cursor, exclude_kinds: exclude_kinds, only_kinds: only_kinds)
+        merge_children(versions, indentation: indentation, chain: chain, terminate: terminate, strip: strip)
       end
 
       # Build maps for type lookups:
