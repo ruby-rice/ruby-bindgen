@@ -44,5 +44,8 @@ void Init_VersionGuards()
     .define_constructor(Constructor<Guards::DataType<Guards::HalfFloat>>())
     .define_singleton_function<int(*)()>("depth", &Guards::DataType<HalfFloat>::depth)
     ;
+  rb_mGuards.define_module_function<Guards::HalfFloat(*)(int)>("saturate_cast", &Guards::saturate_cast,
+    Arg("v"));
+
   #endif
 }

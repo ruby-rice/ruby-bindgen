@@ -62,4 +62,10 @@ namespace Guards
     static int depth() { return 2; }
   };
 
+  // Function template with explicit specialization using versioned type
+  template<typename T>
+  inline T saturate_cast(int v) { return T(); }
+
+  template<>
+  inline HalfFloat saturate_cast<HalfFloat>(int v) { HalfFloat h; h.value = (float)v; return h; }
 }

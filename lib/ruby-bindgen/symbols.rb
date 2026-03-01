@@ -54,6 +54,23 @@ module RubyBindgen
             end
           end
         end
+
+        # Function template specializations: clang reports display_name with empty
+        # template args (e.g., "saturate_cast<>(int)"). Reconstruct qualified args
+        # from the type_ref children which reference the substituted types.
+        if cursor.kind == :cursor_function && display.include?('<>')
+          type_refs = []
+          cursor.each(false) do |child, _|
+            type_refs << child.type.spelling if child.kind == :cursor_type_ref
+            next :continue
+          end
+          unless type_refs.empty?
+            qualified_args_str = "<#{type_refs.join(', ')}>"
+            fq_display = display.sub('<>', qualified_args_str)
+            fq_qualified_display = qualified_name.sub(cursor.spelling, fq_display)
+            candidates << fq_display << fq_qualified_display
+          end
+        end
       end
 
       if cursor.type.respond_to?(:args_size)

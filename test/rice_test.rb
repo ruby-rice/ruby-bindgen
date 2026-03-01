@@ -102,7 +102,8 @@ class RiceTest < AbstractTest
                               "Guards::NEW_FLAG",
                               "Guards::newFunction",
                               "Guards::HalfFloat",
-                              "Guards::DataType<Guards::HalfFloat>"] } })
+                              "Guards::DataType<Guards::HalfFloat>",
+                              "/Guards::saturate_cast<Guards::HalfFloat>/"] } })
   end
 
   def test_cross_file_typedef
