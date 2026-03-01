@@ -398,7 +398,7 @@ module RubyBindgen
       def figure_ffi_pointer_type(type, context)
         case type.pointee.kind
           when :type_char_s
-            context == :callback_return ? ":pointer" : ":string"
+            type.pointee.const_qualified? ? ":string" : ":pointer"
           when :type_elaborated
             if type.pointee.canonical.kind == :type_record
               if type.pointee.canonical.declaration.opaque_declaration?
