@@ -548,7 +548,10 @@ module RubyBindgen
                                     :cursor_non_type_template_parameter,
                                     :cursor_template_template_parameter]
 
+        # Filter out unnamed template parameters (e.g., `typename = void` default params)
+        # — they have empty spelling and produce invalid C++ like `<T, >`
         template_parameters = cursor.find_by_kind(false, *template_parameter_kinds)
+                                    .reject { |p| p.spelling.empty? }
         template_signature = template_parameters.map do |template_parameter|
           if template_parameter.kind == :cursor_template_type_parameter
             "typename #{template_parameter.spelling}"
