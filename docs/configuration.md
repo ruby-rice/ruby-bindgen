@@ -37,6 +37,7 @@ These options apply to all formats.
 |--------------------|---------|-------------|
 | `library_names`    | `[]`    | Base names of shared libraries to load (e.g., `["proj"]` for `libproj`). |
 | `library_versions` | `[]`    | Library version suffixes to search for (e.g., `["25", "9"]`). Combined with `library_names` to build platform-specific search names like `libproj.so.25`. |
+| `module`           | filename | Ruby module name for the generated bindings. Defaults to the header filename camelized (e.g., `proj.h` → `Proj`). Supports nested modules with `::` (e.g., `Proj::Api`). |
 
 ## C++ (Rice) Options
 

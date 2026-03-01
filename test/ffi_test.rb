@@ -16,7 +16,7 @@ class FfiTest < AbstractTest
   end
 
   def test_proj
-    run_ffi_test("proj.h", library_names: ["proj"], library_versions: [])
+    run_ffi_test("proj.h", library_names: ["proj"], library_versions: [], module: "Proj::Api")
   end
 
   def test_sqlite3

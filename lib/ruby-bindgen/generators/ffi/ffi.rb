@@ -14,6 +14,7 @@ module RubyBindgen
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
         @version_macro = config[:version_macro]
         @export_macros = config[:export_macros] || []
+        @module_name = config[:module]
         @indentation = 0
       end
 
@@ -49,8 +50,11 @@ module RubyBindgen
         relative_path_2 = File.join(File.dirname(relative_path), "#{basename}.rb")
 
         cursor = translation_unit.cursor
+        module_name = @module_name || cursor.ruby_name
         content = render_children(cursor, :indentation => 2)
-        result = render_cursor(cursor, "translation_unit", :content => content.rstrip)
+        result = render_cursor(cursor, "translation_unit",
+                               :content => content.rstrip,
+                               :module_name => module_name)
         result.gsub!(/\n\n\n/, "\n\n")
         self.outputter.write(relative_path_2, result)
       end
