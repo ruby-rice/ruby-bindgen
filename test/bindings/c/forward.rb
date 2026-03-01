@@ -47,4 +47,8 @@ module Forward
   class C < FFI::Struct
     layout :cname, :string
   end
+
+  typedef :pointer, :Opaque
+  attach_function :use_opaque, :use_opaque, [:pointer], :void
+  attach_function :create_opaque, :create_opaque, [], :pointer
 end

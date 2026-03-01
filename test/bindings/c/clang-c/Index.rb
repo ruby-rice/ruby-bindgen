@@ -38,16 +38,8 @@ module Index
   CINDEX_VERSION_MAJOR = 0
   CINDEX_VERSION_MINOR = 64
   typedef :pointer, :cx_index
-
-  class CXTargetInfoImpl < FFI::Struct
-  end
-
-  typedef CXTargetInfoImpl.ptr, :cx_target_info
-
-  class CXTranslationUnitImpl < FFI::Struct
-  end
-
-  typedef CXTranslationUnitImpl.ptr, :cx_translation_unit
+  typedef :pointer, :cx_target_info
+  typedef :pointer, :cx_translation_unit
   typedef :pointer, :cx_client_data
 
   class CXUnsavedFile < FFI::Struct
@@ -588,11 +580,7 @@ module Index
 
   attach_function :clang_get_cursor_tls_kind, :clang_getCursorTLSKind, [CXCursor.by_value], CXTLSKind
   attach_function :clang_cursor_get_translation_unit, :clang_Cursor_getTranslationUnit, [CXCursor.by_value], :pointer
-
-  class CXCursorSetImpl < FFI::Struct
-  end
-
-  typedef CXCursorSetImpl.ptr, :cx_cursor_set
+  typedef :pointer, :cx_cursor_set
   attach_function :clang_create_cx_cursor_set, :clang_createCXCursorSet, [], :pointer
   attach_function :clang_dispose_cx_cursor_set, :clang_disposeCXCursorSet, [:pointer], :void
   attach_function :clang_cx_cursor_set_contains, :clang_CXCursorSet_contains, [:pointer, CXCursor.by_value], :uint
@@ -909,11 +897,7 @@ module Index
 
   callback :cx_cursor_visitor, [], CXChildVisitResult
   attach_function :clang_visit_children, :clang_visitChildren, [CXCursor.by_value, :pointer, :pointer], :uint
-
-  class CXChildVisitResult < FFI::Struct
-  end
-
-  typedef CXChildVisitResult.ptr, :cx_cursor_visitor_block
+  typedef :pointer, :cx_cursor_visitor_block
   attach_function :clang_visit_children_with_block, :clang_visitChildrenWithBlock, [CXCursor.by_value, :pointer], :uint
   attach_function :clang_get_cursor_usr, :clang_getCursorUSR, [CXCursor.by_value], CXString.by_value
   attach_function :clang_construct_usr_obj_c_class, :clang_constructUSR_ObjCClass, [:string], CXString.by_value
@@ -1222,11 +1206,7 @@ module Index
 
   attach_function :clang_find_references_in_file, :clang_findReferencesInFile, [CXCursor.by_value, :pointer, CXCursorAndRangeVisitor.by_value], CXResult
   attach_function :clang_find_includes_in_file, :clang_findIncludesInFile, [:pointer, :pointer, CXCursorAndRangeVisitor.by_value], CXResult
-
-  class CXCursorAndRangeVisitorBlock < FFI::Struct
-  end
-
-  typedef CXCursorAndRangeVisitorBlock.ptr, :cx_cursor_and_range_visitor_block
+  typedef :pointer, :cx_cursor_and_range_visitor_block
   attach_function :clang_find_references_in_file_with_block, :clang_findReferencesInFileWithBlock, [CXCursor.by_value, :pointer, :pointer], CXResult
   attach_function :clang_find_includes_in_file_with_block, :clang_findIncludesInFileWithBlock, [:pointer, :pointer, :pointer], CXResult
   typedef :pointer, :cx_idx_client_file

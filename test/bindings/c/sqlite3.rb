@@ -433,19 +433,16 @@ module Sqlite3
   attach_function :sqlite3_compileoption_used, :sqlite3_compileoption_used, [:string], :int
   attach_function :sqlite3_compileoption_get, :sqlite3_compileoption_get, [:int], :string
   attach_function :sqlite3_threadsafe, :sqlite3_threadsafe, [], :int
-
-  class Sqlite3 < FFI::Struct
-  end
-
+  typedef :pointer, :Sqlite3
   typedef :long_long, :sqlite_int64
   typedef :ulong_long, :sqlite_uint64
   typedef :long_long, :sqlite_int64
   typedef :ulong_long, :sqlite_uint64
-  attach_function :sqlite3_close, :sqlite3_close, [Sqlite3.by_ref], :int
-  attach_function :sqlite3_close_v2, :sqlite3_close_v2, [Sqlite3.by_ref], :int
+  attach_function :sqlite3_close, :sqlite3_close, [:pointer], :int
+  attach_function :sqlite3_close_v2, :sqlite3_close_v2, [:pointer], :int
   callback :sqlite3_callback, [], :int
   callback :sqlite3_exec_callback_callback, [:pointer, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_exec, :sqlite3_exec, [Sqlite3.by_ref, :string, :sqlite3_exec_callback_callback, :pointer, :pointer], :int
+  attach_function :sqlite3_exec, :sqlite3_exec, [:pointer, :string, :sqlite3_exec_callback_callback, :pointer, :pointer], :int
 
   class Sqlite3File < FFI::Struct
     layout :p_methods, :pointer
@@ -492,12 +489,8 @@ module Sqlite3
            :x_unfetch, :sqlite3_io_methods_xUnfetch_callback
   end
 
-  class Sqlite3Mutex < FFI::Struct
-  end
-
-  class Sqlite3ApiRoutines < FFI::Struct
-  end
-
+  typedef :pointer, :Sqlite3Mutex
+  typedef :pointer, :Sqlite3ApiRoutines
   typedef :string, :sqlite3_filename
   callback :sqlite3_syscall_ptr, [], :void
   callback :sqlite3_vfs_xOpen_callback, [:pointer, :string, :pointer, :int, :pointer], :int
@@ -547,7 +540,7 @@ module Sqlite3
   attach_function :sqlite3_os_init, :sqlite3_os_init, [], :int
   attach_function :sqlite3_os_end, :sqlite3_os_end, [], :int
   attach_function :sqlite3_config, :sqlite3_config, [:int], :int
-  attach_function :sqlite3_db_config, :sqlite3_db_config, [Sqlite3.by_ref, :int], :int
+  attach_function :sqlite3_db_config, :sqlite3_db_config, [:pointer, :int], :int
   callback :sqlite3_mem_methods_xMalloc_callback, [:int], :pointer
   callback :sqlite3_mem_methods_xFree_callback, [:pointer], :void
   callback :sqlite3_mem_methods_xRealloc_callback, [:pointer, :int], :pointer
@@ -567,21 +560,21 @@ module Sqlite3
            :p_app_data, :pointer
   end
 
-  attach_function :sqlite3_extended_result_codes, :sqlite3_extended_result_codes, [Sqlite3.by_ref, :int], :int
-  attach_function :sqlite3_last_insert_rowid, :sqlite3_last_insert_rowid, [Sqlite3.by_ref], :long_long
-  attach_function :sqlite3_set_last_insert_rowid, :sqlite3_set_last_insert_rowid, [Sqlite3.by_ref, :long_long], :void
-  attach_function :sqlite3_changes, :sqlite3_changes, [Sqlite3.by_ref], :int
-  attach_function :sqlite3_changes64, :sqlite3_changes64, [Sqlite3.by_ref], :long_long
-  attach_function :sqlite3_total_changes, :sqlite3_total_changes, [Sqlite3.by_ref], :int
-  attach_function :sqlite3_total_changes64, :sqlite3_total_changes64, [Sqlite3.by_ref], :long_long
-  attach_function :sqlite3_interrupt, :sqlite3_interrupt, [Sqlite3.by_ref], :void
-  attach_function :sqlite3_is_interrupted, :sqlite3_is_interrupted, [Sqlite3.by_ref], :int
+  attach_function :sqlite3_extended_result_codes, :sqlite3_extended_result_codes, [:pointer, :int], :int
+  attach_function :sqlite3_last_insert_rowid, :sqlite3_last_insert_rowid, [:pointer], :long_long
+  attach_function :sqlite3_set_last_insert_rowid, :sqlite3_set_last_insert_rowid, [:pointer, :long_long], :void
+  attach_function :sqlite3_changes, :sqlite3_changes, [:pointer], :int
+  attach_function :sqlite3_changes64, :sqlite3_changes64, [:pointer], :long_long
+  attach_function :sqlite3_total_changes, :sqlite3_total_changes, [:pointer], :int
+  attach_function :sqlite3_total_changes64, :sqlite3_total_changes64, [:pointer], :long_long
+  attach_function :sqlite3_interrupt, :sqlite3_interrupt, [:pointer], :void
+  attach_function :sqlite3_is_interrupted, :sqlite3_is_interrupted, [:pointer], :int
   attach_function :sqlite3_complete, :sqlite3_complete, [:string], :int
   attach_function :sqlite3_complete16, :sqlite3_complete16, [:pointer], :int
   callback :sqlite3_busy_handler__callback, [:pointer, :int], :int
-  attach_function :sqlite3_busy_handler, :sqlite3_busy_handler, [Sqlite3.by_ref, :sqlite3_busy_handler__callback, :pointer], :int
-  attach_function :sqlite3_busy_timeout, :sqlite3_busy_timeout, [Sqlite3.by_ref, :int], :int
-  attach_function :sqlite3_get_table, :sqlite3_get_table, [Sqlite3.by_ref, :string, :pointer, :pointer, :pointer, :pointer], :int
+  attach_function :sqlite3_busy_handler, :sqlite3_busy_handler, [:pointer, :sqlite3_busy_handler__callback, :pointer], :int
+  attach_function :sqlite3_busy_timeout, :sqlite3_busy_timeout, [:pointer, :int], :int
+  attach_function :sqlite3_get_table, :sqlite3_get_table, [:pointer, :string, :pointer, :pointer, :pointer, :pointer], :int
   attach_function :sqlite3_free_table, :sqlite3_free_table, [:pointer], :void
   attach_function :sqlite3_mprintf, :sqlite3_mprintf, [:string], :string
   attach_function :sqlite3_vmprintf, :sqlite3_vmprintf, [:string, :varargs], :string
@@ -597,15 +590,15 @@ module Sqlite3
   attach_function :sqlite3_memory_highwater, :sqlite3_memory_highwater, [:int], :long_long
   attach_function :sqlite3_randomness, :sqlite3_randomness, [:int, :pointer], :void
   callback :sqlite3_set_authorizer_xAuth_callback, [:pointer, :int, :string, :string, :string, :string], :int
-  attach_function :sqlite3_set_authorizer, :sqlite3_set_authorizer, [Sqlite3.by_ref, :sqlite3_set_authorizer_xAuth_callback, :pointer], :int
+  attach_function :sqlite3_set_authorizer, :sqlite3_set_authorizer, [:pointer, :sqlite3_set_authorizer_xAuth_callback, :pointer], :int
   callback :sqlite3_trace_xTrace_callback, [:pointer, :string], :void
-  attach_function :sqlite3_trace, :sqlite3_trace, [Sqlite3.by_ref, :sqlite3_trace_xTrace_callback, :pointer], :pointer
+  attach_function :sqlite3_trace, :sqlite3_trace, [:pointer, :sqlite3_trace_xTrace_callback, :pointer], :pointer
   callback :sqlite3_profile_xProfile_callback, [:pointer, :string, :ulong_long], :void
-  attach_function :sqlite3_profile, :sqlite3_profile, [Sqlite3.by_ref, :sqlite3_profile_xProfile_callback, :pointer], :pointer
+  attach_function :sqlite3_profile, :sqlite3_profile, [:pointer, :sqlite3_profile_xProfile_callback, :pointer], :pointer
   callback :sqlite3_trace_v2_xCallback_callback, [:uint, :pointer, :pointer, :pointer], :int
-  attach_function :sqlite3_trace_v2, :sqlite3_trace_v2, [Sqlite3.by_ref, :uint, :sqlite3_trace_v2_xCallback_callback, :pointer], :int
+  attach_function :sqlite3_trace_v2, :sqlite3_trace_v2, [:pointer, :uint, :sqlite3_trace_v2_xCallback_callback, :pointer], :int
   callback :sqlite3_progress_handler__callback, [:pointer], :int
-  attach_function :sqlite3_progress_handler, :sqlite3_progress_handler, [Sqlite3.by_ref, :int, :sqlite3_progress_handler__callback, :pointer], :void
+  attach_function :sqlite3_progress_handler, :sqlite3_progress_handler, [:pointer, :int, :sqlite3_progress_handler__callback, :pointer], :void
   attach_function :sqlite3_open, :sqlite3_open, [:string, :pointer], :int
   attach_function :sqlite3_open16, :sqlite3_open16, [:pointer, :pointer], :int
   attach_function :sqlite3_open_v2, :sqlite3_open_v2, [:string, :pointer, :int, :string], :int
@@ -619,210 +612,202 @@ module Sqlite3
   attach_function :sqlite3_database_file_object, :sqlite3_database_file_object, [:string], Sqlite3File.by_ref
   attach_function :sqlite3_create_filename, :sqlite3_create_filename, [:string, :string, :string, :int, :pointer], :string
   attach_function :sqlite3_free_filename, :sqlite3_free_filename, [:string], :void
-  attach_function :sqlite3_errcode, :sqlite3_errcode, [Sqlite3.by_ref], :int
-  attach_function :sqlite3_extended_errcode, :sqlite3_extended_errcode, [Sqlite3.by_ref], :int
-  attach_function :sqlite3_errmsg, :sqlite3_errmsg, [Sqlite3.by_ref], :string
-  attach_function :sqlite3_errmsg16, :sqlite3_errmsg16, [Sqlite3.by_ref], :pointer
+  attach_function :sqlite3_errcode, :sqlite3_errcode, [:pointer], :int
+  attach_function :sqlite3_extended_errcode, :sqlite3_extended_errcode, [:pointer], :int
+  attach_function :sqlite3_errmsg, :sqlite3_errmsg, [:pointer], :string
+  attach_function :sqlite3_errmsg16, :sqlite3_errmsg16, [:pointer], :pointer
   attach_function :sqlite3_errstr, :sqlite3_errstr, [:int], :string
-  attach_function :sqlite3_error_offset, :sqlite3_error_offset, [Sqlite3.by_ref], :int
-
-  class Sqlite3Stmt < FFI::Struct
-  end
-
-  attach_function :sqlite3_limit, :sqlite3_limit, [Sqlite3.by_ref, :int, :int], :int
-  attach_function :sqlite3_prepare, :sqlite3_prepare, [Sqlite3.by_ref, :string, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_prepare_v2, :sqlite3_prepare_v2, [Sqlite3.by_ref, :string, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_prepare_v3, :sqlite3_prepare_v3, [Sqlite3.by_ref, :string, :int, :uint, :pointer, :pointer], :int
-  attach_function :sqlite3_prepare16, :sqlite3_prepare16, [Sqlite3.by_ref, :pointer, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_prepare16_v2, :sqlite3_prepare16_v2, [Sqlite3.by_ref, :pointer, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_prepare16_v3, :sqlite3_prepare16_v3, [Sqlite3.by_ref, :pointer, :int, :uint, :pointer, :pointer], :int
-  attach_function :sqlite3_sql, :sqlite3_sql, [Sqlite3Stmt.by_ref], :string
-  attach_function :sqlite3_expanded_sql, :sqlite3_expanded_sql, [Sqlite3Stmt.by_ref], :string
-  attach_function :sqlite3_stmt_readonly, :sqlite3_stmt_readonly, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_stmt_isexplain, :sqlite3_stmt_isexplain, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_stmt_explain, :sqlite3_stmt_explain, [Sqlite3Stmt.by_ref, :int], :int
-  attach_function :sqlite3_stmt_busy, :sqlite3_stmt_busy, [Sqlite3Stmt.by_ref], :int
-
-  class Sqlite3Value < FFI::Struct
-  end
-
-  class Sqlite3Context < FFI::Struct
-  end
-
+  attach_function :sqlite3_error_offset, :sqlite3_error_offset, [:pointer], :int
+  typedef :pointer, :Sqlite3Stmt
+  attach_function :sqlite3_limit, :sqlite3_limit, [:pointer, :int, :int], :int
+  attach_function :sqlite3_prepare, :sqlite3_prepare, [:pointer, :string, :int, :pointer, :pointer], :int
+  attach_function :sqlite3_prepare_v2, :sqlite3_prepare_v2, [:pointer, :string, :int, :pointer, :pointer], :int
+  attach_function :sqlite3_prepare_v3, :sqlite3_prepare_v3, [:pointer, :string, :int, :uint, :pointer, :pointer], :int
+  attach_function :sqlite3_prepare16, :sqlite3_prepare16, [:pointer, :pointer, :int, :pointer, :pointer], :int
+  attach_function :sqlite3_prepare16_v2, :sqlite3_prepare16_v2, [:pointer, :pointer, :int, :pointer, :pointer], :int
+  attach_function :sqlite3_prepare16_v3, :sqlite3_prepare16_v3, [:pointer, :pointer, :int, :uint, :pointer, :pointer], :int
+  attach_function :sqlite3_sql, :sqlite3_sql, [:pointer], :string
+  attach_function :sqlite3_expanded_sql, :sqlite3_expanded_sql, [:pointer], :string
+  attach_function :sqlite3_stmt_readonly, :sqlite3_stmt_readonly, [:pointer], :int
+  attach_function :sqlite3_stmt_isexplain, :sqlite3_stmt_isexplain, [:pointer], :int
+  attach_function :sqlite3_stmt_explain, :sqlite3_stmt_explain, [:pointer, :int], :int
+  attach_function :sqlite3_stmt_busy, :sqlite3_stmt_busy, [:pointer], :int
+  typedef :pointer, :Sqlite3Value
+  typedef :pointer, :Sqlite3Context
   callback :sqlite3_bind_blob__callback, [:pointer], :void
-  attach_function :sqlite3_bind_blob, :sqlite3_bind_blob, [Sqlite3Stmt.by_ref, :int, :pointer, :int, :sqlite3_bind_blob__callback], :int
+  attach_function :sqlite3_bind_blob, :sqlite3_bind_blob, [:pointer, :int, :pointer, :int, :sqlite3_bind_blob__callback], :int
   callback :sqlite3_bind_blob64__callback, [:pointer], :void
-  attach_function :sqlite3_bind_blob64, :sqlite3_bind_blob64, [Sqlite3Stmt.by_ref, :int, :pointer, :ulong_long, :sqlite3_bind_blob64__callback], :int
-  attach_function :sqlite3_bind_double, :sqlite3_bind_double, [Sqlite3Stmt.by_ref, :int, :double], :int
-  attach_function :sqlite3_bind_int, :sqlite3_bind_int, [Sqlite3Stmt.by_ref, :int, :int], :int
-  attach_function :sqlite3_bind_int64, :sqlite3_bind_int64, [Sqlite3Stmt.by_ref, :int, :long_long], :int
-  attach_function :sqlite3_bind_null, :sqlite3_bind_null, [Sqlite3Stmt.by_ref, :int], :int
+  attach_function :sqlite3_bind_blob64, :sqlite3_bind_blob64, [:pointer, :int, :pointer, :ulong_long, :sqlite3_bind_blob64__callback], :int
+  attach_function :sqlite3_bind_double, :sqlite3_bind_double, [:pointer, :int, :double], :int
+  attach_function :sqlite3_bind_int, :sqlite3_bind_int, [:pointer, :int, :int], :int
+  attach_function :sqlite3_bind_int64, :sqlite3_bind_int64, [:pointer, :int, :long_long], :int
+  attach_function :sqlite3_bind_null, :sqlite3_bind_null, [:pointer, :int], :int
   callback :sqlite3_bind_text__callback, [:pointer], :void
-  attach_function :sqlite3_bind_text, :sqlite3_bind_text, [Sqlite3Stmt.by_ref, :int, :string, :int, :sqlite3_bind_text__callback], :int
+  attach_function :sqlite3_bind_text, :sqlite3_bind_text, [:pointer, :int, :string, :int, :sqlite3_bind_text__callback], :int
   callback :sqlite3_bind_text16__callback, [:pointer], :void
-  attach_function :sqlite3_bind_text16, :sqlite3_bind_text16, [Sqlite3Stmt.by_ref, :int, :pointer, :int, :sqlite3_bind_text16__callback], :int
+  attach_function :sqlite3_bind_text16, :sqlite3_bind_text16, [:pointer, :int, :pointer, :int, :sqlite3_bind_text16__callback], :int
   callback :sqlite3_bind_text64__callback, [:pointer], :void
-  attach_function :sqlite3_bind_text64, :sqlite3_bind_text64, [Sqlite3Stmt.by_ref, :int, :string, :ulong_long, :sqlite3_bind_text64__callback, :uchar], :int
-  attach_function :sqlite3_bind_value, :sqlite3_bind_value, [Sqlite3Stmt.by_ref, :int, Sqlite3Value.by_ref], :int
+  attach_function :sqlite3_bind_text64, :sqlite3_bind_text64, [:pointer, :int, :string, :ulong_long, :sqlite3_bind_text64__callback, :uchar], :int
+  attach_function :sqlite3_bind_value, :sqlite3_bind_value, [:pointer, :int, :pointer], :int
   callback :sqlite3_bind_pointer__callback, [:pointer], :void
-  attach_function :sqlite3_bind_pointer, :sqlite3_bind_pointer, [Sqlite3Stmt.by_ref, :int, :pointer, :string, :sqlite3_bind_pointer__callback], :int
-  attach_function :sqlite3_bind_zeroblob, :sqlite3_bind_zeroblob, [Sqlite3Stmt.by_ref, :int, :int], :int
-  attach_function :sqlite3_bind_zeroblob64, :sqlite3_bind_zeroblob64, [Sqlite3Stmt.by_ref, :int, :ulong_long], :int
-  attach_function :sqlite3_bind_parameter_count, :sqlite3_bind_parameter_count, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_bind_parameter_name, :sqlite3_bind_parameter_name, [Sqlite3Stmt.by_ref, :int], :string
-  attach_function :sqlite3_bind_parameter_index, :sqlite3_bind_parameter_index, [Sqlite3Stmt.by_ref, :string], :int
-  attach_function :sqlite3_clear_bindings, :sqlite3_clear_bindings, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_column_count, :sqlite3_column_count, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_column_name, :sqlite3_column_name, [Sqlite3Stmt.by_ref, :int], :string
-  attach_function :sqlite3_column_name16, :sqlite3_column_name16, [Sqlite3Stmt.by_ref, :int], :pointer
-  attach_function :sqlite3_column_database_name, :sqlite3_column_database_name, [Sqlite3Stmt.by_ref, :int], :string
-  attach_function :sqlite3_column_database_name16, :sqlite3_column_database_name16, [Sqlite3Stmt.by_ref, :int], :pointer
-  attach_function :sqlite3_column_table_name, :sqlite3_column_table_name, [Sqlite3Stmt.by_ref, :int], :string
-  attach_function :sqlite3_column_table_name16, :sqlite3_column_table_name16, [Sqlite3Stmt.by_ref, :int], :pointer
-  attach_function :sqlite3_column_origin_name, :sqlite3_column_origin_name, [Sqlite3Stmt.by_ref, :int], :string
-  attach_function :sqlite3_column_origin_name16, :sqlite3_column_origin_name16, [Sqlite3Stmt.by_ref, :int], :pointer
-  attach_function :sqlite3_column_decltype, :sqlite3_column_decltype, [Sqlite3Stmt.by_ref, :int], :string
-  attach_function :sqlite3_column_decltype16, :sqlite3_column_decltype16, [Sqlite3Stmt.by_ref, :int], :pointer
-  attach_function :sqlite3_step, :sqlite3_step, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_data_count, :sqlite3_data_count, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_column_blob, :sqlite3_column_blob, [Sqlite3Stmt.by_ref, :int], :pointer
-  attach_function :sqlite3_column_double, :sqlite3_column_double, [Sqlite3Stmt.by_ref, :int], :double
-  attach_function :sqlite3_column_int, :sqlite3_column_int, [Sqlite3Stmt.by_ref, :int], :int
-  attach_function :sqlite3_column_int64, :sqlite3_column_int64, [Sqlite3Stmt.by_ref, :int], :long_long
-  attach_function :sqlite3_column_text, :sqlite3_column_text, [Sqlite3Stmt.by_ref, :int], :pointer
-  attach_function :sqlite3_column_text16, :sqlite3_column_text16, [Sqlite3Stmt.by_ref, :int], :pointer
-  attach_function :sqlite3_column_value, :sqlite3_column_value, [Sqlite3Stmt.by_ref, :int], Sqlite3Value.by_ref
-  attach_function :sqlite3_column_bytes, :sqlite3_column_bytes, [Sqlite3Stmt.by_ref, :int], :int
-  attach_function :sqlite3_column_bytes16, :sqlite3_column_bytes16, [Sqlite3Stmt.by_ref, :int], :int
-  attach_function :sqlite3_column_type, :sqlite3_column_type, [Sqlite3Stmt.by_ref, :int], :int
-  attach_function :sqlite3_finalize, :sqlite3_finalize, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_reset, :sqlite3_reset, [Sqlite3Stmt.by_ref], :int
+  attach_function :sqlite3_bind_pointer, :sqlite3_bind_pointer, [:pointer, :int, :pointer, :string, :sqlite3_bind_pointer__callback], :int
+  attach_function :sqlite3_bind_zeroblob, :sqlite3_bind_zeroblob, [:pointer, :int, :int], :int
+  attach_function :sqlite3_bind_zeroblob64, :sqlite3_bind_zeroblob64, [:pointer, :int, :ulong_long], :int
+  attach_function :sqlite3_bind_parameter_count, :sqlite3_bind_parameter_count, [:pointer], :int
+  attach_function :sqlite3_bind_parameter_name, :sqlite3_bind_parameter_name, [:pointer, :int], :string
+  attach_function :sqlite3_bind_parameter_index, :sqlite3_bind_parameter_index, [:pointer, :string], :int
+  attach_function :sqlite3_clear_bindings, :sqlite3_clear_bindings, [:pointer], :int
+  attach_function :sqlite3_column_count, :sqlite3_column_count, [:pointer], :int
+  attach_function :sqlite3_column_name, :sqlite3_column_name, [:pointer, :int], :string
+  attach_function :sqlite3_column_name16, :sqlite3_column_name16, [:pointer, :int], :pointer
+  attach_function :sqlite3_column_database_name, :sqlite3_column_database_name, [:pointer, :int], :string
+  attach_function :sqlite3_column_database_name16, :sqlite3_column_database_name16, [:pointer, :int], :pointer
+  attach_function :sqlite3_column_table_name, :sqlite3_column_table_name, [:pointer, :int], :string
+  attach_function :sqlite3_column_table_name16, :sqlite3_column_table_name16, [:pointer, :int], :pointer
+  attach_function :sqlite3_column_origin_name, :sqlite3_column_origin_name, [:pointer, :int], :string
+  attach_function :sqlite3_column_origin_name16, :sqlite3_column_origin_name16, [:pointer, :int], :pointer
+  attach_function :sqlite3_column_decltype, :sqlite3_column_decltype, [:pointer, :int], :string
+  attach_function :sqlite3_column_decltype16, :sqlite3_column_decltype16, [:pointer, :int], :pointer
+  attach_function :sqlite3_step, :sqlite3_step, [:pointer], :int
+  attach_function :sqlite3_data_count, :sqlite3_data_count, [:pointer], :int
+  attach_function :sqlite3_column_blob, :sqlite3_column_blob, [:pointer, :int], :pointer
+  attach_function :sqlite3_column_double, :sqlite3_column_double, [:pointer, :int], :double
+  attach_function :sqlite3_column_int, :sqlite3_column_int, [:pointer, :int], :int
+  attach_function :sqlite3_column_int64, :sqlite3_column_int64, [:pointer, :int], :long_long
+  attach_function :sqlite3_column_text, :sqlite3_column_text, [:pointer, :int], :pointer
+  attach_function :sqlite3_column_text16, :sqlite3_column_text16, [:pointer, :int], :pointer
+  attach_function :sqlite3_column_value, :sqlite3_column_value, [:pointer, :int], :pointer
+  attach_function :sqlite3_column_bytes, :sqlite3_column_bytes, [:pointer, :int], :int
+  attach_function :sqlite3_column_bytes16, :sqlite3_column_bytes16, [:pointer, :int], :int
+  attach_function :sqlite3_column_type, :sqlite3_column_type, [:pointer, :int], :int
+  attach_function :sqlite3_finalize, :sqlite3_finalize, [:pointer], :int
+  attach_function :sqlite3_reset, :sqlite3_reset, [:pointer], :int
   callback :sqlite3_create_function_xFunc_callback, [:pointer, :int, :pointer], :void
   callback :sqlite3_create_function_xStep_callback, [:pointer, :int, :pointer], :void
   callback :sqlite3_create_function_xFinal_callback, [:pointer], :void
-  attach_function :sqlite3_create_function, :sqlite3_create_function, [Sqlite3.by_ref, :string, :int, :int, :pointer, :sqlite3_create_function_xFunc_callback, :sqlite3_create_function_xStep_callback, :sqlite3_create_function_xFinal_callback], :int
+  attach_function :sqlite3_create_function, :sqlite3_create_function, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_function_xFunc_callback, :sqlite3_create_function_xStep_callback, :sqlite3_create_function_xFinal_callback], :int
   callback :sqlite3_create_function16_xFunc_callback, [:pointer, :int, :pointer], :void
   callback :sqlite3_create_function16_xStep_callback, [:pointer, :int, :pointer], :void
   callback :sqlite3_create_function16_xFinal_callback, [:pointer], :void
-  attach_function :sqlite3_create_function16, :sqlite3_create_function16, [Sqlite3.by_ref, :pointer, :int, :int, :pointer, :sqlite3_create_function16_xFunc_callback, :sqlite3_create_function16_xStep_callback, :sqlite3_create_function16_xFinal_callback], :int
+  attach_function :sqlite3_create_function16, :sqlite3_create_function16, [:pointer, :pointer, :int, :int, :pointer, :sqlite3_create_function16_xFunc_callback, :sqlite3_create_function16_xStep_callback, :sqlite3_create_function16_xFinal_callback], :int
   callback :sqlite3_create_function_v2_xFunc_callback, [:pointer, :int, :pointer], :void
   callback :sqlite3_create_function_v2_xStep_callback, [:pointer, :int, :pointer], :void
   callback :sqlite3_create_function_v2_xFinal_callback, [:pointer], :void
   callback :sqlite3_create_function_v2_xDestroy_callback, [:pointer], :void
-  attach_function :sqlite3_create_function_v2, :sqlite3_create_function_v2, [Sqlite3.by_ref, :string, :int, :int, :pointer, :sqlite3_create_function_v2_xFunc_callback, :sqlite3_create_function_v2_xStep_callback, :sqlite3_create_function_v2_xFinal_callback, :sqlite3_create_function_v2_xDestroy_callback], :int
+  attach_function :sqlite3_create_function_v2, :sqlite3_create_function_v2, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_function_v2_xFunc_callback, :sqlite3_create_function_v2_xStep_callback, :sqlite3_create_function_v2_xFinal_callback, :sqlite3_create_function_v2_xDestroy_callback], :int
   callback :sqlite3_create_window_function_xStep_callback, [:pointer, :int, :pointer], :void
   callback :sqlite3_create_window_function_xFinal_callback, [:pointer], :void
   callback :sqlite3_create_window_function_xValue_callback, [:pointer], :void
   callback :sqlite3_create_window_function_xInverse_callback, [:pointer, :int, :pointer], :void
   callback :sqlite3_create_window_function_xDestroy_callback, [:pointer], :void
-  attach_function :sqlite3_create_window_function, :sqlite3_create_window_function, [Sqlite3.by_ref, :string, :int, :int, :pointer, :sqlite3_create_window_function_xStep_callback, :sqlite3_create_window_function_xFinal_callback, :sqlite3_create_window_function_xValue_callback, :sqlite3_create_window_function_xInverse_callback, :sqlite3_create_window_function_xDestroy_callback], :int
-  attach_function :sqlite3_aggregate_count, :sqlite3_aggregate_count, [Sqlite3Context.by_ref], :int
-  attach_function :sqlite3_expired, :sqlite3_expired, [Sqlite3Stmt.by_ref], :int
-  attach_function :sqlite3_transfer_bindings, :sqlite3_transfer_bindings, [Sqlite3Stmt.by_ref, Sqlite3Stmt.by_ref], :int
+  attach_function :sqlite3_create_window_function, :sqlite3_create_window_function, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_window_function_xStep_callback, :sqlite3_create_window_function_xFinal_callback, :sqlite3_create_window_function_xValue_callback, :sqlite3_create_window_function_xInverse_callback, :sqlite3_create_window_function_xDestroy_callback], :int
+  attach_function :sqlite3_aggregate_count, :sqlite3_aggregate_count, [:pointer], :int
+  attach_function :sqlite3_expired, :sqlite3_expired, [:pointer], :int
+  attach_function :sqlite3_transfer_bindings, :sqlite3_transfer_bindings, [:pointer, :pointer], :int
   attach_function :sqlite3_global_recover, :sqlite3_global_recover, [], :int
   attach_function :sqlite3_thread_cleanup, :sqlite3_thread_cleanup, [], :void
   callback :sqlite3_memory_alarm__callback, [:pointer, :long_long, :int], :void
   attach_function :sqlite3_memory_alarm, :sqlite3_memory_alarm, [:sqlite3_memory_alarm__callback, :pointer, :long_long], :int
-  attach_function :sqlite3_value_blob, :sqlite3_value_blob, [Sqlite3Value.by_ref], :pointer
-  attach_function :sqlite3_value_double, :sqlite3_value_double, [Sqlite3Value.by_ref], :double
-  attach_function :sqlite3_value_int, :sqlite3_value_int, [Sqlite3Value.by_ref], :int
-  attach_function :sqlite3_value_int64, :sqlite3_value_int64, [Sqlite3Value.by_ref], :long_long
-  attach_function :sqlite3_value_pointer, :sqlite3_value_pointer, [Sqlite3Value.by_ref, :string], :pointer
-  attach_function :sqlite3_value_text, :sqlite3_value_text, [Sqlite3Value.by_ref], :pointer
-  attach_function :sqlite3_value_text16, :sqlite3_value_text16, [Sqlite3Value.by_ref], :pointer
-  attach_function :sqlite3_value_text16le, :sqlite3_value_text16le, [Sqlite3Value.by_ref], :pointer
-  attach_function :sqlite3_value_text16be, :sqlite3_value_text16be, [Sqlite3Value.by_ref], :pointer
-  attach_function :sqlite3_value_bytes, :sqlite3_value_bytes, [Sqlite3Value.by_ref], :int
-  attach_function :sqlite3_value_bytes16, :sqlite3_value_bytes16, [Sqlite3Value.by_ref], :int
-  attach_function :sqlite3_value_type, :sqlite3_value_type, [Sqlite3Value.by_ref], :int
-  attach_function :sqlite3_value_numeric_type, :sqlite3_value_numeric_type, [Sqlite3Value.by_ref], :int
-  attach_function :sqlite3_value_nochange, :sqlite3_value_nochange, [Sqlite3Value.by_ref], :int
-  attach_function :sqlite3_value_frombind, :sqlite3_value_frombind, [Sqlite3Value.by_ref], :int
-  attach_function :sqlite3_value_encoding, :sqlite3_value_encoding, [Sqlite3Value.by_ref], :int
-  attach_function :sqlite3_value_subtype, :sqlite3_value_subtype, [Sqlite3Value.by_ref], :uint
-  attach_function :sqlite3_value_dup, :sqlite3_value_dup, [Sqlite3Value.by_ref], Sqlite3Value.by_ref
-  attach_function :sqlite3_value_free, :sqlite3_value_free, [Sqlite3Value.by_ref], :void
-  attach_function :sqlite3_aggregate_context, :sqlite3_aggregate_context, [Sqlite3Context.by_ref, :int], :pointer
-  attach_function :sqlite3_user_data, :sqlite3_user_data, [Sqlite3Context.by_ref], :pointer
-  attach_function :sqlite3_context_db_handle, :sqlite3_context_db_handle, [Sqlite3Context.by_ref], Sqlite3.by_ref
-  attach_function :sqlite3_get_auxdata, :sqlite3_get_auxdata, [Sqlite3Context.by_ref, :int], :pointer
+  attach_function :sqlite3_value_blob, :sqlite3_value_blob, [:pointer], :pointer
+  attach_function :sqlite3_value_double, :sqlite3_value_double, [:pointer], :double
+  attach_function :sqlite3_value_int, :sqlite3_value_int, [:pointer], :int
+  attach_function :sqlite3_value_int64, :sqlite3_value_int64, [:pointer], :long_long
+  attach_function :sqlite3_value_pointer, :sqlite3_value_pointer, [:pointer, :string], :pointer
+  attach_function :sqlite3_value_text, :sqlite3_value_text, [:pointer], :pointer
+  attach_function :sqlite3_value_text16, :sqlite3_value_text16, [:pointer], :pointer
+  attach_function :sqlite3_value_text16le, :sqlite3_value_text16le, [:pointer], :pointer
+  attach_function :sqlite3_value_text16be, :sqlite3_value_text16be, [:pointer], :pointer
+  attach_function :sqlite3_value_bytes, :sqlite3_value_bytes, [:pointer], :int
+  attach_function :sqlite3_value_bytes16, :sqlite3_value_bytes16, [:pointer], :int
+  attach_function :sqlite3_value_type, :sqlite3_value_type, [:pointer], :int
+  attach_function :sqlite3_value_numeric_type, :sqlite3_value_numeric_type, [:pointer], :int
+  attach_function :sqlite3_value_nochange, :sqlite3_value_nochange, [:pointer], :int
+  attach_function :sqlite3_value_frombind, :sqlite3_value_frombind, [:pointer], :int
+  attach_function :sqlite3_value_encoding, :sqlite3_value_encoding, [:pointer], :int
+  attach_function :sqlite3_value_subtype, :sqlite3_value_subtype, [:pointer], :uint
+  attach_function :sqlite3_value_dup, :sqlite3_value_dup, [:pointer], :pointer
+  attach_function :sqlite3_value_free, :sqlite3_value_free, [:pointer], :void
+  attach_function :sqlite3_aggregate_context, :sqlite3_aggregate_context, [:pointer, :int], :pointer
+  attach_function :sqlite3_user_data, :sqlite3_user_data, [:pointer], :pointer
+  attach_function :sqlite3_context_db_handle, :sqlite3_context_db_handle, [:pointer], :pointer
+  attach_function :sqlite3_get_auxdata, :sqlite3_get_auxdata, [:pointer, :int], :pointer
   callback :sqlite3_set_auxdata__callback, [:pointer], :void
-  attach_function :sqlite3_set_auxdata, :sqlite3_set_auxdata, [Sqlite3Context.by_ref, :int, :pointer, :sqlite3_set_auxdata__callback], :void
-  attach_function :sqlite3_get_clientdata, :sqlite3_get_clientdata, [Sqlite3.by_ref, :string], :pointer
+  attach_function :sqlite3_set_auxdata, :sqlite3_set_auxdata, [:pointer, :int, :pointer, :sqlite3_set_auxdata__callback], :void
+  attach_function :sqlite3_get_clientdata, :sqlite3_get_clientdata, [:pointer, :string], :pointer
   callback :sqlite3_set_clientdata__callback, [:pointer], :void
-  attach_function :sqlite3_set_clientdata, :sqlite3_set_clientdata, [Sqlite3.by_ref, :string, :pointer, :sqlite3_set_clientdata__callback], :int
+  attach_function :sqlite3_set_clientdata, :sqlite3_set_clientdata, [:pointer, :string, :pointer, :sqlite3_set_clientdata__callback], :int
   callback :sqlite3_destructor_type, [], :void
   callback :sqlite3_result_blob__callback, [:pointer], :void
-  attach_function :sqlite3_result_blob, :sqlite3_result_blob, [Sqlite3Context.by_ref, :pointer, :int, :sqlite3_result_blob__callback], :void
+  attach_function :sqlite3_result_blob, :sqlite3_result_blob, [:pointer, :pointer, :int, :sqlite3_result_blob__callback], :void
   callback :sqlite3_result_blob64__callback, [:pointer], :void
-  attach_function :sqlite3_result_blob64, :sqlite3_result_blob64, [Sqlite3Context.by_ref, :pointer, :ulong_long, :sqlite3_result_blob64__callback], :void
-  attach_function :sqlite3_result_double, :sqlite3_result_double, [Sqlite3Context.by_ref, :double], :void
-  attach_function :sqlite3_result_error, :sqlite3_result_error, [Sqlite3Context.by_ref, :string, :int], :void
-  attach_function :sqlite3_result_error16, :sqlite3_result_error16, [Sqlite3Context.by_ref, :pointer, :int], :void
-  attach_function :sqlite3_result_error_toobig, :sqlite3_result_error_toobig, [Sqlite3Context.by_ref], :void
-  attach_function :sqlite3_result_error_nomem, :sqlite3_result_error_nomem, [Sqlite3Context.by_ref], :void
-  attach_function :sqlite3_result_error_code, :sqlite3_result_error_code, [Sqlite3Context.by_ref, :int], :void
-  attach_function :sqlite3_result_int, :sqlite3_result_int, [Sqlite3Context.by_ref, :int], :void
-  attach_function :sqlite3_result_int64, :sqlite3_result_int64, [Sqlite3Context.by_ref, :long_long], :void
-  attach_function :sqlite3_result_null, :sqlite3_result_null, [Sqlite3Context.by_ref], :void
+  attach_function :sqlite3_result_blob64, :sqlite3_result_blob64, [:pointer, :pointer, :ulong_long, :sqlite3_result_blob64__callback], :void
+  attach_function :sqlite3_result_double, :sqlite3_result_double, [:pointer, :double], :void
+  attach_function :sqlite3_result_error, :sqlite3_result_error, [:pointer, :string, :int], :void
+  attach_function :sqlite3_result_error16, :sqlite3_result_error16, [:pointer, :pointer, :int], :void
+  attach_function :sqlite3_result_error_toobig, :sqlite3_result_error_toobig, [:pointer], :void
+  attach_function :sqlite3_result_error_nomem, :sqlite3_result_error_nomem, [:pointer], :void
+  attach_function :sqlite3_result_error_code, :sqlite3_result_error_code, [:pointer, :int], :void
+  attach_function :sqlite3_result_int, :sqlite3_result_int, [:pointer, :int], :void
+  attach_function :sqlite3_result_int64, :sqlite3_result_int64, [:pointer, :long_long], :void
+  attach_function :sqlite3_result_null, :sqlite3_result_null, [:pointer], :void
   callback :sqlite3_result_text__callback, [:pointer], :void
-  attach_function :sqlite3_result_text, :sqlite3_result_text, [Sqlite3Context.by_ref, :string, :int, :sqlite3_result_text__callback], :void
+  attach_function :sqlite3_result_text, :sqlite3_result_text, [:pointer, :string, :int, :sqlite3_result_text__callback], :void
   callback :sqlite3_result_text64__callback, [:pointer], :void
-  attach_function :sqlite3_result_text64, :sqlite3_result_text64, [Sqlite3Context.by_ref, :string, :ulong_long, :sqlite3_result_text64__callback, :uchar], :void
+  attach_function :sqlite3_result_text64, :sqlite3_result_text64, [:pointer, :string, :ulong_long, :sqlite3_result_text64__callback, :uchar], :void
   callback :sqlite3_result_text16__callback, [:pointer], :void
-  attach_function :sqlite3_result_text16, :sqlite3_result_text16, [Sqlite3Context.by_ref, :pointer, :int, :sqlite3_result_text16__callback], :void
+  attach_function :sqlite3_result_text16, :sqlite3_result_text16, [:pointer, :pointer, :int, :sqlite3_result_text16__callback], :void
   callback :sqlite3_result_text16le__callback, [:pointer], :void
-  attach_function :sqlite3_result_text16le, :sqlite3_result_text16le, [Sqlite3Context.by_ref, :pointer, :int, :sqlite3_result_text16le__callback], :void
+  attach_function :sqlite3_result_text16le, :sqlite3_result_text16le, [:pointer, :pointer, :int, :sqlite3_result_text16le__callback], :void
   callback :sqlite3_result_text16be__callback, [:pointer], :void
-  attach_function :sqlite3_result_text16be, :sqlite3_result_text16be, [Sqlite3Context.by_ref, :pointer, :int, :sqlite3_result_text16be__callback], :void
-  attach_function :sqlite3_result_value, :sqlite3_result_value, [Sqlite3Context.by_ref, Sqlite3Value.by_ref], :void
+  attach_function :sqlite3_result_text16be, :sqlite3_result_text16be, [:pointer, :pointer, :int, :sqlite3_result_text16be__callback], :void
+  attach_function :sqlite3_result_value, :sqlite3_result_value, [:pointer, :pointer], :void
   callback :sqlite3_result_pointer__callback, [:pointer], :void
-  attach_function :sqlite3_result_pointer, :sqlite3_result_pointer, [Sqlite3Context.by_ref, :pointer, :string, :sqlite3_result_pointer__callback], :void
-  attach_function :sqlite3_result_zeroblob, :sqlite3_result_zeroblob, [Sqlite3Context.by_ref, :int], :void
-  attach_function :sqlite3_result_zeroblob64, :sqlite3_result_zeroblob64, [Sqlite3Context.by_ref, :ulong_long], :int
-  attach_function :sqlite3_result_subtype, :sqlite3_result_subtype, [Sqlite3Context.by_ref, :uint], :void
+  attach_function :sqlite3_result_pointer, :sqlite3_result_pointer, [:pointer, :pointer, :string, :sqlite3_result_pointer__callback], :void
+  attach_function :sqlite3_result_zeroblob, :sqlite3_result_zeroblob, [:pointer, :int], :void
+  attach_function :sqlite3_result_zeroblob64, :sqlite3_result_zeroblob64, [:pointer, :ulong_long], :int
+  attach_function :sqlite3_result_subtype, :sqlite3_result_subtype, [:pointer, :uint], :void
   callback :sqlite3_create_collation_xCompare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
-  attach_function :sqlite3_create_collation, :sqlite3_create_collation, [Sqlite3.by_ref, :string, :int, :pointer, :sqlite3_create_collation_xCompare_callback], :int
+  attach_function :sqlite3_create_collation, :sqlite3_create_collation, [:pointer, :string, :int, :pointer, :sqlite3_create_collation_xCompare_callback], :int
   callback :sqlite3_create_collation_v2_xCompare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
   callback :sqlite3_create_collation_v2_xDestroy_callback, [:pointer], :void
-  attach_function :sqlite3_create_collation_v2, :sqlite3_create_collation_v2, [Sqlite3.by_ref, :string, :int, :pointer, :sqlite3_create_collation_v2_xCompare_callback, :sqlite3_create_collation_v2_xDestroy_callback], :int
+  attach_function :sqlite3_create_collation_v2, :sqlite3_create_collation_v2, [:pointer, :string, :int, :pointer, :sqlite3_create_collation_v2_xCompare_callback, :sqlite3_create_collation_v2_xDestroy_callback], :int
   callback :sqlite3_create_collation16_xCompare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
-  attach_function :sqlite3_create_collation16, :sqlite3_create_collation16, [Sqlite3.by_ref, :pointer, :int, :pointer, :sqlite3_create_collation16_xCompare_callback], :int
+  attach_function :sqlite3_create_collation16, :sqlite3_create_collation16, [:pointer, :pointer, :int, :pointer, :sqlite3_create_collation16_xCompare_callback], :int
   callback :sqlite3_collation_needed__callback, [:pointer, :pointer, :int, :string], :void
-  attach_function :sqlite3_collation_needed, :sqlite3_collation_needed, [Sqlite3.by_ref, :pointer, :sqlite3_collation_needed__callback], :int
+  attach_function :sqlite3_collation_needed, :sqlite3_collation_needed, [:pointer, :pointer, :sqlite3_collation_needed__callback], :int
   callback :sqlite3_collation_needed16__callback, [:pointer, :pointer, :int, :pointer], :void
-  attach_function :sqlite3_collation_needed16, :sqlite3_collation_needed16, [Sqlite3.by_ref, :pointer, :sqlite3_collation_needed16__callback], :int
+  attach_function :sqlite3_collation_needed16, :sqlite3_collation_needed16, [:pointer, :pointer, :sqlite3_collation_needed16__callback], :int
   attach_function :sqlite3_sleep, :sqlite3_sleep, [:int], :int
   attach_variable :Sqlite3TempDirectory, :sqlite3_temp_directory, :string
   attach_variable :Sqlite3DataDirectory, :sqlite3_data_directory, :string
   attach_function :sqlite3_win32_set_directory, :sqlite3_win32_set_directory, [:ulong, :pointer], :int
   attach_function :sqlite3_win32_set_directory8, :sqlite3_win32_set_directory8, [:ulong, :string], :int
   attach_function :sqlite3_win32_set_directory16, :sqlite3_win32_set_directory16, [:ulong, :pointer], :int
-  attach_function :sqlite3_get_autocommit, :sqlite3_get_autocommit, [Sqlite3.by_ref], :int
-  attach_function :sqlite3_db_handle, :sqlite3_db_handle, [Sqlite3Stmt.by_ref], Sqlite3.by_ref
-  attach_function :sqlite3_db_name, :sqlite3_db_name, [Sqlite3.by_ref, :int], :string
-  attach_function :sqlite3_db_filename, :sqlite3_db_filename, [Sqlite3.by_ref, :string], :string
-  attach_function :sqlite3_db_readonly, :sqlite3_db_readonly, [Sqlite3.by_ref, :string], :int
-  attach_function :sqlite3_txn_state, :sqlite3_txn_state, [Sqlite3.by_ref, :string], :int
-  attach_function :sqlite3_next_stmt, :sqlite3_next_stmt, [Sqlite3.by_ref, Sqlite3Stmt.by_ref], Sqlite3Stmt.by_ref
+  attach_function :sqlite3_get_autocommit, :sqlite3_get_autocommit, [:pointer], :int
+  attach_function :sqlite3_db_handle, :sqlite3_db_handle, [:pointer], :pointer
+  attach_function :sqlite3_db_name, :sqlite3_db_name, [:pointer, :int], :string
+  attach_function :sqlite3_db_filename, :sqlite3_db_filename, [:pointer, :string], :string
+  attach_function :sqlite3_db_readonly, :sqlite3_db_readonly, [:pointer, :string], :int
+  attach_function :sqlite3_txn_state, :sqlite3_txn_state, [:pointer, :string], :int
+  attach_function :sqlite3_next_stmt, :sqlite3_next_stmt, [:pointer, :pointer], :pointer
   callback :sqlite3_commit_hook__callback, [:pointer], :int
-  attach_function :sqlite3_commit_hook, :sqlite3_commit_hook, [Sqlite3.by_ref, :sqlite3_commit_hook__callback, :pointer], :pointer
+  attach_function :sqlite3_commit_hook, :sqlite3_commit_hook, [:pointer, :sqlite3_commit_hook__callback, :pointer], :pointer
   callback :sqlite3_rollback_hook__callback, [:pointer], :void
-  attach_function :sqlite3_rollback_hook, :sqlite3_rollback_hook, [Sqlite3.by_ref, :sqlite3_rollback_hook__callback, :pointer], :pointer
+  attach_function :sqlite3_rollback_hook, :sqlite3_rollback_hook, [:pointer, :sqlite3_rollback_hook__callback, :pointer], :pointer
   callback :sqlite3_autovacuum_pages__callback, [:pointer, :string, :uint, :uint, :uint], :uint
   callback :sqlite3_autovacuum_pages__callback, [:pointer], :void
-  attach_function :sqlite3_autovacuum_pages, :sqlite3_autovacuum_pages, [Sqlite3.by_ref, :sqlite3_autovacuum_pages__callback, :pointer, :sqlite3_autovacuum_pages__callback], :int
+  attach_function :sqlite3_autovacuum_pages, :sqlite3_autovacuum_pages, [:pointer, :sqlite3_autovacuum_pages__callback, :pointer, :sqlite3_autovacuum_pages__callback], :int
   callback :sqlite3_update_hook__callback, [:pointer, :int, :string, :string, :long_long], :void
-  attach_function :sqlite3_update_hook, :sqlite3_update_hook, [Sqlite3.by_ref, :sqlite3_update_hook__callback, :pointer], :pointer
+  attach_function :sqlite3_update_hook, :sqlite3_update_hook, [:pointer, :sqlite3_update_hook__callback, :pointer], :pointer
   attach_function :sqlite3_enable_shared_cache, :sqlite3_enable_shared_cache, [:int], :int
   attach_function :sqlite3_release_memory, :sqlite3_release_memory, [:int], :int
-  attach_function :sqlite3_db_release_memory, :sqlite3_db_release_memory, [Sqlite3.by_ref], :int
+  attach_function :sqlite3_db_release_memory, :sqlite3_db_release_memory, [:pointer], :int
   attach_function :sqlite3_soft_heap_limit64, :sqlite3_soft_heap_limit64, [:long_long], :long_long
   attach_function :sqlite3_hard_heap_limit64, :sqlite3_hard_heap_limit64, [:long_long], :long_long
   attach_function :sqlite3_soft_heap_limit, :sqlite3_soft_heap_limit, [:int], :void
-  attach_function :sqlite3_table_column_metadata, :sqlite3_table_column_metadata, [Sqlite3.by_ref, :string, :string, :string, :pointer, :pointer, :pointer, :pointer, :pointer], :int
-  attach_function :sqlite3_load_extension, :sqlite3_load_extension, [Sqlite3.by_ref, :string, :string, :pointer], :int
-  attach_function :sqlite3_enable_load_extension, :sqlite3_enable_load_extension, [Sqlite3.by_ref, :int], :int
+  attach_function :sqlite3_table_column_metadata, :sqlite3_table_column_metadata, [:pointer, :string, :string, :string, :pointer, :pointer, :pointer, :pointer, :pointer], :int
+  attach_function :sqlite3_load_extension, :sqlite3_load_extension, [:pointer, :string, :string, :pointer], :int
+  attach_function :sqlite3_enable_load_extension, :sqlite3_enable_load_extension, [:pointer, :int], :int
   callback :sqlite3_auto_extension_xEntryPoint_callback, [], :void
   attach_function :sqlite3_auto_extension, :sqlite3_auto_extension, [:sqlite3_auto_extension_xEntryPoint_callback], :int
   callback :sqlite3_cancel_auto_extension_xEntryPoint_callback, [], :void
@@ -914,10 +899,10 @@ module Sqlite3
            :col_used, :ulong_long
   end
 
-  attach_function :sqlite3_create_module, :sqlite3_create_module, [Sqlite3.by_ref, :string, Sqlite3Module.by_ref, :pointer], :int
+  attach_function :sqlite3_create_module, :sqlite3_create_module, [:pointer, :string, Sqlite3Module.by_ref, :pointer], :int
   callback :sqlite3_create_module_v2_xDestroy_callback, [:pointer], :void
-  attach_function :sqlite3_create_module_v2, :sqlite3_create_module_v2, [Sqlite3.by_ref, :string, Sqlite3Module.by_ref, :pointer, :sqlite3_create_module_v2_xDestroy_callback], :int
-  attach_function :sqlite3_drop_modules, :sqlite3_drop_modules, [Sqlite3.by_ref, :pointer], :int
+  attach_function :sqlite3_create_module_v2, :sqlite3_create_module_v2, [:pointer, :string, Sqlite3Module.by_ref, :pointer, :sqlite3_create_module_v2_xDestroy_callback], :int
+  attach_function :sqlite3_drop_modules, :sqlite3_drop_modules, [:pointer, :pointer], :int
 
   class Sqlite3Vtab < FFI::Struct
     layout :p_module, :pointer,
@@ -929,29 +914,26 @@ module Sqlite3
     layout :p_vtab, :pointer
   end
 
-  attach_function :sqlite3_declare_vtab, :sqlite3_declare_vtab, [Sqlite3.by_ref, :string], :int
-  attach_function :sqlite3_overload_function, :sqlite3_overload_function, [Sqlite3.by_ref, :string, :int], :int
-
-  class Sqlite3Blob < FFI::Struct
-  end
-
-  attach_function :sqlite3_blob_open, :sqlite3_blob_open, [Sqlite3.by_ref, :string, :string, :string, :long_long, :int, :pointer], :int
-  attach_function :sqlite3_blob_reopen, :sqlite3_blob_reopen, [Sqlite3Blob.by_ref, :long_long], :int
-  attach_function :sqlite3_blob_close, :sqlite3_blob_close, [Sqlite3Blob.by_ref], :int
-  attach_function :sqlite3_blob_bytes, :sqlite3_blob_bytes, [Sqlite3Blob.by_ref], :int
-  attach_function :sqlite3_blob_read, :sqlite3_blob_read, [Sqlite3Blob.by_ref, :pointer, :int, :int], :int
-  attach_function :sqlite3_blob_write, :sqlite3_blob_write, [Sqlite3Blob.by_ref, :pointer, :int, :int], :int
+  attach_function :sqlite3_declare_vtab, :sqlite3_declare_vtab, [:pointer, :string], :int
+  attach_function :sqlite3_overload_function, :sqlite3_overload_function, [:pointer, :string, :int], :int
+  typedef :pointer, :Sqlite3Blob
+  attach_function :sqlite3_blob_open, :sqlite3_blob_open, [:pointer, :string, :string, :string, :long_long, :int, :pointer], :int
+  attach_function :sqlite3_blob_reopen, :sqlite3_blob_reopen, [:pointer, :long_long], :int
+  attach_function :sqlite3_blob_close, :sqlite3_blob_close, [:pointer], :int
+  attach_function :sqlite3_blob_bytes, :sqlite3_blob_bytes, [:pointer], :int
+  attach_function :sqlite3_blob_read, :sqlite3_blob_read, [:pointer, :pointer, :int, :int], :int
+  attach_function :sqlite3_blob_write, :sqlite3_blob_write, [:pointer, :pointer, :int, :int], :int
   attach_function :sqlite3_vfs_find, :sqlite3_vfs_find, [:string], Sqlite3Vfs.by_ref
   attach_function :sqlite3_vfs_register, :sqlite3_vfs_register, [Sqlite3Vfs.by_ref, :int], :int
   attach_function :sqlite3_vfs_unregister, :sqlite3_vfs_unregister, [Sqlite3Vfs.by_ref], :int
-  attach_function :sqlite3_mutex_alloc, :sqlite3_mutex_alloc, [:int], Sqlite3Mutex.by_ref
-  attach_function :sqlite3_mutex_free, :sqlite3_mutex_free, [Sqlite3Mutex.by_ref], :void
-  attach_function :sqlite3_mutex_enter, :sqlite3_mutex_enter, [Sqlite3Mutex.by_ref], :void
-  attach_function :sqlite3_mutex_try, :sqlite3_mutex_try, [Sqlite3Mutex.by_ref], :int
-  attach_function :sqlite3_mutex_leave, :sqlite3_mutex_leave, [Sqlite3Mutex.by_ref], :void
+  attach_function :sqlite3_mutex_alloc, :sqlite3_mutex_alloc, [:int], :pointer
+  attach_function :sqlite3_mutex_free, :sqlite3_mutex_free, [:pointer], :void
+  attach_function :sqlite3_mutex_enter, :sqlite3_mutex_enter, [:pointer], :void
+  attach_function :sqlite3_mutex_try, :sqlite3_mutex_try, [:pointer], :int
+  attach_function :sqlite3_mutex_leave, :sqlite3_mutex_leave, [:pointer], :void
   callback :sqlite3_mutex_methods_xMutexInit_callback, [], :int
   callback :sqlite3_mutex_methods_xMutexEnd_callback, [], :int
-  callback :sqlite3_mutex_methods_xMutexAlloc_callback, [:int], Sqlite3Mutex.by_ref
+  callback :sqlite3_mutex_methods_xMutexAlloc_callback, [:int], :pointer
   callback :sqlite3_mutex_methods_xMutexFree_callback, [:pointer], :void
   callback :sqlite3_mutex_methods_xMutexEnter_callback, [:pointer], :void
   callback :sqlite3_mutex_methods_xMutexTry_callback, [:pointer], :int
@@ -971,36 +953,31 @@ module Sqlite3
            :x_mutex_notheld, :sqlite3_mutex_methods_xMutexNotheld_callback
   end
 
-  attach_function :sqlite3_mutex_held, :sqlite3_mutex_held, [Sqlite3Mutex.by_ref], :int
-  attach_function :sqlite3_mutex_notheld, :sqlite3_mutex_notheld, [Sqlite3Mutex.by_ref], :int
-  attach_function :sqlite3_db_mutex, :sqlite3_db_mutex, [Sqlite3.by_ref], Sqlite3Mutex.by_ref
-  attach_function :sqlite3_file_control, :sqlite3_file_control, [Sqlite3.by_ref, :string, :int, :pointer], :int
+  attach_function :sqlite3_mutex_held, :sqlite3_mutex_held, [:pointer], :int
+  attach_function :sqlite3_mutex_notheld, :sqlite3_mutex_notheld, [:pointer], :int
+  attach_function :sqlite3_db_mutex, :sqlite3_db_mutex, [:pointer], :pointer
+  attach_function :sqlite3_file_control, :sqlite3_file_control, [:pointer, :string, :int, :pointer], :int
   attach_function :sqlite3_test_control, :sqlite3_test_control, [:int], :int
   attach_function :sqlite3_keyword_count, :sqlite3_keyword_count, [], :int
   attach_function :sqlite3_keyword_name, :sqlite3_keyword_name, [:int, :pointer, :pointer], :int
   attach_function :sqlite3_keyword_check, :sqlite3_keyword_check, [:string, :int], :int
-
-  class Sqlite3Str < FFI::Struct
-  end
-
-  attach_function :sqlite3_str_new, :sqlite3_str_new, [Sqlite3.by_ref], Sqlite3Str.by_ref
-  attach_function :sqlite3_str_finish, :sqlite3_str_finish, [Sqlite3Str.by_ref], :string
-  attach_function :sqlite3_str_appendf, :sqlite3_str_appendf, [Sqlite3Str.by_ref, :string], :void
-  attach_function :sqlite3_str_vappendf, :sqlite3_str_vappendf, [Sqlite3Str.by_ref, :string, :varargs], :void
-  attach_function :sqlite3_str_append, :sqlite3_str_append, [Sqlite3Str.by_ref, :string, :int], :void
-  attach_function :sqlite3_str_appendall, :sqlite3_str_appendall, [Sqlite3Str.by_ref, :string], :void
-  attach_function :sqlite3_str_appendchar, :sqlite3_str_appendchar, [Sqlite3Str.by_ref, :int, :char], :void
-  attach_function :sqlite3_str_reset, :sqlite3_str_reset, [Sqlite3Str.by_ref], :void
-  attach_function :sqlite3_str_errcode, :sqlite3_str_errcode, [Sqlite3Str.by_ref], :int
-  attach_function :sqlite3_str_length, :sqlite3_str_length, [Sqlite3Str.by_ref], :int
-  attach_function :sqlite3_str_value, :sqlite3_str_value, [Sqlite3Str.by_ref], :string
+  typedef :pointer, :Sqlite3Str
+  attach_function :sqlite3_str_new, :sqlite3_str_new, [:pointer], :pointer
+  attach_function :sqlite3_str_finish, :sqlite3_str_finish, [:pointer], :string
+  attach_function :sqlite3_str_appendf, :sqlite3_str_appendf, [:pointer, :string], :void
+  attach_function :sqlite3_str_vappendf, :sqlite3_str_vappendf, [:pointer, :string, :varargs], :void
+  attach_function :sqlite3_str_append, :sqlite3_str_append, [:pointer, :string, :int], :void
+  attach_function :sqlite3_str_appendall, :sqlite3_str_appendall, [:pointer, :string], :void
+  attach_function :sqlite3_str_appendchar, :sqlite3_str_appendchar, [:pointer, :int, :char], :void
+  attach_function :sqlite3_str_reset, :sqlite3_str_reset, [:pointer], :void
+  attach_function :sqlite3_str_errcode, :sqlite3_str_errcode, [:pointer], :int
+  attach_function :sqlite3_str_length, :sqlite3_str_length, [:pointer], :int
+  attach_function :sqlite3_str_value, :sqlite3_str_value, [:pointer], :string
   attach_function :sqlite3_status, :sqlite3_status, [:int, :pointer, :pointer, :int], :int
   attach_function :sqlite3_status64, :sqlite3_status64, [:int, :pointer, :pointer, :int], :int
-  attach_function :sqlite3_db_status, :sqlite3_db_status, [Sqlite3.by_ref, :int, :pointer, :pointer, :int], :int
-  attach_function :sqlite3_stmt_status, :sqlite3_stmt_status, [Sqlite3Stmt.by_ref, :int, :int], :int
-
-  class Sqlite3Pcache < FFI::Struct
-  end
+  attach_function :sqlite3_db_status, :sqlite3_db_status, [:pointer, :int, :pointer, :pointer, :int], :int
+  attach_function :sqlite3_stmt_status, :sqlite3_stmt_status, [:pointer, :int, :int], :int
+  typedef :pointer, :Sqlite3Pcache
 
   class Sqlite3PcachePage < FFI::Struct
     layout :p_buf, :pointer,
@@ -1009,7 +986,7 @@ module Sqlite3
 
   callback :sqlite3_pcache_methods2_xInit_callback, [:pointer], :int
   callback :sqlite3_pcache_methods2_xShutdown_callback, [:pointer], :void
-  callback :sqlite3_pcache_methods2_xCreate_callback, [:int, :int, :int], Sqlite3Pcache.by_ref
+  callback :sqlite3_pcache_methods2_xCreate_callback, [:int, :int, :int], :pointer
   callback :sqlite3_pcache_methods2_xCachesize_callback, [:pointer, :int], :void
   callback :sqlite3_pcache_methods2_xPagecount_callback, [:pointer], :int
   callback :sqlite3_pcache_methods2_xFetch_callback, [:pointer, :uint, :int], Sqlite3PcachePage.by_ref
@@ -1037,7 +1014,7 @@ module Sqlite3
 
   callback :sqlite3_pcache_methods_xInit_callback, [:pointer], :int
   callback :sqlite3_pcache_methods_xShutdown_callback, [:pointer], :void
-  callback :sqlite3_pcache_methods_xCreate_callback, [:int, :int], Sqlite3Pcache.by_ref
+  callback :sqlite3_pcache_methods_xCreate_callback, [:int, :int], :pointer
   callback :sqlite3_pcache_methods_xCachesize_callback, [:pointer, :int], :void
   callback :sqlite3_pcache_methods_xPagecount_callback, [:pointer], :int
   callback :sqlite3_pcache_methods_xFetch_callback, [:pointer, :uint, :int], :pointer
@@ -1060,55 +1037,53 @@ module Sqlite3
            :x_destroy, :sqlite3_pcache_methods_xDestroy_callback
   end
 
-  class Sqlite3Backup < FFI::Struct
-  end
-
-  attach_function :sqlite3_backup_init, :sqlite3_backup_init, [Sqlite3.by_ref, :string, Sqlite3.by_ref, :string], Sqlite3Backup.by_ref
-  attach_function :sqlite3_backup_step, :sqlite3_backup_step, [Sqlite3Backup.by_ref, :int], :int
-  attach_function :sqlite3_backup_finish, :sqlite3_backup_finish, [Sqlite3Backup.by_ref], :int
-  attach_function :sqlite3_backup_remaining, :sqlite3_backup_remaining, [Sqlite3Backup.by_ref], :int
-  attach_function :sqlite3_backup_pagecount, :sqlite3_backup_pagecount, [Sqlite3Backup.by_ref], :int
+  typedef :pointer, :Sqlite3Backup
+  attach_function :sqlite3_backup_init, :sqlite3_backup_init, [:pointer, :string, :pointer, :string], :pointer
+  attach_function :sqlite3_backup_step, :sqlite3_backup_step, [:pointer, :int], :int
+  attach_function :sqlite3_backup_finish, :sqlite3_backup_finish, [:pointer], :int
+  attach_function :sqlite3_backup_remaining, :sqlite3_backup_remaining, [:pointer], :int
+  attach_function :sqlite3_backup_pagecount, :sqlite3_backup_pagecount, [:pointer], :int
   callback :sqlite3_unlock_notify_xNotify_callback, [:pointer, :int], :void
-  attach_function :sqlite3_unlock_notify, :sqlite3_unlock_notify, [Sqlite3.by_ref, :sqlite3_unlock_notify_xNotify_callback, :pointer], :int
+  attach_function :sqlite3_unlock_notify, :sqlite3_unlock_notify, [:pointer, :sqlite3_unlock_notify_xNotify_callback, :pointer], :int
   attach_function :sqlite3_stricmp, :sqlite3_stricmp, [:string, :string], :int
   attach_function :sqlite3_strnicmp, :sqlite3_strnicmp, [:string, :string, :int], :int
   attach_function :sqlite3_strglob, :sqlite3_strglob, [:string, :string], :int
   attach_function :sqlite3_strlike, :sqlite3_strlike, [:string, :string, :uint], :int
   attach_function :sqlite3_log, :sqlite3_log, [:int, :string], :void
   callback :sqlite3_wal_hook__callback, [:pointer, :pointer, :string, :int], :int
-  attach_function :sqlite3_wal_hook, :sqlite3_wal_hook, [Sqlite3.by_ref, :sqlite3_wal_hook__callback, :pointer], :pointer
-  attach_function :sqlite3_wal_autocheckpoint, :sqlite3_wal_autocheckpoint, [Sqlite3.by_ref, :int], :int
-  attach_function :sqlite3_wal_checkpoint, :sqlite3_wal_checkpoint, [Sqlite3.by_ref, :string], :int
-  attach_function :sqlite3_wal_checkpoint_v2, :sqlite3_wal_checkpoint_v2, [Sqlite3.by_ref, :string, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_vtab_config, :sqlite3_vtab_config, [Sqlite3.by_ref, :int], :int
-  attach_function :sqlite3_vtab_on_conflict, :sqlite3_vtab_on_conflict, [Sqlite3.by_ref], :int
-  attach_function :sqlite3_vtab_nochange, :sqlite3_vtab_nochange, [Sqlite3Context.by_ref], :int
+  attach_function :sqlite3_wal_hook, :sqlite3_wal_hook, [:pointer, :sqlite3_wal_hook__callback, :pointer], :pointer
+  attach_function :sqlite3_wal_autocheckpoint, :sqlite3_wal_autocheckpoint, [:pointer, :int], :int
+  attach_function :sqlite3_wal_checkpoint, :sqlite3_wal_checkpoint, [:pointer, :string], :int
+  attach_function :sqlite3_wal_checkpoint_v2, :sqlite3_wal_checkpoint_v2, [:pointer, :string, :int, :pointer, :pointer], :int
+  attach_function :sqlite3_vtab_config, :sqlite3_vtab_config, [:pointer, :int], :int
+  attach_function :sqlite3_vtab_on_conflict, :sqlite3_vtab_on_conflict, [:pointer], :int
+  attach_function :sqlite3_vtab_nochange, :sqlite3_vtab_nochange, [:pointer], :int
   attach_function :sqlite3_vtab_collation, :sqlite3_vtab_collation, [Sqlite3IndexInfo.by_ref, :int], :string
   attach_function :sqlite3_vtab_distinct, :sqlite3_vtab_distinct, [Sqlite3IndexInfo.by_ref], :int
   attach_function :sqlite3_vtab_in, :sqlite3_vtab_in, [Sqlite3IndexInfo.by_ref, :int, :int], :int
-  attach_function :sqlite3_vtab_in_first, :sqlite3_vtab_in_first, [Sqlite3Value.by_ref, :pointer], :int
-  attach_function :sqlite3_vtab_in_next, :sqlite3_vtab_in_next, [Sqlite3Value.by_ref, :pointer], :int
+  attach_function :sqlite3_vtab_in_first, :sqlite3_vtab_in_first, [:pointer, :pointer], :int
+  attach_function :sqlite3_vtab_in_next, :sqlite3_vtab_in_next, [:pointer, :pointer], :int
   attach_function :sqlite3_vtab_rhs_value, :sqlite3_vtab_rhs_value, [Sqlite3IndexInfo.by_ref, :int, :pointer], :int
-  attach_function :sqlite3_stmt_scanstatus, :sqlite3_stmt_scanstatus, [Sqlite3Stmt.by_ref, :int, :int, :pointer], :int
-  attach_function :sqlite3_stmt_scanstatus_v2, :sqlite3_stmt_scanstatus_v2, [Sqlite3Stmt.by_ref, :int, :int, :int, :pointer], :int
-  attach_function :sqlite3_stmt_scanstatus_reset, :sqlite3_stmt_scanstatus_reset, [Sqlite3Stmt.by_ref], :void
-  attach_function :sqlite3_db_cacheflush, :sqlite3_db_cacheflush, [Sqlite3.by_ref], :int
-  attach_function :sqlite3_system_errno, :sqlite3_system_errno, [Sqlite3.by_ref], :int
+  attach_function :sqlite3_stmt_scanstatus, :sqlite3_stmt_scanstatus, [:pointer, :int, :int, :pointer], :int
+  attach_function :sqlite3_stmt_scanstatus_v2, :sqlite3_stmt_scanstatus_v2, [:pointer, :int, :int, :int, :pointer], :int
+  attach_function :sqlite3_stmt_scanstatus_reset, :sqlite3_stmt_scanstatus_reset, [:pointer], :void
+  attach_function :sqlite3_db_cacheflush, :sqlite3_db_cacheflush, [:pointer], :int
+  attach_function :sqlite3_system_errno, :sqlite3_system_errno, [:pointer], :int
 
   class Sqlite3Snapshot < FFI::Struct
     layout :hidden, [:uchar, 48]
   end
 
-  attach_function :sqlite3_snapshot_get, :sqlite3_snapshot_get, [Sqlite3.by_ref, :string, :pointer], :int
-  attach_function :sqlite3_snapshot_open, :sqlite3_snapshot_open, [Sqlite3.by_ref, :string, Sqlite3Snapshot.by_ref], :int
+  attach_function :sqlite3_snapshot_get, :sqlite3_snapshot_get, [:pointer, :string, :pointer], :int
+  attach_function :sqlite3_snapshot_open, :sqlite3_snapshot_open, [:pointer, :string, Sqlite3Snapshot.by_ref], :int
   attach_function :sqlite3_snapshot_free, :sqlite3_snapshot_free, [Sqlite3Snapshot.by_ref], :void
   attach_function :sqlite3_snapshot_cmp, :sqlite3_snapshot_cmp, [Sqlite3Snapshot.by_ref, Sqlite3Snapshot.by_ref], :int
-  attach_function :sqlite3_snapshot_recover, :sqlite3_snapshot_recover, [Sqlite3.by_ref, :string], :int
-  attach_function :sqlite3_serialize, :sqlite3_serialize, [Sqlite3.by_ref, :string, :pointer, :uint], :pointer
-  attach_function :sqlite3_deserialize, :sqlite3_deserialize, [Sqlite3.by_ref, :string, :pointer, :long_long, :long_long, :uint], :int
+  attach_function :sqlite3_snapshot_recover, :sqlite3_snapshot_recover, [:pointer, :string], :int
+  attach_function :sqlite3_serialize, :sqlite3_serialize, [:pointer, :string, :pointer, :uint], :pointer
+  attach_function :sqlite3_deserialize, :sqlite3_deserialize, [:pointer, :string, :pointer, :long_long, :long_long, :uint], :int
   typedef :double, :sqlite3_rtree_dbl
   callback :sqlite3_rtree_geometry_callback_xGeom_callback, [:pointer, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_rtree_geometry_callback, :sqlite3_rtree_geometry_callback, [Sqlite3.by_ref, :string, :sqlite3_rtree_geometry_callback_xGeom_callback, :pointer], :int
+  attach_function :sqlite3_rtree_geometry_callback, :sqlite3_rtree_geometry_callback, [:pointer, :string, :sqlite3_rtree_geometry_callback_xGeom_callback, :pointer], :int
   callback :sqlite3_rtree_geometry_xDelUser_callback, [:pointer], :void
 
   class Sqlite3RtreeGeometry < FFI::Struct
@@ -1121,7 +1096,7 @@ module Sqlite3
 
   callback :sqlite3_rtree_query_callback_xQueryFunc_callback, [:pointer], :int
   callback :sqlite3_rtree_query_callback_xDestructor_callback, [:pointer], :void
-  attach_function :sqlite3_rtree_query_callback, :sqlite3_rtree_query_callback, [Sqlite3.by_ref, :string, :sqlite3_rtree_query_callback_xQueryFunc_callback, :pointer, :sqlite3_rtree_query_callback_xDestructor_callback], :int
+  attach_function :sqlite3_rtree_query_callback, :sqlite3_rtree_query_callback, [:pointer, :string, :sqlite3_rtree_query_callback_xQueryFunc_callback, :pointer, :sqlite3_rtree_query_callback_xDestructor_callback], :int
   callback :sqlite3_rtree_query_info_xDelUser_callback, [:pointer], :void
 
   class Sqlite3RtreeQueryInfo < FFI::Struct
@@ -1143,9 +1118,7 @@ module Sqlite3
            :ap_sql_param, :pointer
   end
 
-  class Fts5Context < FFI::Struct
-  end
-
+  typedef :pointer, :Fts5Context
   callback :fts5_extension_function, [], :void
 
   class Fts5PhraseIter < FFI::Struct
@@ -1200,9 +1173,7 @@ module Sqlite3
            :x_inst_token, :Fts5ExtensionApi_xInstToken_callback
   end
 
-  class Fts5Tokenizer < FFI::Struct
-  end
-
+  typedef :pointer, :Fts5Tokenizer
   callback :fts5_tokenizer_xCreate_callback, [:pointer, :pointer, :int, :pointer], :int
   callback :fts5_tokenizer_xDelete_callback, [:pointer], :void
   callback :fts5_tokenizer_xTokenize_callback, [:pointer, :pointer, :int, :string, :int, :pointer], :int

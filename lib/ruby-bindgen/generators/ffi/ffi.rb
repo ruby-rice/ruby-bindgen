@@ -184,6 +184,7 @@ module RubyBindgen
 
       def visit_struct(cursor)
         return if cursor.forward_declaration?
+        return if cursor.opaque_declaration?
         return if @symbols.skip?(cursor)
 
         result = Hash.new { |h, k| h[k] = [] }
@@ -234,8 +235,14 @@ module RubyBindgen
 
         case cursor.underlying_type.kind
           when :type_elaborated
-            # If this is a struct or a union or enum we have already rendered it
-            return if [:type_record, :type_enum].include?(cursor.underlying_type&.canonical&.kind)
+            if [:type_record, :type_enum].include?(cursor.underlying_type&.canonical&.kind)
+              # Opaque struct/union typedef - emit typedef :pointer
+              if cursor.underlying_type.canonical.declaration.opaque_declaration?
+                return render_cursor(cursor, "typedef_decl")
+              end
+              # Otherwise it's a struct/union/enum we have already rendered - skip
+              return
+            end
           when :type_pointer
             if cursor.underlying_type.function?
               return self.visit_callback(cursor.ruby_name, cursor.find_by_kind(false, :cursor_parameter_decl), cursor.underlying_type.pointee)
@@ -246,6 +253,7 @@ module RubyBindgen
 
       def visit_union(cursor)
         return if cursor.forward_declaration?
+        return if cursor.opaque_declaration?
         return if @symbols.skip?(cursor)
 
         result = Hash.new { |h, k| h[k] = [] }
@@ -359,6 +367,9 @@ module RubyBindgen
         elsif type.canonical.is_a?(::FFI::Clang::Types::Function)
           ":pointer"
         elsif type.canonical.kind == :type_record
+          if type.canonical.declaration.opaque_declaration?
+            return ":pointer"
+          end
           if type.anonymous?
             return type.declaration.anonymous_definer.spelling.camelize
           end
@@ -382,6 +393,9 @@ module RubyBindgen
             context == :callback_return ? ":pointer" : ":string"
           when :type_elaborated
             if type.pointee.canonical.kind == :type_record
+              if type.pointee.canonical.declaration.opaque_declaration?
+                return ":pointer"
+              end
               case context
                 when :union, :structure, :typedef
                   "#{type.pointee.canonical.declaration.ruby_name}.ptr"

@@ -29,3 +29,10 @@ struct C
 {
     char* cname;
 };
+
+// Opaque struct - no definition exists
+struct Opaque;
+typedef struct Opaque Opaque;
+
+void use_opaque(Opaque* o);
+Opaque* create_opaque(void);
