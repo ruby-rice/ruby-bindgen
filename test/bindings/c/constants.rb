@@ -35,11 +35,11 @@ module Constants
 
   ffi_lib self.search_names
 
-  CONST_INT = 10
-  STATIC_CONST_INT = 20
-  CONST_DOUBLE = 3.14
-  CONST_FLOAT = 2.5f
-  CONST_CHAR = 'A'
-  CONST_LONG = 100000L
-  CONST_UINT = 42
+  ConstInt = 10
+  StaticConstInt = 20
+  ConstDouble = 3.14
+  ConstFloat = 2.5f
+  ConstChar = 'A'
+  ConstLong = 100000L
+  ConstUint = 42
 end

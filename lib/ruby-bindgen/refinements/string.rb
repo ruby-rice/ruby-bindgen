@@ -14,11 +14,8 @@ class String
       return self.capitalize
     end
 
-    if self.match?(/\A[A-Z_0-9]*\z/)
-      return self
-    end
-
-    string = self.sub(/^[a-z\d]*/) { |match| match.capitalize! || match }
+    input = self.match?(/\A[A-Z_0-9]*\z/) ? self.downcase : self
+    string = input.sub(/^[a-z\d]*/) { |match| match.capitalize! || match }
     string.gsub!(/\/, ::/)
     string.gsub!(/(?:_|-|\.|::|,| |\<|\>|(\/))([a-z\d]*)/i) do
       word = $2
