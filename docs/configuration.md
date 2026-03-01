@@ -28,6 +28,8 @@ These options apply to all formats.
 | `skip`          | `[]`               | Array of glob patterns specifying which files to skip. For Rice/FFI, these match header file paths. For CMake, these match generated `*-rb.cpp` file paths. In most cases, it's better to add skips to the Rice/FFI config so the files are never generated, rather than skipping them in CMake after the fact. |
 | `symbols`       | `{}`               | Symbol actions grouped by type. See [Symbols](#symbols).                  |
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
+| `rename_types` | `[]` | Override generated Ruby class/module names. Array of `{from, to}` entries where `from` is a string or `/regex/` pattern and `to` is the replacement (supports `\1` capture groups). For C (FFI), `from` matches the original C name. For C++ (Rice), `from` matches the generated Ruby name. See [Name Mappings](#name-mappings). |
+| `rename_methods` | `[]` | Override generated Ruby method names. Array of `{from, to}` entries where `from` is a C/C++ name (simple or fully qualified) or `/regex/` pattern and `to` is the Ruby name. See [Name Mappings](#name-mappings). |
 
 ## C (FFI) Options
 
@@ -42,8 +44,6 @@ These options apply to all formats.
 |-----------------|----------------|-------------|
 | `project`       | none           | Project name for the Ruby extension. Used for the `Init_` function name and project wrapper file names. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{project}-rb.cpp`, `{project}-rb.hpp`). When omitted, only per-file bindings are generated. |
 | `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/cpp_bindings.md#include-header). |
-| `rename_types` | `[]` | Override generated Ruby class names. Array of `{from, to}` entries where `from` is a string or `/regex/` pattern and `to` is the replacement (supports `\1` capture groups). See [Name Mappings](#name-mappings). |
-| `rename_methods` | `[]` | Override generated Ruby method names. Array of `{from, to}` entries where `from` is a C++ qualified name or `/regex/` pattern and `to` is the Ruby name. See [Name Mappings](#name-mappings). |
 | `version_macro` | none | C preprocessor macro used for version guards. When set, symbols with `action: version` are wrapped in `#if VERSION_MACRO >= version` / `#endif`. See [Version Guards](#version-guards). |
 
 ## CMake Options

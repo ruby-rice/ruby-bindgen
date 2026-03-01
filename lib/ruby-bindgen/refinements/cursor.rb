@@ -4,7 +4,7 @@ module FFI
   module Clang
     class Cursor
       def self.namer
-        @namer || RubyBindgen::Namer.new
+        @namer || raise("Namer not set — generator must call Cursor.namer= before processing")
       end
 
       def self.namer=(value)

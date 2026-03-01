@@ -20,6 +20,10 @@ module RubyBindgen
       def generate
         clang_args = @config[:clang_args] || []
         parser = RubyBindgen::Parser.new(@inputter, clang_args, libclang: @config[:libclang])
+        rename_types = RubyBindgen::NameMapper.from_config(@config[:rename_types] || {})
+        rename_methods = RubyBindgen::NameMapper.from_config(@config[:rename_methods] || {})
+        @namer = RubyBindgen::Namer.new(rename_types, rename_methods)
+        ::FFI::Clang::Cursor.namer = @namer
         parser.generate(self)
       end
 

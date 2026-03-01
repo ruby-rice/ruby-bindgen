@@ -21,23 +21,15 @@ module RubyBindgen
             ruby_conversion_function(cursor)
           when :cursor_function, :cursor_cxx_method
             ruby_operator_or_method(cursor)
-          when :cursor_enum_decl
-            cursor.spelling.camelize
+          when :cursor_struct, :cursor_union, :cursor_enum_decl, :cursor_class_decl, :cursor_namespace
+            @rename_types.lookup(cursor.spelling) || cursor.spelling.camelize
           when :cursor_field_decl
             cursor.spelling.underscore
           when :cursor_typedef_decl
             cursor.underlying_type.declaration.invalid? ?
               cursor.spelling.underscore :
               ruby(cursor.underlying_type.declaration)
-          when :cursor_struct
-            cursor.spelling.camelize
-          when :cursor_union
-            cursor.spelling.camelize
           when :cursor_variable
-            cursor.spelling.camelize
-          when :cursor_class_decl
-            cursor.spelling.camelize
-          when :cursor_namespace
             cursor.spelling.camelize
           else
             cursor.spelling.underscore
