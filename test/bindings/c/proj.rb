@@ -216,13 +216,13 @@ module Proj
   end
 
   PJ_LOG_LEVEL = enum(
-    :pj_log_none, 0,
-    :pj_log_error, 1,
-    :pj_log_debug, 2,
-    :pj_log_trace, 3,
-    :pj_log_tell, 4,
-    :pj_log_debug_major, 2,
-    :pj_log_debug_minor, 3
+    :PJ_LOG_NONE, 0,
+    :PJ_LOG_ERROR, 1,
+    :PJ_LOG_DEBUG, 2,
+    :PJ_LOG_TRACE, 3,
+    :PJ_LOG_TELL, 4,
+    :PJ_LOG_DEBUG_MAJOR, 2,
+    :PJ_LOG_DEBUG_MINOR, 3
   )
 
   callback :pj_log_function, [], :void
@@ -239,9 +239,9 @@ module Proj
   typedef :pointer, :PROJ_FILE_HANDLE
 
   PROJ_OPEN_ACCESS = enum(
-    :proj_open_access_read_only, 0,
-    :proj_open_access_read_update, 1,
-    :proj_open_access_create, 2
+    :PROJ_OPEN_ACCESS_READ_ONLY, 0,
+    :PROJ_OPEN_ACCESS_READ_UPDATE, 1,
+    :PROJ_OPEN_ACCESS_CREATE, 2
   )
 
   callback :PROJ_FILE_API_open_cbk_callback, [:pointer, :string, PROJ_OPEN_ACCESS, :pointer], :pointer
@@ -304,9 +304,9 @@ module Proj
   attach_function :proj_area_destroy, :proj_area_destroy, [:pointer], :void
 
   PJ_DIRECTION = enum(
-    :pj_fwd, 1,
-    :pj_ident, 0,
-    :pj_inv, -1
+    :PJ_FWD, 1,
+    :PJ_IDENT, 0,
+    :PJ_INV, -1
   )
 
   attach_function :proj_angular_input, :proj_angular_input, [:pointer, PJ_DIRECTION], :int
@@ -351,114 +351,114 @@ module Proj
   typedef :pointer, :proj_string_list
 
   PJ_GUESSED_WKT_DIALECT = enum(
-    :pj_guessed_wkt2_2019, 0,
-    :pj_guessed_wkt2_2018, 0,
-    :pj_guessed_wkt2_2015, 1,
-    :pj_guessed_wkt1_gdal, 2,
-    :pj_guessed_wkt1_esri, 3,
-    :pj_guessed_not_wkt, 4
+    :PJ_GUESSED_WKT2_2019, 0,
+    :PJ_GUESSED_WKT2_2018, 0,
+    :PJ_GUESSED_WKT2_2015, 1,
+    :PJ_GUESSED_WKT1_GDAL, 2,
+    :PJ_GUESSED_WKT1_ESRI, 3,
+    :PJ_GUESSED_NOT_WKT, 4
   )
 
   PJ_CATEGORY = enum(
-    :pj_category_ellipsoid, 0,
-    :pj_category_prime_meridian, 1,
-    :pj_category_datum, 2,
-    :pj_category_crs, 3,
-    :pj_category_coordinate_operation, 4,
-    :pj_category_datum_ensemble, 5
+    :PJ_CATEGORY_ELLIPSOID, 0,
+    :PJ_CATEGORY_PRIME_MERIDIAN, 1,
+    :PJ_CATEGORY_DATUM, 2,
+    :PJ_CATEGORY_CRS, 3,
+    :PJ_CATEGORY_COORDINATE_OPERATION, 4,
+    :PJ_CATEGORY_DATUM_ENSEMBLE, 5
   )
 
   PJ_TYPE = enum(
-    :pj_type_unknown, 0,
-    :pj_type_ellipsoid, 1,
-    :pj_type_prime_meridian, 2,
-    :pj_type_geodetic_reference_frame, 3,
-    :pj_type_dynamic_geodetic_reference_frame, 4,
-    :pj_type_vertical_reference_frame, 5,
-    :pj_type_dynamic_vertical_reference_frame, 6,
-    :pj_type_datum_ensemble, 7,
-    :pj_type_crs, 8,
-    :pj_type_geodetic_crs, 9,
-    :pj_type_geocentric_crs, 10,
-    :pj_type_geographic_crs, 11,
-    :pj_type_geographic_2d_crs, 12,
-    :pj_type_geographic_3d_crs, 13,
-    :pj_type_vertical_crs, 14,
-    :pj_type_projected_crs, 15,
-    :pj_type_compound_crs, 16,
-    :pj_type_temporal_crs, 17,
-    :pj_type_engineering_crs, 18,
-    :pj_type_bound_crs, 19,
-    :pj_type_other_crs, 20,
-    :pj_type_conversion, 21,
-    :pj_type_transformation, 22,
-    :pj_type_concatenated_operation, 23,
-    :pj_type_other_coordinate_operation, 24,
-    :pj_type_temporal_datum, 25,
-    :pj_type_engineering_datum, 26,
-    :pj_type_parametric_datum, 27,
-    :pj_type_derived_projected_crs, 28,
-    :pj_type_coordinate_metadata, 29
+    :PJ_TYPE_UNKNOWN, 0,
+    :PJ_TYPE_ELLIPSOID, 1,
+    :PJ_TYPE_PRIME_MERIDIAN, 2,
+    :PJ_TYPE_GEODETIC_REFERENCE_FRAME, 3,
+    :PJ_TYPE_DYNAMIC_GEODETIC_REFERENCE_FRAME, 4,
+    :PJ_TYPE_VERTICAL_REFERENCE_FRAME, 5,
+    :PJ_TYPE_DYNAMIC_VERTICAL_REFERENCE_FRAME, 6,
+    :PJ_TYPE_DATUM_ENSEMBLE, 7,
+    :PJ_TYPE_CRS, 8,
+    :PJ_TYPE_GEODETIC_CRS, 9,
+    :PJ_TYPE_GEOCENTRIC_CRS, 10,
+    :PJ_TYPE_GEOGRAPHIC_CRS, 11,
+    :PJ_TYPE_GEOGRAPHIC_2D_CRS, 12,
+    :PJ_TYPE_GEOGRAPHIC_3D_CRS, 13,
+    :PJ_TYPE_VERTICAL_CRS, 14,
+    :PJ_TYPE_PROJECTED_CRS, 15,
+    :PJ_TYPE_COMPOUND_CRS, 16,
+    :PJ_TYPE_TEMPORAL_CRS, 17,
+    :PJ_TYPE_ENGINEERING_CRS, 18,
+    :PJ_TYPE_BOUND_CRS, 19,
+    :PJ_TYPE_OTHER_CRS, 20,
+    :PJ_TYPE_CONVERSION, 21,
+    :PJ_TYPE_TRANSFORMATION, 22,
+    :PJ_TYPE_CONCATENATED_OPERATION, 23,
+    :PJ_TYPE_OTHER_COORDINATE_OPERATION, 24,
+    :PJ_TYPE_TEMPORAL_DATUM, 25,
+    :PJ_TYPE_ENGINEERING_DATUM, 26,
+    :PJ_TYPE_PARAMETRIC_DATUM, 27,
+    :PJ_TYPE_DERIVED_PROJECTED_CRS, 28,
+    :PJ_TYPE_COORDINATE_METADATA, 29
   )
 
   PJ_COMPARISON_CRITERION = enum(
-    :pj_comp_strict, 0,
-    :pj_comp_equivalent, 1,
-    :pj_comp_equivalent_except_axis_order_geogcrs, 2
+    :PJ_COMP_STRICT, 0,
+    :PJ_COMP_EQUIVALENT, 1,
+    :PJ_COMP_EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS, 2
   )
 
   PJ_WKT_TYPE = enum(
-    :pj_wkt2_2015, 0,
-    :pj_wkt2_2015_simplified, 1,
-    :pj_wkt2_2019, 2,
-    :pj_wkt2_2018, 2,
-    :pj_wkt2_2019_simplified, 3,
-    :pj_wkt2_2018_simplified, 3,
-    :pj_wkt1_gdal, 4,
-    :pj_wkt1_esri, 5
+    :PJ_WKT2_2015, 0,
+    :PJ_WKT2_2015_SIMPLIFIED, 1,
+    :PJ_WKT2_2019, 2,
+    :PJ_WKT2_2018, 2,
+    :PJ_WKT2_2019_SIMPLIFIED, 3,
+    :PJ_WKT2_2018_SIMPLIFIED, 3,
+    :PJ_WKT1_GDAL, 4,
+    :PJ_WKT1_ESRI, 5
   )
 
   PROJ_CRS_EXTENT_USE = enum(
-    :pj_crs_extent_none, 0,
-    :pj_crs_extent_both, 1,
-    :pj_crs_extent_intersection, 2,
-    :pj_crs_extent_smallest, 3
+    :PJ_CRS_EXTENT_NONE, 0,
+    :PJ_CRS_EXTENT_BOTH, 1,
+    :PJ_CRS_EXTENT_INTERSECTION, 2,
+    :PJ_CRS_EXTENT_SMALLEST, 3
   )
 
   PROJ_GRID_AVAILABILITY_USE = enum(
-    :proj_grid_availability_used_for_sorting, 0,
-    :proj_grid_availability_discard_operation_if_missing_grid, 1,
-    :proj_grid_availability_ignored, 2,
-    :proj_grid_availability_known_available, 3
+    :PROJ_GRID_AVAILABILITY_USED_FOR_SORTING, 0,
+    :PROJ_GRID_AVAILABILITY_DISCARD_OPERATION_IF_MISSING_GRID, 1,
+    :PROJ_GRID_AVAILABILITY_IGNORED, 2,
+    :PROJ_GRID_AVAILABILITY_KNOWN_AVAILABLE, 3
   )
 
   PJ_PROJ_STRING_TYPE = enum(
-    :pj_proj_5, 0,
-    :pj_proj_4, 1
+    :PJ_PROJ_5, 0,
+    :PJ_PROJ_4, 1
   )
 
   PROJ_SPATIAL_CRITERION = enum(
-    :proj_spatial_criterion_strict_containment, 0,
-    :proj_spatial_criterion_partial_intersection, 1
+    :PROJ_SPATIAL_CRITERION_STRICT_CONTAINMENT, 0,
+    :PROJ_SPATIAL_CRITERION_PARTIAL_INTERSECTION, 1
   )
 
   PROJ_INTERMEDIATE_CRS_USE = enum(
-    :proj_intermediate_crs_use_always, 0,
-    :proj_intermediate_crs_use_if_no_direct_transformation, 1,
-    :proj_intermediate_crs_use_never, 2
+    :PROJ_INTERMEDIATE_CRS_USE_ALWAYS, 0,
+    :PROJ_INTERMEDIATE_CRS_USE_IF_NO_DIRECT_TRANSFORMATION, 1,
+    :PROJ_INTERMEDIATE_CRS_USE_NEVER, 2
   )
 
   PJ_COORDINATE_SYSTEM_TYPE = enum(
-    :pj_cs_type_unknown, 0,
-    :pj_cs_type_cartesian, 1,
-    :pj_cs_type_ellipsoidal, 2,
-    :pj_cs_type_vertical, 3,
-    :pj_cs_type_spherical, 4,
-    :pj_cs_type_ordinal, 5,
-    :pj_cs_type_parametric, 6,
-    :pj_cs_type_datetimetemporal, 7,
-    :pj_cs_type_temporalcount, 8,
-    :pj_cs_type_temporalmeasure, 9
+    :PJ_CS_TYPE_UNKNOWN, 0,
+    :PJ_CS_TYPE_CARTESIAN, 1,
+    :PJ_CS_TYPE_ELLIPSOIDAL, 2,
+    :PJ_CS_TYPE_VERTICAL, 3,
+    :PJ_CS_TYPE_SPHERICAL, 4,
+    :PJ_CS_TYPE_ORDINAL, 5,
+    :PJ_CS_TYPE_PARAMETRIC, 6,
+    :PJ_CS_TYPE_DATETIMETEMPORAL, 7,
+    :PJ_CS_TYPE_TEMPORALCOUNT, 8,
+    :PJ_CS_TYPE_TEMPORALMEASURE, 9
   )
 
   class PROJ_CRS_INFO < FFI::Struct
@@ -617,11 +617,11 @@ module Proj
   attach_function :proj_coordinate_metadata_get_epoch, :proj_coordinate_metadata_get_epoch, [:pointer, :pointer], :double
 
   PJ_UNIT_TYPE = enum(
-    :pj_ut_angular, 0,
-    :pj_ut_linear, 1,
-    :pj_ut_scale, 2,
-    :pj_ut_time, 3,
-    :pj_ut_parametric, 4
+    :PJ_UT_ANGULAR, 0,
+    :PJ_UT_LINEAR, 1,
+    :PJ_UT_SCALE, 2,
+    :PJ_UT_TIME, 3,
+    :PJ_UT_PARAMETRIC, 4
   )
 
   class PJ_AXIS_DESCRIPTION < FFI::Struct
@@ -634,21 +634,21 @@ module Proj
   end
 
   PJ_CARTESIAN_CS_2D_TYPE = enum(
-    :pj_cart2d_easting_northing, 0,
-    :pj_cart2d_northing_easting, 1,
-    :pj_cart2d_north_pole_easting_south_northing_south, 2,
-    :pj_cart2d_south_pole_easting_north_northing_north, 3,
-    :pj_cart2d_westing_southing, 4
+    :PJ_CART2D_EASTING_NORTHING, 0,
+    :PJ_CART2D_NORTHING_EASTING, 1,
+    :PJ_CART2D_NORTH_POLE_EASTING_SOUTH_NORTHING_SOUTH, 2,
+    :PJ_CART2D_SOUTH_POLE_EASTING_NORTH_NORTHING_NORTH, 3,
+    :PJ_CART2D_WESTING_SOUTHING, 4
   )
 
   PJ_ELLIPSOIDAL_CS_2D_TYPE = enum(
-    :pj_ellps2d_longitude_latitude, 0,
-    :pj_ellps2d_latitude_longitude, 1
+    :PJ_ELLPS2D_LONGITUDE_LATITUDE, 0,
+    :PJ_ELLPS2D_LATITUDE_LONGITUDE, 1
   )
 
   PJ_ELLIPSOIDAL_CS_3D_TYPE = enum(
-    :pj_ellps3d_longitude_latitude_height, 0,
-    :pj_ellps3d_latitude_longitude_height, 1
+    :PJ_ELLPS3D_LONGITUDE_LATITUDE_HEIGHT, 0,
+    :PJ_ELLPS3D_LATITUDE_LONGITUDE_HEIGHT, 1
   )
 
   class PJ_PARAM_DESCRIPTION < FFI::Struct

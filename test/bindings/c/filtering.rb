@@ -44,8 +44,8 @@ module Filtering
   end
 
   IncludedEnum = enum(
-    :value_one, 0,
-    :value_two, 1
+    :VALUE_ONE, 0,
+    :VALUE_TWO, 1
   )
 
   typedef :int, :included_typedef

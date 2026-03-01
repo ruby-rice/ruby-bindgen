@@ -44,8 +44,8 @@ module VersionGuards
   end
 
   StableEnum = enum(
-    :stable_a, 0,
-    :stable_b, 1
+    :STABLE_A, 0,
+    :STABLE_B, 1
   )
 
   typedef :int, :stable_typedef
@@ -58,8 +58,8 @@ module VersionGuards
     end
 
     NewEnum = enum(
-      :new_a, 10,
-      :new_b, 20
+      :NEW_A, 10,
+      :NEW_B, 20
     )
 
     typedef :double, :new_typedef
