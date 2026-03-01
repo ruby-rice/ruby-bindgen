@@ -12,6 +12,7 @@ module RubyBindgen
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || [])
+        @version_macro = config[:version_macro]
         @export_macros = config[:export_macros] || []
         @indentation = 0
       end
@@ -54,7 +55,7 @@ module RubyBindgen
       end
 
       def visit_children(cursor, exclude_kinds: Set.new)
-        results = Array.new
+        versions = Hash.new { |h, k| h[k] = [] }
         cursor.each(false) do |child_cursor, parent_cursor|
           if child_cursor.location.in_system_header?
             next :continue
@@ -88,35 +89,42 @@ module RubyBindgen
           visit_method = self.figure_method(child_cursor)
           if self.respond_to?(visit_method)
             content = self.send(visit_method, child_cursor)
+            version = @symbols.version(child_cursor)
             case content
               when Array
-                results += content
+                versions[version] += content
               when String
-                results << content
+                versions[version] << content
             end
           end
           next :continue
         end
-        results
+        versions
       end
 
-      def merge_children(children, indentation: 0, separator: "\n", terminator: "", strip: false)
-        return "" if children.empty?
-
-        children = children.map do |line|
-          strip ? line.rstrip : line
+      def merge_children(versions, indentation: 0, comma: false, strip: false)
+        lines = versions.keys.sort_by { |key| key.to_s }.each_with_object([]) do |version, result|
+          next unless versions[version]&.any?
+          result << "if #{@version_macro} >= #{version}" if version
+          versions[version].each do |line|
+            line = line.rstrip if strip
+            line = add_indentation(line, 2) if version
+            result << line
+          end
+          result << "end" if version
         end
 
-        # Join together templates
-        children = children.join(separator) + terminator
-        children = add_indentation(children, indentation) if indentation > 0
+        return "" if lines.empty?
 
-        children
+        separator = comma ? ",\n" : "\n"
+        result = lines.join(separator)
+        result = add_indentation(result, indentation) if indentation > 0
+        result
       end
 
-      def render_children(cursor, indentation: 0, separator: "\n", terminator: "", strip: false, exclude_kinds: Set.new)
-        children = visit_children(cursor, exclude_kinds: exclude_kinds)
-        merge_children(children, indentation: indentation, separator: separator, terminator: terminator, strip: strip)
+      def render_children(cursor, indentation: 0, comma: false, strip: false, exclude_kinds: Set.new)
+        versions = visit_children(cursor, exclude_kinds: exclude_kinds)
+        merge_children(versions, indentation: indentation, comma: comma, strip: strip)
       end
 
       def visit_callback(name, parameters, type)
@@ -130,10 +138,21 @@ module RubyBindgen
         self.render_callback(name, parameter_types, type.result_type)
       end
 
+      def visit_macro_definition(cursor)
+        tokens = cursor.translation_unit.tokenize(cursor.extent)
+        return unless tokens.size == 2
+        return unless tokens.tokens[0].kind == :identifier
+        return unless tokens.tokens[1].kind == :literal
+
+        self.render_cursor(cursor, "macro_definition",
+                           :name => tokens.tokens[0].spelling,
+                           :value => tokens.tokens[1].spelling)
+      end
+
       def visit_enum_decl(cursor)
         return if @symbols.skip?(cursor)
 
-        children = render_children(cursor, indentation: 2, separator: ",\n", strip: true)
+        children = render_children(cursor, indentation: 2, comma: true, strip: true)
         self.render_cursor(cursor, "enum_decl", :children => children)
       end
 
@@ -167,16 +186,18 @@ module RubyBindgen
         return if cursor.forward_declaration?
         return if @symbols.skip?(cursor)
 
-        result = Array.new
+        result = Hash.new { |h, k| h[k] = [] }
 
         # Define any embedded structures
         cursor.find_by_kind(false, :cursor_struct).each do |struct|
-          result << visit_struct(struct)
+          version = @symbols.version(struct)
+          result[version] << visit_struct(struct)
         end
 
         # Define any embedded unions
         cursor.find_by_kind(false, :cursor_union).each do |union|
-          result << visit_union(union)
+          version = @symbols.version(union)
+          result[version] << visit_union(union)
         end
 
         # Define any embedded callbacks
@@ -184,15 +205,15 @@ module RubyBindgen
           if field.type.is_a?(::FFI::Clang::Types::Pointer) && field.type.function?
             callback_name = "#{cursor.spelling}_#{field.spelling}_callback"
             parameters = field.find_by_kind(false, :cursor_parm_decl)
-            result << self.visit_callback(callback_name, parameters, field.type.pointee)
+            result[nil] << self.visit_callback(callback_name, parameters, field.type.pointee)
           end
         end
 
-        children = render_children(cursor, indentation: 9, separator: ",\n", strip: true,
+        children = render_children(cursor, indentation: 9, comma: true, strip: true,
                                            exclude_kinds: [:cursor_struct, :cursor_union])
 
-        result << self.render_cursor(cursor, "struct", :children => children.lstrip)
-        result.join("\n")
+        result[nil] << self.render_cursor(cursor, "struct", :children => children.lstrip)
+        merge_children(result)
       end
 
       def visit_field_decl(cursor)
@@ -227,35 +248,47 @@ module RubyBindgen
         return if cursor.forward_declaration?
         return if @symbols.skip?(cursor)
 
-        result = Array.new
+        result = Hash.new { |h, k| h[k] = [] }
 
         # Define any embedded unions
         cursor.find_by_kind(false, :cursor_union).each do |struct|
-          result << visit_struct(struct)
+          version = @symbols.version(struct)
+          result[version] << visit_struct(struct)
         end
 
         # Define any embedded structures
         cursor.find_by_kind(false, :cursor_struct).each do |struct|
-          result << visit_struct(struct)
+          version = @symbols.version(struct)
+          result[version] << visit_struct(struct)
         end
 
         # Define any embedded callbacks
         cursor.find_by_kind(false, :cursor_field_decl).each do |field|
           if field.type.is_a?(::FFI::Clang::Types::Pointer) && field.type.function?
             callback_name = "#{cursor.ruby}_#{field.ruby}_callback"
-            result << self.visit_callback(callback_name, field.parameters, field.type.pointee)
+            result[nil] << self.visit_callback(callback_name, field.parameters, field.type.pointee)
           end
         end
 
-        children = render_children(cursor, indentation: 9, separator: ",\n", strip: true,
+        children = render_children(cursor, indentation: 9, comma: true, strip: true,
                                    exclude_kinds: [:cursor_struct, :cursor_union])
 
-        result << self.render_cursor(cursor, "union", :children => children.lstrip)
-        result.join("\n")
+        result[nil] << self.render_cursor(cursor, "union", :children => children.lstrip)
+        merge_children(result)
       end
 
       def visit_variable(cursor)
         return if @symbols.skip?(cursor)
+
+        if cursor.type.const_qualified?
+          tokens = cursor.translation_unit.tokenize(cursor.extent)
+          eq_index = tokens.tokens.index { |t| t.spelling == "=" }
+          if eq_index && tokens.tokens[eq_index + 1]&.kind == :literal
+            return render_cursor(cursor, "macro_definition",
+                                 name: cursor.ruby_name,
+                                 value: tokens.tokens[eq_index + 1].spelling)
+          end
+        end
 
         self.render_cursor(cursor, "variable")
       end

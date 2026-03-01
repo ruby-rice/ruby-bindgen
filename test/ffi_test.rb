@@ -23,6 +23,21 @@ class FfiTest < AbstractTest
     run_ffi_test("sqlite3.h", library_names: ["sqlite3"], library_versions: [])
   end
 
+  def test_version_guards
+    run_ffi_test("version_guards.h",
+      library_names: ["version_guards"], library_versions: [],
+      version_macro: "TEST_VERSION",
+      symbols: [{"name" => "newFunction", "action" => "version", "version" => 20000},
+                {"name" => "NewStruct", "action" => "version", "version" => 20000},
+                {"name" => "NewEnum", "action" => "version", "version" => 20000},
+                {"name" => "NewTypedef", "action" => "version", "version" => 20000},
+                {"name" => "futureFunction", "action" => "version", "version" => 30000}])
+  end
+
+  def test_constants
+    run_ffi_test("constants.h", library_names: ["constants"], library_versions: [])
+  end
+
   def test_filtering
     run_ffi_test("filtering.h",
       library_names: ["filtering"], library_versions: [],

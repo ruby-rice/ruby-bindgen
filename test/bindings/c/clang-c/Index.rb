@@ -35,6 +35,8 @@ module Index
 
   ffi_lib self.search_names
 
+  CINDEX_VERSION_MAJOR = 0
+  CINDEX_VERSION_MINOR = 64
   typedef :pointer, :cx_index
 
   class CXTargetInfoImpl < FFI::Struct

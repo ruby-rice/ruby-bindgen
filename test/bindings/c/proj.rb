@@ -35,6 +35,13 @@ module Proj
 
   ffi_lib self.search_names
 
+  PROJ_VERSION_MAJOR = 9
+  PROJ_VERSION_MINOR = 3
+  PROJ_VERSION_PATCH = 1
+  PJ_DEFAULT_CTX = 0
+  PROJ_ERR_INVALID_OP = 1024
+  PROJ_ERR_COORD_TRANSFM = 2048
+  PROJ_ERR_OTHER = 4096
   attach_variable :PjRelease, :pj_release, :string
 
   class PJ_AREA < FFI::Struct
