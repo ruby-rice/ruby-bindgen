@@ -16,18 +16,29 @@ module RubyBindgen
     end
 
     # Build candidate names for a cursor for symbol lookup.
-    # Returns [simple_name, qualified_name, simple_with_params, qualified_with_params].
+    # Returns candidates in priority order: exact names first, then with params.
+    # Includes display_name-based candidates for template specializations.
     def build_candidates(cursor)
       qualified_name = cursor.spelling
       parent = cursor.semantic_parent
       while parent && !parent.kind.nil? &&
             parent.kind != :cursor_translation_unit &&
             !parent.kind.to_s.start_with?("cursor_invalid")
-        qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty?
+        # Skip anonymous parents (clang spells them as "(unnamed enum at ...)" etc.)
+        qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty? && !parent.spelling.start_with?('(')
         parent = parent.semantic_parent
       end
 
       candidates = [cursor.spelling, qualified_name]
+
+      # Add display_name-based candidates for template specializations
+      # (display_name includes template args, e.g., "DataType<hfloat>" or "saturate_cast<hfloat>(uchar)")
+      display = cursor.display_name
+      if display != cursor.spelling
+        qualified_display = qualified_name.sub(cursor.spelling, display)
+        candidates << display << qualified_display
+      end
+
       if cursor.type.respond_to?(:args_size)
         param_types = (0...cursor.type.args_size).map { |i| cursor.type.arg_type(i).spelling }.join(", ")
         candidates << "#{cursor.spelling}(#{param_types})"

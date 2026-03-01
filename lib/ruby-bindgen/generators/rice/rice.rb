@@ -389,13 +389,14 @@ module RubyBindgen
                                                      :args => []))
         end
 
-        # Add anonymous enum constants to the class chain
+        # Add anonymous enum constants to the class chain (with per-constant versioning)
         cursor.find_by_kind(false, :cursor_enum_decl) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
           next unless child_cursor.anonymous?
-          version = @symbols.version(child_cursor)
-          content = visit_enum_decl(child_cursor)
-          versions[version].concat(Array(content))
+          constant_versions = visit_children(child_cursor)
+          constant_versions.each do |version, lines|
+            versions[version].concat(lines.map(&:strip))
+          end
         end
 
         children_content = merge_children(versions, indentation: 2, chain: true, terminate: true, strip: true)

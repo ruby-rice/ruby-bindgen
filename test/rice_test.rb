@@ -91,6 +91,18 @@ class RiceTest < AbstractTest
                   ])
   end
 
+  def test_version_guards
+    run_rice_test("version_guards.hpp",
+                  version_macro: "TEST_VERSION",
+                  symbols: { versions: {
+                    20000 => ["Guards::MyClass::newMethod",
+                              "Guards::MyClass::NEW_CONST",
+                              "Guards::MyClass::overloaded(int, bool)",
+                              "Guards::MyClass::MyClass(int, bool)",
+                              "Guards::NEW_FLAG",
+                              "Guards::newFunction"] } })
+  end
+
   def test_cross_file_typedef
     # Tests that typedefs from included headers are found when generating
     # base classes. DerivedVector4d inherits from BaseMatrix<double, 4>,
