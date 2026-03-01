@@ -23,12 +23,13 @@ void Init_Enums()
   Rice::Data_Type<MyNamespace::MyClass> rb_cMyNamespaceMyClass = define_class_under<MyNamespace::MyClass>(rb_mMyNamespace, "MyClass")
     .define_constructor(Constructor<MyNamespace::MyClass>())
     .define_constant("SOME_CONSTANT", MyNamespace::MyClass::SOME_CONSTANT)
+    .define_constant("HACKED_CLASS_CONSTANT_1", (int)MyNamespace::MyClass::HACKED_CLASS_CONSTANT_1)
+    .define_constant("HACKED_CLASS_CONSTANT_2", (int)MyNamespace::MyClass::HACKED_CLASS_CONSTANT_2)
     ;
   Enum<MyNamespace::MyClass::EmbeddedEnum> rb_cMyNamespaceMyClassEmbeddedEnum = define_enum_under<MyNamespace::MyClass::EmbeddedEnum>("EmbeddedEnum", rb_cMyNamespaceMyClass)
     .define_value("Value1", MyNamespace::MyClass::EmbeddedEnum::Value1)
     .define_value("Value2", MyNamespace::MyClass::EmbeddedEnum::Value2)
     ;
-
   Rice::Data_Type<MyNamespace::Buffer> rb_cMyNamespaceBuffer = define_class_under<MyNamespace::Buffer>(rb_mMyNamespace, "Buffer")
     .define_constructor(Constructor<MyNamespace::Buffer>())
     .define_method<void(MyNamespace::Buffer::*)(int, int, MyNamespace::Buffer::Target)>("create", &MyNamespace::Buffer::create,

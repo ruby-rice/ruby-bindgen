@@ -23,8 +23,8 @@ void Init_DefaultValues()
       Arg("m"), Arg("row_range"), Arg("col_range") = static_cast<const cv::Range&>(cv::Range::all()))
     .define_constructor(Constructor<cv::Mat, int, int, void*, int>(),
       Arg("rows"), Arg("cols"), ArgBuffer("data"), Arg("step") = static_cast<int>(cv::Mat::AUTO_STEP))
+    .define_constant("AUTO_STEP", (int)cv::Mat::AUTO_STEP)
     ;
-
   Rice::Data_Type<cv::Affine3<float>> rb_cAffine3f = Affine3_instantiate<float>(rb_mCv, "Affine3f");
 
   Rice::Data_Type<cv::Affine3<double>> rb_cAffine3d = Affine3_instantiate<double>(rb_mCv, "Affine3d");
@@ -122,7 +122,8 @@ void Init_DefaultValues()
 
   Module rb_mCvFisheye = define_module_under(rb_mCv, "Fisheye");
 
-
+  rb_mCvFisheye.define_constant("CALIB_USE_INTRINSIC_GUESS", (int)cv::fisheye::CALIB_USE_INTRINSIC_GUESS);
+  rb_mCvFisheye.define_constant("CALIB_FIX_INTRINSIC", (int)cv::fisheye::CALIB_FIX_INTRINSIC);
   rb_mCv.define_module_function<void(*)(int)>("calibrate_fisheye", &cv::calibrateFisheye,
     Arg("flags") = static_cast<int>(cv::fisheye::CALIB_FIX_INTRINSIC));
 

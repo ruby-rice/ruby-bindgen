@@ -389,6 +389,15 @@ module RubyBindgen
                                                      :args => []))
         end
 
+        # Add anonymous enum constants to the class chain
+        cursor.find_by_kind(false, :cursor_enum_decl) do |child_cursor|
+          next if child_cursor.private? || child_cursor.protected?
+          next unless child_cursor.anonymous?
+          version = @symbols.version(child_cursor)
+          content = visit_enum_decl(child_cursor)
+          versions[version].concat(Array(content))
+        end
+
         children_content = merge_children(versions, indentation: 2, chain: true, terminate: true, strip: true)
 
         # Collect forward-declared (incomplete) inner classes
@@ -426,9 +435,10 @@ module RubyBindgen
           result[version] << visit_class_decl(child_cursor)
         end
 
-        # Define any embedded enums
+        # Define any named embedded enums (anonymous enums are chained above)
         cursor.find_by_kind(false, :cursor_enum_decl) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
+          next if child_cursor.anonymous?
           version = @symbols.version(child_cursor)
           result[version] << visit_enum_decl(child_cursor)
         end
@@ -1592,13 +1602,13 @@ module RubyBindgen
       def visit_enum_decl(cursor)
         return if CURSOR_CLASSES.include?(cursor.semantic_parent.kind) && !cursor.public?
 
-        if cursor.anonymous? && cursor.semantic_parent.kind == :cursor_class_template
-          # Return array of individual constants so the parent class template chains them
+        if cursor.anonymous? && CURSOR_CLASSES.include?(cursor.semantic_parent.kind)
+          # Anonymous enum inside a class — return constants as chainable strings
           versions = visit_children(cursor)
           return versions.values.flatten.map(&:strip)
         elsif cursor.anonymous?
-          children = render_children(cursor, strip: true)
-          return self.render_cursor(cursor, "enum_decl", :under => nil, :children => children)
+          # Anonymous enum at namespace/TU level — return standalone constant definitions
+          return render_children(cursor, strip: true)
         end
 
         under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
