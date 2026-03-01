@@ -37,6 +37,23 @@ module RubyBindgen
       if display != cursor.spelling
         qualified_display = qualified_name.sub(cursor.spelling, display)
         candidates << display << qualified_display
+
+        # Also add candidates with fully-qualified template args.
+        # display_name uses unqualified args (e.g., "DataType<hfloat>") but users
+        # may configure symbols with qualified args (e.g., "cv::DataType<cv::hfloat>").
+        # Use clang's template_argument_type API to get the qualified arg spellings.
+        if cursor.type.respond_to?(:num_template_arguments)
+          n = cursor.type.num_template_arguments
+          if n > 0
+            qualified_args = (0...n).map { |i| cursor.type.template_argument_type(i).spelling }
+            qualified_args_str = "<#{qualified_args.join(', ')}>"
+            fq_display = display.sub(/<[^>]+>/, qualified_args_str)
+            if fq_display != display
+              fq_qualified_display = qualified_name.sub(cursor.spelling, fq_display)
+              candidates << fq_display << fq_qualified_display
+            end
+          end
+        end
       end
 
       if cursor.type.respond_to?(:args_size)
@@ -63,9 +80,11 @@ module RubyBindgen
       nil
     end
 
-    # Iterate over exact (non-regex) symbol keys.
+    # Iterate over exact (non-regex) skip symbol keys.
     def each(&block)
-      @exact.each_key(&block)
+      @exact.each do |key, value|
+        yield key if value[:action] == :skip
+      end
     end
 
     # Check if a cursor should be skipped based on symbols config.

@@ -100,7 +100,9 @@ class RiceTest < AbstractTest
                               "Guards::MyClass::overloaded(int, bool)",
                               "Guards::MyClass::MyClass(int, bool)",
                               "Guards::NEW_FLAG",
-                              "Guards::newFunction"] } })
+                              "Guards::newFunction",
+                              "Guards::HalfFloat",
+                              "Guards::DataType<Guards::HalfFloat>"] } })
   end
 
   def test_cross_file_typedef

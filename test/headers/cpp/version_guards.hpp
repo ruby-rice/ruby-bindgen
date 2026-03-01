@@ -33,4 +33,33 @@ namespace Guards
 
   // Free function — versioned
   inline void newFunction(int x) {}
+
+  // Type introduced in a newer version
+  class HalfFloat
+  {
+  public:
+    float value;
+  };
+
+  // Class template with existing specializations
+  template<typename T>
+  class DataType
+  {
+  public:
+    static int depth() { return 0; }
+  };
+
+  template<> class DataType<int>
+  {
+  public:
+    static int depth() { return 1; }
+  };
+
+  // Template specialization using versioned type — version-guarded
+  template<> class DataType<HalfFloat>
+  {
+  public:
+    static int depth() { return 2; }
+  };
+
 }
