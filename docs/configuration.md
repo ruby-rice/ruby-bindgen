@@ -26,7 +26,7 @@ These options apply to all formats.
 |-----------------|--------------------|-------------------------------------------------------------------------------------------|
 | `match`         | `["**/*.{h,hpp}"]` | Array of glob pattern specifying which header files to process.                           |
 | `skip`          | `[]`               | Array of glob patterns specifying which files to skip. For Rice/FFI, these match header file paths. For CMake, these match generated `*-rb.cpp` file paths. In most cases, it's better to add skips to the Rice/FFI config so the files are never generated, rather than skipping them in CMake after the fact. |
-| `symbols`       | `[]`               | Array of symbol objects with per-symbol actions. See [Symbols](#symbols).                  |
+| `symbols`       | `{}`               | Symbol actions grouped by type. See [Symbols](#symbols).                  |
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
 
 ## C (FFI) Options
@@ -135,17 +135,17 @@ C:\Program Files\LLVM\bin\libclang.dll
 
 ## Symbols
 
-The `symbols` option is an array of objects that let you control per-symbol behavior. Each entry has a `name` and an `action`.
+The `symbols` option groups per-symbol actions by type. There are two action groups: `skip` and `versions`.
 
-### Skip Action
+### Skip
 
-Use `action: skip` to exclude symbols from bindings. This is useful when:
+The `skip` key lists symbols to exclude from bindings. This is useful when:
 
 - Functions have export macros but still aren't available (build configuration issues)
 - Functions are internal/private APIs not meant for external use
 - Functions cause linker errors due to missing symbols
 
-The `name` field supports:
+Symbol names support:
 
 - Simple names: `versionMajor` - skips all symbols with this name
 - Fully qualified names: `cv::ocl::PlatformInfo::versionMajor` - skips only that specific symbol
@@ -154,29 +154,25 @@ The `name` field supports:
 
 ```yaml
 symbols:
-  - name: versionMajor                           # Skips all symbols named "versionMajor"
-    action: skip
-  - name: cv::ocl::PlatformInfo::versionMinor    # Skips only this specific method
-    action: skip
-  - name: "cv::Mat_::zeros(int, const int *)"    # Skips only this overload (others remain)
-    action: skip
-  - name: /cv::dnn::.*Layer::init.*/             # Regex: skips all init* methods on any Layer class
-    action: skip
+  skip:
+    - versionMajor                           # Skips all symbols named "versionMajor"
+    - cv::ocl::PlatformInfo::versionMinor    # Skips only this specific method
+    - "cv::Mat_::zeros(int, const int *)"    # Skips only this overload (others remain)
+    - /cv::dnn::.*Layer::init.*/             # Regex: skips all init* methods on any Layer class
 ```
 
-### Version Action
+### Versions
 
-Use `action: version` to wrap a symbol in a preprocessor version guard. This requires the `version_macro` option to be set. The `version` field specifies the minimum version value.
+The `versions` key wraps symbols in preprocessor version guards. This requires the `version_macro` option to be set. Each sub-key is the minimum version value, with a list of symbol names underneath.
 
 ```yaml
 version_macro: CV_VERSION
 symbols:
-  - name: cv::Foo::baz
-    action: version
-    version: "40100"
-  - name: /cv::cuda::.*/
-    action: version
-    version: "40500"
+  versions:
+    40100:
+      - cv::Foo::baz
+    40500:
+      - /cv::cuda::.*/
 ```
 
 This generates:
@@ -194,10 +190,9 @@ When a function has multiple overloads but only some cause problems (e.g., linke
 
 ```yaml
 symbols:
-  - name: cv::Mat_::zeros                        # Skips ALL overloads of zeros
-    action: skip
-  - name: "cv::Mat_::zeros(int, const int *)"    # Skips only zeros(int ndims, const int* sz)
-    action: skip
+  skip:
+    - cv::Mat_::zeros                        # Skips ALL overloads of zeros
+    - "cv::Mat_::zeros(int, const int *)"    # Skips only zeros(int ndims, const int* sz)
 ```
 
 The parameter types must match the canonical clang type spelling exactly (e.g., `const int *` not `const int*` or `int const *`).

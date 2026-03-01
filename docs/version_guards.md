@@ -7,21 +7,20 @@ Some C++ libraries ship symbols that only exist in certain versions. For example
 Two config options work together:
 
 1. **`version_macro`** — the C preprocessor macro to test (e.g., `CV_VERSION`)
-2. **`symbols`** entries with `action: version` — which symbols to guard and at what version
+2. **`symbols.versions`** — which symbols to guard and at what version
 
 ```yaml
 format: Rice
 version_macro: CV_VERSION
 symbols:
-  - name: cv::Foo::newMethod
-    action: version
-    version: "40100"
-  - name: /cv::cuda::.*/
-    action: version
-    version: "40500"
+  versions:
+    40100:
+      - cv::Foo::newMethod
+    40500:
+      - /cv::cuda::.*/
 ```
 
-The `name` field supports the same syntax as skip symbols: simple names, fully qualified names, signatures, and regex patterns. See [Symbols](configuration.md#symbols) for details.
+Symbol names support the same syntax as skip symbols: simple names, fully qualified names, signatures, and regex patterns. See [Symbols](configuration.md#symbols) for details.
 
 ## Generated Output
 

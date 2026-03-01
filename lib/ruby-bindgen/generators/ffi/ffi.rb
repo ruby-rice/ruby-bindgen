@@ -11,7 +11,7 @@ module RubyBindgen
         super(inputter, outputter, config)
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
-        @symbols = RubyBindgen::Symbols.new(config[:symbols] || [])
+        @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
         @version_macro = config[:version_macro]
         @export_macros = config[:export_macros] || []
         @indentation = 0

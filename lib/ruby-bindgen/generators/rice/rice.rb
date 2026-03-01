@@ -140,7 +140,7 @@ module RubyBindgen
         @typedef_map = Hash.new
         @type_name_map = Hash.new  # Maps simple type names to qualified names
         @auto_generated_bases = Set.new
-        @symbols = RubyBindgen::Symbols.new(config[:symbols] || [])
+        @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
         @export_macros = config[:export_macros] || []
         @version_macro = config[:version_macro]
 

@@ -27,11 +27,8 @@ class FfiTest < AbstractTest
     run_ffi_test("version_guards.h",
       library_names: ["version_guards"], library_versions: [],
       version_macro: "TEST_VERSION",
-      symbols: [{"name" => "newFunction", "action" => "version", "version" => 20000},
-                {"name" => "NewStruct", "action" => "version", "version" => 20000},
-                {"name" => "NewEnum", "action" => "version", "version" => 20000},
-                {"name" => "NewTypedef", "action" => "version", "version" => 20000},
-                {"name" => "futureFunction", "action" => "version", "version" => 30000}])
+      symbols: { versions: { 20000 => ["newFunction", "NewStruct", "NewEnum", "NewTypedef"],
+                              30000 => ["futureFunction"] } })
   end
 
   def test_constants
@@ -42,12 +39,12 @@ class FfiTest < AbstractTest
     run_ffi_test("filtering.h",
       library_names: ["filtering"], library_versions: [],
       export_macros: ["MY_EXPORT"],
-      symbols: [{"name" => "skippedFunction", "action" => "skip"},
-                {"name" => "alsoSkipped", "action" => "skip"},
-                {"name" => "/internal_helper.*/", "action" => "skip"},
-                {"name" => "SkippedStruct", "action" => "skip"},
-                {"name" => "SkippedEnum", "action" => "skip"},
-                {"name" => "SkippedTypedef", "action" => "skip"}])
+      symbols: { skip: ["skippedFunction",
+                        "alsoSkipped",
+                        "/internal_helper.*/",
+                        "SkippedStruct",
+                        "SkippedEnum",
+                        "SkippedTypedef"] })
   end
 
   private

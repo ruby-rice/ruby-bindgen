@@ -1,15 +1,16 @@
 module RubyBindgen
   class Symbols
-    def initialize(entries = [])
+    def initialize(config = {})
       @exact = {}
       @regex = []
-      entries.each do |entry|
-        key = entry["name"]
-        value = { action: entry["action"]&.to_sym, version: entry["version"] }
-        if key.start_with?('/') && key.end_with?('/')
-          @regex << [Regexp.new(key[1..-2]), value]
-        else
-          @exact[key] = value
+
+      (config[:skip] || []).each do |name|
+        add_entry(name, action: :skip, version: nil)
+      end
+
+      (config[:versions] || {}).each do |version, names|
+        names.each do |name|
+          add_entry(name, action: :version, version: version)
         end
       end
     end
@@ -66,6 +67,17 @@ module RubyBindgen
     def version(cursor)
       result = lookup(build_candidates(cursor))
       result[:version] if result && result[:action] == :version
+    end
+
+    private
+
+    def add_entry(name, action:, version:)
+      value = { action: action, version: version }
+      if name.start_with?('/') && name.end_with?('/')
+        @regex << [Regexp.new(name[1..-2]), value]
+      else
+        @exact[name] = value
+      end
     end
   end
 end
