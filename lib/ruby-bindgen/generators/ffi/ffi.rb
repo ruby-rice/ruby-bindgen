@@ -9,6 +9,7 @@ module RubyBindgen
 
       def initialize(inputter, outputter, config)
         super(inputter, outputter, config)
+        raise ArgumentError, "FFI format requires the 'project' option" unless @project
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
