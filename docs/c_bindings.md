@@ -98,6 +98,26 @@ end
 - Global variables - Exported variables via [`attach_variable`](https://www.rubydoc.info/gems/ffi/FFI/Library#attach_variable-instance_method)
 - Constants - `const` variables and simple `#define` macros (see [Constants and Macros](#constants-and-macros))
 
+## String and Pointer Types
+
+C uses `char *` for both strings and raw memory buffers. `ruby-bindgen` uses const-qualification and context to choose the correct FFI type:
+
+| Context | `const char *` | `char *` |
+|---------|---------------|----------|
+| Function parameters | `:string` | `:pointer` |
+| Function returns | `:string` | `:pointer` |
+| Callback returns | `:pointer` | `:pointer` |
+| Struct/union fields | `:string` | `:string` |
+
+**Rationale:**
+
+- **`const char *`** is a read-only string — FFI auto-converts to a Ruby `String`.
+- **`char *`** in function signatures typically indicates a caller-allocated buffer (e.g., `char *buf, size_t buf_size`), so `:pointer` is correct — the caller creates the buffer with `FFI::MemoryPointer.new`.
+- **Callback returns** always use `:pointer` regardless of const because FFI cannot manage the lifetime of callback-returned strings.
+- **Struct fields** always use `:string` because struct members are typically read for their string content, regardless of const qualification.
+
+If a specific function needs a different type mapping, use [`symbols: overrides:`](configuration.md#symbols) to replace the generated signature.
+
 ## Examples
 
 The test suite includes bindings generated from some popular C libraries:

@@ -230,7 +230,7 @@ module Proj::Api
   attach_function :proj_context_create, :proj_context_create, [], :pointer
   attach_function :proj_context_destroy, :proj_context_destroy, [:pointer], :pointer
   attach_function :proj_context_clone, :proj_context_clone, [:pointer], :pointer
-  callback :proj_file_finder, [], :string
+  callback :proj_file_finder, [], :pointer
   attach_function :proj_context_set_file_finder, :proj_context_set_file_finder, [:pointer, :pointer, :pointer], :void
   attach_function :proj_context_set_search_paths, :proj_context_set_search_paths, [:pointer, :int, :pointer], :void
   attach_function :proj_context_set_ca_bundle_path, :proj_context_set_ca_bundle_path, [:pointer, :string], :void
@@ -274,7 +274,7 @@ module Proj::Api
   typedef :pointer, :ProjNetworkHandle
   callback :proj_network_open_cbk_type, [], :pointer
   callback :proj_network_close_cbk_type, [], :void
-  callback :proj_network_get_header_value_cbk_type, [], :string
+  callback :proj_network_get_header_value_cbk_type, [], :pointer
   callback :proj_network_read_range_type, [], :ulong
   attach_function :proj_context_set_network_callbacks, :proj_context_set_network_callbacks, [:pointer, :pointer, :pointer, :pointer, :pointer, :pointer], :int
   attach_function :proj_context_set_enable_network, :proj_context_set_enable_network, [:pointer, :int], :int
@@ -462,9 +462,9 @@ module Proj::Api
   )
 
   class ProjCrsInfo < FFI::Struct
-    layout :auth_name, :pointer,
-           :code, :pointer,
-           :name, :pointer,
+    layout :auth_name, :string,
+           :code, :string,
+           :name, :string,
            :type, PjType,
            :deprecated, :int,
            :bbox_valid, :int,
@@ -472,9 +472,9 @@ module Proj::Api
            :south_lat_degree, :double,
            :east_lon_degree, :double,
            :north_lat_degree, :double,
-           :area_name, :pointer,
-           :projection_method_name, :pointer,
-           :celestial_body_name, :pointer
+           :area_name, :string,
+           :projection_method_name, :string,
+           :celestial_body_name, :string
   end
 
   class ProjCrsListParameters < FFI::Struct
@@ -491,18 +491,18 @@ module Proj::Api
   end
 
   class ProjUnitInfo < FFI::Struct
-    layout :auth_name, :pointer,
-           :code, :pointer,
-           :name, :pointer,
-           :category, :pointer,
+    layout :auth_name, :string,
+           :code, :string,
+           :name, :string,
+           :category, :string,
            :conv_factor, :double,
-           :proj_short_name, :pointer,
+           :proj_short_name, :string,
            :deprecated, :int
   end
 
   class ProjCelestialBodyInfo < FFI::Struct
-    layout :auth_name, :pointer,
-           :name, :pointer
+    layout :auth_name, :string,
+           :name, :string
   end
 
   typedef :pointer, :PjObjList
@@ -625,10 +625,10 @@ module Proj::Api
   )
 
   class PjAxisDescription < FFI::Struct
-    layout :name, :pointer,
-           :abbreviation, :pointer,
-           :direction, :pointer,
-           :unit_name, :pointer,
+    layout :name, :string,
+           :abbreviation, :string,
+           :direction, :string,
+           :unit_name, :string,
            :unit_conv_factor, :double,
            :unit_type, PjUnitType
   end

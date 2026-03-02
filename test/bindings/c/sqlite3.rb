@@ -508,7 +508,7 @@ module Sqlite3
   callback :sqlite3_vfs_xCurrentTimeInt64_callback, [:pointer, :pointer], :int
   callback :sqlite3_vfs_xSetSystemCall_callback, [:pointer, :string, :pointer], :int
   callback :sqlite3_vfs_xGetSystemCall_callback, [:pointer, :string], :pointer
-  callback :sqlite3_vfs_xNextSystemCall_callback, [:pointer, :string], :string
+  callback :sqlite3_vfs_xNextSystemCall_callback, [:pointer, :string], :pointer
 
   class Sqlite3Vfs < FFI::Struct
     layout :i_version, :int,
@@ -890,7 +890,7 @@ module Sqlite3
            :a_order_by, Sqlite3IndexOrderby.ptr,
            :a_constraint_usage, Sqlite3IndexConstraintUsage.ptr,
            :idx_num, :int,
-           :idx_str, :pointer,
+           :idx_str, :string,
            :need_to_free_idx_str, :int,
            :order_by_consumed, :int,
            :estimated_cost, :double,
@@ -907,7 +907,7 @@ module Sqlite3
   class Sqlite3Vtab < FFI::Struct
     layout :p_module, :pointer,
            :n_ref, :int,
-           :z_err_msg, :pointer
+           :z_err_msg, :string
   end
 
   class Sqlite3VtabCursor < FFI::Struct
