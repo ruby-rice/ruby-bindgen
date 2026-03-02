@@ -134,17 +134,6 @@ module Proj
              :lp, PjLp
     end
 
-    class PjInfo < FFI::Struct
-      layout :major, :int,
-             :minor, :int,
-             :patch, :int,
-             :release, :string,
-             :version, :string,
-             :searchpath, :string,
-             :paths, :pointer,
-             :path_count, :ulong
-    end
-
     class PjProjInfo < FFI::Struct
       layout :id, :string,
              :description, :string,
@@ -253,7 +242,6 @@ module Proj
     attach_function :proj_create_argv, :proj_create_argv, [:pointer, :int, :pointer], :pointer
     attach_function :proj_create_crs_to_crs, :proj_create_crs_to_crs, [:pointer, :string, :string, :pointer], :pointer
     attach_function :proj_create_crs_to_crs_from_pj, :proj_create_crs_to_crs_from_pj, [:pointer, :pointer, :pointer, :pointer, :pointer], :pointer
-    attach_function :proj_normalize_for_visualization, :proj_normalize_for_visualization, [:pointer, :pointer], :pointer
     attach_function :proj_assign_context, :proj_assign_context, [:pointer, :pointer], :void
     attach_function :proj_destroy, :proj_destroy, [:pointer], :pointer
     attach_function :proj_area_create, :proj_area_create, [], :pointer
@@ -290,11 +278,9 @@ module Proj
     attach_function :proj_errno_reset, :proj_errno_reset, [:pointer], :int
     attach_function :proj_errno_restore, :proj_errno_restore, [:pointer, :int], :int
     attach_function :proj_errno_string, :proj_errno_string, [:int], :string
-    attach_function :proj_context_errno_string, :proj_context_errno_string, [:pointer, :int], :string
     attach_function :proj_log_level, :proj_log_level, [:pointer, PjLogLevel], PjLogLevel
     attach_function :proj_log_func, :proj_log_func, [:pointer, :pointer, :pj_log_function], :void
     attach_function :proj_factors, :proj_factors, [:pointer, PjCoord.by_value], P5Factors.by_value
-    attach_function :proj_info, :proj_info, [], PjInfo.by_value
     attach_function :proj_pj_info, :proj_pj_info, [:pointer], PjProjInfo.by_value
     attach_function :proj_grid_info, :proj_grid_info, [:string], PjGridInfo.by_value
     attach_function :proj_init_info, :proj_init_info, [:string], PjInitInfo.by_value
@@ -305,7 +291,6 @@ module Proj
     attach_function :proj_todeg, :proj_todeg, [:double], :double
     attach_function :proj_dmstor, :proj_dmstor, [:string, :pointer], :double
     attach_function :proj_rtodms2, :proj_rtodms2, [:pointer, :ulong, :double, :int, :int], :pointer
-    attach_function :proj_cleanup, :proj_cleanup, [], :void
     typedef :pointer, :proj_string_list
 
     PjGuessedWktDialect = enum(
@@ -721,5 +706,14 @@ module Proj
     attach_function :proj_create_conversion_vertical_perspective, :proj_create_conversion_vertical_perspective, [:pointer, :double, :double, :double, :double, :double, :double, :string, :double, :string, :double], :pointer
     attach_function :proj_create_conversion_pole_rotation_grib_convention, :proj_create_conversion_pole_rotation_grib_convention, [:pointer, :double, :double, :double, :string, :double], :pointer
     attach_function :proj_create_conversion_pole_rotation_netcdf_cf_convention, :proj_create_conversion_pole_rotation_netcdf_cf_convention, [:pointer, :double, :double, :double, :string, :double], :pointer
+    if proj_version >= 60100
+      attach_function :proj_normalize_for_visualization, :proj_normalize_for_visualization, [:pointer, :pointer], :pointer
+    end
+    if proj_version >= 60200
+      attach_function :proj_cleanup, :proj_cleanup, [], :void
+    end
+    if proj_version >= 80000
+      attach_function :proj_context_errno_string, :proj_context_errno_string, [:pointer, :int], :string
+    end
   end
 end

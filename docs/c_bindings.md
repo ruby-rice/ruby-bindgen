@@ -244,22 +244,38 @@ When `symbols.versions` has entries, `ruby-bindgen` generates version-guarded Ru
 
 ### Configuration
 
+This example is from [proj4rb](https://github.com/cfis/proj4rb), Ruby bindings for the [PROJ](https://proj.org/) coordinate transformation library. PROJ's API has grown significantly across versions — `proj_normalize_for_visualization` was added in 6.1.0, `proj_cleanup` in 6.2.0, and so on.
+
 ```yaml
 format: FFI
 project: proj
+module: Proj::Api
+
 library_names:
   - proj
 
 symbols:
   skip:
-    - proj_info          # manually used in version file
-    - PJ_INFO            # manually used in version file
+    - PJ_INFO       # manually defined in version file
+    - proj_info      # manually defined in version file
+
   versions:
-    90400:
+    # 6.1.0
+    60100:
       - proj_normalize_for_visualization
+
+    # 6.2.0
+    60200:
+      - proj_cleanup
+      - proj_as_projjson
+      - proj_create_crs_to_crs_from_pj
+
+    # 8.0.0
+    80000:
+      - proj_context_errno_string
 ```
 
-Since the version file manually calls `proj_info()` and uses `PJ_INFO`, add those symbols to `skip` so they aren't defined twice — once in the generated content file and once in the version file.
+The version file calls `proj_info()` and uses `PJ_INFO` to compute the runtime version number. Since those symbols are manually defined in the version file, add them to `skip` so they aren't also generated in the content files.
 
 ### Generated Output
 
@@ -268,8 +284,11 @@ The generator produces three things:
 **1. Version guards in content files** — version-specific symbols are wrapped in conditionals:
 
 ```ruby
-if proj_version >= 90400
+if proj_version >= 60100
   attach_function :proj_normalize_for_visualization, ...
+end
+if proj_version >= 60200
+  attach_function :proj_cleanup, :proj_cleanup, [], :void
 end
 ```
 
@@ -296,13 +315,11 @@ end
 
 ### Implementing Version Detection
 
-Replace the skeleton with your library's version API. For PROJ, `proj_info()` returns a struct with `major`, `minor`, and `patch` fields:
+Replace the skeleton with your library's version API. PROJ provides `proj_info()` which returns a `PJ_INFO` struct with `major`, `minor`, and `patch` fields. Since the version file is loaded before the generated content files, define the struct and function here:
 
 ```ruby
 module Proj
   module Api
-    # These are needed by proj_version below, so define them before
-    # the generated content files are loaded.
     class PjInfo < FFI::Struct
       layout :major, :int,
              :minor, :int,
@@ -324,7 +341,7 @@ module Proj
 end
 ```
 
-The version file is loaded before the content files, so the `proj_version` method is available when the guards execute. The skeleton is only generated if the file doesn't already exist — your implementation is preserved across re-runs.
+The version file is loaded before the content files, so `proj_version` is available when the guards execute. The skeleton is only generated if the file doesn't already exist — your implementation is preserved across re-runs.
 
 ## Constants and Macros
 

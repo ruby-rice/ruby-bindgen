@@ -21,7 +21,11 @@ class FfiTest < AbstractTest
   def test_proj
     run_ffi_test(["proj.h", "proj_experimental.h"], project: "proj",
       library_names: ["proj"], library_versions: [], module: "Proj::Api",
-      symbols: { overrides: { "proj_is_crs" => "[:pointer], :bool" } })
+      symbols: { skip: ["PJ_INFO", "proj_info"],
+                 versions: { 60100 => ["proj_normalize_for_visualization"],
+                             60200 => ["proj_cleanup"],
+                             80000 => ["proj_context_errno_string"] },
+                 overrides: { "proj_is_crs" => "[:pointer], :bool" } })
   end
 
   def test_sqlite3

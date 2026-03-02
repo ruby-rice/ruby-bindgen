@@ -193,19 +193,24 @@ For **FFI** (C), the generator wraps version-specific symbols in `if {project}_v
 format: FFI
 project: proj
 symbols:
+  skip:
+    - PJ_INFO       # manually defined in version file
+    - proj_info      # manually defined in version file
   versions:
-    90400:
+    60100:
       - proj_normalize_for_visualization
+    60200:
+      - proj_cleanup
 ```
 
 This generates:
 ```ruby
-if proj_version >= 90400
+if proj_version >= 60100
   attach_function :proj_normalize_for_visualization, ...
 end
 ```
 
-See [Version Guards](version_guards.md) for the Rice guide.
+See [Version Guards](version_guards.md) for the Rice guide and [Version Detection](c_bindings.md#version-detection) for a full FFI example.
 
 ### Overrides (FFI only)
 
