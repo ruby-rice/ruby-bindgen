@@ -266,7 +266,9 @@ module RubyBindgen
             end
           when :type_pointer
             if cursor.underlying_type.function?
-              return self.visit_callback(cursor.ruby_name, cursor.find_by_kind(false, :cursor_parameter_decl), cursor.underlying_type.pointee)
+              func_type = cursor.underlying_type.pointee
+              parameter_types = (0...func_type.args_size).map { |i| figure_ffi_type(func_type.arg_type(i), :callback) }
+              return render_callback(cursor.ruby_name, parameter_types, func_type.result_type)
             end
         end
         render_cursor(cursor, "typedef_decl")
@@ -385,7 +387,10 @@ module RubyBindgen
       def figure_ffi_elaborated_type(type, context = nil)
         if type.declaration.spelling == "va_list"
           ":varargs"
-        elsif type.canonical.is_a?(::FFI::Clang::Types::Function)
+        elsif type.canonical.kind == :type_pointer && type.canonical.function?
+          # Typedef'd function pointer (callback) — use the callback name
+          ":#{type.declaration.ruby_name}"
+        elsif type.canonical.kind == :type_function_proto
           ":pointer"
         elsif type.canonical.kind == :type_record
           if type.canonical.declaration.opaque_declaration?

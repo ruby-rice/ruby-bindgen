@@ -224,13 +224,13 @@ module Proj
       :PJ_LOG_DEBUG_MINOR, 3
     )
 
-    callback :pj_log_function, [], :void
+    callback :pj_log_function, [:pointer, :int, :string], :void
     typedef :pointer, :PjCtx
     attach_function :proj_context_create, :proj_context_create, [], :pointer
     attach_function :proj_context_destroy, :proj_context_destroy, [:pointer], :pointer
     attach_function :proj_context_clone, :proj_context_clone, [:pointer], :pointer
-    callback :proj_file_finder, [], :pointer
-    attach_function :proj_context_set_file_finder, :proj_context_set_file_finder, [:pointer, :pointer, :pointer], :void
+    callback :proj_file_finder, [:pointer, :string, :pointer], :pointer
+    attach_function :proj_context_set_file_finder, :proj_context_set_file_finder, [:pointer, :proj_file_finder, :pointer], :void
     attach_function :proj_context_set_search_paths, :proj_context_set_search_paths, [:pointer, :int, :pointer], :void
     attach_function :proj_context_set_ca_bundle_path, :proj_context_set_ca_bundle_path, [:pointer, :string], :void
     attach_function :proj_context_use_proj4_init_rules, :proj_context_use_proj4_init_rules, [:pointer, :int], :void
@@ -271,11 +271,11 @@ module Proj
     attach_function :proj_context_set_fileapi, :proj_context_set_fileapi, [:pointer, ProjFileApi.by_ref, :pointer], :int
     attach_function :proj_context_set_sqlite3_vfs_name, :proj_context_set_sqlite3_vfs_name, [:pointer, :string], :void
     typedef :pointer, :ProjNetworkHandle
-    callback :proj_network_open_cbk_type, [], :pointer
-    callback :proj_network_close_cbk_type, [], :void
-    callback :proj_network_get_header_value_cbk_type, [], :pointer
-    callback :proj_network_read_range_type, [], :ulong
-    attach_function :proj_context_set_network_callbacks, :proj_context_set_network_callbacks, [:pointer, :pointer, :pointer, :pointer, :pointer, :pointer], :int
+    callback :proj_network_open_cbk_type, [:pointer, :string, :ulong_long, :ulong, :pointer, :pointer, :ulong, :pointer, :pointer], :pointer
+    callback :proj_network_close_cbk_type, [:pointer, :pointer, :pointer], :void
+    callback :proj_network_get_header_value_cbk_type, [:pointer, :pointer, :string, :pointer], :pointer
+    callback :proj_network_read_range_type, [:pointer, :pointer, :ulong_long, :ulong, :pointer, :ulong, :pointer, :pointer], :ulong
+    attach_function :proj_context_set_network_callbacks, :proj_context_set_network_callbacks, [:pointer, :proj_network_open_cbk_type, :proj_network_close_cbk_type, :proj_network_get_header_value_cbk_type, :proj_network_read_range_type, :pointer], :int
     attach_function :proj_context_set_enable_network, :proj_context_set_enable_network, [:pointer, :int], :int
     attach_function :proj_context_is_network_enabled, :proj_context_is_network_enabled, [:pointer], :int
     attach_function :proj_context_set_url_endpoint, :proj_context_set_url_endpoint, [:pointer, :string], :void
@@ -333,7 +333,7 @@ module Proj
     attach_function :proj_errno_string, :proj_errno_string, [:int], :string
     attach_function :proj_context_errno_string, :proj_context_errno_string, [:pointer, :int], :string
     attach_function :proj_log_level, :proj_log_level, [:pointer, PjLogLevel], PjLogLevel
-    attach_function :proj_log_func, :proj_log_func, [:pointer, :pointer, :pointer], :void
+    attach_function :proj_log_func, :proj_log_func, [:pointer, :pointer, :pj_log_function], :void
     attach_function :proj_factors, :proj_factors, [:pointer, PjCoord.by_value], P5Factors.by_value
     attach_function :proj_info, :proj_info, [], PjInfo.by_value
     attach_function :proj_pj_info, :proj_pj_info, [:pointer], PjProjInfo.by_value

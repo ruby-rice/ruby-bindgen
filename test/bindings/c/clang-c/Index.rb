@@ -893,8 +893,8 @@ module Index
     :CXChildVisit_Recurse, 2
   )
 
-  callback :cx_cursor_visitor, [], CXChildVisitResult
-  attach_function :clang_visit_children, :clang_visitChildren, [CXCursor.by_value, :pointer, :pointer], :uint
+  callback :cx_cursor_visitor, [CXCursor.by_value, CXCursor.by_value, :pointer], CXChildVisitResult
+  attach_function :clang_visit_children, :clang_visitChildren, [CXCursor.by_value, :cx_cursor_visitor, :pointer], :uint
   typedef :pointer, :cx_cursor_visitor_block
   attach_function :clang_visit_children_with_block, :clang_visitChildrenWithBlock, [CXCursor.by_value, :pointer], :uint
   attach_function :clang_get_cursor_usr, :clang_getCursorUSR, [CXCursor.by_value], CXString.by_value
@@ -1154,8 +1154,8 @@ module Index
   attach_function :clang_code_complete_get_obj_c_selector, :clang_codeCompleteGetObjCSelector, [CXCodeCompleteResults.by_ref], CXString.by_value
   attach_function :clang_get_clang_version, :clang_getClangVersion, [], CXString.by_value
   attach_function :clang_toggle_crash_recovery, :clang_toggleCrashRecovery, [:uint], :void
-  callback :cx_inclusion_visitor, [], :void
-  attach_function :clang_get_inclusions, :clang_getInclusions, [:pointer, :pointer, :pointer], :void
+  callback :cx_inclusion_visitor, [:pointer, CXSourceLocation.by_ref, :uint, :pointer], :void
+  attach_function :clang_get_inclusions, :clang_getInclusions, [:pointer, :cx_inclusion_visitor, :pointer], :void
 
   CXEvalResultKind = enum(
     :CXEval_Int, 1,
@@ -1466,8 +1466,8 @@ module Index
   attach_function :clang_index_translation_unit, :clang_indexTranslationUnit, [:pointer, :pointer, IndexerCallbacks.by_ref, :uint, :uint, :pointer], :int
   attach_function :clang_index_loc_get_file_location, :clang_indexLoc_getFileLocation, [CXIdxLoc.by_value, :pointer, :pointer, :pointer, :pointer, :pointer], :void
   attach_function :clang_index_loc_get_cx_source_location, :clang_indexLoc_getCXSourceLocation, [CXIdxLoc.by_value], CXSourceLocation.by_value
-  callback :cx_field_visitor, [], CXVisitorResult
-  attach_function :clang_type_visit_fields, :clang_Type_visitFields, [CXType.by_value, :pointer, :pointer], :uint
+  callback :cx_field_visitor, [CXCursor.by_value, :pointer], CXVisitorResult
+  attach_function :clang_type_visit_fields, :clang_Type_visitFields, [CXType.by_value, :cx_field_visitor, :pointer], :uint
 
   CXBinaryOperatorKind = enum(
     :CXBinaryOperator_Invalid, 0,

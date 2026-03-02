@@ -438,7 +438,7 @@ module Sqlite3
   typedef :ulong_long, :sqlite_uint64
   attach_function :sqlite3_close, :sqlite3_close, [:pointer], :int
   attach_function :sqlite3_close_v2, :sqlite3_close_v2, [:pointer], :int
-  callback :sqlite3_callback, [], :int
+  callback :sqlite3_callback, [:pointer, :int, :pointer, :pointer], :int
   callback :sqlite3_exec_callback_callback, [:pointer, :int, :pointer, :pointer], :int
   attach_function :sqlite3_exec, :sqlite3_exec, [:pointer, :string, :sqlite3_exec_callback_callback, :pointer, :pointer], :int
 
@@ -504,8 +504,8 @@ module Sqlite3
   callback :sqlite3_vfs_xCurrentTime_callback, [:pointer, :pointer], :int
   callback :sqlite3_vfs_xGetLastError_callback, [:pointer, :int, :pointer], :int
   callback :sqlite3_vfs_xCurrentTimeInt64_callback, [:pointer, :pointer], :int
-  callback :sqlite3_vfs_xSetSystemCall_callback, [:pointer, :string, :pointer], :int
-  callback :sqlite3_vfs_xGetSystemCall_callback, [:pointer, :string], :pointer
+  callback :sqlite3_vfs_xSetSystemCall_callback, [:pointer, :string, :sqlite3_syscall_ptr], :int
+  callback :sqlite3_vfs_xGetSystemCall_callback, [:pointer, :string], :sqlite3_syscall_ptr
   callback :sqlite3_vfs_xNextSystemCall_callback, [:pointer, :string], :pointer
 
   class Sqlite3Vfs < FFI::Struct
@@ -734,7 +734,7 @@ module Sqlite3
   attach_function :sqlite3_get_clientdata, :sqlite3_get_clientdata, [:pointer, :string], :pointer
   callback :sqlite3_set_clientdata__callback, [:pointer], :void
   attach_function :sqlite3_set_clientdata, :sqlite3_set_clientdata, [:pointer, :string, :pointer, :sqlite3_set_clientdata__callback], :int
-  callback :sqlite3_destructor_type, [], :void
+  callback :sqlite3_destructor_type, [:pointer], :void
   callback :sqlite3_result_blob__callback, [:pointer], :void
   attach_function :sqlite3_result_blob, :sqlite3_result_blob, [:pointer, :pointer, :int, :sqlite3_result_blob__callback], :void
   callback :sqlite3_result_blob64__callback, [:pointer], :void
@@ -1117,7 +1117,7 @@ module Sqlite3
   end
 
   typedef :pointer, :Fts5Context
-  callback :fts5_extension_function, [], :void
+  callback :fts5_extension_function, [Fts5ExtensionApi.by_ref, :pointer, :pointer, :int, :pointer], :void
 
   class Fts5PhraseIter < FFI::Struct
     layout :a, :pointer,
@@ -1184,7 +1184,7 @@ module Sqlite3
 
   callback :fts5_api_xCreateTokenizer_callback, [:pointer, :string, :pointer, :pointer, :pointer], :int
   callback :fts5_api_xFindTokenizer_callback, [:pointer, :string, :pointer, :pointer], :int
-  callback :fts5_api_xCreateFunction_callback, [:pointer, :string, :pointer, :pointer, :pointer], :int
+  callback :fts5_api_xCreateFunction_callback, [:pointer, :string, :pointer, :fts5_extension_function, :pointer], :int
 
   class Fts5Api < FFI::Struct
     layout :i_version, :int,
