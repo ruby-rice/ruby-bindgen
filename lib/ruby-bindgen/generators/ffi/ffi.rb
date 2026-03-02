@@ -170,17 +170,6 @@ module RubyBindgen
         self.render_callback(name, parameter_types, type.result_type)
       end
 
-      def visit_macro_definition(cursor)
-        tokens = cursor.translation_unit.tokenize(cursor.extent)
-        return unless tokens.size == 2
-        return unless tokens.tokens[0].kind == :identifier
-        return unless tokens.tokens[1].kind == :literal
-
-        self.render_cursor(cursor, "macro_definition",
-                           :name => tokens.tokens[0].spelling,
-                           :value => tokens.tokens[1].spelling)
-      end
-
       def visit_enum_decl(cursor)
         return if @symbols.skip?(cursor)
 

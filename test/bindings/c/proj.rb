@@ -1,12 +1,5 @@
 module Proj
   module Api
-    PROJ_VERSION_MAJOR = 9
-    PROJ_VERSION_MINOR = 6
-    PROJ_VERSION_PATCH = 2
-    PJ_DEFAULT_CTX = 0
-    PROJ_ERR_INVALID_OP = 1024
-    PROJ_ERR_COORD_TRANSFM = 2048
-    PROJ_ERR_OTHER = 4096
     attach_variable :PjRelease, :pj_release, :string
     typedef :pointer, :PjArea
 

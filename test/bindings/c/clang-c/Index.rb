@@ -1,6 +1,4 @@
 module Index
-  CINDEX_VERSION_MAJOR = 0
-  CINDEX_VERSION_MINOR = 64
   typedef :pointer, :cx_index
   typedef :pointer, :cx_target_info
   typedef :pointer, :cx_translation_unit

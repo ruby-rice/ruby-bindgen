@@ -1,5 +1,4 @@
 module VersionGuards
-  TEST_VERSION = 25000
   attach_function :stable_function, :stableFunction, [:int], :int
 
   class StableStruct < FFI::Struct
