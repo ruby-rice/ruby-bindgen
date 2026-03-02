@@ -2,7 +2,7 @@
 
 Wrapping C and C++ libraries by hand is a long, arduous task. For large, complex libraries it can take months. As a result, many C/C++ libraries are either never exposed to Ruby or their bindings quickly become outdated, especially in scientific and technical domains.
 
-`ruby-bindgen` and its ecosystem solve this problem by automating binding generation. For simpler libraries, it should be able to generate fully working bindings while complex libraries may require some [customization](cpp/customizing.md).
+`ruby-bindgen` and its ecosystem solve this problem by automating binding generation. For simpler libraries, it should be able to generate fully working bindings while complex libraries may require some [customization](#customization).
 
 As an example, there used to be hand-crafted Ruby [bindings](https://github.com/ruby-opencv/ruby-opencv) for [OpenCV](https://opencv.org/). However, they were based on the C API which was subsequently remove by the OpenCV project. `ruby-bindgen` was used to create new [bindings](https://github.com/cfis/opencv-ruby) based on the new C++ API. The bindings wrap over [1,000](https://cfis.github.io/opencv-ruby/) C++ classes and almost [10,000](https://cfis.github.io/opencv-ruby/) method calls. Imagine having to do that by hand!
 
@@ -107,3 +107,14 @@ ruby-bindgen rice-bindings.yaml
 - Enum values: `snake_case` symbols (FFI) or scoped constants (Rice)
 
 In addition, methods that return boolean values have `?` appended to their names and `is_` removed if present. For example, `is_open` becomes `open?`.
+
+## Customization
+
+Out of the box, `ruby-bindgen` applies sensible defaults and heuristics. For most libraries you will need to fine-tune the output. The [configuration](configuration.md) file provides several knobs:
+
+- **[Symbol filtering](configuration.md#symbols)** — skip functions, structs, or enums by name or regex pattern. Useful for internal APIs, linker-error symbols, or platform-specific code.
+- **[Symbol overrides](configuration.md#overrides-ffi-only)** (FFI) — replace a generated function signature when the heuristics pick the wrong type (e.g., `int` → `:bool`, `ulong` → `:size_t`).
+- **[Version guards](configuration.md#versions)** — wrap symbols in `#if VERSION >= N` preprocessor guards so bindings compile against multiple library versions.
+- **[Name mappings](configuration.md#name-mappings)** — override generated Ruby class and method names with exact strings or regex patterns with capture-group substitution.
+- **[Export macros](configuration.md#export-macros)** — only include functions marked with specific visibility macros (e.g., `CV_EXPORTS`), preventing linker errors from internal symbols.
+- **[Module naming](configuration.md#c-ffi-options)** (FFI) — set the Ruby module name, including nested modules like `Proj::Api`.

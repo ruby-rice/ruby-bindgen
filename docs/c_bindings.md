@@ -115,7 +115,44 @@ C uses `char *` for both strings and raw memory buffers. `ruby-bindgen` uses con
 - **`char *`** typically indicates a caller-allocated buffer (e.g., `char *buf, size_t buf_size`), so `:pointer` is correct — the caller creates the buffer with `FFI::MemoryPointer.new`.
 - **Callback returns** always use `:pointer` regardless of const because FFI cannot manage the lifetime of callback-returned strings.
 
-If a specific function needs a different type mapping, use [`symbols: overrides:`](configuration.md#symbols) to replace the generated signature.
+If a specific function needs a different type mapping, use [`symbols: overrides:`](configuration.md#overrides-ffi-only) to replace the generated signature.
+
+## Struct Pointer Types
+
+When a function parameter is a pointer to a struct, `ruby-bindgen` generates `StructName.by_ref`. This is correct for the common case of passing a single struct by pointer:
+
+```c
+int proj_get_area_of_use(PJ *obj, double *west, ...);
+// → attach_function :proj_get_area_of_use, ..., [:pointer, :pointer, ...], :int
+```
+
+However, `.by_ref` is **wrong** when the pointer is actually an array of structs. `ruby-bindgen` cannot distinguish these cases from the C signature alone — both are just `SomeStruct *`. Two common patterns:
+
+**Array parameters** — a count parameter precedes the struct pointer:
+
+```c
+PJ *proj_create_conversion(PJ_CONTEXT *ctx, ..., int param_count,
+                            const PJ_PARAM_DESCRIPTION *params);
+```
+
+Here `params` points to an array of `param_count` structs. The caller allocates the array with `FFI::MemoryPointer` and writes structs into it.
+
+**Array returns** — a function returns a pointer to a statically-allocated or heap-allocated array of structs:
+
+```c
+const PJ_OPERATIONS *proj_list_operations(void);
+```
+
+This returns a NULL-terminated array of `PJ_OPERATIONS` structs, not a single struct. The caller iterates the array by advancing the pointer.
+
+Use [`symbols: overrides:`](configuration.md#overrides-ffi-only) to fix these:
+
+```yaml
+symbols:
+  overrides:
+    proj_create_conversion: "[:pointer, :string, :string, :string, :string, :string, :string, :int, :pointer], :pointer"
+    proj_list_operations: "[], :pointer"
+```
 
 ## Examples
 
@@ -164,12 +201,25 @@ This generates search names like `libproj.so.25`, `libproj.so.22`, etc. on Linux
 
 If `library_versions` is omitted, only the unversioned name is searched. This works on most systems where the package manager creates an unversioned symlink (e.g., `libproj.so` → `libproj.so.25`).
 
-## Filtering
+## Module Name
 
-`ruby-bindgen` can filter which symbols are included in the generated bindings:
+By default, the generated Ruby module is named after the header file (e.g., `proj.h` → `module Proj`). Use the [`module`](configuration.md#c-ffi-options) option to override this, including nested modules:
 
-- [`symbols`](configuration.md#symbols) - Skip specific functions, structs, enums, or typedefs by name or regex pattern
-- [`export_macros`](configuration.md#export-macros) - Only include functions marked with specific visibility macros
+```yaml
+module: Proj::Api
+```
+
+This generates properly nested `module Proj` / `module Api` with correct indentation.
+
+## Customization
+
+`ruby-bindgen` can customize the generated bindings in several ways:
+
+- [`symbols: skip:`](configuration.md#skip) — exclude specific functions, structs, enums, or typedefs by name or regex pattern
+- [`symbols: overrides:`](configuration.md#overrides-ffi-only) — replace the generated signature for specific functions when the heuristics pick the wrong FFI type
+- [`export_macros`](configuration.md#export-macros) — only include functions marked with specific visibility macros
+- [`rename_types`](configuration.md#name-mappings) — override generated Ruby module/class names
+- [`rename_methods`](configuration.md#name-mappings) — override generated Ruby method names
 
 ## Constants and Macros
 

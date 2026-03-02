@@ -12,8 +12,10 @@ However, complex libraries may require some customization. Customizations fall i
 
 Some issues are best solved via the [configuration](../configuration.md) file rather than editing generated code:
 
-- Skip symbols: Functions that cause linker errors or aren’t meant for external use can be added to [`symbols`](../configuration.md#symbols) with `action: skip`
-- Export macros: Use [`export_macros`](../configuration.md#export-macros) to limit bindings to exported symbols, preventing linker errors from internal functions
+- [Symbol filtering](../configuration.md#skip): Skip functions that cause linker errors or aren’t meant for external use by name or regex pattern
+- [Version guards](../configuration.md#versions): Wrap symbols in `#if VERSION >= N` guards so bindings compile against multiple library versions
+- [Export macros](../configuration.md#export-macros): Limit bindings to exported symbols, preventing linker errors from internal functions
+- [Name mappings](../configuration.md#name-mappings): Override generated Ruby class and method names with exact strings or regex patterns
 
 ## Refinements
 
