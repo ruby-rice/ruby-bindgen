@@ -103,6 +103,19 @@ module RubyBindgen
         qualified_names.each do |qn|
           candidates << "#{qn}(#{param_types})"
         end
+
+        # Also try canonical arg type spellings for better namespace qualification.
+        # Clang may spell arg types without namespace (e.g., "Mat" instead of "cv::Mat")
+        # when the type is in the same namespace as the function. Canonical spellings
+        # use fully qualified names.
+        canonical_param_types = (0...cursor.type.args_size).map { |i| cursor.type.arg_type(i).canonical.spelling }.join(", ")
+        if canonical_param_types != param_types
+          candidates << "#{cursor.spelling}(#{canonical_param_types})"
+          qualified_names.each do |qn|
+            candidate = "#{qn}(#{canonical_param_types})"
+            candidates << candidate unless candidates.include?(candidate)
+          end
+        end
       end
 
       if ENV['BINDGEN_DEBUG_SYMBOLS']

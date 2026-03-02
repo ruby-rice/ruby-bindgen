@@ -48,4 +48,10 @@ void Init_Filtering()
   Rice::Data_Type<Outer::GuardedClass> rb_cOuterGuardedClass = define_class_under<Outer::GuardedClass>(rb_mOuterGuardV1, "GuardedClass")
     .define_constructor(Constructor<Outer::guard_v1::GuardedClass>())
     .define_method<void(Outer::guard_v1::GuardedClass::*)()>("normal_method", &Outer::guard_v1::GuardedClass::normalMethod);
+  Rice::Data_Type<Outer::MyParam> rb_cOuterMyParam = define_class_under<Outer::MyParam>(rb_mOuter, "MyParam")
+    .define_constructor(Constructor<Outer::MyParam>())
+    .define_attr("value", &Outer::MyParam::value);
+  Rice::Data_Type<Outer::ConstructorWithNsParam> rb_cOuterConstructorWithNsParam = define_class_under<Outer::ConstructorWithNsParam>(rb_mOuter, "ConstructorWithNsParam")
+    .define_constructor(Constructor<Outer::ConstructorWithNsParam>())
+    .define_method<void(Outer::ConstructorWithNsParam::*)()>("do_work", &Outer::ConstructorWithNsParam::doWork);
 }

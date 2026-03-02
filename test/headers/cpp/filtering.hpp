@@ -203,4 +203,27 @@ namespace Outer
       void normalMethod();
     };
   }
+
+  // --- Namespace-qualified parameter type tests ---
+  // When a constructor takes a same-namespace type, clang may spell
+  // the arg type without the namespace (e.g., "MyParam" instead of "Outer::MyParam").
+  // The skip entry uses the fully qualified form, so we need to match both.
+
+  class MY_EXPORT MyParam
+  {
+  public:
+    int value;
+  };
+
+  class MY_EXPORT ConstructorWithNsParam
+  {
+  public:
+    ConstructorWithNsParam();
+
+    // SKIP via "Outer::ConstructorWithNsParam::ConstructorWithNsParam(const Outer::MyParam*)"
+    // Clang will spell this as "const MyParam *" (unqualified) in arg_type
+    ConstructorWithNsParam(const MyParam* param);
+
+    void doWork();
+  };
 }
