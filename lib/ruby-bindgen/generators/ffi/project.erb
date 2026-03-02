@@ -9,6 +9,9 @@ require 'ffi'
 <%= "  " * i %>end
 <% end -%>
 
+<% if version_file -%>
+require_relative '<%= version_file %>'
+<% end -%>
 <% files.each do |file| -%>
 require_relative '<%= file %>'
 <% end -%>

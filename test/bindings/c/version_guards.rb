@@ -12,7 +12,7 @@ module VersionGuards
   )
 
   typedef :int, :stable_typedef
-  if TEST_VERSION >= 20000
+  if version_guards_version >= 20000
     attach_function :new_function, :newFunction, [:double], :void
 
     class NewStruct < FFI::Struct
@@ -27,7 +27,7 @@ module VersionGuards
 
     typedef :double, :new_typedef
   end
-  if TEST_VERSION >= 30000
+  if version_guards_version >= 30000
     attach_function :future_function, :futureFunction, [:int, :int], :int
   end
 end

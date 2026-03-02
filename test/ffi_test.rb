@@ -32,7 +32,6 @@ class FfiTest < AbstractTest
   def test_version_guards
     run_ffi_test("version_guards.h", project: "version_guards",
       library_names: ["version_guards"], library_versions: [],
-      version_macro: "TEST_VERSION",
       symbols: { versions: { 20000 => ["newFunction", "NewStruct", "NewEnum", "NewTypedef"],
                               30000 => ["futureFunction"] } })
   end

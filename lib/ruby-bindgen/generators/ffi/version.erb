@@ -1,0 +1,7 @@
+<% module_parts.each_with_index do |part, i| -%>
+<%= "  " * i %>module <%= part %>
+<% end -%>
+<%= method_body %>
+<% (module_parts.length - 1).downto(0) do |i| -%>
+<%= "  " * i %>end
+<% end -%>

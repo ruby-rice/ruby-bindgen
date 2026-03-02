@@ -10,10 +10,10 @@ module RubyBindgen
       def initialize(inputter, outputter, config)
         super(inputter, outputter, config)
         raise ArgumentError, "FFI format requires the 'project' option" unless @project
+        raise ArgumentError, "FFI format does not support 'version_macro'. Version detection uses a runtime method instead. See docs/c_bindings.md#version-detection" if config[:version_macro]
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
-        @version_macro = config[:version_macro]
         @export_macros = config[:export_macros] || []
         @module_name = config[:module]
         @indentation = 0
@@ -78,12 +78,34 @@ module RubyBindgen
         depth = module_parts.length
         library = add_indentation(render_template("library"), depth * 2)
 
+        symbols_config = @config[:symbols] || {}
+        has_versions = (symbols_config[:versions] || {}).any?
+        version_file = has_versions ? "#{@project}_version" : nil
+
         content = render_template("project",
                                   :module_parts => module_parts,
                                   :library => library.rstrip,
+                                  :version_file => version_file,
                                   :files => @generated_files)
 
         self.outputter.write("#{@project}_ffi.rb", content)
+
+        create_version_file(module_parts) if version_file
+      end
+
+      def create_version_file(module_parts)
+        relative_path = "#{@project}_version.rb"
+        full_path = self.outputter.output_path(relative_path)
+        return if File.exist?(full_path)
+
+        method_name = "#{@project}_version"
+        depth = module_parts.length
+        method_body = add_indentation(render_template("version_method", :method_name => method_name), depth * 2)
+
+        content = render_template("version",
+                                  :module_parts => module_parts,
+                                  :method_body => method_body.rstrip)
+        self.outputter.write(relative_path, content)
       end
 
       def visit_children(cursor, exclude_kinds: Set.new)
@@ -137,7 +159,7 @@ module RubyBindgen
       def merge_children(versions, indentation: 0, comma: false, strip: false)
         lines = versions.keys.sort_by { |key| key.to_s }.each_with_object([]) do |version, result|
           next unless versions[version]&.any?
-          result << "if #{@version_macro} >= #{version}" if version
+          result << "if #{@project}_version >= #{version}" if version
           versions[version].each do |line|
             line = line.rstrip if strip
             line = add_indentation(line, 2) if version

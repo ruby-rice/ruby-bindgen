@@ -238,6 +238,94 @@ This generates properly nested `module Proj` / `module Api` with correct indenta
 - [`rename_types`](configuration.md#name-mappings) — override generated Ruby module/class names
 - [`rename_methods`](configuration.md#name-mappings) — override generated Ruby method names
 
+## Version Detection
+
+When `symbols.versions` has entries, `ruby-bindgen` generates version-guarded Ruby conditionals and a `{project}_version.rb` skeleton file. The user implements the version detection method in that file — typically by calling the library's own version API.
+
+### Configuration
+
+```yaml
+format: FFI
+project: proj
+library_names:
+  - proj
+
+symbols:
+  skip:
+    - proj_info          # manually used in version file
+    - PJ_INFO            # manually used in version file
+  versions:
+    90400:
+      - proj_normalize_for_visualization
+```
+
+Since the version file manually calls `proj_info()` and uses `PJ_INFO`, add those symbols to `skip` so they aren't defined twice — once in the generated content file and once in the version file.
+
+### Generated Output
+
+The generator produces three things:
+
+**1. Version guards in content files** — version-specific symbols are wrapped in conditionals:
+
+```ruby
+if proj_version >= 90400
+  attach_function :proj_normalize_for_visualization, ...
+end
+```
+
+**2. Version require in the project file** (`proj_ffi.rb`):
+
+```ruby
+require_relative 'proj_version'
+require_relative './proj'
+```
+
+**3. Version skeleton file** (`proj_version.rb`) — generated once, then user-maintained:
+
+```ruby
+module Proj
+  module Api
+    def self.proj_version
+      # Return the runtime library version as an integer.
+      # Example: 90602 for version 9.6.2
+      raise NotImplementedError, "Implement proj_version to return the runtime library version number"
+    end
+  end
+end
+```
+
+### Implementing Version Detection
+
+Replace the skeleton with your library's version API. For PROJ, `proj_info()` returns a struct with `major`, `minor`, and `patch` fields:
+
+```ruby
+module Proj
+  module Api
+    # These are needed by proj_version below, so define them before
+    # the generated content files are loaded.
+    class PjInfo < FFI::Struct
+      layout :major, :int,
+             :minor, :int,
+             :patch, :int,
+             :release, :string,
+             :version, :string,
+             :searchpath, :string,
+             :paths, :pointer,
+             :path_count, :ulong
+    end
+
+    attach_function :proj_info, :proj_info, [], PjInfo.by_value
+
+    def self.proj_version
+      info = proj_info
+      info[:major] * 10000 + info[:minor] * 100 + info[:patch]
+    end
+  end
+end
+```
+
+The version file is loaded before the content files, so the `proj_version` method is available when the guards execute. The skeleton is only generated if the file doesn't already exist — your implementation is preserved across re-runs.
+
 ## Constants and Macros
 
 `ruby-bindgen` generates Ruby constants from two sources: `const` variables and `#define` macros.

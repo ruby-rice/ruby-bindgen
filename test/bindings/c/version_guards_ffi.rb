@@ -34,4 +34,5 @@ module VersionGuards
   ffi_lib self.search_names
 end
 
+require_relative 'version_guards_version'
 require_relative './version_guards'

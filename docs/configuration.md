@@ -165,9 +165,12 @@ symbols:
 
 ### Versions
 
-The `versions` key wraps symbols in preprocessor version guards. This requires the `version_macro` option to be set. Each sub-key is the minimum version value, with a list of symbol names underneath.
+The `versions` key wraps symbols in version guards. Each sub-key is the minimum version value, with a list of symbol names underneath.
+
+For **Rice** (C++), this requires the `version_macro` option to be set. The generator wraps version-specific symbols in `#if VERSION_MACRO >= version` / `#endif` preprocessor directives.
 
 ```yaml
+format: Rice
 version_macro: CV_VERSION
 symbols:
   versions:
@@ -184,7 +187,25 @@ This generates:
 #endif
 ```
 
-See [Version Guards](version_guards.md) for a full guide.
+For **FFI** (C), the generator wraps version-specific symbols in `if {project}_version >= version` Ruby conditionals and generates a `{project}_version.rb` skeleton file. The user implements the version detection method — typically by calling the library's own version API. See [Version Detection](c_bindings.md#version-detection) for a full example.
+
+```yaml
+format: FFI
+project: proj
+symbols:
+  versions:
+    90400:
+      - proj_normalize_for_visualization
+```
+
+This generates:
+```ruby
+if proj_version >= 90400
+  attach_function :proj_normalize_for_visualization, ...
+end
+```
+
+See [Version Guards](version_guards.md) for the Rice guide.
 
 ### Overrides (FFI only)
 
