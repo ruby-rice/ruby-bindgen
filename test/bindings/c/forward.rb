@@ -39,11 +39,11 @@ module Forward
   end
 
   class B < FFI::Struct
-    layout :bname, :string
+    layout :bname, :pointer
   end
 
   class C < FFI::Struct
-    layout :cname, :string
+    layout :cname, :pointer
   end
 
   typedef :pointer, :Opaque

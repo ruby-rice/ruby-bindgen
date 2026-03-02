@@ -407,8 +407,6 @@ module RubyBindgen
         case type.pointee.kind
           when :type_char_s
             case context
-            when :structure, :union
-              ":string"
             when :callback_return
               ":pointer"
             else

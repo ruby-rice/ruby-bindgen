@@ -45,7 +45,7 @@ module Structs
   attach_variable :MyArrayT, :MyArray_t, MyArrayT
 
   class U < FFI::Union
-    layout :sdata, :string,
+    layout :sdata, :pointer,
            :idata, :int
   end
 

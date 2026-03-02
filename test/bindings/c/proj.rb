@@ -461,9 +461,9 @@ module Proj
     )
 
     class ProjCrsInfo < FFI::Struct
-      layout :auth_name, :string,
-             :code, :string,
-             :name, :string,
+      layout :auth_name, :pointer,
+             :code, :pointer,
+             :name, :pointer,
              :type, PjType,
              :deprecated, :int,
              :bbox_valid, :int,
@@ -471,9 +471,9 @@ module Proj
              :south_lat_degree, :double,
              :east_lon_degree, :double,
              :north_lat_degree, :double,
-             :area_name, :string,
-             :projection_method_name, :string,
-             :celestial_body_name, :string
+             :area_name, :pointer,
+             :projection_method_name, :pointer,
+             :celestial_body_name, :pointer
     end
 
     class ProjCrsListParameters < FFI::Struct
@@ -490,18 +490,18 @@ module Proj
     end
 
     class ProjUnitInfo < FFI::Struct
-      layout :auth_name, :string,
-             :code, :string,
-             :name, :string,
-             :category, :string,
+      layout :auth_name, :pointer,
+             :code, :pointer,
+             :name, :pointer,
+             :category, :pointer,
              :conv_factor, :double,
-             :proj_short_name, :string,
+             :proj_short_name, :pointer,
              :deprecated, :int
     end
 
     class ProjCelestialBodyInfo < FFI::Struct
-      layout :auth_name, :string,
-             :name, :string
+      layout :auth_name, :pointer,
+             :name, :pointer
     end
 
     typedef :pointer, :PjObjList
@@ -624,10 +624,10 @@ module Proj
     )
 
     class PjAxisDescription < FFI::Struct
-      layout :name, :string,
-             :abbreviation, :string,
-             :direction, :string,
-             :unit_name, :string,
+      layout :name, :pointer,
+             :abbreviation, :pointer,
+             :direction, :pointer,
+             :unit_name, :pointer,
              :unit_conv_factor, :double,
              :unit_type, PjUnitType
     end
