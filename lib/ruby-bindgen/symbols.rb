@@ -13,6 +13,10 @@ module RubyBindgen
           add_entry(name, action: :version, version: version)
         end
       end
+
+      (config[:overrides] || {}).each do |name, signature|
+        add_entry(name.to_s, action: :override, version: nil, signature: signature)
+      end
     end
 
     # Build candidate names for a cursor for symbol lookup.
@@ -116,10 +120,16 @@ module RubyBindgen
       result[:version] if result && result[:action] == :version
     end
 
+    # Returns the override signature string for a cursor, or nil if not overridden.
+    def override(cursor)
+      result = lookup(build_candidates(cursor))
+      result[:signature] if result && result[:action] == :override
+    end
+
     private
 
-    def add_entry(name, action:, version:)
-      value = { action: action, version: version }
+    def add_entry(name, action:, version:, signature: nil)
+      value = { action: action, version: version, signature: signature }
       if name.start_with?('/') && name.end_with?('/')
         @regex << [Regexp.new(name[1..-2]), value]
       else

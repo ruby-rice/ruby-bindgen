@@ -1,1 +1,5 @@
-attach_function :<%= cursor.ruby_name %>, :<%= cursor.spelling %>, [<%= parameter_types.join(", ") %>], <%= figure_ffi_type(cursor.result_type, :function) %>
+<%- if signature -%>
+attach_function :<%= cursor.ruby_name %>, :<%= cursor.spelling %>, <%= signature -%>
+<%- else -%>
+attach_function :<%= cursor.ruby_name %>, :<%= cursor.spelling %>, [<%= parameter_types.join(", ") %>], <%= figure_ffi_type(cursor.result_type, :function) -%>
+<%- end -%>

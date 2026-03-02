@@ -16,7 +16,8 @@ class FfiTest < AbstractTest
   end
 
   def test_proj
-    run_ffi_test("proj.h", library_names: ["proj"], library_versions: [], module: "Proj::Api")
+    run_ffi_test("proj.h", library_names: ["proj"], library_versions: [], module: "Proj::Api",
+      symbols: { overrides: { "proj_is_crs" => "[:pointer], :bool" } })
   end
 
   def test_sqlite3

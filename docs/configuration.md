@@ -136,7 +136,7 @@ C:\Program Files\LLVM\bin\libclang.dll
 
 ## Symbols
 
-The `symbols` option groups per-symbol actions by type. There are two action groups: `skip` and `versions`.
+The `symbols` option groups per-symbol actions by type. There are three action groups: `skip`, `versions`, and `overrides`.
 
 ### Skip
 
@@ -184,6 +184,23 @@ This generates:
 ```
 
 See [Version Guards](version_guards.md) for a full guide.
+
+### Overrides (FFI only)
+
+The `overrides` key replaces the generated `attach_function` signature for specific functions. This is useful when ruby-bindgen's type heuristics produce the wrong FFI type — for example, C functions that return `int` 0/1 for boolean, or use `size_t` parameters that resolve to `:ulong`.
+
+Each entry maps a C function name to a signature string that replaces everything after `attach_function :ruby_name, :c_name, `:
+
+```yaml
+symbols:
+  overrides:
+    # C returns int 0/1, but Ruby 0 is truthy so must use :bool
+    proj_is_crs: "[:pointer], :bool"
+    # size_t vs ulong: on 64-bit Windows size_t is 8 bytes but ulong is 4 bytes
+    proj_trans_generic: "[:pointer, PjDirection, :pointer, :size_t, :size_t, ...], :size_t"
+    # Output buffer: char *s is caller-allocated, return is same pointer
+    proj_rtodms2: "[:pointer, :ulong, :double, :int, :int], :pointer"
+```
 
 ### Overload-Specific Skipping
 

@@ -180,6 +180,11 @@ module RubyBindgen
         return if @symbols.skip?(cursor)
         return unless has_export_macro?(cursor)
 
+        signature = @symbols.override(cursor)
+        if signature
+          return self.render_cursor(cursor, "function", :parameter_types => nil, :signature => signature)
+        end
+
         result = Array.new
         parameter_types = cursor.find_by_kind(false, :cursor_parm_decl).map do |parameter|
           callback_name = "#{cursor.spelling}_#{parameter.spelling}_callback"
@@ -194,7 +199,7 @@ module RubyBindgen
             figure_ffi_type(parameter.type, :function)
           end
         end
-        result << self.render_cursor(cursor, "function", :parameter_types => parameter_types)
+        result << self.render_cursor(cursor, "function", :parameter_types => parameter_types, :signature => nil)
         result.join("\n")
       end
 

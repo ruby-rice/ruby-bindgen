@@ -523,7 +523,7 @@ module Proj
     attach_function :proj_get_non_deprecated, :proj_get_non_deprecated, [:pointer, :pointer], :pointer
     attach_function :proj_is_equivalent_to, :proj_is_equivalent_to, [:pointer, :pointer, PjComparisonCriterion], :int
     attach_function :proj_is_equivalent_to_with_ctx, :proj_is_equivalent_to_with_ctx, [:pointer, :pointer, :pointer, PjComparisonCriterion], :int
-    attach_function :proj_is_crs, :proj_is_crs, [:pointer], :int
+    attach_function :proj_is_crs, :proj_is_crs, [:pointer], :bool
     attach_function :proj_get_name, :proj_get_name, [:pointer], :string
     attach_function :proj_get_id_auth_name, :proj_get_id_auth_name, [:pointer, :int], :string
     attach_function :proj_get_id_code, :proj_get_id_code, [:pointer, :int], :string
