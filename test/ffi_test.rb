@@ -4,28 +4,33 @@ require_relative './abstract_test'
 
 class FfiTest < AbstractTest
   def test_forward_declarations
-    run_ffi_test("forward.h", library_names: ["forward"], library_versions: [])
+    run_ffi_test("forward.h", project: "forward",
+      library_names: ["forward"], library_versions: [])
   end
 
   def test_structs
-    run_ffi_test("structs.h", library_names: ["structs"], library_versions: [])
+    run_ffi_test("structs.h", project: "structs",
+      library_names: ["structs"], library_versions: [])
   end
 
   def test_clang
-    run_ffi_test("clang-c/index.h", library_names: ["clang"], library_versions: [])
+    run_ffi_test("clang-c/index.h", project: "clang",
+      library_names: ["clang"], library_versions: [])
   end
 
   def test_proj
-    run_ffi_test("proj.h", library_names: ["proj"], library_versions: [], module: "Proj::Api",
+    run_ffi_test(["proj.h", "proj_experimental.h"], project: "proj",
+      library_names: ["proj"], library_versions: [], module: "Proj::Api",
       symbols: { overrides: { "proj_is_crs" => "[:pointer], :bool" } })
   end
 
   def test_sqlite3
-    run_ffi_test("sqlite3.h", library_names: ["sqlite3"], library_versions: [])
+    run_ffi_test("sqlite3.h", project: "sqlite3",
+      library_names: ["sqlite3"], library_versions: [])
   end
 
   def test_version_guards
-    run_ffi_test("version_guards.h",
+    run_ffi_test("version_guards.h", project: "version_guards",
       library_names: ["version_guards"], library_versions: [],
       version_macro: "TEST_VERSION",
       symbols: { versions: { 20000 => ["newFunction", "NewStruct", "NewEnum", "NewTypedef"],
@@ -33,11 +38,12 @@ class FfiTest < AbstractTest
   end
 
   def test_constants
-    run_ffi_test("constants.h", library_names: ["constants"], library_versions: [])
+    run_ffi_test("constants.h", project: "constants",
+      library_names: ["constants"], library_versions: [])
   end
 
   def test_filtering
-    run_ffi_test("filtering.h",
+    run_ffi_test("filtering.h", project: "filtering",
       library_names: ["filtering"], library_versions: [],
       export_macros: ["MY_EXPORT"],
       symbols: { skip: ["skippedFunction",
@@ -49,7 +55,7 @@ class FfiTest < AbstractTest
   end
 
   def test_rename
-    run_ffi_test("rename.h",
+    run_ffi_test("rename.h", project: "rename",
       library_names: ["rename"], library_versions: [],
       rename_types: [
         { "from" => "MY_3D_POINT", "to" => "My3DPoint" },

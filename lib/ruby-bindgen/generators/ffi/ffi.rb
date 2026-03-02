@@ -43,31 +43,46 @@ module RubyBindgen
       end
 
       def visit_start
+        @generated_files = []
       end
 
       def visit_translation_unit(translation_unit, path, relative_path)
-        basename = "#{File.basename(relative_path, ".*")}"
+        basename = File.basename(relative_path, ".*")
         relative_path_2 = File.join(File.dirname(relative_path), "#{basename}.rb")
 
         cursor = translation_unit.cursor
         module_name = @module_name || cursor.ruby_name
         module_parts = module_name.split("::")
-        depth = module_parts.length
 
-        # Render library boilerplate and children at 0 indent, then add module depth indentation
-        library = add_indentation(render_template("library"), depth * 2)
-        content = add_indentation(render_children(cursor, :indentation => 0), depth * 2)
+        content = render_children(cursor, indentation: module_parts.length * 2)
 
         result = render_template("translation_unit",
                                  :module_parts => module_parts,
-                                 :library => library.rstrip,
                                  :content => content.rstrip)
 
         result.gsub!(/\n\n\n/, "\n\n")
+        @generated_files << File.join(File.dirname(relative_path), basename)
         self.outputter.write(relative_path_2, result)
       end
 
       def visit_end
+        create_project_file
+      end
+
+      def create_project_file
+        return if @generated_files.empty?
+
+        module_name = @module_name || @project.camelize
+        module_parts = module_name.split("::")
+        depth = module_parts.length
+        library = add_indentation(render_template("library"), depth * 2)
+
+        content = render_template("project",
+                                  :module_parts => module_parts,
+                                  :library => library.rstrip,
+                                  :files => @generated_files)
+
+        self.outputter.write("#{@project}_ffi.rb", content)
       end
 
       def visit_children(cursor, exclude_kinds: Set.new)
