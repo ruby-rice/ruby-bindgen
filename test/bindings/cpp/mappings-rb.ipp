@@ -4,7 +4,6 @@ inline Rice::Data_Type<cv::Matx<T, Rows, Cols>> Matx_instantiate(Rice::Module pa
   return Rice::define_class_under<cv::Matx<T, Rows, Cols>>(parent, name)
     .define_constructor(Constructor<cv::Matx<T, Rows, Cols>>())
     .template define_method<T(cv::Matx<T, Rows, Cols>::*)(int, int) const>("[]", &cv::Matx<T, Rows, Cols>::operator(),
-      Arg("i"), Arg("j"))
-    ;
+      Arg("i"), Arg("j"));
 }
 

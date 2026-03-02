@@ -16,6 +16,5 @@ void Init_CrossFileBase()
     .define_attr("y", &CrossFile::Point2d::y)
     .define_constructor(Constructor<CrossFile::Point2d>())
     .define_constructor(Constructor<CrossFile::Point2d, double, double>(),
-      Arg("x"), Arg("y"))
-    ;
+      Arg("x"), Arg("y"));
 }

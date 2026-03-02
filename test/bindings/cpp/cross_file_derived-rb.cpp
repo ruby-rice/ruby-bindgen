@@ -18,26 +18,22 @@ void Init_CrossFileDerived()
     .define_attr("end", &CrossFile::SimpleRange::end)
     .define_constructor(Constructor<CrossFile::SimpleRange>())
     .define_constructor(Constructor<CrossFile::SimpleRange, int, int>(),
-      Arg("s"), Arg("e"))
-    ;
+      Arg("s"), Arg("e"));
   rb_cBaseMatrix4d
     .define_method("*", [](const CrossFile::BaseMatrix4d& self, double other) -> CrossFile::BaseMatrix4d
     {
       return self * other;
-    })
-    ;
+    });
   
   rb_cCrossFileSimpleRange
     .define_method("==", [](const CrossFile::SimpleRange& self, const CrossFile::SimpleRange& other) -> bool
     {
       return self == other;
-    })
-    ;
+    });
   
   Data_Type<CrossFile::Point2d>()
     .define_method("+", [](const CrossFile::Point2d& self, double other) -> CrossFile::Point2d
     {
       return self + other;
-    })
-    ;
+    });
 }

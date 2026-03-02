@@ -2196,7 +2196,7 @@ module RubyBindgen
             line = ".#{line}" if chain
             result << line
           end
-          result << "#endif" if version
+          result << "#endif\n" if version
         end
 
         if lines.empty?
@@ -2205,7 +2205,7 @@ module RubyBindgen
 
         result = lines.join("\n")
         if terminate
-          result += chain ? "\n;" : ";"
+          result += ";"
         end
 
         result = add_indentation(result, indentation) if indentation > 0

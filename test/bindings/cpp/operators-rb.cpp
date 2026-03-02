@@ -104,16 +104,14 @@ void Init_Operators()
     .define_method("to_bool", [](const Operators& self) -> bool
     {
       return self;
-    })
-    ;
+    });
   Module rb_mSubscript = define_module("Subscript");
 
   Rice::Data_Type<subscript::Element> rb_cSubscriptElement = define_class_under<subscript::Element>(rb_mSubscript, "Element")
     .define_attr("id", &subscript::Element::id)
     .define_constructor(Constructor<subscript::Element>())
     .define_constructor(Constructor<subscript::Element, int>(),
-      Arg("i"))
-    ;
+      Arg("i"));
   Rice::Data_Type<subscript::Container> rb_cSubscriptContainer = define_class_under<subscript::Container>(rb_mSubscript, "Container")
     .define_constructor(Constructor<subscript::Container>())
     .define_method<subscript::Element&(subscript::Container::*)(int)>("[]", &subscript::Container::operator[],
@@ -123,16 +121,14 @@ void Init_Operators()
         self[index] = value;
     })
     .define_method<const subscript::Element&(subscript::Container::*)(int) const>("[]", &subscript::Container::operator[],
-      Arg("index"))
-    ;
+      Arg("index"));
   Module rb_mConv = define_module("Conv");
 
   Rice::Data_Type<conv::Target> rb_cConvTarget = define_class_under<conv::Target>(rb_mConv, "Target")
     .define_attr("value", &conv::Target::value)
     .define_constructor(Constructor<conv::Target>())
     .define_constructor(Constructor<conv::Target, int>(),
-      Arg("v"))
-    ;
+      Arg("v"));
   Rice::Data_Type<NamespacedConversion> rb_cNamespacedConversion = define_class<NamespacedConversion>("NamespacedConversion")
     .define_attr("value", &NamespacedConversion::value)
     .define_constructor(Constructor<NamespacedConversion>())
@@ -145,8 +141,7 @@ void Init_Operators()
     .define_method("to_target", [](NamespacedConversion& self) -> conv::Target&
     {
       return self;
-    })
-    ;
+    });
   Rice::Data_Type<DataPtr<int>> rb_cDataPtrInt = DataPtr_instantiate<int>(Rice::Module(rb_cObject), "DataPtrInt");
 
   Rice::Data_Type<DataPtr<float>> rb_cDataPtrFloat = DataPtr_instantiate<float>(Rice::Module(rb_cObject), "DataPtrFloat");
@@ -156,19 +151,16 @@ void Init_Operators()
     .define_attr("cols", &Matrix::cols)
     .define_constructor(Constructor<Matrix>())
     .define_constructor(Constructor<Matrix, int, int>(),
-      Arg("r"), Arg("c"))
-    ;
+      Arg("r"), Arg("c"));
   Rice::Data_Type<Printable> rb_cPrintable = define_class<Printable>("Printable")
     .define_attr("name", &Printable::name)
     .define_attr("value", &Printable::value)
     .define_constructor(Constructor<Printable>())
     .define_constructor(Constructor<Printable, const std::string&, int>(),
-      Arg("n"), Arg("v"))
-    ;
+      Arg("n"), Arg("v"));
   Rice::Data_Type<FileWriter> rb_cFileWriter = define_class<FileWriter>("FileWriter")
     .define_constructor(Constructor<FileWriter>())
-    .define_method<bool(FileWriter::*)() const>("open?", &FileWriter::isOpen)
-    ;
+    .define_method<bool(FileWriter::*)() const>("open?", &FileWriter::isOpen);
   Rice::Data_Type<AllConversions> rb_cAllConversions = define_class<AllConversions>("AllConversions")
     .define_constructor(Constructor<AllConversions>())
     .define_method("to_i", [](const AllConversions& self) -> int
@@ -222,16 +214,14 @@ void Init_Operators()
     .define_method("to_s", [](const AllConversions& self) -> std::string
     {
       return self;
-    })
-    ;
+    });
   Rice::Data_Type<SizeTConversion> rb_cSizeTConversion = define_class<SizeTConversion>("SizeTConversion")
     .define_attr("value", &SizeTConversion::value)
     .define_constructor(Constructor<SizeTConversion>())
     .define_method("to_size", [](const SizeTConversion& self) -> size_t
     {
       return self;
-    })
-    ;
+    });
   rb_cMatrix
     .define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
     {
@@ -259,8 +249,7 @@ void Init_Operators()
     .define_method("+@", [](const Matrix& self) -> Matrix
     {
       return +self;
-    })
-    ;
+    });
   
   rb_cPrintable
     .define_method("inspect", [](const Printable& self) -> std::string
@@ -268,8 +257,7 @@ void Init_Operators()
       std::ostringstream stream;
       stream << self;
       return stream.str();
-    })
-    ;
+    });
   
   rb_cFileWriter
     .define_method("<<", [](FileWriter& self, const std::string& other) -> FileWriter&
@@ -286,6 +274,5 @@ void Init_Operators()
     {
       self << other;
       return self;
-    })
-    ;
+    });
 }

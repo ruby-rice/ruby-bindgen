@@ -13,7 +13,6 @@ inline Rice::Data_Type<DataPtr<T>> DataPtr_instantiate(Rice::Module parent, cons
     .define_method("to_const_ptr", [](const DataPtr<T>& self) -> const T*
     {
       return self;
-    })
-    ;
+    });
 }
 

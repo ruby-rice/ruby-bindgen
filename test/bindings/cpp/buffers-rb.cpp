@@ -12,17 +12,14 @@ void Init_Buffers()
   Rice::Data_Type<BufferNS::Point2f> rb_cBufferNSPoint2f = define_class_under<BufferNS::Point2f>(rb_mBufferNS, "Point2f")
     .define_constructor(Constructor<BufferNS::Point2f>())
     .define_attr("x", &BufferNS::Point2f::x)
-    .define_attr("y", &BufferNS::Point2f::y)
-    ;
+    .define_attr("y", &BufferNS::Point2f::y);
   Rice::Data_Type<BufferNS::Shape> rb_cBufferNSShape = define_class_under<BufferNS::Shape>(rb_mBufferNS, "Shape")
     .define_constructor(Constructor<BufferNS::Shape>())
     .define_method<void(BufferNS::Shape::*)(BufferNS::Point2f[]) const>("set_points", &BufferNS::Shape::setPoints,
-      Arg("pts"))
-    ;
+      Arg("pts"));
   Rice::Data_Type<BufferClass> rb_cBufferClass = define_class<BufferClass>("BufferClass")
     .define_constructor(Constructor<BufferClass>())
-    .define_attr("value", &BufferClass::value)
-    ;
+    .define_attr("value", &BufferClass::value);
   define_global_function<void(*)(int, size_t[], size_t[])>("process_kernel_dims", &processKernelDims,
     Arg("dims"), Arg("globalsize"), Arg("localsize"));
 
@@ -93,8 +90,7 @@ void Init_Buffers()
     .define_method<BufferClass**(DataProcessor::*)()>("get_objects", &DataProcessor::getObjects,
       ReturnBuffer())
     .define_method<void(DataProcessor::*)(double*, double*)>("compute_stats", &DataProcessor::computeStats,
-      ArgBuffer("mean"), ArgBuffer("stddev"))
-    ;
+      ArgBuffer("mean"), ArgBuffer("stddev"));
   define_global_function<void(*)(int*, int, ProcessCallback, void*)>("process_with_callback", &processWithCallback,
     ArgBuffer("data"), Arg("size"), Arg("callback"), ArgBuffer("user_data"));
 
@@ -106,6 +102,5 @@ void Init_Buffers()
     .define_method<void(EventHandler::*)(void (*)(int, void*), void*)>("set_callback", &EventHandler::setCallback,
       Arg("callback"), ArgBuffer("user_data"))
     .define_method<void(EventHandler::*)(bool (*)(const char*))>("set_validator", &EventHandler::setValidator,
-      Arg("validate"))
-    ;
+      Arg("validate"));
 }
