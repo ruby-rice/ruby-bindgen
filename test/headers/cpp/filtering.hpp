@@ -185,4 +185,22 @@ namespace Outer
     // Non-deprecated conversion operator - should be INCLUDED
     operator int() const;
   };
+
+  // --- Inline Namespace Tests ---
+  // Symbols inside inline namespaces should be matchable without the inline namespace qualifier
+
+  inline namespace guard_v1
+  {
+    class MY_EXPORT GuardedClass
+    {
+    public:
+      GuardedClass();
+
+      // This constructor should be SKIPPED via "Outer::GuardedClass::GuardedClass(const int*)"
+      // even though the actual parent chain is Outer::guard_v1::GuardedClass
+      GuardedClass(const int* data);
+
+      void normalMethod();
+    };
+  }
 }

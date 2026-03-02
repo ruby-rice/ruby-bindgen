@@ -334,6 +334,9 @@ module RubyBindgen
         # Skip deprecated constructors (they may not be exported from library)
         return if cursor.availability == :deprecated
 
+        # Skip explicitly listed constructors
+        return if skip_symbol?(cursor)
+
         # Do not process move constructors
         return if cursor.move_constructor?
 

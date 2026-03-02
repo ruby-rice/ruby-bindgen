@@ -60,7 +60,8 @@ class RiceTest < AbstractTest
                                      "SkippedClass",
                                      "SkippedTemplateClass",
                                      "SkippedArgType",
-                                     "Outer::MyClass::overloaded(int, const int *)"] })
+                                     "Outer::MyClass::overloaded(int, const int*)",
+                                     "Outer::GuardedClass::GuardedClass(const int*)"] })
   end
 
   def test_buffers

@@ -43,4 +43,9 @@ void Init_Filtering()
     {
       return self;
     });
+  Module rb_mOuterGuardV1 = define_module_under(rb_mOuter, "GuardV1");
+
+  Rice::Data_Type<Outer::GuardedClass> rb_cOuterGuardedClass = define_class_under<Outer::GuardedClass>(rb_mOuterGuardV1, "GuardedClass")
+    .define_constructor(Constructor<Outer::guard_v1::GuardedClass>())
+    .define_method<void(Outer::guard_v1::GuardedClass::*)()>("normal_method", &Outer::guard_v1::GuardedClass::normalMethod);
 }

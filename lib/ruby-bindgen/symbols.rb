@@ -33,14 +33,28 @@ module RubyBindgen
         parent = parent.semantic_parent
       end
 
-      candidates = [cursor.spelling, qualified_name]
+      qualified_names = [qualified_name]
+
+      # For class members, also build a qualified name from the parent's type spelling.
+      # The type system resolves through inline namespaces (e.g., cv::debug_build_guard::_OutputArray
+      # becomes cv::_OutputArray), so this candidate matches YAML entries that omit inline namespaces.
+      parent = cursor.semantic_parent
+      if parent && [:cursor_class_decl, :cursor_struct, :cursor_class_template].include?(parent.kind)
+        type_qualified = "#{parent.type.spelling}::#{cursor.spelling}"
+        qualified_names << type_qualified unless qualified_names.include?(type_qualified)
+      end
+
+      candidates = [cursor.spelling] + qualified_names
 
       # Add display_name-based candidates for template specializations
       # (display_name includes template args, e.g., "DataType<hfloat>" or "saturate_cast<hfloat>(uchar)")
       display = cursor.display_name
       if display != cursor.spelling
-        qualified_display = qualified_name.sub(cursor.spelling, display)
-        candidates << display << qualified_display
+        qualified_names.each do |qn|
+          qualified_display = qn.sub(cursor.spelling, display)
+          candidates << display unless candidates.include?(display)
+          candidates << qualified_display unless candidates.include?(qualified_display)
+        end
 
         # Also add candidates with fully-qualified template args.
         # display_name uses unqualified args (e.g., "DataType<hfloat>") but users
@@ -53,8 +67,11 @@ module RubyBindgen
             qualified_args_str = "<#{qualified_args.join(', ')}>"
             fq_display = display.sub(/<[^>]+>/, qualified_args_str)
             if fq_display != display
-              fq_qualified_display = qualified_name.sub(cursor.spelling, fq_display)
-              candidates << fq_display << fq_qualified_display
+              qualified_names.each do |qn|
+                fq_qualified_display = qn.sub(cursor.spelling, fq_display)
+                candidates << fq_display unless candidates.include?(fq_display)
+                candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
+              end
             end
           end
         end
@@ -71,8 +88,11 @@ module RubyBindgen
           unless type_refs.empty?
             qualified_args_str = "<#{type_refs.join(', ')}>"
             fq_display = display.sub('<>', qualified_args_str)
-            fq_qualified_display = qualified_name.sub(cursor.spelling, fq_display)
-            candidates << fq_display << fq_qualified_display
+            qualified_names.each do |qn|
+              fq_qualified_display = qn.sub(cursor.spelling, fq_display)
+              candidates << fq_display unless candidates.include?(fq_display)
+              candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
+            end
           end
         end
       end
@@ -80,8 +100,15 @@ module RubyBindgen
       if cursor.type.respond_to?(:args_size)
         param_types = (0...cursor.type.args_size).map { |i| cursor.type.arg_type(i).spelling }.join(", ")
         candidates << "#{cursor.spelling}(#{param_types})"
-        candidates << "#{qualified_name}(#{param_types})"
+        qualified_names.each do |qn|
+          candidates << "#{qn}(#{param_types})"
+        end
       end
+
+      if ENV['BINDGEN_DEBUG_SYMBOLS']
+        $stderr.puts "Candidates for #{cursor.spelling}: #{candidates.inspect}"
+      end
+
       candidates
     end
 
@@ -89,13 +116,13 @@ module RubyBindgen
     # Returns the value hash ({action: :skip, ...}) or nil.
     def lookup(candidates)
       candidates.each do |name|
-        result = @exact[name]
+        result = @exact[normalize_signature(name)]
         return result if result
       end
 
       @regex.each do |pattern, value|
         candidates.each do |name|
-          return value if pattern.match?(name)
+          return value if pattern.match?(normalize_signature(name))
         end
       end
       nil
@@ -128,12 +155,22 @@ module RubyBindgen
 
     private
 
+    # Normalize type signatures so that whitespace differences don't prevent matching.
+    # Clang spells types like "const int *" (space before *) but users may write "const int*".
+    def normalize_signature(str)
+      str
+        .gsub(/\s+/, ' ')
+        .gsub(/\s*\*/, '*')
+        .gsub(/\s*&/, '&')
+        .strip
+    end
+
     def add_entry(name, action:, version:, signature: nil)
       value = { action: action, version: version, signature: signature }
       if name.start_with?('/') && name.end_with?('/')
         @regex << [Regexp.new(name[1..-2]), value]
       else
-        @exact[name] = value
+        @exact[normalize_signature(name)] = value
       end
     end
   end
