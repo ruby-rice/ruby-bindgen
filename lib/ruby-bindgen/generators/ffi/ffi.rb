@@ -51,10 +51,18 @@ module RubyBindgen
 
         cursor = translation_unit.cursor
         module_name = @module_name || cursor.ruby_name
-        content = render_children(cursor, :indentation => 2)
-        result = render_cursor(cursor, "translation_unit",
-                               :content => content.rstrip,
-                               :module_name => module_name)
+        module_parts = module_name.split("::")
+        depth = module_parts.length
+
+        # Render library boilerplate and children at 0 indent, then add module depth indentation
+        library = add_indentation(render_template("library"), depth * 2)
+        content = add_indentation(render_children(cursor, :indentation => 0), depth * 2)
+
+        result = render_template("translation_unit",
+                                 :module_parts => module_parts,
+                                 :library => library.rstrip,
+                                 :content => content.rstrip)
+
         result.gsub!(/\n\n\n/, "\n\n")
         self.outputter.write(relative_path_2, result)
       end
