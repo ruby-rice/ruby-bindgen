@@ -64,7 +64,7 @@ void Init_DefaultValues()
     .define_attr("max_val", &ml::ParamGrid::maxVal)
     .define_attr("log_step", &ml::ParamGrid::logStep);
 
-  Rice::Data_Type<ml::SVM> rb_cMlSVM = define_class_under<ml::SVM>(rb_mMl, "Svm")
+  Rice::Data_Type<ml::SVM> rb_cMlSVM = define_class_under<ml::SVM>(rb_mMl, "SVM")
     .define_constructor(Constructor<ml::SVM>())
     .define_singleton_function<ml::ParamGrid(*)(int)>("get_default_grid", &ml::SVM::getDefaultGrid,
       Arg("param_id"))
