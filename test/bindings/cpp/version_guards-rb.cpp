@@ -24,27 +24,34 @@ void Init_VersionGuards()
     .define_constant("NEW_CONST", (int)Guards::MyClass::NEW_CONST)
     #endif
     ;
+
   rb_mGuards.define_constant("EXISTING_FLAG", (int)Guards::EXISTING_FLAG);
+
   #if TEST_VERSION >= 20000
+
   rb_mGuards.define_constant("NEW_FLAG", (int)Guards::NEW_FLAG);
+
   #endif
 
   Rice::Data_Type<Guards::DataType<int>> rb_cGuardsDataTypeInt = define_class_under<Guards::DataType<int>>(rb_mGuards, "DataTypeInt")
     .define_constructor(Constructor<Guards::DataType<int>>())
     .define_singleton_function<int(*)()>("depth", &Guards::DataType<int>::depth);
+
   #if TEST_VERSION >= 20000
+
   rb_mGuards.define_module_function<void(*)(int)>("new_function", &Guards::newFunction,
     Arg("x"));
 
   Rice::Data_Type<Guards::HalfFloat> rb_cGuardsHalfFloat = define_class_under<Guards::HalfFloat>(rb_mGuards, "HalfFloat")
     .define_constructor(Constructor<Guards::HalfFloat>())
     .define_attr("value", &Guards::HalfFloat::value);
+
   Rice::Data_Type<Guards::DataType<Guards::HalfFloat>> rb_cGuardsDataTypeHalfFloat = define_class_under<Guards::DataType<Guards::HalfFloat>>(rb_mGuards, "DataTypeHalfFloat")
     .define_constructor(Constructor<Guards::DataType<Guards::HalfFloat>>())
     .define_singleton_function<int(*)()>("depth", &Guards::DataType<HalfFloat>::depth);
+
   rb_mGuards.define_module_function<Guards::HalfFloat(*)(int)>("saturate_cast", &Guards::saturate_cast,
     Arg("v"));
 
   #endif
-
 }

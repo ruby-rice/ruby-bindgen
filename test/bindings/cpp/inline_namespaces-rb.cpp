@@ -15,10 +15,10 @@ void Init_InlineNamespaces()
 
   Module rb_mCvDnnDnn4V20241223 = define_module_under(rb_mCvDnn, "Dnn4V20241223");
 
-
   Rice::Data_Type<cv::dnn::dnn4_v20241223::Net> rb_cCvDnnDnn4V20241223Net = define_class_under<cv::dnn::dnn4_v20241223::Net>(rb_mCvDnnDnn4V20241223, "Net")
     .define_constructor(Constructor<cv::dnn::dnn4_v20241223::Net>())
     .define_attr("layers", &cv::dnn::dnn4_v20241223::Net::layers);
+
   Module rb_mCvMcc = define_module_under(rb_mCv, "Mcc");
 
   Rice::Data_Type<cv::mcc::CCheckerDetector> rb_cCvMccCCheckerDetector = define_class_under<cv::mcc::CCheckerDetector>(rb_mCvMcc, "CCheckerDetector")

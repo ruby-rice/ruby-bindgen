@@ -19,6 +19,7 @@ void Init_CrossFileDerived()
     .define_constructor(Constructor<CrossFile::SimpleRange>())
     .define_constructor(Constructor<CrossFile::SimpleRange, int, int>(),
       Arg("s"), Arg("e"));
+
   rb_cBaseMatrix4d
     .define_method("*", [](const CrossFile::BaseMatrix4d& self, double other) -> CrossFile::BaseMatrix4d
     {

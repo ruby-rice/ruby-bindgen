@@ -20,4 +20,3 @@ inline Rice::Data_Type<Outer::Inner::Holder<T>> Holder_instantiate(Rice::Module 
     .define_attr("ptr", &Outer::Inner::Holder<T>::ptr)
     .define_constructor(Constructor<Outer::Inner::Holder<T>>());
 }
-

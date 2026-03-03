@@ -8,4 +8,3 @@ inline Rice::Data_Type<iter::TemplateContainer<T>> TemplateContainer_instantiate
     .template define_iterator<std::reverse_iterator<typename iter::TemplateContainer<T>::iterator>(iter::TemplateContainer<T>::*)()>(&iter::TemplateContainer<T>::rbegin, &iter::TemplateContainer<T>::rend, "each_reverse")
     .template define_iterator<std::reverse_iterator<typename iter::TemplateContainer<T>::const_iterator>(iter::TemplateContainer<T>::*)() const>(&iter::TemplateContainer<T>::rbegin, &iter::TemplateContainer<T>::rend, "each_reverse_const");
 }
-

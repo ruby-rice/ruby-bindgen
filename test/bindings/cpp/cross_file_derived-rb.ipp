@@ -12,4 +12,3 @@ inline Rice::Data_Type<CrossFile::DataType<T>> DataType_instantiate(Rice::Module
 {
   return Rice::define_class_under<CrossFile::DataType<T>>(parent, name);
 }
-

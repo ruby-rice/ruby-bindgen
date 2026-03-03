@@ -21,4 +21,3 @@ inline Rice::Data_Type<TypeDefault<T, U>> TypeDefault_instantiate(Rice::Module p
     .define_attr("first", &TypeDefault<T, U>::first)
     .define_attr("second", &TypeDefault<T, U>::second);
 }
-

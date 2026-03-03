@@ -31,4 +31,3 @@ inline Rice::Data_Type<cv::Rect_<T>> Rect__instantiate(Rice::Module parent, cons
     .define_attr("width", &cv::Rect_<T>::width)
     .define_attr("height", &cv::Rect_<T>::height);
 }
-

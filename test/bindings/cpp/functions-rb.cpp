@@ -62,10 +62,12 @@ void Init_Functions()
       Arg("x"))
     .define_method<bool(Widget::*)(int)>("try_set", &Widget::trySet,
       Arg("value"));
+
   Module rb_mArrays = define_module("Arrays");
 
   Rice::Data_Type<arrays::Element> rb_cArraysElement = define_class_under<arrays::Element>(rb_mArrays, "Element")
     .define_constructor(Constructor<arrays::Element>());
+
   rb_mArrays.define_module_function<void(*)(arrays::Element[4])>("process_array", &arrays::processArray,
     Arg("arr"));
 
@@ -84,10 +86,12 @@ void Init_Functions()
     .define_constant("Size", nontype_args::Config::Size)
     .define_method<void(nontype_args::Config::*)(const nontype_args::Container<double, nontype_args::Config::Size>&)>("process", &nontype_args::Config::process,
       Arg("data"));
+
   Rice::Data_Type<nontype_args::User> rb_cNontypeArgsUser = define_class_under<nontype_args::User>(rb_mNontypeArgs, "User")
     .define_constructor(Constructor<nontype_args::User>())
     .define_method<void(nontype_args::User::*)(const nontype_args::Container<double, nontype_args::Config::Size>&)>("use", &nontype_args::User::use,
       Arg("data"));
+
   Rice::Data_Type<Logger> rb_cLogger = define_class<Logger>("Logger")
     .define_constructor(Constructor<Logger>())
     .define_singleton_function<void(*)(int)>("set_level", &Logger::setLevel,

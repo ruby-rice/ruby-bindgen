@@ -290,7 +290,7 @@ module RubyBindgen
         # Render non-member operators grouped by class
         non_member_ops = render_non_member_operators
         unless non_member_ops.empty?
-          content = content + "\n  " + non_member_ops
+          content = content + "\n\n  " + non_member_ops
         end
 
         # Generate .ipp file if builders exist (for reusability without duplicate Init symbols)
@@ -1685,7 +1685,7 @@ module RubyBindgen
 
         result << self.render_children(cursor)
 
-        result.join("\n")
+        result.map { |s| s.chomp }.reject(&:empty?).join("\n\n")
       end
 
       def visit_field_decl(cursor)
@@ -2207,7 +2207,11 @@ module RubyBindgen
           return terminate ? ";" : ""
         end
 
-        result = lines.join("\n")
+        result = if chain
+                   lines.join("\n")
+                 else
+                   lines.map { |l| l.chomp }.reject(&:empty?).join("\n\n")
+                 end
         if terminate
           result += ";"
         end

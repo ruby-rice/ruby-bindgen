@@ -6,4 +6,3 @@ inline Rice::Data_Type<CrossFile::BaseMatrix<T, N>> BaseMatrix_instantiate(Rice:
     .define_constructor(Constructor<CrossFile::BaseMatrix<T, N>>())
     .template define_method<T(CrossFile::BaseMatrix<T, N>::*)() const>("sum", &CrossFile::BaseMatrix<T, N>::sum);
 }
-

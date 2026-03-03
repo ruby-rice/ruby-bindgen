@@ -18,11 +18,13 @@ void Init_TemplateInheritance()
   Rice::Data_Type<Tests::PlaneProjector> rb_cTestsPlaneProjector = define_class_under<Tests::PlaneProjector>(rb_mTests, "PlaneProjector")
     .define_attr("scale", &Tests::PlaneProjector::scale)
     .define_constructor(Constructor<Tests::PlaneProjector>());
+
   Rice::Data_Type<Tests::WarperBase<Tests::PlaneProjector>> rb_cWarperBasePlaneProjector = WarperBase_instantiate<Tests::PlaneProjector>(rb_mTests, "WarperBasePlaneProjector");
   Rice::Data_Type<Tests::PlaneWarper> rb_cTestsPlaneWarper = define_class_under<Tests::PlaneWarper, Tests::WarperBase<Tests::PlaneProjector>>(rb_mTests, "PlaneWarper")
     .define_constructor(Constructor<Tests::PlaneWarper, float>(),
       Arg("scale") = static_cast<float>(1.0f))
     .define_method<float(Tests::PlaneWarper::*)() const>("get_scale", &Tests::PlaneWarper::getScale);
+
   Rice::Data_Type<Tests::Matx<unsigned char, 2, 1>> rb_cMatxUnsignedChar21 = Matx_instantiate<unsigned char, 2, 1>(rb_mTests, "MatxUnsignedChar21");
   Rice::Data_Type<Tests::Vec<unsigned char, 2>> rb_cVec2b = Vec_instantiate<unsigned char, 2>(rb_mTests, "Vec2b");
 
@@ -38,8 +40,8 @@ void Init_TemplateInheritance()
     .define_constructor(Constructor<Tests::Mat>())
     .define_constructor(Constructor<Tests::Mat, int, int>(),
       Arg("rows_"), Arg("cols_"));
+
   Rice::Data_Type<Tests::Mat_<unsigned char>> rb_cMat1b = Mat__instantiate<unsigned char>(rb_mTests, "Mat1b");
 
   Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = Mat__instantiate<float>(rb_mTests, "Mat1f");
-
 }

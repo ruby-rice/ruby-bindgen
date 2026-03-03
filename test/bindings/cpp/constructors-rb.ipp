@@ -6,4 +6,3 @@ inline Rice::Data_Type<TemplateConstructor<T>> TemplateConstructor_instantiate(R
     .define_constructor(Constructor<TemplateConstructor<T>, T>(),
       Arg("value"));
 }
-

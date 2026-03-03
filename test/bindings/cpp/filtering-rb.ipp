@@ -20,4 +20,3 @@ inline Rice::Data_Type<Outer::DeprecatedTemplate<T>> DeprecatedTemplate_instanti
 {
   return Rice::define_class_under<Outer::DeprecatedTemplate<T>>(parent, name);
 }
-

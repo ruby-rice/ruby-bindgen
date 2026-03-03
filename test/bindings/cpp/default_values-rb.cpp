@@ -16,6 +16,7 @@ void Init_DefaultValues()
     .define_singleton_function<cv::Range(*)()>("all", &cv::Range::all)
     .define_attr("start", &cv::Range::start)
     .define_attr("end", &cv::Range::end);
+
   Rice::Data_Type<cv::Mat> rb_cCvMat = define_class_under<cv::Mat>(rb_mCv, "Mat")
     .define_constructor(Constructor<cv::Mat>())
     .define_constructor(Constructor<cv::Mat, const cv::Mat&, const cv::Range&, const cv::Range&>(),
@@ -23,6 +24,7 @@ void Init_DefaultValues()
     .define_constructor(Constructor<cv::Mat, int, int, void*, int>(),
       Arg("rows"), Arg("cols"), ArgBuffer("data"), Arg("step") = static_cast<int>(cv::Mat::AUTO_STEP))
     .define_constant("AUTO_STEP", (int)cv::Mat::AUTO_STEP);
+
   Rice::Data_Type<cv::Affine3<float>> rb_cAffine3f = Affine3_instantiate<float>(rb_mCv, "Affine3f");
 
   Rice::Data_Type<cv::Affine3<double>> rb_cAffine3d = Affine3_instantiate<double>(rb_mCv, "Affine3d");
@@ -40,6 +42,7 @@ void Init_DefaultValues()
     .define_value("SLOW", multiline::PerfLevel::SLOW)
     .define_value("MEDIUM", multiline::PerfLevel::MEDIUM)
     .define_value("FAST", multiline::PerfLevel::FAST);
+
   rb_mMultiline.define_module_function<void(*)(multiline::PerfLevel)>("configure", &multiline::configure,
     Arg("level") = static_cast<multiline::PerfLevel>(multiline::PerfLevel::SLOW));
 
@@ -60,15 +63,18 @@ void Init_DefaultValues()
     .define_attr("min_val", &ml::ParamGrid::minVal)
     .define_attr("max_val", &ml::ParamGrid::maxVal)
     .define_attr("log_step", &ml::ParamGrid::logStep);
+
   Rice::Data_Type<ml::SVM> rb_cMlSVM = define_class_under<ml::SVM>(rb_mMl, "Svm")
     .define_constructor(Constructor<ml::SVM>())
     .define_singleton_function<ml::ParamGrid(*)(int)>("get_default_grid", &ml::SVM::getDefaultGrid,
       Arg("param_id"))
     .define_method<bool(ml::SVM::*)(int, ml::ParamGrid)>("train_auto", &ml::SVM::trainAuto,
       Arg("k_fold") = static_cast<int>(10), Arg("cgrid") = static_cast<ml::ParamGrid>(ml::SVM::getDefaultGrid(ml::SVM::ParamTypes::C)));
+
   Enum<ml::SVM::ParamTypes> rb_cMlSVMParamTypes = define_enum_under<ml::SVM::ParamTypes>("ParamTypes", rb_cMlSVM)
     .define_value("C", ml::SVM::ParamTypes::C)
     .define_value("GAMMA", ml::SVM::ParamTypes::GAMMA);
+
   Module rb_mNoncopyable = define_module("Noncopyable");
 
   Rice::Data_Type<noncopyable::NonCopyableCpp03> rb_cNoncopyableNonCopyableCpp03 = define_class_under<noncopyable::NonCopyableCpp03>(rb_mNoncopyable, "NonCopyableCpp03")
@@ -76,11 +82,13 @@ void Init_DefaultValues()
     .define_constructor(Constructor<noncopyable::NonCopyableCpp03, int>(),
       Arg("value"))
     .define_method<int(noncopyable::NonCopyableCpp03::*)() const>("get_value", &noncopyable::NonCopyableCpp03::get_value);
+
   Rice::Data_Type<noncopyable::NonCopyableCpp11> rb_cNoncopyableNonCopyableCpp11 = define_class_under<noncopyable::NonCopyableCpp11>(rb_mNoncopyable, "NonCopyableCpp11")
     .define_constructor(Constructor<noncopyable::NonCopyableCpp11>())
     .define_constructor(Constructor<noncopyable::NonCopyableCpp11, int>(),
       Arg("value"))
     .define_method<int(noncopyable::NonCopyableCpp11::*)() const>("get_value", &noncopyable::NonCopyableCpp11::get_value);
+
   rb_mNoncopyable.define_module_function<void(*)(const noncopyable::NonCopyableCpp03&)>("use_cpp03", &noncopyable::use_cpp03,
     Arg("obj"));
 
@@ -92,6 +100,7 @@ void Init_DefaultValues()
     .define_constructor(Constructor<noncopyable::Copyable, int>(),
       Arg("value"))
     .define_attr("value", &noncopyable::Copyable::value);
+
   rb_mNoncopyable.define_module_function<void(*)(const noncopyable::Copyable&)>("use_copyable", &noncopyable::use_copyable,
     Arg("obj") = static_cast<const noncopyable::Copyable&>(noncopyable::Copyable()));
 
@@ -99,10 +108,12 @@ void Init_DefaultValues()
     .define_constructor(Constructor<noncopyable::DerivedFromCpp03>())
     .define_constructor(Constructor<noncopyable::DerivedFromCpp03, int, int>(),
       Arg("value"), Arg("extra"));
+
   Rice::Data_Type<noncopyable::DerivedFromCpp11> rb_cNoncopyableDerivedFromCpp11 = define_class_under<noncopyable::DerivedFromCpp11, noncopyable::NonCopyableCpp11>(rb_mNoncopyable, "DerivedFromCpp11")
     .define_constructor(Constructor<noncopyable::DerivedFromCpp11>())
     .define_constructor(Constructor<noncopyable::DerivedFromCpp11, int, int>(),
       Arg("value"), Arg("extra"));
+
   rb_mNoncopyable.define_module_function<void(*)(const noncopyable::DerivedFromCpp03&)>("use_derived_cpp03", &noncopyable::use_derived_cpp03,
     Arg("obj"));
 
@@ -112,7 +123,9 @@ void Init_DefaultValues()
   Module rb_mCvFisheye = define_module_under(rb_mCv, "Fisheye");
 
   rb_mCvFisheye.define_constant("CALIB_USE_INTRINSIC_GUESS", (int)cv::fisheye::CALIB_USE_INTRINSIC_GUESS);
+
   rb_mCvFisheye.define_constant("CALIB_FIX_INTRINSIC", (int)cv::fisheye::CALIB_FIX_INTRINSIC);
+
   rb_mCv.define_module_function<void(*)(int)>("calibrate_fisheye", &cv::calibrateFisheye,
     Arg("flags") = static_cast<int>(cv::fisheye::CALIB_FIX_INTRINSIC));
 
@@ -122,6 +135,7 @@ void Init_DefaultValues()
 
   Rice::Data_Type<outer::inner::IndexParams> rb_cOuterInnerIndexParams = define_class_under<outer::inner::IndexParams>(rb_mOuterInner, "IndexParams")
     .define_constructor(Constructor<outer::inner::IndexParams>());
+
   Rice::Data_Type<outer::Matcher> rb_cOuterMatcher = define_class_under<outer::Matcher>(rb_mOuter, "Matcher")
     .define_constructor(Constructor<outer::Matcher, outer::inner::IndexParams*>(),
       Arg("params") = static_cast<outer::inner::IndexParams*>(outer::makePtr<outer::inner::IndexParams>()));

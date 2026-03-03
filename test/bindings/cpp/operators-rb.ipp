@@ -15,4 +15,3 @@ inline Rice::Data_Type<DataPtr<T>> DataPtr_instantiate(Rice::Module parent, cons
       return self;
     });
 }
-

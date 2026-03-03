@@ -23,34 +23,41 @@ void Init_Filtering()
       Arg("a"))
     .define_method<void(Outer::MyClass::*)(double)>("overloaded", &Outer::MyClass::overloaded,
       Arg("a"));
+
   Rice::Data_Type<Outer::ClassWithDeprecatedConstructor> rb_cOuterClassWithDeprecatedConstructor = define_class_under<Outer::ClassWithDeprecatedConstructor>(rb_mOuter, "ClassWithDeprecatedConstructor")
     .define_constructor(Constructor<Outer::ClassWithDeprecatedConstructor, int, int>(),
       Arg("param1"), Arg("param2"))
     .define_method<void(Outer::ClassWithDeprecatedConstructor::*)()>("do_something", &Outer::ClassWithDeprecatedConstructor::doSomething);
+
   Rice::Data_Type<Outer::UsesSkippedType<int>> rb_cUsesSkippedTypeInt = UsesSkippedType_instantiate<int>(rb_mOuter, "UsesSkippedTypeInt");
 
   Rice::Data_Type<Outer::Wrapper<int>> rb_cOuterWrapperInt = define_class_under<Outer::Wrapper<int>>(rb_mOuter, "WrapperInt")
     .define_constructor(Constructor<Outer::Wrapper<int>>())
     .define_method<void(Outer::Wrapper<int>::*)(int*)>("wrap", &Outer::Wrapper<int>::wrap,
       ArgBuffer("obj"));
+
   Rice::Data_Type<Outer::DeprecatedTemplate<int>> rb_cDeprecatedTemplateInt = DeprecatedTemplate_instantiate<int>(rb_mOuter, "DeprecatedTemplateInt");
 
   Rice::Data_Type<Outer::OtherClass> rb_cOuterOtherClass = define_class_under<Outer::OtherClass>(rb_mOuter, "OtherClass")
     .define_constructor(Constructor<Outer::OtherClass>());
+
   Rice::Data_Type<Outer::ClassWithDeprecatedConversion> rb_cOuterClassWithDeprecatedConversion = define_class_under<Outer::ClassWithDeprecatedConversion>(rb_mOuter, "ClassWithDeprecatedConversion")
     .define_constructor(Constructor<Outer::ClassWithDeprecatedConversion>())
     .define_method("to_i", [](const Outer::ClassWithDeprecatedConversion& self) -> int
     {
       return self;
     });
+
   Module rb_mOuterGuardV1 = define_module_under(rb_mOuter, "GuardV1");
 
   Rice::Data_Type<Outer::GuardedClass> rb_cOuterGuardedClass = define_class_under<Outer::GuardedClass>(rb_mOuterGuardV1, "GuardedClass")
     .define_constructor(Constructor<Outer::guard_v1::GuardedClass>())
     .define_method<void(Outer::guard_v1::GuardedClass::*)()>("normal_method", &Outer::guard_v1::GuardedClass::normalMethod);
+
   Rice::Data_Type<Outer::MyParam> rb_cOuterMyParam = define_class_under<Outer::MyParam>(rb_mOuter, "MyParam")
     .define_constructor(Constructor<Outer::MyParam>())
     .define_attr("value", &Outer::MyParam::value);
+
   Rice::Data_Type<Outer::ConstructorWithNsParam> rb_cOuterConstructorWithNsParam = define_class_under<Outer::ConstructorWithNsParam>(rb_mOuter, "ConstructorWithNsParam")
     .define_constructor(Constructor<Outer::ConstructorWithNsParam>())
     .define_method<void(Outer::ConstructorWithNsParam::*)()>("do_work", &Outer::ConstructorWithNsParam::doWork);

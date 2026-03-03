@@ -106,4 +106,3 @@ inline Rice::Data_Type<Tests::SmartPtr<T>> SmartPtr_instantiate(Rice::Module par
     .define_constructor(Constructor<Tests::SmartPtr<T>, T*>(),
       std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("p"));
 }
-

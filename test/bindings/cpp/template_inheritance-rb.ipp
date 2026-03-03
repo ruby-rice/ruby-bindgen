@@ -59,4 +59,3 @@ inline Rice::Data_Type<Tests::Mat_<_Tp>> Mat__instantiate(Rice::Module parent, c
     .template define_method<_Tp&(Tests::Mat_<_Tp>::*)(int, int)>("at", &Tests::Mat_<_Tp>::at,
       Arg("row"), Arg("col"));
 }
-

@@ -28,5 +28,4 @@ void Init_TemplateDefaults()
   Rice::Data_Type<TypeDefault<double>> rb_cTypeDefaultDouble = TypeDefault_instantiate<double, int>(Rice::Module(rb_cObject), "TypeDefaultDouble");
 
   Rice::Data_Type<TypeDefault<double, float>> rb_cTypeDefaultDF = TypeDefault_instantiate<double, float>(Rice::Module(rb_cObject), "TypeDefaultDF");
-
 }
