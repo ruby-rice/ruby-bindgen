@@ -10,10 +10,11 @@ module RubyBindgen
       def initialize(inputter, outputter, config)
         super(inputter, outputter, config)
         raise ArgumentError, "FFI format requires the 'project' option" unless @project
-        raise ArgumentError, "FFI format does not support 'version_macro'. Version detection uses a runtime method instead. See docs/c_bindings.md#version-detection" if config[:version_macro]
+        @version_check = config[:version_check]
         @library_names = config[:library_names] || []
         @library_versions = config[:library_versions] || []
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
+        raise ArgumentError, "version_check is required when symbols.versions is non-empty" if @symbols.has_versions? && !@version_check
         @export_macros = config[:export_macros] || []
         @module_name = config[:module]
         @indentation = 0
@@ -78,8 +79,7 @@ module RubyBindgen
         depth = module_parts.length
         library = add_indentation(render_template("library"), depth * 2)
 
-        symbols_config = @config[:symbols] || {}
-        has_versions = (symbols_config[:versions] || {}).any?
+        has_versions = @symbols.has_versions?
         version_file = has_versions ? "#{@project}_version" : nil
 
         content = render_template("project",
@@ -98,7 +98,7 @@ module RubyBindgen
         full_path = self.outputter.output_path(relative_path)
         return if File.exist?(full_path)
 
-        method_name = "#{@project}_version"
+        method_name = @version_check
         depth = module_parts.length
         method_body = add_indentation(render_template("version_method", :method_name => method_name), depth * 2)
 
@@ -159,7 +159,7 @@ module RubyBindgen
       def merge_children(versions, indentation: 0, comma: false, strip: false)
         lines = versions.keys.sort_by { |key| key.to_s }.each_with_object([]) do |version, result|
           next unless versions[version]&.any?
-          result << "if #{@project}_version >= #{version}" if version
+          result << "if #{@version_check} >= #{version}" if version
           versions[version].each do |line|
             line = line.rstrip if strip
             line = add_indentation(line, 2) if version

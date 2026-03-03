@@ -95,7 +95,7 @@ class RiceTest < AbstractTest
 
   def test_version_guards
     run_rice_test("version_guards.hpp",
-                  version_macro: "TEST_VERSION",
+                  version_check: "TEST_VERSION",
                   symbols: { versions: {
                     20000 => ["Guards::MyClass::newMethod",
                               "Guards::MyClass::NEW_CONST",

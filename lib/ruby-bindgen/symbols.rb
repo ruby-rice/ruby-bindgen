@@ -166,6 +166,10 @@ module RubyBindgen
       result[:signature] if result && result[:action] == :override
     end
 
+    def has_versions?
+      @exact.any? { |_, v| v[:action] == :version } || @regex.any? { |_, v| v[:action] == :version }
+    end
+
     private
 
     # Normalize type signatures so that whitespace differences don't prevent matching.

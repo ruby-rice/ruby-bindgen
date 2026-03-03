@@ -30,6 +30,7 @@ These options apply to all formats.
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
 | `rename_types` | `[]` | Override generated Ruby class/module names. Array of `{from, to}` entries where `from` is a string or `/regex/` pattern and `to` is the replacement (supports `\1` capture groups). For C (FFI), `from` matches the original C name. For C++ (Rice), `from` matches the generated Ruby name. See [Name Mappings](#name-mappings). |
 | `rename_methods` | `[]` | Override generated Ruby method names. Array of `{from, to}` entries where `from` is a C/C++ name (simple or fully qualified) or `/regex/` pattern and `to` is the Ruby name. See [Name Mappings](#name-mappings). |
+| `version_check` | none | Identifier used for version guards. Required when `symbols.versions` is non-empty. For **Rice**, this is a C preprocessor macro — symbols are wrapped in `#if version_check >= version` / `#endif`. For **FFI**, this is a Ruby method name — symbols are wrapped in `if version_check >= version` / `end`. See [Version Guards](#version-guards). |
 
 ## C (FFI) Options
 
@@ -46,7 +47,6 @@ These options apply to all formats.
 |-----------------|----------------|-------------|
 | `project`       | none           | Project name for the Ruby extension. Used for the `Init_` function name and project wrapper file names. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{project}-rb.cpp`, `{project}-rb.hpp`). When omitted, only per-file bindings are generated. |
 | `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/cpp_bindings.md#include-header). |
-| `version_macro` | none | C preprocessor macro used for version guards. When set, symbols with `action: version` are wrapped in `#if VERSION_MACRO >= version` / `#endif`. See [Version Guards](#version-guards). |
 
 ## CMake Options
 
@@ -167,11 +167,11 @@ symbols:
 
 The `versions` key wraps symbols in version guards. Each sub-key is the minimum version value, with a list of symbol names underneath.
 
-For **Rice** (C++), this requires the `version_macro` option to be set. The generator wraps version-specific symbols in `#if VERSION_MACRO >= version` / `#endif` preprocessor directives.
+For **Rice** (C++), this requires the `version_check` option to be set. The generator wraps version-specific symbols in `#if version_check >= version` / `#endif` preprocessor directives.
 
 ```yaml
 format: Rice
-version_macro: CV_VERSION
+version_check: CV_VERSION
 symbols:
   versions:
     40100:
@@ -187,11 +187,12 @@ This generates:
 #endif
 ```
 
-For **FFI** (C), the generator wraps version-specific symbols in `if {project}_version >= version` Ruby conditionals and generates a `{project}_version.rb` skeleton file. The user implements the version detection method — typically by calling the library's own version API. See [Version Detection](c_bindings.md#version-detection) for a full example.
+For **FFI** (C), this requires the `version_check` option to be set to a Ruby method name. The generator wraps version-specific symbols in `if version_check >= version` Ruby conditionals and generates a `{project}_version.rb` skeleton file. The user implements the version detection method — typically by calling the library's own version API. See [Version Detection](c_bindings.md#version-detection) for a full example.
 
 ```yaml
 format: FFI
 project: proj
+version_check: proj_version
 symbols:
   skip:
     - PJ_INFO       # manually defined in version file

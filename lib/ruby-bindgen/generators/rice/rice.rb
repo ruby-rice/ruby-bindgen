@@ -142,7 +142,8 @@ module RubyBindgen
         @auto_generated_bases = Set.new
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
         @export_macros = config[:export_macros] || []
-        @version_macro = config[:version_macro]
+        @version_check = config[:version_check]
+        raise ArgumentError, "version_check is required when symbols.versions is non-empty" if @symbols.has_versions? && !@version_check
 
         # Build naming tables: merge operator defaults with user config
         rename_types = RubyBindgen::NameMapper.from_config(config[:rename_types] || {})
@@ -2193,7 +2194,7 @@ module RubyBindgen
       def merge_children(versions, indentation: 0, chain: false, terminate: false, strip: false)
         lines = versions.keys.sort_by { |key| key.to_s }.each_with_object([]) do |version, result|
           next unless versions[version]&.any?
-          result << "#if #{@version_macro} >= #{version}" if version
+          result << "#if #{@version_check} >= #{version}" if version
           versions[version].each do |line|
             line = line.rstrip if strip
             line = ".#{line}" if chain

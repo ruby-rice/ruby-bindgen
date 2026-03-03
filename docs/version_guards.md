@@ -13,12 +13,12 @@ The mechanism differs by format:
 
 Two config options work together:
 
-1. **`version_macro`** — the C preprocessor macro to test (e.g., `CV_VERSION`)
+1. **`version_check`** — the C preprocessor macro to test (e.g., `CV_VERSION`)
 2. **`symbols.versions`** — which symbols to guard and at what version
 
 ```yaml
 format: Rice
-version_macro: CV_VERSION
+version_check: CV_VERSION
 symbols:
   versions:
     40100:
@@ -56,7 +56,7 @@ define_global_function("new_func", &cv::newFunc);
 
 ### How It Works
 
-When `version_macro` is set, the generator looks up each symbol's version via the `symbols` config. Symbols with a version are grouped by their version value. The code generator emits `#if VERSION_MACRO >= version` before the group and `#endif` after it. Unversioned symbols are emitted normally with no guards.
+When `version_check` is set, the generator looks up each symbol's version via the `symbols` config. Symbols with a version are grouped by their version value. The code generator emits `#if VERSION_MACRO >= version` before the group and `#endif` after it. Unversioned symbols are emitted normally with no guards.
 
 ## FFI (C)
 

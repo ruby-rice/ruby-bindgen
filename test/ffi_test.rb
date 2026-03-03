@@ -20,7 +20,7 @@ class FfiTest < AbstractTest
 
   def test_proj
     run_ffi_test(["proj.h", "proj_experimental.h"], project: "proj",
-      library_names: ["proj"], library_versions: [], module: "Proj::Api",
+      library_names: ["proj"], library_versions: [], module: "Proj::Api", version_check: "proj_version",
       symbols: { skip: ["PJ_INFO", "proj_info"],
                  versions: { 60100 => ["proj_normalize_for_visualization"],
                              60200 => ["proj_cleanup"],
@@ -35,7 +35,7 @@ class FfiTest < AbstractTest
 
   def test_version_guards
     run_ffi_test("version_guards.h", project: "version_guards",
-      library_names: ["version_guards"], library_versions: [],
+      library_names: ["version_guards"], library_versions: [], version_check: "version_guards_version",
       symbols: { versions: { 20000 => ["newFunction", "NewStruct", "NewEnum", "NewTypedef"],
                               30000 => ["futureFunction"] } })
   end
