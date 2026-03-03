@@ -19,11 +19,11 @@ module Proj
     end
 
     typedef :pointer, :PJconsts
-    callback :PJ_LIST_proj_callback, [:pointer], :pointer
+    callback :pj_list_proj_callback, [:pointer], :pointer
 
     class PjList < FFI::Struct
       layout :id, :string,
-             :proj, :PJ_LIST_proj_callback,
+             :proj, :pj_list_proj_callback,
              :descr, :pointer
     end
 
@@ -191,29 +191,29 @@ module Proj
       :PROJ_OPEN_ACCESS_CREATE, 2
     )
 
-    callback :PROJ_FILE_API_open_cbk_callback, [:pointer, :string, ProjOpenAccess, :pointer], :pointer
-    callback :PROJ_FILE_API_read_cbk_callback, [:pointer, :pointer, :pointer, :ulong, :pointer], :ulong
-    callback :PROJ_FILE_API_write_cbk_callback, [:pointer, :pointer, :pointer, :ulong, :pointer], :ulong
-    callback :PROJ_FILE_API_seek_cbk_callback, [:pointer, :pointer, :long_long, :int, :pointer], :int
-    callback :PROJ_FILE_API_tell_cbk_callback, [:pointer, :pointer, :pointer], :ulong_long
-    callback :PROJ_FILE_API_close_cbk_callback, [:pointer, :pointer, :pointer], :void
-    callback :PROJ_FILE_API_exists_cbk_callback, [:pointer, :string, :pointer], :int
-    callback :PROJ_FILE_API_mkdir_cbk_callback, [:pointer, :string, :pointer], :int
-    callback :PROJ_FILE_API_unlink_cbk_callback, [:pointer, :string, :pointer], :int
-    callback :PROJ_FILE_API_rename_cbk_callback, [:pointer, :string, :string, :pointer], :int
+    callback :proj_file_api_open_cbk_callback, [:pointer, :string, ProjOpenAccess, :pointer], :pointer
+    callback :proj_file_api_read_cbk_callback, [:pointer, :pointer, :pointer, :ulong, :pointer], :ulong
+    callback :proj_file_api_write_cbk_callback, [:pointer, :pointer, :pointer, :ulong, :pointer], :ulong
+    callback :proj_file_api_seek_cbk_callback, [:pointer, :pointer, :long_long, :int, :pointer], :int
+    callback :proj_file_api_tell_cbk_callback, [:pointer, :pointer, :pointer], :ulong_long
+    callback :proj_file_api_close_cbk_callback, [:pointer, :pointer, :pointer], :void
+    callback :proj_file_api_exists_cbk_callback, [:pointer, :string, :pointer], :int
+    callback :proj_file_api_mkdir_cbk_callback, [:pointer, :string, :pointer], :int
+    callback :proj_file_api_unlink_cbk_callback, [:pointer, :string, :pointer], :int
+    callback :proj_file_api_rename_cbk_callback, [:pointer, :string, :string, :pointer], :int
 
     class ProjFileApi < FFI::Struct
       layout :version, :int,
-             :open_cbk, :PROJ_FILE_API_open_cbk_callback,
-             :read_cbk, :PROJ_FILE_API_read_cbk_callback,
-             :write_cbk, :PROJ_FILE_API_write_cbk_callback,
-             :seek_cbk, :PROJ_FILE_API_seek_cbk_callback,
-             :tell_cbk, :PROJ_FILE_API_tell_cbk_callback,
-             :close_cbk, :PROJ_FILE_API_close_cbk_callback,
-             :exists_cbk, :PROJ_FILE_API_exists_cbk_callback,
-             :mkdir_cbk, :PROJ_FILE_API_mkdir_cbk_callback,
-             :unlink_cbk, :PROJ_FILE_API_unlink_cbk_callback,
-             :rename_cbk, :PROJ_FILE_API_rename_cbk_callback
+             :open_cbk, :proj_file_api_open_cbk_callback,
+             :read_cbk, :proj_file_api_read_cbk_callback,
+             :write_cbk, :proj_file_api_write_cbk_callback,
+             :seek_cbk, :proj_file_api_seek_cbk_callback,
+             :tell_cbk, :proj_file_api_tell_cbk_callback,
+             :close_cbk, :proj_file_api_close_cbk_callback,
+             :exists_cbk, :proj_file_api_exists_cbk_callback,
+             :mkdir_cbk, :proj_file_api_mkdir_cbk_callback,
+             :unlink_cbk, :proj_file_api_unlink_cbk_callback,
+             :rename_cbk, :proj_file_api_rename_cbk_callback
     end
 
     attach_function :proj_context_set_fileapi, :proj_context_set_fileapi, [:pointer, ProjFileApi.by_ref, :pointer], :int

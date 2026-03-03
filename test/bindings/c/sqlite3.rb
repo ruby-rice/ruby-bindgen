@@ -21,67 +21,67 @@ module Sqlite3
     layout :p_methods, :pointer
   end
 
-  callback :sqlite3_io_methods_xClose_callback, [:pointer], :int
-  callback :sqlite3_io_methods_xRead_callback, [:pointer, :pointer, :int, :long_long], :int
-  callback :sqlite3_io_methods_xWrite_callback, [:pointer, :pointer, :int, :long_long], :int
-  callback :sqlite3_io_methods_xTruncate_callback, [:pointer, :long_long], :int
-  callback :sqlite3_io_methods_xSync_callback, [:pointer, :int], :int
-  callback :sqlite3_io_methods_xFileSize_callback, [:pointer, :pointer], :int
-  callback :sqlite3_io_methods_xLock_callback, [:pointer, :int], :int
-  callback :sqlite3_io_methods_xUnlock_callback, [:pointer, :int], :int
-  callback :sqlite3_io_methods_xCheckReservedLock_callback, [:pointer, :pointer], :int
-  callback :sqlite3_io_methods_xFileControl_callback, [:pointer, :int, :pointer], :int
-  callback :sqlite3_io_methods_xSectorSize_callback, [:pointer], :int
-  callback :sqlite3_io_methods_xDeviceCharacteristics_callback, [:pointer], :int
-  callback :sqlite3_io_methods_xShmMap_callback, [:pointer, :int, :int, :int, :pointer], :int
-  callback :sqlite3_io_methods_xShmLock_callback, [:pointer, :int, :int, :int], :int
-  callback :sqlite3_io_methods_xShmBarrier_callback, [:pointer], :void
-  callback :sqlite3_io_methods_xShmUnmap_callback, [:pointer, :int], :int
-  callback :sqlite3_io_methods_xFetch_callback, [:pointer, :long_long, :int, :pointer], :int
-  callback :sqlite3_io_methods_xUnfetch_callback, [:pointer, :long_long, :pointer], :int
+  callback :sqlite3_io_methods_x_close_callback, [:pointer], :int
+  callback :sqlite3_io_methods_x_read_callback, [:pointer, :pointer, :int, :long_long], :int
+  callback :sqlite3_io_methods_x_write_callback, [:pointer, :pointer, :int, :long_long], :int
+  callback :sqlite3_io_methods_x_truncate_callback, [:pointer, :long_long], :int
+  callback :sqlite3_io_methods_x_sync_callback, [:pointer, :int], :int
+  callback :sqlite3_io_methods_x_file_size_callback, [:pointer, :pointer], :int
+  callback :sqlite3_io_methods_x_lock_callback, [:pointer, :int], :int
+  callback :sqlite3_io_methods_x_unlock_callback, [:pointer, :int], :int
+  callback :sqlite3_io_methods_x_check_reserved_lock_callback, [:pointer, :pointer], :int
+  callback :sqlite3_io_methods_x_file_control_callback, [:pointer, :int, :pointer], :int
+  callback :sqlite3_io_methods_x_sector_size_callback, [:pointer], :int
+  callback :sqlite3_io_methods_x_device_characteristics_callback, [:pointer], :int
+  callback :sqlite3_io_methods_x_shm_map_callback, [:pointer, :int, :int, :int, :pointer], :int
+  callback :sqlite3_io_methods_x_shm_lock_callback, [:pointer, :int, :int, :int], :int
+  callback :sqlite3_io_methods_x_shm_barrier_callback, [:pointer], :void
+  callback :sqlite3_io_methods_x_shm_unmap_callback, [:pointer, :int], :int
+  callback :sqlite3_io_methods_x_fetch_callback, [:pointer, :long_long, :int, :pointer], :int
+  callback :sqlite3_io_methods_x_unfetch_callback, [:pointer, :long_long, :pointer], :int
 
   class Sqlite3IoMethods < FFI::Struct
     layout :i_version, :int,
-           :x_close, :sqlite3_io_methods_xClose_callback,
-           :x_read, :sqlite3_io_methods_xRead_callback,
-           :x_write, :sqlite3_io_methods_xWrite_callback,
-           :x_truncate, :sqlite3_io_methods_xTruncate_callback,
-           :x_sync, :sqlite3_io_methods_xSync_callback,
-           :x_file_size, :sqlite3_io_methods_xFileSize_callback,
-           :x_lock, :sqlite3_io_methods_xLock_callback,
-           :x_unlock, :sqlite3_io_methods_xUnlock_callback,
-           :x_check_reserved_lock, :sqlite3_io_methods_xCheckReservedLock_callback,
-           :x_file_control, :sqlite3_io_methods_xFileControl_callback,
-           :x_sector_size, :sqlite3_io_methods_xSectorSize_callback,
-           :x_device_characteristics, :sqlite3_io_methods_xDeviceCharacteristics_callback,
-           :x_shm_map, :sqlite3_io_methods_xShmMap_callback,
-           :x_shm_lock, :sqlite3_io_methods_xShmLock_callback,
-           :x_shm_barrier, :sqlite3_io_methods_xShmBarrier_callback,
-           :x_shm_unmap, :sqlite3_io_methods_xShmUnmap_callback,
-           :x_fetch, :sqlite3_io_methods_xFetch_callback,
-           :x_unfetch, :sqlite3_io_methods_xUnfetch_callback
+           :x_close, :sqlite3_io_methods_x_close_callback,
+           :x_read, :sqlite3_io_methods_x_read_callback,
+           :x_write, :sqlite3_io_methods_x_write_callback,
+           :x_truncate, :sqlite3_io_methods_x_truncate_callback,
+           :x_sync, :sqlite3_io_methods_x_sync_callback,
+           :x_file_size, :sqlite3_io_methods_x_file_size_callback,
+           :x_lock, :sqlite3_io_methods_x_lock_callback,
+           :x_unlock, :sqlite3_io_methods_x_unlock_callback,
+           :x_check_reserved_lock, :sqlite3_io_methods_x_check_reserved_lock_callback,
+           :x_file_control, :sqlite3_io_methods_x_file_control_callback,
+           :x_sector_size, :sqlite3_io_methods_x_sector_size_callback,
+           :x_device_characteristics, :sqlite3_io_methods_x_device_characteristics_callback,
+           :x_shm_map, :sqlite3_io_methods_x_shm_map_callback,
+           :x_shm_lock, :sqlite3_io_methods_x_shm_lock_callback,
+           :x_shm_barrier, :sqlite3_io_methods_x_shm_barrier_callback,
+           :x_shm_unmap, :sqlite3_io_methods_x_shm_unmap_callback,
+           :x_fetch, :sqlite3_io_methods_x_fetch_callback,
+           :x_unfetch, :sqlite3_io_methods_x_unfetch_callback
   end
 
   typedef :pointer, :Sqlite3Mutex
   typedef :pointer, :Sqlite3ApiRoutines
   typedef :string, :sqlite3_filename
   callback :sqlite3_syscall_ptr, [], :void
-  callback :sqlite3_vfs_xOpen_callback, [:pointer, :string, :pointer, :int, :pointer], :int
-  callback :sqlite3_vfs_xDelete_callback, [:pointer, :string, :int], :int
-  callback :sqlite3_vfs_xAccess_callback, [:pointer, :string, :int, :pointer], :int
-  callback :sqlite3_vfs_xFullPathname_callback, [:pointer, :string, :int, :pointer], :int
-  callback :sqlite3_vfs_xDlOpen_callback, [:pointer, :string], :pointer
-  callback :sqlite3_vfs_xDlError_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_vfs_xDlSym_callback, [:pointer, :pointer, :string], :pointer
-  callback :sqlite3_vfs_xDlClose_callback, [:pointer, :pointer], :void
-  callback :sqlite3_vfs_xRandomness_callback, [:pointer, :int, :pointer], :int
-  callback :sqlite3_vfs_xSleep_callback, [:pointer, :int], :int
-  callback :sqlite3_vfs_xCurrentTime_callback, [:pointer, :pointer], :int
-  callback :sqlite3_vfs_xGetLastError_callback, [:pointer, :int, :pointer], :int
-  callback :sqlite3_vfs_xCurrentTimeInt64_callback, [:pointer, :pointer], :int
-  callback :sqlite3_vfs_xSetSystemCall_callback, [:pointer, :string, :sqlite3_syscall_ptr], :int
-  callback :sqlite3_vfs_xGetSystemCall_callback, [:pointer, :string], :sqlite3_syscall_ptr
-  callback :sqlite3_vfs_xNextSystemCall_callback, [:pointer, :string], :pointer
+  callback :sqlite3_vfs_x_open_callback, [:pointer, :string, :pointer, :int, :pointer], :int
+  callback :sqlite3_vfs_x_delete_callback, [:pointer, :string, :int], :int
+  callback :sqlite3_vfs_x_access_callback, [:pointer, :string, :int, :pointer], :int
+  callback :sqlite3_vfs_x_full_pathname_callback, [:pointer, :string, :int, :pointer], :int
+  callback :sqlite3_vfs_x_dl_open_callback, [:pointer, :string], :pointer
+  callback :sqlite3_vfs_x_dl_error_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_vfs_x_dl_sym_callback, [:pointer, :pointer, :string], :pointer
+  callback :sqlite3_vfs_x_dl_close_callback, [:pointer, :pointer], :void
+  callback :sqlite3_vfs_x_randomness_callback, [:pointer, :int, :pointer], :int
+  callback :sqlite3_vfs_x_sleep_callback, [:pointer, :int], :int
+  callback :sqlite3_vfs_x_current_time_callback, [:pointer, :pointer], :int
+  callback :sqlite3_vfs_x_get_last_error_callback, [:pointer, :int, :pointer], :int
+  callback :sqlite3_vfs_x_current_time_int64_callback, [:pointer, :pointer], :int
+  callback :sqlite3_vfs_x_set_system_call_callback, [:pointer, :string, :sqlite3_syscall_ptr], :int
+  callback :sqlite3_vfs_x_get_system_call_callback, [:pointer, :string], :sqlite3_syscall_ptr
+  callback :sqlite3_vfs_x_next_system_call_callback, [:pointer, :string], :pointer
 
   class Sqlite3Vfs < FFI::Struct
     layout :i_version, :int,
@@ -90,22 +90,22 @@ module Sqlite3
            :p_next, :pointer,
            :z_name, :string,
            :p_app_data, :pointer,
-           :x_open, :sqlite3_vfs_xOpen_callback,
-           :x_delete, :sqlite3_vfs_xDelete_callback,
-           :x_access, :sqlite3_vfs_xAccess_callback,
-           :x_full_pathname, :sqlite3_vfs_xFullPathname_callback,
-           :x_dl_open, :sqlite3_vfs_xDlOpen_callback,
-           :x_dl_error, :sqlite3_vfs_xDlError_callback,
-           :x_dl_sym, :sqlite3_vfs_xDlSym_callback,
-           :x_dl_close, :sqlite3_vfs_xDlClose_callback,
-           :x_randomness, :sqlite3_vfs_xRandomness_callback,
-           :x_sleep, :sqlite3_vfs_xSleep_callback,
-           :x_current_time, :sqlite3_vfs_xCurrentTime_callback,
-           :x_get_last_error, :sqlite3_vfs_xGetLastError_callback,
-           :x_current_time_int64, :sqlite3_vfs_xCurrentTimeInt64_callback,
-           :x_set_system_call, :sqlite3_vfs_xSetSystemCall_callback,
-           :x_get_system_call, :sqlite3_vfs_xGetSystemCall_callback,
-           :x_next_system_call, :sqlite3_vfs_xNextSystemCall_callback
+           :x_open, :sqlite3_vfs_x_open_callback,
+           :x_delete, :sqlite3_vfs_x_delete_callback,
+           :x_access, :sqlite3_vfs_x_access_callback,
+           :x_full_pathname, :sqlite3_vfs_x_full_pathname_callback,
+           :x_dl_open, :sqlite3_vfs_x_dl_open_callback,
+           :x_dl_error, :sqlite3_vfs_x_dl_error_callback,
+           :x_dl_sym, :sqlite3_vfs_x_dl_sym_callback,
+           :x_dl_close, :sqlite3_vfs_x_dl_close_callback,
+           :x_randomness, :sqlite3_vfs_x_randomness_callback,
+           :x_sleep, :sqlite3_vfs_x_sleep_callback,
+           :x_current_time, :sqlite3_vfs_x_current_time_callback,
+           :x_get_last_error, :sqlite3_vfs_x_get_last_error_callback,
+           :x_current_time_int64, :sqlite3_vfs_x_current_time_int64_callback,
+           :x_set_system_call, :sqlite3_vfs_x_set_system_call_callback,
+           :x_get_system_call, :sqlite3_vfs_x_get_system_call_callback,
+           :x_next_system_call, :sqlite3_vfs_x_next_system_call_callback
   end
 
   attach_function :sqlite3_initialize, :sqlite3_initialize, [], :int
@@ -114,22 +114,22 @@ module Sqlite3
   attach_function :sqlite3_os_end, :sqlite3_os_end, [], :int
   attach_function :sqlite3_config, :sqlite3_config, [:int], :int
   attach_function :sqlite3_db_config, :sqlite3_db_config, [:pointer, :int], :int
-  callback :sqlite3_mem_methods_xMalloc_callback, [:int], :pointer
-  callback :sqlite3_mem_methods_xFree_callback, [:pointer], :void
-  callback :sqlite3_mem_methods_xRealloc_callback, [:pointer, :int], :pointer
-  callback :sqlite3_mem_methods_xSize_callback, [:pointer], :int
-  callback :sqlite3_mem_methods_xRoundup_callback, [:int], :int
-  callback :sqlite3_mem_methods_xInit_callback, [:pointer], :int
-  callback :sqlite3_mem_methods_xShutdown_callback, [:pointer], :void
+  callback :sqlite3_mem_methods_x_malloc_callback, [:int], :pointer
+  callback :sqlite3_mem_methods_x_free_callback, [:pointer], :void
+  callback :sqlite3_mem_methods_x_realloc_callback, [:pointer, :int], :pointer
+  callback :sqlite3_mem_methods_x_size_callback, [:pointer], :int
+  callback :sqlite3_mem_methods_x_roundup_callback, [:int], :int
+  callback :sqlite3_mem_methods_x_init_callback, [:pointer], :int
+  callback :sqlite3_mem_methods_x_shutdown_callback, [:pointer], :void
 
   class Sqlite3MemMethods < FFI::Struct
-    layout :x_malloc, :sqlite3_mem_methods_xMalloc_callback,
-           :x_free, :sqlite3_mem_methods_xFree_callback,
-           :x_realloc, :sqlite3_mem_methods_xRealloc_callback,
-           :x_size, :sqlite3_mem_methods_xSize_callback,
-           :x_roundup, :sqlite3_mem_methods_xRoundup_callback,
-           :x_init, :sqlite3_mem_methods_xInit_callback,
-           :x_shutdown, :sqlite3_mem_methods_xShutdown_callback,
+    layout :x_malloc, :sqlite3_mem_methods_x_malloc_callback,
+           :x_free, :sqlite3_mem_methods_x_free_callback,
+           :x_realloc, :sqlite3_mem_methods_x_realloc_callback,
+           :x_size, :sqlite3_mem_methods_x_size_callback,
+           :x_roundup, :sqlite3_mem_methods_x_roundup_callback,
+           :x_init, :sqlite3_mem_methods_x_init_callback,
+           :x_shutdown, :sqlite3_mem_methods_x_shutdown_callback,
            :p_app_data, :pointer
   end
 
@@ -162,14 +162,14 @@ module Sqlite3
   attach_function :sqlite3_memory_used, :sqlite3_memory_used, [], :long_long
   attach_function :sqlite3_memory_highwater, :sqlite3_memory_highwater, [:int], :long_long
   attach_function :sqlite3_randomness, :sqlite3_randomness, [:int, :pointer], :void
-  callback :sqlite3_set_authorizer_xAuth_callback, [:pointer, :int, :string, :string, :string, :string], :int
-  attach_function :sqlite3_set_authorizer, :sqlite3_set_authorizer, [:pointer, :sqlite3_set_authorizer_xAuth_callback, :pointer], :int
-  callback :sqlite3_trace_xTrace_callback, [:pointer, :string], :void
-  attach_function :sqlite3_trace, :sqlite3_trace, [:pointer, :sqlite3_trace_xTrace_callback, :pointer], :pointer
-  callback :sqlite3_profile_xProfile_callback, [:pointer, :string, :ulong_long], :void
-  attach_function :sqlite3_profile, :sqlite3_profile, [:pointer, :sqlite3_profile_xProfile_callback, :pointer], :pointer
-  callback :sqlite3_trace_v2_xCallback_callback, [:uint, :pointer, :pointer, :pointer], :int
-  attach_function :sqlite3_trace_v2, :sqlite3_trace_v2, [:pointer, :uint, :sqlite3_trace_v2_xCallback_callback, :pointer], :int
+  callback :sqlite3_set_authorizer_x_auth_callback, [:pointer, :int, :string, :string, :string, :string], :int
+  attach_function :sqlite3_set_authorizer, :sqlite3_set_authorizer, [:pointer, :sqlite3_set_authorizer_x_auth_callback, :pointer], :int
+  callback :sqlite3_trace_x_trace_callback, [:pointer, :string], :void
+  attach_function :sqlite3_trace, :sqlite3_trace, [:pointer, :sqlite3_trace_x_trace_callback, :pointer], :pointer
+  callback :sqlite3_profile_x_profile_callback, [:pointer, :string, :ulong_long], :void
+  attach_function :sqlite3_profile, :sqlite3_profile, [:pointer, :sqlite3_profile_x_profile_callback, :pointer], :pointer
+  callback :sqlite3_trace_v2_x_callback_callback, [:uint, :pointer, :pointer, :pointer], :int
+  attach_function :sqlite3_trace_v2, :sqlite3_trace_v2, [:pointer, :uint, :sqlite3_trace_v2_x_callback_callback, :pointer], :int
   callback :sqlite3_progress_handler__callback, [:pointer], :int
   attach_function :sqlite3_progress_handler, :sqlite3_progress_handler, [:pointer, :int, :sqlite3_progress_handler__callback, :pointer], :void
   attach_function :sqlite3_open, :sqlite3_open, [:string, :pointer], :int
@@ -255,25 +255,25 @@ module Sqlite3
   attach_function :sqlite3_column_type, :sqlite3_column_type, [:pointer, :int], :int
   attach_function :sqlite3_finalize, :sqlite3_finalize, [:pointer], :int
   attach_function :sqlite3_reset, :sqlite3_reset, [:pointer], :int
-  callback :sqlite3_create_function_xFunc_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_create_function_xStep_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_create_function_xFinal_callback, [:pointer], :void
-  attach_function :sqlite3_create_function, :sqlite3_create_function, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_function_xFunc_callback, :sqlite3_create_function_xStep_callback, :sqlite3_create_function_xFinal_callback], :int
-  callback :sqlite3_create_function16_xFunc_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_create_function16_xStep_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_create_function16_xFinal_callback, [:pointer], :void
-  attach_function :sqlite3_create_function16, :sqlite3_create_function16, [:pointer, :pointer, :int, :int, :pointer, :sqlite3_create_function16_xFunc_callback, :sqlite3_create_function16_xStep_callback, :sqlite3_create_function16_xFinal_callback], :int
-  callback :sqlite3_create_function_v2_xFunc_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_create_function_v2_xStep_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_create_function_v2_xFinal_callback, [:pointer], :void
-  callback :sqlite3_create_function_v2_xDestroy_callback, [:pointer], :void
-  attach_function :sqlite3_create_function_v2, :sqlite3_create_function_v2, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_function_v2_xFunc_callback, :sqlite3_create_function_v2_xStep_callback, :sqlite3_create_function_v2_xFinal_callback, :sqlite3_create_function_v2_xDestroy_callback], :int
-  callback :sqlite3_create_window_function_xStep_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_create_window_function_xFinal_callback, [:pointer], :void
-  callback :sqlite3_create_window_function_xValue_callback, [:pointer], :void
-  callback :sqlite3_create_window_function_xInverse_callback, [:pointer, :int, :pointer], :void
-  callback :sqlite3_create_window_function_xDestroy_callback, [:pointer], :void
-  attach_function :sqlite3_create_window_function, :sqlite3_create_window_function, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_window_function_xStep_callback, :sqlite3_create_window_function_xFinal_callback, :sqlite3_create_window_function_xValue_callback, :sqlite3_create_window_function_xInverse_callback, :sqlite3_create_window_function_xDestroy_callback], :int
+  callback :sqlite3_create_function_x_func_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_create_function_x_step_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_create_function_x_final_callback, [:pointer], :void
+  attach_function :sqlite3_create_function, :sqlite3_create_function, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_function_x_func_callback, :sqlite3_create_function_x_step_callback, :sqlite3_create_function_x_final_callback], :int
+  callback :sqlite3_create_function16_x_func_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_create_function16_x_step_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_create_function16_x_final_callback, [:pointer], :void
+  attach_function :sqlite3_create_function16, :sqlite3_create_function16, [:pointer, :pointer, :int, :int, :pointer, :sqlite3_create_function16_x_func_callback, :sqlite3_create_function16_x_step_callback, :sqlite3_create_function16_x_final_callback], :int
+  callback :sqlite3_create_function_v2_x_func_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_create_function_v2_x_step_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_create_function_v2_x_final_callback, [:pointer], :void
+  callback :sqlite3_create_function_v2_x_destroy_callback, [:pointer], :void
+  attach_function :sqlite3_create_function_v2, :sqlite3_create_function_v2, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_function_v2_x_func_callback, :sqlite3_create_function_v2_x_step_callback, :sqlite3_create_function_v2_x_final_callback, :sqlite3_create_function_v2_x_destroy_callback], :int
+  callback :sqlite3_create_window_function_x_step_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_create_window_function_x_final_callback, [:pointer], :void
+  callback :sqlite3_create_window_function_x_value_callback, [:pointer], :void
+  callback :sqlite3_create_window_function_x_inverse_callback, [:pointer, :int, :pointer], :void
+  callback :sqlite3_create_window_function_x_destroy_callback, [:pointer], :void
+  attach_function :sqlite3_create_window_function, :sqlite3_create_window_function, [:pointer, :string, :int, :int, :pointer, :sqlite3_create_window_function_x_step_callback, :sqlite3_create_window_function_x_final_callback, :sqlite3_create_window_function_x_value_callback, :sqlite3_create_window_function_x_inverse_callback, :sqlite3_create_window_function_x_destroy_callback], :int
   attach_function :sqlite3_aggregate_count, :sqlite3_aggregate_count, [:pointer], :int
   attach_function :sqlite3_expired, :sqlite3_expired, [:pointer], :int
   attach_function :sqlite3_transfer_bindings, :sqlite3_transfer_bindings, [:pointer, :pointer], :int
@@ -339,13 +339,13 @@ module Sqlite3
   attach_function :sqlite3_result_zeroblob, :sqlite3_result_zeroblob, [:pointer, :int], :void
   attach_function :sqlite3_result_zeroblob64, :sqlite3_result_zeroblob64, [:pointer, :ulong_long], :int
   attach_function :sqlite3_result_subtype, :sqlite3_result_subtype, [:pointer, :uint], :void
-  callback :sqlite3_create_collation_xCompare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
-  attach_function :sqlite3_create_collation, :sqlite3_create_collation, [:pointer, :string, :int, :pointer, :sqlite3_create_collation_xCompare_callback], :int
-  callback :sqlite3_create_collation_v2_xCompare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
-  callback :sqlite3_create_collation_v2_xDestroy_callback, [:pointer], :void
-  attach_function :sqlite3_create_collation_v2, :sqlite3_create_collation_v2, [:pointer, :string, :int, :pointer, :sqlite3_create_collation_v2_xCompare_callback, :sqlite3_create_collation_v2_xDestroy_callback], :int
-  callback :sqlite3_create_collation16_xCompare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
-  attach_function :sqlite3_create_collation16, :sqlite3_create_collation16, [:pointer, :pointer, :int, :pointer, :sqlite3_create_collation16_xCompare_callback], :int
+  callback :sqlite3_create_collation_x_compare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
+  attach_function :sqlite3_create_collation, :sqlite3_create_collation, [:pointer, :string, :int, :pointer, :sqlite3_create_collation_x_compare_callback], :int
+  callback :sqlite3_create_collation_v2_x_compare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
+  callback :sqlite3_create_collation_v2_x_destroy_callback, [:pointer], :void
+  attach_function :sqlite3_create_collation_v2, :sqlite3_create_collation_v2, [:pointer, :string, :int, :pointer, :sqlite3_create_collation_v2_x_compare_callback, :sqlite3_create_collation_v2_x_destroy_callback], :int
+  callback :sqlite3_create_collation16_x_compare_callback, [:pointer, :int, :pointer, :int, :pointer], :int
+  attach_function :sqlite3_create_collation16, :sqlite3_create_collation16, [:pointer, :pointer, :int, :pointer, :sqlite3_create_collation16_x_compare_callback], :int
   callback :sqlite3_collation_needed__callback, [:pointer, :pointer, :int, :string], :void
   attach_function :sqlite3_collation_needed, :sqlite3_collation_needed, [:pointer, :pointer, :sqlite3_collation_needed__callback], :int
   callback :sqlite3_collation_needed16__callback, [:pointer, :pointer, :int, :pointer], :void
@@ -381,62 +381,62 @@ module Sqlite3
   attach_function :sqlite3_table_column_metadata, :sqlite3_table_column_metadata, [:pointer, :string, :string, :string, :pointer, :pointer, :pointer, :pointer, :pointer], :int
   attach_function :sqlite3_load_extension, :sqlite3_load_extension, [:pointer, :string, :string, :pointer], :int
   attach_function :sqlite3_enable_load_extension, :sqlite3_enable_load_extension, [:pointer, :int], :int
-  callback :sqlite3_auto_extension_xEntryPoint_callback, [], :void
-  attach_function :sqlite3_auto_extension, :sqlite3_auto_extension, [:sqlite3_auto_extension_xEntryPoint_callback], :int
-  callback :sqlite3_cancel_auto_extension_xEntryPoint_callback, [], :void
-  attach_function :sqlite3_cancel_auto_extension, :sqlite3_cancel_auto_extension, [:sqlite3_cancel_auto_extension_xEntryPoint_callback], :int
+  callback :sqlite3_auto_extension_x_entry_point_callback, [], :void
+  attach_function :sqlite3_auto_extension, :sqlite3_auto_extension, [:sqlite3_auto_extension_x_entry_point_callback], :int
+  callback :sqlite3_cancel_auto_extension_x_entry_point_callback, [], :void
+  attach_function :sqlite3_cancel_auto_extension, :sqlite3_cancel_auto_extension, [:sqlite3_cancel_auto_extension_x_entry_point_callback], :int
   attach_function :sqlite3_reset_auto_extension, :sqlite3_reset_auto_extension, [], :void
-  callback :sqlite3_module_xCreate_callback, [:pointer, :pointer, :int, :pointer, :pointer, :pointer], :int
-  callback :sqlite3_module_xConnect_callback, [:pointer, :pointer, :int, :pointer, :pointer, :pointer], :int
-  callback :sqlite3_module_xBestIndex_callback, [:pointer, :pointer], :int
-  callback :sqlite3_module_xDisconnect_callback, [:pointer], :int
-  callback :sqlite3_module_xDestroy_callback, [:pointer], :int
-  callback :sqlite3_module_xOpen_callback, [:pointer, :pointer], :int
-  callback :sqlite3_module_xClose_callback, [:pointer], :int
-  callback :sqlite3_module_xFilter_callback, [:pointer, :int, :string, :int, :pointer], :int
-  callback :sqlite3_module_xNext_callback, [:pointer], :int
-  callback :sqlite3_module_xEof_callback, [:pointer], :int
-  callback :sqlite3_module_xColumn_callback, [:pointer, :pointer, :int], :int
-  callback :sqlite3_module_xRowid_callback, [:pointer, :pointer], :int
-  callback :sqlite3_module_xUpdate_callback, [:pointer, :int, :pointer, :pointer], :int
-  callback :sqlite3_module_xBegin_callback, [:pointer], :int
-  callback :sqlite3_module_xSync_callback, [:pointer], :int
-  callback :sqlite3_module_xCommit_callback, [:pointer], :int
-  callback :sqlite3_module_xRollback_callback, [:pointer], :int
-  callback :sqlite3_module_xFindFunction_callback, [:pointer, :int, :string, :pointer, :pointer], :int
-  callback :sqlite3_module_xRename_callback, [:pointer, :string], :int
-  callback :sqlite3_module_xSavepoint_callback, [:pointer, :int], :int
-  callback :sqlite3_module_xRelease_callback, [:pointer, :int], :int
-  callback :sqlite3_module_xRollbackTo_callback, [:pointer, :int], :int
-  callback :sqlite3_module_xShadowName_callback, [:string], :int
-  callback :sqlite3_module_xIntegrity_callback, [:pointer, :string, :string, :int, :pointer], :int
+  callback :sqlite3_module_x_create_callback, [:pointer, :pointer, :int, :pointer, :pointer, :pointer], :int
+  callback :sqlite3_module_x_connect_callback, [:pointer, :pointer, :int, :pointer, :pointer, :pointer], :int
+  callback :sqlite3_module_x_best_index_callback, [:pointer, :pointer], :int
+  callback :sqlite3_module_x_disconnect_callback, [:pointer], :int
+  callback :sqlite3_module_x_destroy_callback, [:pointer], :int
+  callback :sqlite3_module_x_open_callback, [:pointer, :pointer], :int
+  callback :sqlite3_module_x_close_callback, [:pointer], :int
+  callback :sqlite3_module_x_filter_callback, [:pointer, :int, :string, :int, :pointer], :int
+  callback :sqlite3_module_x_next_callback, [:pointer], :int
+  callback :sqlite3_module_x_eof_callback, [:pointer], :int
+  callback :sqlite3_module_x_column_callback, [:pointer, :pointer, :int], :int
+  callback :sqlite3_module_x_rowid_callback, [:pointer, :pointer], :int
+  callback :sqlite3_module_x_update_callback, [:pointer, :int, :pointer, :pointer], :int
+  callback :sqlite3_module_x_begin_callback, [:pointer], :int
+  callback :sqlite3_module_x_sync_callback, [:pointer], :int
+  callback :sqlite3_module_x_commit_callback, [:pointer], :int
+  callback :sqlite3_module_x_rollback_callback, [:pointer], :int
+  callback :sqlite3_module_x_find_function_callback, [:pointer, :int, :string, :pointer, :pointer], :int
+  callback :sqlite3_module_x_rename_callback, [:pointer, :string], :int
+  callback :sqlite3_module_x_savepoint_callback, [:pointer, :int], :int
+  callback :sqlite3_module_x_release_callback, [:pointer, :int], :int
+  callback :sqlite3_module_x_rollback_to_callback, [:pointer, :int], :int
+  callback :sqlite3_module_x_shadow_name_callback, [:string], :int
+  callback :sqlite3_module_x_integrity_callback, [:pointer, :string, :string, :int, :pointer], :int
 
   class Sqlite3Module < FFI::Struct
     layout :i_version, :int,
-           :x_create, :sqlite3_module_xCreate_callback,
-           :x_connect, :sqlite3_module_xConnect_callback,
-           :x_best_index, :sqlite3_module_xBestIndex_callback,
-           :x_disconnect, :sqlite3_module_xDisconnect_callback,
-           :x_destroy, :sqlite3_module_xDestroy_callback,
-           :x_open, :sqlite3_module_xOpen_callback,
-           :x_close, :sqlite3_module_xClose_callback,
-           :x_filter, :sqlite3_module_xFilter_callback,
-           :x_next, :sqlite3_module_xNext_callback,
-           :x_eof, :sqlite3_module_xEof_callback,
-           :x_column, :sqlite3_module_xColumn_callback,
-           :x_rowid, :sqlite3_module_xRowid_callback,
-           :x_update, :sqlite3_module_xUpdate_callback,
-           :x_begin, :sqlite3_module_xBegin_callback,
-           :x_sync, :sqlite3_module_xSync_callback,
-           :x_commit, :sqlite3_module_xCommit_callback,
-           :x_rollback, :sqlite3_module_xRollback_callback,
-           :x_find_function, :sqlite3_module_xFindFunction_callback,
-           :x_rename, :sqlite3_module_xRename_callback,
-           :x_savepoint, :sqlite3_module_xSavepoint_callback,
-           :x_release, :sqlite3_module_xRelease_callback,
-           :x_rollback_to, :sqlite3_module_xRollbackTo_callback,
-           :x_shadow_name, :sqlite3_module_xShadowName_callback,
-           :x_integrity, :sqlite3_module_xIntegrity_callback
+           :x_create, :sqlite3_module_x_create_callback,
+           :x_connect, :sqlite3_module_x_connect_callback,
+           :x_best_index, :sqlite3_module_x_best_index_callback,
+           :x_disconnect, :sqlite3_module_x_disconnect_callback,
+           :x_destroy, :sqlite3_module_x_destroy_callback,
+           :x_open, :sqlite3_module_x_open_callback,
+           :x_close, :sqlite3_module_x_close_callback,
+           :x_filter, :sqlite3_module_x_filter_callback,
+           :x_next, :sqlite3_module_x_next_callback,
+           :x_eof, :sqlite3_module_x_eof_callback,
+           :x_column, :sqlite3_module_x_column_callback,
+           :x_rowid, :sqlite3_module_x_rowid_callback,
+           :x_update, :sqlite3_module_x_update_callback,
+           :x_begin, :sqlite3_module_x_begin_callback,
+           :x_sync, :sqlite3_module_x_sync_callback,
+           :x_commit, :sqlite3_module_x_commit_callback,
+           :x_rollback, :sqlite3_module_x_rollback_callback,
+           :x_find_function, :sqlite3_module_x_find_function_callback,
+           :x_rename, :sqlite3_module_x_rename_callback,
+           :x_savepoint, :sqlite3_module_x_savepoint_callback,
+           :x_release, :sqlite3_module_x_release_callback,
+           :x_rollback_to, :sqlite3_module_x_rollback_to_callback,
+           :x_shadow_name, :sqlite3_module_x_shadow_name_callback,
+           :x_integrity, :sqlite3_module_x_integrity_callback
   end
 
   class Sqlite3IndexConstraint < FFI::Struct
@@ -473,8 +473,8 @@ module Sqlite3
   end
 
   attach_function :sqlite3_create_module, :sqlite3_create_module, [:pointer, :string, Sqlite3Module.by_ref, :pointer], :int
-  callback :sqlite3_create_module_v2_xDestroy_callback, [:pointer], :void
-  attach_function :sqlite3_create_module_v2, :sqlite3_create_module_v2, [:pointer, :string, Sqlite3Module.by_ref, :pointer, :sqlite3_create_module_v2_xDestroy_callback], :int
+  callback :sqlite3_create_module_v2_x_destroy_callback, [:pointer], :void
+  attach_function :sqlite3_create_module_v2, :sqlite3_create_module_v2, [:pointer, :string, Sqlite3Module.by_ref, :pointer, :sqlite3_create_module_v2_x_destroy_callback], :int
   attach_function :sqlite3_drop_modules, :sqlite3_drop_modules, [:pointer, :pointer], :int
 
   class Sqlite3Vtab < FFI::Struct
@@ -504,26 +504,26 @@ module Sqlite3
   attach_function :sqlite3_mutex_enter, :sqlite3_mutex_enter, [:pointer], :void
   attach_function :sqlite3_mutex_try, :sqlite3_mutex_try, [:pointer], :int
   attach_function :sqlite3_mutex_leave, :sqlite3_mutex_leave, [:pointer], :void
-  callback :sqlite3_mutex_methods_xMutexInit_callback, [], :int
-  callback :sqlite3_mutex_methods_xMutexEnd_callback, [], :int
-  callback :sqlite3_mutex_methods_xMutexAlloc_callback, [:int], :pointer
-  callback :sqlite3_mutex_methods_xMutexFree_callback, [:pointer], :void
-  callback :sqlite3_mutex_methods_xMutexEnter_callback, [:pointer], :void
-  callback :sqlite3_mutex_methods_xMutexTry_callback, [:pointer], :int
-  callback :sqlite3_mutex_methods_xMutexLeave_callback, [:pointer], :void
-  callback :sqlite3_mutex_methods_xMutexHeld_callback, [:pointer], :int
-  callback :sqlite3_mutex_methods_xMutexNotheld_callback, [:pointer], :int
+  callback :sqlite3_mutex_methods_x_mutex_init_callback, [], :int
+  callback :sqlite3_mutex_methods_x_mutex_end_callback, [], :int
+  callback :sqlite3_mutex_methods_x_mutex_alloc_callback, [:int], :pointer
+  callback :sqlite3_mutex_methods_x_mutex_free_callback, [:pointer], :void
+  callback :sqlite3_mutex_methods_x_mutex_enter_callback, [:pointer], :void
+  callback :sqlite3_mutex_methods_x_mutex_try_callback, [:pointer], :int
+  callback :sqlite3_mutex_methods_x_mutex_leave_callback, [:pointer], :void
+  callback :sqlite3_mutex_methods_x_mutex_held_callback, [:pointer], :int
+  callback :sqlite3_mutex_methods_x_mutex_notheld_callback, [:pointer], :int
 
   class Sqlite3MutexMethods < FFI::Struct
-    layout :x_mutex_init, :sqlite3_mutex_methods_xMutexInit_callback,
-           :x_mutex_end, :sqlite3_mutex_methods_xMutexEnd_callback,
-           :x_mutex_alloc, :sqlite3_mutex_methods_xMutexAlloc_callback,
-           :x_mutex_free, :sqlite3_mutex_methods_xMutexFree_callback,
-           :x_mutex_enter, :sqlite3_mutex_methods_xMutexEnter_callback,
-           :x_mutex_try, :sqlite3_mutex_methods_xMutexTry_callback,
-           :x_mutex_leave, :sqlite3_mutex_methods_xMutexLeave_callback,
-           :x_mutex_held, :sqlite3_mutex_methods_xMutexHeld_callback,
-           :x_mutex_notheld, :sqlite3_mutex_methods_xMutexNotheld_callback
+    layout :x_mutex_init, :sqlite3_mutex_methods_x_mutex_init_callback,
+           :x_mutex_end, :sqlite3_mutex_methods_x_mutex_end_callback,
+           :x_mutex_alloc, :sqlite3_mutex_methods_x_mutex_alloc_callback,
+           :x_mutex_free, :sqlite3_mutex_methods_x_mutex_free_callback,
+           :x_mutex_enter, :sqlite3_mutex_methods_x_mutex_enter_callback,
+           :x_mutex_try, :sqlite3_mutex_methods_x_mutex_try_callback,
+           :x_mutex_leave, :sqlite3_mutex_methods_x_mutex_leave_callback,
+           :x_mutex_held, :sqlite3_mutex_methods_x_mutex_held_callback,
+           :x_mutex_notheld, :sqlite3_mutex_methods_x_mutex_notheld_callback
   end
 
   attach_function :sqlite3_mutex_held, :sqlite3_mutex_held, [:pointer], :int
@@ -557,57 +557,57 @@ module Sqlite3
            :p_extra, :pointer
   end
 
-  callback :sqlite3_pcache_methods2_xInit_callback, [:pointer], :int
-  callback :sqlite3_pcache_methods2_xShutdown_callback, [:pointer], :void
-  callback :sqlite3_pcache_methods2_xCreate_callback, [:int, :int, :int], :pointer
-  callback :sqlite3_pcache_methods2_xCachesize_callback, [:pointer, :int], :void
-  callback :sqlite3_pcache_methods2_xPagecount_callback, [:pointer], :int
-  callback :sqlite3_pcache_methods2_xFetch_callback, [:pointer, :uint, :int], Sqlite3PcachePage.by_ref
-  callback :sqlite3_pcache_methods2_xUnpin_callback, [:pointer, :pointer, :int], :void
-  callback :sqlite3_pcache_methods2_xRekey_callback, [:pointer, :pointer, :uint, :uint], :void
-  callback :sqlite3_pcache_methods2_xTruncate_callback, [:pointer, :uint], :void
-  callback :sqlite3_pcache_methods2_xDestroy_callback, [:pointer], :void
-  callback :sqlite3_pcache_methods2_xShrink_callback, [:pointer], :void
+  callback :sqlite3_pcache_methods2_x_init_callback, [:pointer], :int
+  callback :sqlite3_pcache_methods2_x_shutdown_callback, [:pointer], :void
+  callback :sqlite3_pcache_methods2_x_create_callback, [:int, :int, :int], :pointer
+  callback :sqlite3_pcache_methods2_x_cachesize_callback, [:pointer, :int], :void
+  callback :sqlite3_pcache_methods2_x_pagecount_callback, [:pointer], :int
+  callback :sqlite3_pcache_methods2_x_fetch_callback, [:pointer, :uint, :int], Sqlite3PcachePage.by_ref
+  callback :sqlite3_pcache_methods2_x_unpin_callback, [:pointer, :pointer, :int], :void
+  callback :sqlite3_pcache_methods2_x_rekey_callback, [:pointer, :pointer, :uint, :uint], :void
+  callback :sqlite3_pcache_methods2_x_truncate_callback, [:pointer, :uint], :void
+  callback :sqlite3_pcache_methods2_x_destroy_callback, [:pointer], :void
+  callback :sqlite3_pcache_methods2_x_shrink_callback, [:pointer], :void
 
   class Sqlite3PcacheMethods2 < FFI::Struct
     layout :i_version, :int,
            :p_arg, :pointer,
-           :x_init, :sqlite3_pcache_methods2_xInit_callback,
-           :x_shutdown, :sqlite3_pcache_methods2_xShutdown_callback,
-           :x_create, :sqlite3_pcache_methods2_xCreate_callback,
-           :x_cachesize, :sqlite3_pcache_methods2_xCachesize_callback,
-           :x_pagecount, :sqlite3_pcache_methods2_xPagecount_callback,
-           :x_fetch, :sqlite3_pcache_methods2_xFetch_callback,
-           :x_unpin, :sqlite3_pcache_methods2_xUnpin_callback,
-           :x_rekey, :sqlite3_pcache_methods2_xRekey_callback,
-           :x_truncate, :sqlite3_pcache_methods2_xTruncate_callback,
-           :x_destroy, :sqlite3_pcache_methods2_xDestroy_callback,
-           :x_shrink, :sqlite3_pcache_methods2_xShrink_callback
+           :x_init, :sqlite3_pcache_methods2_x_init_callback,
+           :x_shutdown, :sqlite3_pcache_methods2_x_shutdown_callback,
+           :x_create, :sqlite3_pcache_methods2_x_create_callback,
+           :x_cachesize, :sqlite3_pcache_methods2_x_cachesize_callback,
+           :x_pagecount, :sqlite3_pcache_methods2_x_pagecount_callback,
+           :x_fetch, :sqlite3_pcache_methods2_x_fetch_callback,
+           :x_unpin, :sqlite3_pcache_methods2_x_unpin_callback,
+           :x_rekey, :sqlite3_pcache_methods2_x_rekey_callback,
+           :x_truncate, :sqlite3_pcache_methods2_x_truncate_callback,
+           :x_destroy, :sqlite3_pcache_methods2_x_destroy_callback,
+           :x_shrink, :sqlite3_pcache_methods2_x_shrink_callback
   end
 
-  callback :sqlite3_pcache_methods_xInit_callback, [:pointer], :int
-  callback :sqlite3_pcache_methods_xShutdown_callback, [:pointer], :void
-  callback :sqlite3_pcache_methods_xCreate_callback, [:int, :int], :pointer
-  callback :sqlite3_pcache_methods_xCachesize_callback, [:pointer, :int], :void
-  callback :sqlite3_pcache_methods_xPagecount_callback, [:pointer], :int
-  callback :sqlite3_pcache_methods_xFetch_callback, [:pointer, :uint, :int], :pointer
-  callback :sqlite3_pcache_methods_xUnpin_callback, [:pointer, :pointer, :int], :void
-  callback :sqlite3_pcache_methods_xRekey_callback, [:pointer, :pointer, :uint, :uint], :void
-  callback :sqlite3_pcache_methods_xTruncate_callback, [:pointer, :uint], :void
-  callback :sqlite3_pcache_methods_xDestroy_callback, [:pointer], :void
+  callback :sqlite3_pcache_methods_x_init_callback, [:pointer], :int
+  callback :sqlite3_pcache_methods_x_shutdown_callback, [:pointer], :void
+  callback :sqlite3_pcache_methods_x_create_callback, [:int, :int], :pointer
+  callback :sqlite3_pcache_methods_x_cachesize_callback, [:pointer, :int], :void
+  callback :sqlite3_pcache_methods_x_pagecount_callback, [:pointer], :int
+  callback :sqlite3_pcache_methods_x_fetch_callback, [:pointer, :uint, :int], :pointer
+  callback :sqlite3_pcache_methods_x_unpin_callback, [:pointer, :pointer, :int], :void
+  callback :sqlite3_pcache_methods_x_rekey_callback, [:pointer, :pointer, :uint, :uint], :void
+  callback :sqlite3_pcache_methods_x_truncate_callback, [:pointer, :uint], :void
+  callback :sqlite3_pcache_methods_x_destroy_callback, [:pointer], :void
 
   class Sqlite3PcacheMethods < FFI::Struct
     layout :p_arg, :pointer,
-           :x_init, :sqlite3_pcache_methods_xInit_callback,
-           :x_shutdown, :sqlite3_pcache_methods_xShutdown_callback,
-           :x_create, :sqlite3_pcache_methods_xCreate_callback,
-           :x_cachesize, :sqlite3_pcache_methods_xCachesize_callback,
-           :x_pagecount, :sqlite3_pcache_methods_xPagecount_callback,
-           :x_fetch, :sqlite3_pcache_methods_xFetch_callback,
-           :x_unpin, :sqlite3_pcache_methods_xUnpin_callback,
-           :x_rekey, :sqlite3_pcache_methods_xRekey_callback,
-           :x_truncate, :sqlite3_pcache_methods_xTruncate_callback,
-           :x_destroy, :sqlite3_pcache_methods_xDestroy_callback
+           :x_init, :sqlite3_pcache_methods_x_init_callback,
+           :x_shutdown, :sqlite3_pcache_methods_x_shutdown_callback,
+           :x_create, :sqlite3_pcache_methods_x_create_callback,
+           :x_cachesize, :sqlite3_pcache_methods_x_cachesize_callback,
+           :x_pagecount, :sqlite3_pcache_methods_x_pagecount_callback,
+           :x_fetch, :sqlite3_pcache_methods_x_fetch_callback,
+           :x_unpin, :sqlite3_pcache_methods_x_unpin_callback,
+           :x_rekey, :sqlite3_pcache_methods_x_rekey_callback,
+           :x_truncate, :sqlite3_pcache_methods_x_truncate_callback,
+           :x_destroy, :sqlite3_pcache_methods_x_destroy_callback
   end
 
   typedef :pointer, :Sqlite3Backup
@@ -616,8 +616,8 @@ module Sqlite3
   attach_function :sqlite3_backup_finish, :sqlite3_backup_finish, [:pointer], :int
   attach_function :sqlite3_backup_remaining, :sqlite3_backup_remaining, [:pointer], :int
   attach_function :sqlite3_backup_pagecount, :sqlite3_backup_pagecount, [:pointer], :int
-  callback :sqlite3_unlock_notify_xNotify_callback, [:pointer, :int], :void
-  attach_function :sqlite3_unlock_notify, :sqlite3_unlock_notify, [:pointer, :sqlite3_unlock_notify_xNotify_callback, :pointer], :int
+  callback :sqlite3_unlock_notify_x_notify_callback, [:pointer, :int], :void
+  attach_function :sqlite3_unlock_notify, :sqlite3_unlock_notify, [:pointer, :sqlite3_unlock_notify_x_notify_callback, :pointer], :int
   attach_function :sqlite3_stricmp, :sqlite3_stricmp, [:string, :string], :int
   attach_function :sqlite3_strnicmp, :sqlite3_strnicmp, [:string, :string, :int], :int
   attach_function :sqlite3_strglob, :sqlite3_strglob, [:string, :string], :int
@@ -655,29 +655,29 @@ module Sqlite3
   attach_function :sqlite3_serialize, :sqlite3_serialize, [:pointer, :string, :pointer, :uint], :pointer
   attach_function :sqlite3_deserialize, :sqlite3_deserialize, [:pointer, :string, :pointer, :long_long, :long_long, :uint], :int
   typedef :double, :sqlite3_rtree_dbl
-  callback :sqlite3_rtree_geometry_callback_xGeom_callback, [:pointer, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_rtree_geometry_callback, :sqlite3_rtree_geometry_callback, [:pointer, :string, :sqlite3_rtree_geometry_callback_xGeom_callback, :pointer], :int
-  callback :sqlite3_rtree_geometry_xDelUser_callback, [:pointer], :void
+  callback :sqlite3_rtree_geometry_callback_x_geom_callback, [:pointer, :int, :pointer, :pointer], :int
+  attach_function :sqlite3_rtree_geometry_callback, :sqlite3_rtree_geometry_callback, [:pointer, :string, :sqlite3_rtree_geometry_callback_x_geom_callback, :pointer], :int
+  callback :sqlite3_rtree_geometry_x_del_user_callback, [:pointer], :void
 
   class Sqlite3RtreeGeometry < FFI::Struct
     layout :p_context, :pointer,
            :n_param, :int,
            :a_param, :pointer,
            :p_user, :pointer,
-           :x_del_user, :sqlite3_rtree_geometry_xDelUser_callback
+           :x_del_user, :sqlite3_rtree_geometry_x_del_user_callback
   end
 
-  callback :sqlite3_rtree_query_callback_xQueryFunc_callback, [:pointer], :int
-  callback :sqlite3_rtree_query_callback_xDestructor_callback, [:pointer], :void
-  attach_function :sqlite3_rtree_query_callback, :sqlite3_rtree_query_callback, [:pointer, :string, :sqlite3_rtree_query_callback_xQueryFunc_callback, :pointer, :sqlite3_rtree_query_callback_xDestructor_callback], :int
-  callback :sqlite3_rtree_query_info_xDelUser_callback, [:pointer], :void
+  callback :sqlite3_rtree_query_callback_x_query_func_callback, [:pointer], :int
+  callback :sqlite3_rtree_query_callback_x_destructor_callback, [:pointer], :void
+  attach_function :sqlite3_rtree_query_callback, :sqlite3_rtree_query_callback, [:pointer, :string, :sqlite3_rtree_query_callback_x_query_func_callback, :pointer, :sqlite3_rtree_query_callback_x_destructor_callback], :int
+  callback :sqlite3_rtree_query_info_x_del_user_callback, [:pointer], :void
 
   class Sqlite3RtreeQueryInfo < FFI::Struct
     layout :p_context, :pointer,
            :n_param, :int,
            :a_param, :pointer,
            :p_user, :pointer,
-           :x_del_user, :sqlite3_rtree_query_info_xDelUser_callback,
+           :x_del_user, :sqlite3_rtree_query_info_x_del_user_callback,
            :a_coord, :pointer,
            :an_queue, :pointer,
            :n_coord, :int,
@@ -699,72 +699,72 @@ module Sqlite3
            :b, :pointer
   end
 
-  callback :Fts5ExtensionApi_xUserData_callback, [:pointer], :pointer
-  callback :Fts5ExtensionApi_xColumnCount_callback, [:pointer], :int
-  callback :Fts5ExtensionApi_xRowCount_callback, [:pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xColumnTotalSize_callback, [:pointer, :int, :pointer], :int
-  callback :Fts5ExtensionApi_xTokenize_callback, [:pointer, :string, :int, :pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xPhraseCount_callback, [:pointer], :int
-  callback :Fts5ExtensionApi_xPhraseSize_callback, [:pointer, :int], :int
-  callback :Fts5ExtensionApi_xInstCount_callback, [:pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xInst_callback, [:pointer, :int, :pointer, :pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xRowid_callback, [:pointer], :long_long
-  callback :Fts5ExtensionApi_xColumnText_callback, [:pointer, :int, :pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xColumnSize_callback, [:pointer, :int, :pointer], :int
-  callback :Fts5ExtensionApi_xQueryPhrase_callback, [:pointer, :int, :pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xSetAuxdata_callback, [:pointer, :pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xGetAuxdata_callback, [:pointer, :int], :pointer
-  callback :Fts5ExtensionApi_xPhraseFirst_callback, [:pointer, :int, :pointer, :pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xPhraseNext_callback, [:pointer, :pointer, :pointer, :pointer], :void
-  callback :Fts5ExtensionApi_xPhraseFirstColumn_callback, [:pointer, :int, :pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xPhraseNextColumn_callback, [:pointer, :pointer, :pointer], :void
-  callback :Fts5ExtensionApi_xQueryToken_callback, [:pointer, :int, :int, :pointer, :pointer], :int
-  callback :Fts5ExtensionApi_xInstToken_callback, [:pointer, :int, :int, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_user_data_callback, [:pointer], :pointer
+  callback :fts5_extension_api_x_column_count_callback, [:pointer], :int
+  callback :fts5_extension_api_x_row_count_callback, [:pointer, :pointer], :int
+  callback :fts5_extension_api_x_column_total_size_callback, [:pointer, :int, :pointer], :int
+  callback :fts5_extension_api_x_tokenize_callback, [:pointer, :string, :int, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_phrase_count_callback, [:pointer], :int
+  callback :fts5_extension_api_x_phrase_size_callback, [:pointer, :int], :int
+  callback :fts5_extension_api_x_inst_count_callback, [:pointer, :pointer], :int
+  callback :fts5_extension_api_x_inst_callback, [:pointer, :int, :pointer, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_rowid_callback, [:pointer], :long_long
+  callback :fts5_extension_api_x_column_text_callback, [:pointer, :int, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_column_size_callback, [:pointer, :int, :pointer], :int
+  callback :fts5_extension_api_x_query_phrase_callback, [:pointer, :int, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_set_auxdata_callback, [:pointer, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_get_auxdata_callback, [:pointer, :int], :pointer
+  callback :fts5_extension_api_x_phrase_first_callback, [:pointer, :int, :pointer, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_phrase_next_callback, [:pointer, :pointer, :pointer, :pointer], :void
+  callback :fts5_extension_api_x_phrase_first_column_callback, [:pointer, :int, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_phrase_next_column_callback, [:pointer, :pointer, :pointer], :void
+  callback :fts5_extension_api_x_query_token_callback, [:pointer, :int, :int, :pointer, :pointer], :int
+  callback :fts5_extension_api_x_inst_token_callback, [:pointer, :int, :int, :pointer, :pointer], :int
 
   class Fts5ExtensionApi < FFI::Struct
     layout :i_version, :int,
-           :x_user_data, :Fts5ExtensionApi_xUserData_callback,
-           :x_column_count, :Fts5ExtensionApi_xColumnCount_callback,
-           :x_row_count, :Fts5ExtensionApi_xRowCount_callback,
-           :x_column_total_size, :Fts5ExtensionApi_xColumnTotalSize_callback,
-           :x_tokenize, :Fts5ExtensionApi_xTokenize_callback,
-           :x_phrase_count, :Fts5ExtensionApi_xPhraseCount_callback,
-           :x_phrase_size, :Fts5ExtensionApi_xPhraseSize_callback,
-           :x_inst_count, :Fts5ExtensionApi_xInstCount_callback,
-           :x_inst, :Fts5ExtensionApi_xInst_callback,
-           :x_rowid, :Fts5ExtensionApi_xRowid_callback,
-           :x_column_text, :Fts5ExtensionApi_xColumnText_callback,
-           :x_column_size, :Fts5ExtensionApi_xColumnSize_callback,
-           :x_query_phrase, :Fts5ExtensionApi_xQueryPhrase_callback,
-           :x_set_auxdata, :Fts5ExtensionApi_xSetAuxdata_callback,
-           :x_get_auxdata, :Fts5ExtensionApi_xGetAuxdata_callback,
-           :x_phrase_first, :Fts5ExtensionApi_xPhraseFirst_callback,
-           :x_phrase_next, :Fts5ExtensionApi_xPhraseNext_callback,
-           :x_phrase_first_column, :Fts5ExtensionApi_xPhraseFirstColumn_callback,
-           :x_phrase_next_column, :Fts5ExtensionApi_xPhraseNextColumn_callback,
-           :x_query_token, :Fts5ExtensionApi_xQueryToken_callback,
-           :x_inst_token, :Fts5ExtensionApi_xInstToken_callback
+           :x_user_data, :fts5_extension_api_x_user_data_callback,
+           :x_column_count, :fts5_extension_api_x_column_count_callback,
+           :x_row_count, :fts5_extension_api_x_row_count_callback,
+           :x_column_total_size, :fts5_extension_api_x_column_total_size_callback,
+           :x_tokenize, :fts5_extension_api_x_tokenize_callback,
+           :x_phrase_count, :fts5_extension_api_x_phrase_count_callback,
+           :x_phrase_size, :fts5_extension_api_x_phrase_size_callback,
+           :x_inst_count, :fts5_extension_api_x_inst_count_callback,
+           :x_inst, :fts5_extension_api_x_inst_callback,
+           :x_rowid, :fts5_extension_api_x_rowid_callback,
+           :x_column_text, :fts5_extension_api_x_column_text_callback,
+           :x_column_size, :fts5_extension_api_x_column_size_callback,
+           :x_query_phrase, :fts5_extension_api_x_query_phrase_callback,
+           :x_set_auxdata, :fts5_extension_api_x_set_auxdata_callback,
+           :x_get_auxdata, :fts5_extension_api_x_get_auxdata_callback,
+           :x_phrase_first, :fts5_extension_api_x_phrase_first_callback,
+           :x_phrase_next, :fts5_extension_api_x_phrase_next_callback,
+           :x_phrase_first_column, :fts5_extension_api_x_phrase_first_column_callback,
+           :x_phrase_next_column, :fts5_extension_api_x_phrase_next_column_callback,
+           :x_query_token, :fts5_extension_api_x_query_token_callback,
+           :x_inst_token, :fts5_extension_api_x_inst_token_callback
   end
 
   typedef :pointer, :Fts5Tokenizer
-  callback :fts5_tokenizer_xCreate_callback, [:pointer, :pointer, :int, :pointer], :int
-  callback :fts5_tokenizer_xDelete_callback, [:pointer], :void
-  callback :fts5_tokenizer_xTokenize_callback, [:pointer, :pointer, :int, :string, :int, :pointer], :int
+  callback :fts5_tokenizer_x_create_callback, [:pointer, :pointer, :int, :pointer], :int
+  callback :fts5_tokenizer_x_delete_callback, [:pointer], :void
+  callback :fts5_tokenizer_x_tokenize_callback, [:pointer, :pointer, :int, :string, :int, :pointer], :int
 
   class Fts5Tokenizer < FFI::Struct
-    layout :x_create, :fts5_tokenizer_xCreate_callback,
-           :x_delete, :fts5_tokenizer_xDelete_callback,
-           :x_tokenize, :fts5_tokenizer_xTokenize_callback
+    layout :x_create, :fts5_tokenizer_x_create_callback,
+           :x_delete, :fts5_tokenizer_x_delete_callback,
+           :x_tokenize, :fts5_tokenizer_x_tokenize_callback
   end
 
-  callback :fts5_api_xCreateTokenizer_callback, [:pointer, :string, :pointer, :pointer, :pointer], :int
-  callback :fts5_api_xFindTokenizer_callback, [:pointer, :string, :pointer, :pointer], :int
-  callback :fts5_api_xCreateFunction_callback, [:pointer, :string, :pointer, :fts5_extension_function, :pointer], :int
+  callback :fts5_api_x_create_tokenizer_callback, [:pointer, :string, :pointer, :pointer, :pointer], :int
+  callback :fts5_api_x_find_tokenizer_callback, [:pointer, :string, :pointer, :pointer], :int
+  callback :fts5_api_x_create_function_callback, [:pointer, :string, :pointer, :fts5_extension_function, :pointer], :int
 
   class Fts5Api < FFI::Struct
     layout :i_version, :int,
-           :x_create_tokenizer, :fts5_api_xCreateTokenizer_callback,
-           :x_find_tokenizer, :fts5_api_xFindTokenizer_callback,
-           :x_create_function, :fts5_api_xCreateFunction_callback
+           :x_create_tokenizer, :fts5_api_x_create_tokenizer_callback,
+           :x_find_tokenizer, :fts5_api_x_find_tokenizer_callback,
+           :x_create_function, :fts5_api_x_create_function_callback
   end
 end
