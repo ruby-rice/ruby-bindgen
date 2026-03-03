@@ -214,7 +214,7 @@ module RubyBindgen
 
         result = Array.new
         parameter_types = cursor.find_by_kind(false, :cursor_parm_decl).map do |parameter|
-          callback_name = "#{cursor.spelling}_#{parameter.spelling}_callback"
+          callback_name = "#{cursor.spelling.underscore}_#{parameter.spelling.underscore}_callback"
           if parameter.type.is_a?(::FFI::Clang::Types::Pointer) && parameter.type.function?
             parameters = parameter.find_by_kind(false, :cursor_parm_decl)
             result << self.visit_callback(callback_name, parameters, parameter.type.pointee)
@@ -252,7 +252,7 @@ module RubyBindgen
         # Define any embedded callbacks
         cursor.find_by_kind(false, :cursor_field_decl).each do |field|
           if field.type.is_a?(::FFI::Clang::Types::Pointer) && field.type.function?
-            callback_name = "#{cursor.spelling}_#{field.spelling}_callback"
+            callback_name = "#{cursor.spelling.underscore}_#{field.spelling.underscore}_callback"
             parameters = field.find_by_kind(false, :cursor_parm_decl)
             result[nil] << self.visit_callback(callback_name, parameters, field.type.pointee)
           end
@@ -268,7 +268,7 @@ module RubyBindgen
       def visit_field_decl(cursor)
         ffi_type = if cursor.type.is_a?(::FFI::Clang::Types::Pointer)
                       if cursor.type.function?
-                        ":#{cursor.semantic_parent.spelling}_#{cursor.spelling}_callback"
+                        ":#{cursor.semantic_parent.spelling.underscore}_#{cursor.spelling.underscore}_callback"
                       elsif cursor.type.forward_declaration?
                        ":pointer"
                       end
@@ -323,7 +323,7 @@ module RubyBindgen
         # Define any embedded callbacks
         cursor.find_by_kind(false, :cursor_field_decl).each do |field|
           if field.type.is_a?(::FFI::Clang::Types::Pointer) && field.type.function?
-            callback_name = "#{cursor.ruby}_#{field.ruby}_callback"
+            callback_name = "#{cursor.spelling.underscore}_#{field.spelling.underscore}_callback"
             result[nil] << self.visit_callback(callback_name, field.parameters, field.type.pointee)
           end
         end

@@ -1017,8 +1017,8 @@ module Index
   attach_function :clang_get_cursor_kind_spelling, :clang_getCursorKindSpelling, [CXCursorKind], CXString.by_value
   attach_function :clang_get_definition_spelling_and_extent, :clang_getDefinitionSpellingAndExtent, [CXCursor.by_value, :pointer, :pointer, :pointer, :pointer, :pointer, :pointer], :void
   attach_function :clang_enable_stack_traces, :clang_enableStackTraces, [], :void
-  callback :clang_executeOnThread_fn_callback, [:pointer], :void
-  attach_function :clang_execute_on_thread, :clang_executeOnThread, [:clang_executeOnThread_fn_callback, :pointer, :uint], :void
+  callback :clang_execute_on_thread_fn_callback, [:pointer], :void
+  attach_function :clang_execute_on_thread, :clang_executeOnThread, [:clang_execute_on_thread_fn_callback, :pointer, :uint], :void
   typedef :pointer, :cx_completion_string
 
   class CXCompletionResult < FFI::Struct
@@ -1153,11 +1153,11 @@ module Index
     :CXVisit_Continue, 1
   )
 
-  callback :CXCursorAndRangeVisitor_visit_callback, [:pointer, CXCursor.by_value, CXSourceRange.by_value], CXVisitorResult
+  callback :cx_cursor_and_range_visitor_visit_callback, [:pointer, CXCursor.by_value, CXSourceRange.by_value], CXVisitorResult
 
   class CXCursorAndRangeVisitor < FFI::Struct
     layout :context, :pointer,
-           :visit, :CXCursorAndRangeVisitor_visit_callback
+           :visit, :cx_cursor_and_range_visitor_visit_callback
   end
 
   CXResult = enum(
@@ -1380,24 +1380,24 @@ module Index
            :role, CXSymbolRole
   end
 
-  callback :IndexerCallbacks_abortQuery_callback, [:pointer, :pointer], :int
-  callback :IndexerCallbacks_diagnostic_callback, [:pointer, :pointer, :pointer], :void
-  callback :IndexerCallbacks_enteredMainFile_callback, [:pointer, :pointer, :pointer], :pointer
-  callback :IndexerCallbacks_ppIncludedFile_callback, [:pointer, :pointer], :pointer
-  callback :IndexerCallbacks_importedASTFile_callback, [:pointer, :pointer], :pointer
-  callback :IndexerCallbacks_startedTranslationUnit_callback, [:pointer, :pointer], :pointer
-  callback :IndexerCallbacks_indexDeclaration_callback, [:pointer, :pointer], :void
-  callback :IndexerCallbacks_indexEntityReference_callback, [:pointer, :pointer], :void
+  callback :indexer_callbacks_abort_query_callback, [:pointer, :pointer], :int
+  callback :indexer_callbacks_diagnostic_callback, [:pointer, :pointer, :pointer], :void
+  callback :indexer_callbacks_entered_main_file_callback, [:pointer, :pointer, :pointer], :pointer
+  callback :indexer_callbacks_pp_included_file_callback, [:pointer, :pointer], :pointer
+  callback :indexer_callbacks_imported_ast_file_callback, [:pointer, :pointer], :pointer
+  callback :indexer_callbacks_started_translation_unit_callback, [:pointer, :pointer], :pointer
+  callback :indexer_callbacks_index_declaration_callback, [:pointer, :pointer], :void
+  callback :indexer_callbacks_index_entity_reference_callback, [:pointer, :pointer], :void
 
   class IndexerCallbacks < FFI::Struct
-    layout :abort_query, :IndexerCallbacks_abortQuery_callback,
-           :diagnostic, :IndexerCallbacks_diagnostic_callback,
-           :entered_main_file, :IndexerCallbacks_enteredMainFile_callback,
-           :pp_included_file, :IndexerCallbacks_ppIncludedFile_callback,
-           :imported_ast_file, :IndexerCallbacks_importedASTFile_callback,
-           :started_translation_unit, :IndexerCallbacks_startedTranslationUnit_callback,
-           :index_declaration, :IndexerCallbacks_indexDeclaration_callback,
-           :index_entity_reference, :IndexerCallbacks_indexEntityReference_callback
+    layout :abort_query, :indexer_callbacks_abort_query_callback,
+           :diagnostic, :indexer_callbacks_diagnostic_callback,
+           :entered_main_file, :indexer_callbacks_entered_main_file_callback,
+           :pp_included_file, :indexer_callbacks_pp_included_file_callback,
+           :imported_ast_file, :indexer_callbacks_imported_ast_file_callback,
+           :started_translation_unit, :indexer_callbacks_started_translation_unit_callback,
+           :index_declaration, :indexer_callbacks_index_declaration_callback,
+           :index_entity_reference, :indexer_callbacks_index_entity_reference_callback
   end
 
   attach_function :clang_index_is_entity_obj_c_container_kind, :clang_index_isEntityObjCContainerKind, [CXIdxEntityKind], :int

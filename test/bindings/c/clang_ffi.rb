@@ -18,11 +18,12 @@ module Clang
       result << "lib#{name}"
       self.library_versions.each do |version|
         case RbConfig::CONFIG['host_os']
-          when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
-            result << "lib#{name}-#{version}"
-            result << "lib#{name}_#{version}"
           when /darwin|mac os/
             result << "lib#{name}.#{version}"
+          when /mingw/
+            result << "lib#{name}-#{version}"
+          when /mswin/
+            result << "#{name}_#{version}"
           else
             result << "lib#{name}.so.#{version}"
         end
