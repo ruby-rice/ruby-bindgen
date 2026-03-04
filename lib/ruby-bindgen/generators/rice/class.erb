@@ -1,15 +1,17 @@
+<%- raw_class_name = cursor.type.spelling.split("::").last -%>
+<%- ruby_class_name = @namer.apply_rename_types(raw_class_name, raw_class_name.camelize) -%>
 <%- has_incomplete_classes = !incomplete_classes.to_s.empty? -%>
 <%- if has_incomplete_classes -%>
 <%# Split: define class, define incomplete inner classes, then add methods -%>
 <%= auto_generated_base -%>
 <%- if under && base -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>");
 <%- elsif under -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>");
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>");
 <%- elsif base -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= ruby_class_name %>");
 <%- else -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>");
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= ruby_class_name %>");
 <%- end -%>
 
 <%= incomplete_classes -%>
@@ -21,12 +23,12 @@ Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %
 <%# No incomplete classes - single statement -%>
 <%= auto_generated_base -%>
 <%- if under && base -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= children -%>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>")<%= children -%>
 <%- elsif under -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.type.spelling.split("::").last.camelize %>")<%= children -%>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= ruby_class_name %>")<%= children -%>
 <%- elsif base -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= children -%>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>, <%= base %>>("<%= ruby_class_name %>")<%= children -%>
 <%- else -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.type.spelling.split("::").last.camelize %>")<%= children -%>
+Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= ruby_class_name %>")<%= children -%>
 <%- end -%>
 <%- end -%>

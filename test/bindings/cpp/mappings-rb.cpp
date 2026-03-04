@@ -38,4 +38,8 @@ void Init_Mappings()
   Rice::Data_Type<cv::Matx<short, 2, 1>> rb_cMatxShort21 = Matx_instantiate<short, 2, 1>(rb_mCv, "Matx21s");
 
   Rice::Data_Type<cv::Matx<int, 4, 1>> rb_cMatxInt41 = Matx_instantiate<int, 4, 1>(rb_mCv, "Matx41i");
+
+  Rice::Data_Type<cv::RNG_MT19937> rb_cCvRNGMT19937 = define_class_under<cv::RNG_MT19937>(rb_mCv, "RNG_MT19937")
+    .define_constructor(Constructor<cv::RNG_MT19937>())
+    .define_method<unsigned int(cv::RNG_MT19937::*)()>("next", &cv::RNG_MT19937::next);
 }

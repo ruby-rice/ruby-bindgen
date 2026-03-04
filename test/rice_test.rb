@@ -89,7 +89,8 @@ class RiceTest < AbstractTest
                   rename_types: [
                     {"from" => "/^MatxUChar(\\d+)$/", "to" => "Matx\\1b"},
                     {"from" => "/^MatxShort(\\d+)$/", "to" => "Matx\\1s"},
-                    {"from" => "/^MatxInt(\\d+)$/", "to" => "Matx\\1i"}
+                    {"from" => "/^MatxInt(\\d+)$/", "to" => "Matx\\1i"},
+                    {"from" => "RNG_MT19937", "to" => "RNG_MT19937"}
                   ])
   end
 

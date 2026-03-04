@@ -56,4 +56,16 @@ typedef Matx<unsigned char, 3, 1> MatxUChar31;
 typedef Matx<short, 2, 1> MatxShort21;
 typedef Matx<int, 4, 1> MatxInt41;
 
+// =============================================================================
+// Test rename_types for direct class names (not just template specializations).
+// RNG_MT19937 camelizes to RngMt19937, but we want to preserve the original name.
+// =============================================================================
+
+class RNG_MT19937
+{
+public:
+  RNG_MT19937();
+  unsigned int next();
+};
+
 } // namespace cv

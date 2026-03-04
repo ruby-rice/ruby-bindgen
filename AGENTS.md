@@ -39,6 +39,10 @@ All 16 Rice tests: classes, enums, functions, inheritance, template, constructor
 
 For typedef-related issues, use `cross_file_base.hpp` and `cross_file_derived.hpp`.
 
+## Git Commits
+
+Do not add Co-Authored-By or any other author attribution to commit messages.
+
 ## Regenerate opencv-ruby bindings
 
 See `/mnt/c/Source/opencv-ruby/ext/rice-bindings.yaml` for the full configuration. Use the match field to configure what *.h/*.hpp files are processed and thus generate bindings for.

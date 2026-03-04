@@ -62,9 +62,10 @@ module RubyBindgen
     end
 
     # Apply rename_types to a generated Ruby class name.
-    # Returns the mapped name or the original if no mapping matches.
-    def apply_rename_types(ruby_class_name)
-      @rename_types.lookup(ruby_class_name) || ruby_class_name
+    # Accepts one or more candidate names to try (e.g., raw C++ name, camelized name).
+    # Returns the first match, or the last candidate as fallback.
+    def apply_rename_types(*names)
+      @rename_types.lookup(*names) || names.last
     end
 
     # Build fully qualified C++ name from a cursor by walking semantic parents.
