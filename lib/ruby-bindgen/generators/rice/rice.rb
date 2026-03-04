@@ -991,7 +991,11 @@ module RubyBindgen
           # like "iterator" need to stay unqualified for qualify_class_template_typedefs
           # to add the required "typename" keyword later.
           spelling = type.spelling
-          qualified = spelling.match(/\w+::/) ? spelling : spelling.sub(decl.spelling, decl.qualified_name)
+          # Check if the outer type name (before '<') is already namespace-qualified.
+          # Must not check the full spelling — template args may contain '::' (e.g.,
+          # Matrix<typename Distance::ElementType>) which doesn't mean Matrix is qualified.
+          outer_name = spelling.sub(/\s*<.*/, '')
+          qualified = outer_name.match?(/\w+::/) ? spelling : spelling.sub(decl.spelling, decl.qualified_name)
 
           # Handle dependent types (typename patterns)
           qualify_dependent_types_in_template_args(qualified)
@@ -1195,6 +1199,11 @@ module RubyBindgen
         default_expr.find_by_kind(true, :cursor_type_ref, :cursor_template_ref) do |type_ref|
           ref = type_ref.referenced
           next unless ref && ref.kind != :cursor_invalid_file
+
+          # Skip template type parameters — they're visible by name in the generated
+          # template code and should not be qualified (e.g., Distance() stays as Distance(),
+          # not cvflann::CompositeIndex::Distance() which is invalid without template args)
+          next if ref.kind == :cursor_template_type_parameter
 
           begin
             # For typedefs in class templates, preserve template parameters in the qualified name
