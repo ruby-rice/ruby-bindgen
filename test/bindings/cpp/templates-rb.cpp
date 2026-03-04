@@ -61,4 +61,9 @@ void Init_Templates()
     .define_method<int(Tests::Target::*)() const>("get_value", &Tests::Target::getValue);
 
   Rice::Data_Type<Tests::SmartPtr<Tests::Target>> rb_cTargetPtr = SmartPtr_instantiate<Tests::Target>(rb_mTests, "TargetPtr");
+
+  Rice::Data_Type<Tests::L2Distance> rb_cTestsL2Distance = define_class_under<Tests::L2Distance>(rb_mTests, "L2Distance")
+    .define_constructor(Constructor<Tests::L2Distance>());
+
+  Rice::Data_Type<Tests::SearchIndex<Tests::L2Distance>> rb_cL2SearchIndex = SearchIndex_instantiate<Tests::L2Distance>(rb_mTests, "L2SearchIndex");
 }

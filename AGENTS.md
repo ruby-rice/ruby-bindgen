@@ -33,6 +33,8 @@ All 16 Rice tests: classes, enums, functions, inheritance, template, constructor
 
 **IMPORTANT:** Before using `UPDATE_EXPECTED=1` or committing any changes, you MUST first run ALL tests to verify your changes don't break existing functionality. Never blindly update expected files without checking for regressions.
 
+**NEVER manually edit expected output files** in `test/bindings/cpp/`. Always use `UPDATE_EXPECTED=1` to regenerate them.
+
 ## Test Coverage Requirements
 
 **Every bug fix MUST include test coverage.** Add test cases to the appropriate header file in `test/headers/cpp/` and update the expected output in `test/bindings/cpp/`.

@@ -106,3 +106,15 @@ inline Rice::Data_Type<Tests::SmartPtr<T>> SmartPtr_instantiate(Rice::Module par
     .define_constructor(Constructor<Tests::SmartPtr<T>, T*>(),
       std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("p"));
 }
+
+template<typename Distance>
+inline Rice::Data_Type<Tests::SearchIndex<Distance>> SearchIndex_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::SearchIndex<Distance>>(parent, name)
+    .define_constructor(Constructor<Tests::SearchIndex<Distance>, const typename Tests::SearchIndex<Distance>::ElementType&>(),
+      Arg("element"))
+    .define_constructor(Constructor<Tests::SearchIndex<Distance>, const Tests::SearchIndex<Distance>&, int>(),
+      Arg("other"), Arg("flags") = static_cast<int>(0))
+    .template define_method<void(Tests::SearchIndex<Distance>::*)(int, typename Tests::SearchIndex<Distance>::ElementType)>("search", &Tests::SearchIndex<Distance>::search,
+      Arg("count"), Arg("max_dist") = static_cast<typename Tests::SearchIndex<Distance>::ElementType>(Tests::SearchIndex<Distance>::ElementType()));
+}

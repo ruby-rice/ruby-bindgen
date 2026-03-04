@@ -200,4 +200,29 @@ namespace Tests
     };
 
     typedef SmartPtr<Target> TargetPtr;
+
+    // Test template with dependent typedef in constructor params and default values
+    // that reference the class template itself (GCC 15 -Wtemplate-body)
+    template<typename Distance>
+    class SearchIndex
+    {
+    public:
+        typedef typename Distance::ElementType ElementType;
+
+        // Constructor with dependent typedef param (Bug 1: needs qualification in Constructor<>)
+        SearchIndex(const ElementType& element);
+
+        // Constructor with default value referencing self (Bug 3: needs template args)
+        SearchIndex(const SearchIndex& other, int flags = 0);
+
+        // Method with dependent typedef default value (Bug 2: needs qualification in static_cast)
+        void search(int count, ElementType max_dist = ElementType());
+    };
+
+    struct L2Distance
+    {
+        typedef float ElementType;
+    };
+
+    typedef SearchIndex<L2Distance> L2SearchIndex;
 }

@@ -1075,6 +1075,9 @@ module RubyBindgen
             class_name = qualified_display_name_cpp(parent)
             signature << class_name
             params = type_spellings(cursor)
+            if cursor.semantic_parent&.kind == :cursor_class_template
+              params = params.map { |pt| qualify_class_template_typedefs(pt, cursor.semantic_parent) }
+            end
             signature += params
 
           when :cursor_class_decl, :cursor_struct
@@ -1120,6 +1123,9 @@ module RubyBindgen
             if copyable_type?(param.type)
               # Use type_spelling to get fully qualified type name
               qualified_type = type_spelling(param.type)
+              if param.semantic_parent&.semantic_parent&.kind == :cursor_class_template
+                qualified_type = qualify_class_template_typedefs(qualified_type, param.semantic_parent.semantic_parent)
+              end
               # Can't static_cast to array types (e.g., using StepArray = int[3])
               decl = param.type.declaration
               is_array_alias = (decl.kind == :cursor_type_alias_decl || decl.kind == :cursor_typedef_decl) &&
@@ -1208,6 +1214,13 @@ module RubyBindgen
             # Match any prefix::simple_name that isn't already fully qualified
             default_text = default_text.gsub(/(?<!\w)(\w+(?:::\w+)*)::#{Regexp.escape(simple_name)}\b/) do |match|
               match == qualified_name ? match : qualified_name
+            end
+
+            # For class template refs used as qualifiers (before ::) without explicit template args,
+            # insert template parameters (e.g., CompositeIndex:: -> CompositeIndex<Distance>::)
+            if ref.kind == :cursor_class_template
+              display_name = ref.qualified_display_name
+              default_text = default_text.gsub(/#{Regexp.escape(qualified_name)}(?=\s*::)/, display_name)
             end
           rescue ArgumentError
             # Skip if we can't get qualified name (e.g., invalid cursor)
