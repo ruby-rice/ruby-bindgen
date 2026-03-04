@@ -436,7 +436,12 @@ module RubyBindgen
               type.declaration.ruby_name
           end
         else
-          self.figure_ffi_type(type.canonical, context)
+          spelling = type.declaration.spelling
+          if ::FFI::TypeDefs.key?(spelling.to_sym)
+            ":#{spelling}"
+          else
+            self.figure_ffi_type(type.canonical, context)
+          end
         end
       end
 

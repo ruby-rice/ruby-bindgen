@@ -192,8 +192,8 @@ module Proj
     )
 
     callback :proj_file_api_open_cbk_callback, [:pointer, :string, ProjOpenAccess, :pointer], :pointer
-    callback :proj_file_api_read_cbk_callback, [:pointer, :pointer, :pointer, :ulong, :pointer], :ulong
-    callback :proj_file_api_write_cbk_callback, [:pointer, :pointer, :pointer, :ulong, :pointer], :ulong
+    callback :proj_file_api_read_cbk_callback, [:pointer, :pointer, :pointer, :size_t, :pointer], :size_t
+    callback :proj_file_api_write_cbk_callback, [:pointer, :pointer, :pointer, :size_t, :pointer], :size_t
     callback :proj_file_api_seek_cbk_callback, [:pointer, :pointer, :long_long, :int, :pointer], :int
     callback :proj_file_api_tell_cbk_callback, [:pointer, :pointer, :pointer], :ulong_long
     callback :proj_file_api_close_cbk_callback, [:pointer, :pointer, :pointer], :void
@@ -219,10 +219,10 @@ module Proj
     attach_function :proj_context_set_fileapi, :proj_context_set_fileapi, [:pointer, ProjFileApi.by_ref, :pointer], :int
     attach_function :proj_context_set_sqlite3_vfs_name, :proj_context_set_sqlite3_vfs_name, [:pointer, :string], :void
     typedef :pointer, :ProjNetworkHandle
-    callback :proj_network_open_cbk_type, [:pointer, :string, :ulong_long, :ulong, :pointer, :pointer, :ulong, :pointer, :pointer], :pointer
+    callback :proj_network_open_cbk_type, [:pointer, :string, :ulong_long, :size_t, :pointer, :pointer, :size_t, :pointer, :pointer], :pointer
     callback :proj_network_close_cbk_type, [:pointer, :pointer, :pointer], :void
     callback :proj_network_get_header_value_cbk_type, [:pointer, :pointer, :string, :pointer], :pointer
-    callback :proj_network_read_range_type, [:pointer, :pointer, :ulong_long, :ulong, :pointer, :ulong, :pointer, :pointer], :ulong
+    callback :proj_network_read_range_type, [:pointer, :pointer, :ulong_long, :size_t, :pointer, :size_t, :pointer, :pointer], :size_t
     attach_function :proj_context_set_network_callbacks, :proj_context_set_network_callbacks, [:pointer, :proj_network_open_cbk_type, :proj_network_close_cbk_type, :proj_network_get_header_value_cbk_type, :proj_network_read_range_type, :pointer], :int
     attach_function :proj_context_set_enable_network, :proj_context_set_enable_network, [:pointer, :int], :int
     attach_function :proj_context_is_network_enabled, :proj_context_is_network_enabled, [:pointer], :int
@@ -261,8 +261,8 @@ module Proj
     attach_function :proj_degree_output, :proj_degree_output, [:pointer, PjDirection], :int
     attach_function :proj_trans, :proj_trans, [:pointer, PjDirection, PjCoord.by_value], PjCoord.by_value
     attach_function :proj_trans_get_last_used_operation, :proj_trans_get_last_used_operation, [:pointer], :pointer
-    attach_function :proj_trans_array, :proj_trans_array, [:pointer, PjDirection, :ulong, PjCoord.by_ref], :int
-    attach_function :proj_trans_generic, :proj_trans_generic, [:pointer, PjDirection, :pointer, :ulong, :ulong, :pointer, :ulong, :ulong, :pointer, :ulong, :ulong, :pointer, :ulong, :ulong], :ulong
+    attach_function :proj_trans_array, :proj_trans_array, [:pointer, PjDirection, :size_t, PjCoord.by_ref], :int
+    attach_function :proj_trans_generic, :proj_trans_generic, [:pointer, PjDirection, :pointer, :size_t, :size_t, :pointer, :size_t, :size_t, :pointer, :size_t, :size_t, :pointer, :size_t, :size_t], :size_t
     attach_function :proj_trans_bounds, :proj_trans_bounds, [:pointer, :pointer, PjDirection, :double, :double, :double, :double, :pointer, :pointer, :pointer, :pointer, :int], :int
     attach_function :proj_trans_bounds_3d, :proj_trans_bounds_3D, [:pointer, :pointer, PjDirection, :double, :double, :double, :double, :double, :double, :pointer, :pointer, :pointer, :pointer, :pointer, :pointer, :int], :int
     attach_function :proj_coord, :proj_coord, [:double, :double, :double, :double], PjCoord.by_value
@@ -290,7 +290,7 @@ module Proj
     attach_function :proj_torad, :proj_torad, [:double], :double
     attach_function :proj_todeg, :proj_todeg, [:double], :double
     attach_function :proj_dmstor, :proj_dmstor, [:string, :pointer], :double
-    attach_function :proj_rtodms2, :proj_rtodms2, [:pointer, :ulong, :double, :int, :int], :pointer
+    attach_function :proj_rtodms2, :proj_rtodms2, [:pointer, :size_t, :double, :int, :int], :pointer
     typedef :pointer, :proj_string_list
 
     PjGuessedWktDialect = enum(
@@ -422,7 +422,7 @@ module Proj
 
     class ProjCrsListParameters < FFI::Struct
       layout :types, :pointer,
-             :types_count, :ulong,
+             :types_count, :size_t,
              :crs_area_of_use_contains_bbox, :int,
              :bbox_valid, :int,
              :west_lon_degree, :double,
@@ -461,7 +461,7 @@ module Proj
     attach_function :proj_uom_get_info_from_database, :proj_uom_get_info_from_database, [:pointer, :string, :string, :pointer, :pointer, :pointer], :int
     attach_function :proj_grid_get_info_from_database, :proj_grid_get_info_from_database, [:pointer, :string, :pointer, :pointer, :pointer, :pointer, :pointer, :pointer], :int
     attach_function :proj_clone, :proj_clone, [:pointer, :pointer], :pointer
-    attach_function :proj_create_from_name, :proj_create_from_name, [:pointer, :string, :string, :pointer, :ulong, :int, :ulong, :pointer], :pointer
+    attach_function :proj_create_from_name, :proj_create_from_name, [:pointer, :string, :string, :pointer, :size_t, :int, :size_t, :pointer], :pointer
     attach_function :proj_get_type, :proj_get_type, [:pointer], PjType
     attach_function :proj_is_deprecated, :proj_is_deprecated, [:pointer], :int
     attach_function :proj_get_non_deprecated, :proj_get_non_deprecated, [:pointer, :pointer], :pointer
