@@ -9,16 +9,14 @@ module RubyBindgen
     attr_reader :base_path, :globs, :exclude_glob
 
     def initialize(base_path, globs=nil, exclude_glob=[])
+      @base_path = base_path
+      @globs = Array(globs).empty? ? ["**/*.{h,hpp}"] : Array(globs)
+      @exclude_glob = exclude_glob
+
       if RUBY_PLATFORM.match?(/mswin/) || RUBY_PLATFORM.match?(/mingw/)
-        @base_path = base_path.gsub('\\', '/')
-        @globs = Array(globs).map { |g| g.gsub('\\', '/') }
-        @exclude_glob = exclude_glob.map do |glob|
-          glob.gsub('\\', '/')
-        end
-      else
-        @base_path = base_path
-        @globs = Array(globs).empty? ? ["**/*.{h,hpp}"] : Array(globs)
-        @exclude_glob = exclude_glob
+        @base_path = @base_path.gsub('\\', '/')
+        @globs = @globs.map { |g| g.gsub('\\', '/') }
+        @exclude_glob = @exclude_glob.map { |g| g.gsub('\\', '/') }
       end
     end
 
