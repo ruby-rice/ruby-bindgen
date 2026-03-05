@@ -18,7 +18,6 @@ module RubyBindgen
         @library_search_path = config[:library_search_path]
         @export_macros = config[:export_macros] || []
         @module_name = config[:module]
-        @indentation = 0
       end
 
       def generate
@@ -475,12 +474,6 @@ module RubyBindgen
           else
             ":pointer"
         end
-      end
-
-      def indent(content)
-        content.lines.map do |line|
-          " " * @indentation + line
-        end.join
       end
 
       def figure_template(cursor)

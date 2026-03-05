@@ -30,18 +30,6 @@ module RubyBindgen
       new(parsed)
     end
 
-    # Factory: parses a YAML list (skip_symbols style) into match-only mappings
-    def self.from_list(patterns)
-      parsed = patterns.map do |pattern|
-        if pattern.start_with?('/') && pattern.end_with?('/')
-          [Regexp.new(pattern[1..-2]), true]
-        else
-          [pattern, true]
-        end
-      end
-      new(parsed)
-    end
-
     # Look up a name, trying each candidate in order.
     # Returns the replacement value or nil.
     def lookup(*candidates)
