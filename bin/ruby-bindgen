@@ -90,5 +90,6 @@ begin
   cmd.run
 rescue => e
   STDERR.puts "Error: #{e.message}"
+  STDERR.puts e.backtrace
   exit 1
 end

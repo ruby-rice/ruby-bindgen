@@ -38,10 +38,10 @@ module RubyBindgen
 
         begin
           source_text = cursor.extent.text
-          return true if source_text.nil?
+          return false if source_text.nil?
           @export_macros.any? { |macro| source_text.include?(macro) }
-        rescue
-          true
+        rescue StandardError
+          false
         end
       end
 
