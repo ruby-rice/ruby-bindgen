@@ -15,6 +15,7 @@ module RubyBindgen
         @library_versions = config[:library_versions] || []
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
         raise ArgumentError, "version_check is required when symbols.versions is non-empty" if @symbols.has_versions? && !@version_check
+        @library_search_path = config[:library_search_path]
         @export_macros = config[:export_macros] || []
         @module_name = config[:module]
         @indentation = 0

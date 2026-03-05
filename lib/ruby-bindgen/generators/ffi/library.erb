@@ -28,4 +28,12 @@ def self.search_names
   result
 end
 
+<% if @library_search_path -%>
+if ENV['<%= @library_search_path %>']
+  ffi_lib self.search_names.map { |name| File.join(ENV['<%= @library_search_path %>'], name) } + self.search_names
+else
+  ffi_lib self.search_names
+end
+<% else -%>
 ffi_lib self.search_names
+<% end -%>

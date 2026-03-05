@@ -38,6 +38,7 @@ These options apply to all formats.
 | `library_names`    | `[]`     | Base names of shared libraries to load (e.g., `["proj"]` for `libproj`). |
 | `library_versions` | `[]`     | Library version suffixes to search for (e.g., `["25", "9"]`). Combined with `library_names` to build platform-specific search names like `libproj.so.25`. |
 | `module`           | filename | Ruby module name for the generated bindings. Defaults to the header filename camelized (e.g., `proj.h` → `Proj`). For the project loader, defaults to `project` camelized. Supports nested modules with `::` (e.g., `Proj::Api`). |
+| `library_search_path` | none | Name of an environment variable containing a directory path. When the env var is set at runtime, library names are searched in that directory first before falling back to standard search. For example, `library_search_path: PROJ_LIB_PATH` generates code that checks `ENV['PROJ_LIB_PATH']` and prepends that path to each library name. |
 
 ## C++ (Rice) Options
 

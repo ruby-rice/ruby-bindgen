@@ -20,7 +20,7 @@ class FfiTest < AbstractTest
 
   def test_proj
     run_ffi_test(["proj.h", "proj_experimental.h"], project: "proj",
-      library_names: ["proj"], library_versions: [], module: "Proj::Api", version_check: "proj_version",
+      library_names: ["proj"], library_versions: [], module: "Proj::Api", version_check: "proj_version", library_search_path: "PROJ_LIB_PATH",
       symbols: { skip: ["PJ_INFO", "proj_info"],
                  versions: { 60100 => ["proj_normalize_for_visualization"],
                              60200 => ["proj_cleanup"],
