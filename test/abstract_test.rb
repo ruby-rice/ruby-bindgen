@@ -1,4 +1,13 @@
 require 'bundler/setup'
+
+if ENV['COVERAGE']
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter '/test/'
+    track_files 'lib/**/*.rb'
+  end
+end
+
 require 'minitest/autorun'
 
 require 'ruby-bindgen/config'
