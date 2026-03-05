@@ -278,11 +278,7 @@ module RubyBindgen
         @init_names[rice_header] = init_name
 
         @includes = Set.new
-        # Get includes. First any includes the source hpp file has
-        #@includes = translation_unit.includes
-        # Then the hpp file
         @includes << "#include <#{relative_path}>"
-        # Then the rice generated header file
         @includes << "#include \"#{@basename}.hpp\""
 
         class_templates, has_builders = render_class_templates(cursor)

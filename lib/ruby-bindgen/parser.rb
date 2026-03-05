@@ -16,7 +16,6 @@ module RubyBindgen
 
       # Lazy-load ffi-clang and its refinements so CMake format doesn't need libclang
       require 'ffi/clang'
-      require 'ruby-bindgen/refinements/translation_unit'
       require 'ruby-bindgen/refinements/cursor'
       require 'ruby-bindgen/refinements/source_range'
       require 'ruby-bindgen/refinements/type'
