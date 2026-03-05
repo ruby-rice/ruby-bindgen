@@ -21,3 +21,9 @@ typedef struct
   unsigned char len;
   F_TextItemT *val;
 } F_TextItemsT;
+
+typedef struct {
+  float f;
+  unsigned short us;
+  short s;
+} TypeCoverageStruct;

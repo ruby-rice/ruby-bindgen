@@ -26,4 +26,10 @@ module Structs
     layout :len, :uchar,
            :val, FTextItemT.ptr
   end
+
+  class TypeCoverageStruct < FFI::Struct
+    layout :f, :float,
+           :us, :ushort,
+           :s, :short
+  end
 end

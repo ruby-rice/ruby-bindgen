@@ -362,6 +362,8 @@ module RubyBindgen
         case type.kind
           when :type_bool
             ":bool"
+          when :type_float
+            ":float"
           when :type_double
             ":double"
           when :type_int
@@ -378,6 +380,8 @@ module RubyBindgen
             ":ulong_long"
           when :type_uint
             ":uint"
+          when :type_short
+            ":short"
           when :type_ushort
             ":ushort"
           when :type_char_s
