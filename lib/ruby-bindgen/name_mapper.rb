@@ -56,10 +56,9 @@ module RubyBindgen
 
     # Merge two tables. Other's entries override self's.
     def merge(other)
-      merged = self.class.allocate
-      merged.instance_variable_set(:@exact, @exact.merge(other.instance_variable_get(:@exact)))
-      merged.instance_variable_set(:@regex, other.instance_variable_get(:@regex) + @regex)
-      merged
+      exact_mappings = @exact.merge(other.instance_variable_get(:@exact)).map { |k, v| [k, v] }
+      regex_mappings = other.instance_variable_get(:@regex) + @regex
+      self.class.new(exact_mappings + regex_mappings)
     end
 
     # Returns true if any candidate matches (exact or regex).
