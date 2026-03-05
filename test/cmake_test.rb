@@ -29,5 +29,8 @@ class CMakeTest < AbstractTest
     root_cmake = generator.outputter.output_path("CMakeLists.txt")
     assert !output_files.include?(root_cmake),
            "Root CMakeLists.txt should not be generated without project"
+
+    assert output_files.empty?,
+           "No CMake files should be generated without project"
   end
 end
