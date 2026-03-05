@@ -39,6 +39,8 @@ All 16 Rice tests: classes, enums, functions, inheritance, template, constructor
 
 **Every bug fix MUST include test coverage.** Add test cases to the appropriate header file in `test/headers/cpp/` and update the expected output in `test/bindings/cpp/`.
 
+**Mocks are NEVER allowed in tests.** All tests must use real headers and real generator output.
+
 For typedef-related issues, use `cross_file_base.hpp` and `cross_file_derived.hpp`.
 
 ## Git Commits
