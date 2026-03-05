@@ -79,19 +79,21 @@ class RiceTest < AbstractTest
 
   def test_mappings
     run_rice_test("mappings.hpp",
-                  rename_methods: [
-                    {"from" => "cv::VideoCapture::grab", "to" => "grab"},
-                    {"from" => "cv::MatSize::operator()", "to" => "to_size"},
-                    {"from" => "cv::Mat::operator()", "to" => "[]"},
-                    {"from" => "cv::UMat::operator()", "to" => "[]"},
-                    {"from" => "cv::Matx::operator()", "to" => "[]"}
-                  ],
-                  rename_types: [
-                    {"from" => "/^MatxUChar(\\d+)$/", "to" => "Matx\\1b"},
-                    {"from" => "/^MatxShort(\\d+)$/", "to" => "Matx\\1s"},
-                    {"from" => "/^MatxInt(\\d+)$/", "to" => "Matx\\1i"},
-                    {"from" => "RNG_MT19937", "to" => "RNG_MT19937"}
-                  ])
+                  symbols: {
+                    rename_methods: [
+                      {"from" => "cv::VideoCapture::grab", "to" => "grab"},
+                      {"from" => "cv::MatSize::operator()", "to" => "to_size"},
+                      {"from" => "cv::Mat::operator()", "to" => "[]"},
+                      {"from" => "cv::UMat::operator()", "to" => "[]"},
+                      {"from" => "cv::Matx::operator()", "to" => "[]"}
+                    ],
+                    rename_types: [
+                      {"from" => "/^MatxUChar(\\d+)$/", "to" => "Matx\\1b"},
+                      {"from" => "/^MatxShort(\\d+)$/", "to" => "Matx\\1s"},
+                      {"from" => "/^MatxInt(\\d+)$/", "to" => "Matx\\1i"},
+                      {"from" => "RNG_MT19937", "to" => "RNG_MT19937"}
+                    ]
+                  })
   end
 
   def test_version_guards

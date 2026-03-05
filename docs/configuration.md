@@ -26,10 +26,8 @@ These options apply to all formats.
 |-----------------|--------------------|-------------------------------------------------------------------------------------------|
 | `match`         | `["**/*.{h,hpp}"]` | Array of glob pattern specifying which header files to process.                           |
 | `skip`          | `[]`               | Array of glob patterns specifying which files to skip. For Rice/FFI, these match header file paths. For CMake, these match generated `*-rb.cpp` file paths. In most cases, it's better to add skips to the Rice/FFI config so the files are never generated, rather than skipping them in CMake after the fact. |
-| `symbols`       | `{}`               | Symbol actions grouped by type. See [Symbols](#symbols).                  |
+| `symbols`       | `{}`               | Symbol actions and name mappings grouped by type. See [Symbols](#symbols).                  |
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
-| `rename_types` | `[]` | Override generated Ruby class/module names. Array of `{from, to}` entries where `from` is a string or `/regex/` pattern and `to` is the replacement (supports `\1` capture groups). For C (FFI), `from` matches the original C name. For C++ (Rice), `from` matches the generated Ruby name. See [Name Mappings](#name-mappings). |
-| `rename_methods` | `[]` | Override generated Ruby method names. Array of `{from, to}` entries where `from` is a C/C++ name (simple or fully qualified) or `/regex/` pattern and `to` is the Ruby name. See [Name Mappings](#name-mappings). |
 | `version_check` | none | Identifier used for version guards. Required when `symbols.versions` is non-empty. For **Rice**, this is a C preprocessor macro — symbols are wrapped in `#if version_check >= version` / `#endif`. For **FFI**, this is a Ruby method name — symbols are wrapped in `if version_check >= version` / `end`. See [Version Guards](#version-guards). |
 
 ## C (FFI) Options
@@ -137,7 +135,7 @@ C:\Program Files\LLVM\bin\libclang.dll
 
 ## Symbols
 
-The `symbols` option groups per-symbol actions by type. There are three action groups: `skip`, `versions`, and `overrides`.
+The `symbols` option groups per-symbol actions and name mappings by type. The action groups are `skip`, `versions`, and `overrides`. Name mappings use `rename_types` and `rename_methods`.
 
 ### Skip
 
@@ -277,48 +275,50 @@ export_macros:
 | Qt | `Q_DECL_EXPORT`, `Q_CORE_EXPORT` |
 | Boost | `BOOST_*_DECL` |
 
-## Name Mappings
+### Name Mappings
 
-ruby-bindgen applies heuristics to convert C++ names to Ruby names — for example, `isEnabled()` becomes `enabled?` and `operator()` becomes `call`. These heuristics sometimes guess wrong. The `rename_methods` and `rename_types` options let you override the generated names without manual post-generation edits.
+ruby-bindgen applies heuristics to convert C++ names to Ruby names — for example, `isEnabled()` becomes `enabled?` and `operator()` becomes `call`. These heuristics sometimes guess wrong. The `rename_methods` and `rename_types` keys under `symbols` let you override the generated names without manual post-generation edits.
 
 Both options use the same pattern syntax as `symbols` names: plain strings for exact match, `/pattern/` for regex.
 
-### Type Mappings
+#### Type Mappings
 
 Override generated Ruby class names for template instantiations. Supports `\1`, `\2`, etc. capture group substitution in regex replacements.
 
 ```yaml
-rename_types:
-  # OpenCV Matx naming convention: MatxUnsignedChar21 → Matx21b
-  - from: /^MatxUnsignedChar(\d+)$/
-    to: Matx\1b
-  - from: /^MatxUnsignedShort(\d+)$/
-    to: Matx\1w
-  - from: /^MatxShort(\d+)$/
-    to: Matx\1s
-  - from: /^MatxInt(\d+)$/
-    to: Matx\1i
+symbols:
+  rename_types:
+    # OpenCV Matx naming convention: MatxUnsignedChar21 → Matx21b
+    - from: /^MatxUnsignedChar(\d+)$/
+      to: Matx\1b
+    - from: /^MatxUnsignedShort(\d+)$/
+      to: Matx\1w
+    - from: /^MatxShort(\d+)$/
+      to: Matx\1s
+    - from: /^MatxInt(\d+)$/
+      to: Matx\1i
 ```
 
 Without these overrides, `Matx<unsigned char, 2, 1>` would generate the Ruby class name `MatxUnsignedChar21`. With the mapping, it becomes `Matx21b`, matching OpenCV's naming convention.
 
-### Method Mappings
+#### Method Mappings
 
 Override generated Ruby method names. The `from` field is a C++ name (simple or fully qualified), the `to` field is the desired Ruby name.
 
 ```yaml
-rename_methods:
-  # Exact match by qualified name — grab is not a predicate, it grabs a frame
-  - from: cv::VideoCapture::grab
-    to: grab
-  # Override operator() → [] for element/ROI access
-  - from: cv::Mat::operator()
-    to: "[]"
-  - from: cv::UMat::operator()
-    to: "[]"
-  # Override operator() → to_size for MatSize (returns a Size, not element access)
-  - from: cv::MatSize::operator()
-    to: to_size
+symbols:
+  rename_methods:
+    # Exact match by qualified name — grab is not a predicate, it grabs a frame
+    - from: cv::VideoCapture::grab
+      to: grab
+    # Override operator() → [] for element/ROI access
+    - from: cv::Mat::operator()
+      to: "[]"
+    - from: cv::UMat::operator()
+      to: "[]"
+    # Override operator() → to_size for MatSize (returns a Size, not element access)
+    - from: cv::MatSize::operator()
+      to: to_size
 ```
 
 Without these overrides, ruby-bindgen would generate `grab?` (bool return, no params triggers predicate heuristic) and `call` (default `operator()` mapping).

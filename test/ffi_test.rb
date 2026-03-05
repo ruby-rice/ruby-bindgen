@@ -60,13 +60,15 @@ class FfiTest < AbstractTest
   def test_rename
     run_ffi_test("rename.h", project: "rename",
       library_names: ["rename"], library_versions: [],
-      rename_types: [
-        { "from" => "MY_3D_POINT", "to" => "My3DPoint" },
-        { "from" => "ELLIPSOIDAL_CS_2D_TYPE", "to" => "EllipsoidalCs2DType" }
-      ],
-      rename_methods: [
-        { "from" => "create_ellipsoidal_2D_cs", "to" => "create_cs" }
-      ])
+      symbols: {
+        rename_types: [
+          { "from" => "MY_3D_POINT", "to" => "My3DPoint" },
+          { "from" => "ELLIPSOIDAL_CS_2D_TYPE", "to" => "EllipsoidalCs2DType" }
+        ],
+        rename_methods: [
+          { "from" => "create_ellipsoidal_2D_cs", "to" => "create_cs" }
+        ]
+      })
   end
 
   private

@@ -146,8 +146,9 @@ module RubyBindgen
         raise ArgumentError, "version_check is required when symbols.versions is non-empty" if @symbols.has_versions? && !@version_check
 
         # Build naming tables: merge operator defaults with user config
-        rename_types = RubyBindgen::NameMapper.from_config(config[:rename_types] || {})
-        user_rename_methods = RubyBindgen::NameMapper.from_config(config[:rename_methods] || {})
+        symbols_config = config[:symbols] || {}
+        rename_types = RubyBindgen::NameMapper.from_config(symbols_config[:rename_types] || {})
+        user_rename_methods = RubyBindgen::NameMapper.from_config(symbols_config[:rename_methods] || {})
         rename_methods = OPERATOR_MAPPINGS.merge(user_rename_methods)
         @namer = RubyBindgen::Namer.new(rename_types, rename_methods, CONVERSION_TYPE_MAPPINGS)
         # Non-member operators grouped by target class cruby_name
