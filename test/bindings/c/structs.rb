@@ -30,6 +30,8 @@ module Structs
   class TypeCoverageStruct < FFI::Struct
     layout :f, :float,
            :us, :ushort,
-           :s, :short
+           :s, :short,
+           :b, :bool,
+           :u8, :uint8_t
   end
 end

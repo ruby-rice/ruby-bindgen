@@ -22,8 +22,13 @@ typedef struct
   F_TextItemT *val;
 } F_TextItemsT;
 
+#include <stdbool.h>
+#include <stdint.h>
+
 typedef struct {
   float f;
   unsigned short us;
   short s;
+  bool b;
+  uint8_t u8;
 } TypeCoverageStruct;
