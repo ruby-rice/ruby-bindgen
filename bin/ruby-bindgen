@@ -71,7 +71,7 @@ module RubyBindGen
 
     def run
       input = @config[:input]
-      default_match = input == @config[:output] ? ["**/*-rb.cpp"] : ["**/*.{h,hpp}"]
+      default_match = @config[:format] == "CMake" ? ["**/*-rb.cpp"] : ["**/*.{h,hpp}"]
       match_patterns = @config[:match] || default_match
       skip_patterns = @config[:skip] || []
 
