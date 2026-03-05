@@ -15,6 +15,13 @@ module Unions
            :z, :long
   end
 
+  callback :callback_union_on_event_callback, [:int, :string], :void
+
+  class CallbackUnion < FFI::Union
+    layout :on_event, :callback_union_on_event_callback,
+           :raw, :pointer
+  end
+
   class MixedData < FFI::Struct
     layout :a, :int,
            :b, :int

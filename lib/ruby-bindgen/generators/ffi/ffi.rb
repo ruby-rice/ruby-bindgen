@@ -325,7 +325,8 @@ module RubyBindgen
         cursor.find_by_kind(false, :cursor_field_decl).each do |field|
           if field.type.is_a?(::FFI::Clang::Types::Pointer) && field.type.function?
             callback_name = "#{cursor.spelling.underscore}_#{field.spelling.underscore}_callback"
-            result[nil] << self.visit_callback(callback_name, field.parameters, field.type.pointee)
+            parameters = field.find_by_kind(false, :cursor_parm_decl)
+            result[nil] << self.visit_callback(callback_name, parameters, field.type.pointee)
           end
         end
 
