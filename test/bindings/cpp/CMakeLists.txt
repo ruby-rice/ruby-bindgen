@@ -79,5 +79,6 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "template_defaults-rb.cpp"
   "template_inheritance-rb.cpp"
   "templates-rb.cpp"
+  "unions-rb.cpp"
   "version_guards-rb.cpp"
 )

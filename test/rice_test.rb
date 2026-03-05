@@ -115,6 +115,19 @@ class RiceTest < AbstractTest
     run_rice_test("unions.hpp")
   end
 
+  def test_project
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["unions.hpp"]
+    config[:project] = "myproject"
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp_project")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+    generator.generate
+    validate_result(generator.outputter)
+  end
+
   def test_cross_file_typedef
     # Tests that typedefs from included headers are found when generating
     # base classes. DerivedVector4d inherits from BaseMatrix<double, 4>,
