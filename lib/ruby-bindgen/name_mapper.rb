@@ -12,10 +12,6 @@ module RubyBindgen
       end
     end
 
-    def empty?
-      @exact.empty? && @regex.empty?
-    end
-
     # Factory: parses YAML config array of {from:, to:} entries
     def self.from_config(mappings)
       parsed = mappings.map do |entry|
@@ -61,14 +57,5 @@ module RubyBindgen
       self.class.new(exact_mappings + regex_mappings)
     end
 
-    # Returns true if any candidate matches (exact or regex).
-    def match?(*candidates)
-      !lookup(*candidates).nil?
-    end
-
-    # Iterate over exact (non-regex) keys.
-    def each_exact_key(&block)
-      @exact.each_key(&block)
-    end
   end
 end
