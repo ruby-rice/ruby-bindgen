@@ -1,0 +1,39 @@
+#include <unions.hpp>
+#include "unions-rb.hpp"
+
+using namespace Rice;
+
+
+
+void Init_Unions()
+{
+  Module rb_mUnions = define_module("Unions");
+
+  Class simple_union = define_class<SimpleUnion>("SimpleUnion")
+    .define_attr("i", &Unions::SimpleUnion::i)
+
+    .define_attr("d", &Unions::SimpleUnion::d)
+    ;
+
+  Class inner = define_class<Inner>("Inner")
+    .define_attr("x", &Unions::NestedUnion::Inner::x)
+
+    .define_attr("y", &Unions::NestedUnion::Inner::y)
+    ;
+
+  Class nested_union = define_class<NestedUnion>("NestedUnion")
+    .define_attr("inner", &Unions::NestedUnion::inner)
+
+    .define_attr("z", &Unions::NestedUnion::z)
+    ;
+
+  Rice::Data_Type<Unions::UnionWithStruct::Data> rb_cUnionsUnionWithStructData = define_class<Unions::UnionWithStruct::Data>("Data")
+    .define_constructor(Constructor<Unions::UnionWithStruct::Data>())
+    .define_attr("a", &Unions::UnionWithStruct::Data::a)
+    .define_attr("b", &Unions::UnionWithStruct::Data::b);
+  Class union_with_struct = define_class<UnionWithStruct>("UnionWithStruct")
+    .define_attr("data", &Unions::UnionWithStruct::data)
+
+    .define_attr("raw", &Unions::UnionWithStruct::raw)
+    ;
+}

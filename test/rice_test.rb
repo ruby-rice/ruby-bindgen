@@ -111,6 +111,10 @@ class RiceTest < AbstractTest
                               "/Guards::saturate_cast<Guards::HalfFloat>/"] } })
   end
 
+  def test_unions
+    run_rice_test("unions.hpp")
+  end
+
   def test_cross_file_typedef
     # Tests that typedefs from included headers are found when generating
     # base classes. DerivedVector4d inherits from BaseMatrix<double, 4>,
