@@ -2034,8 +2034,8 @@ module RubyBindgen
         result = Array.new
 
         # Define any embedded unions
-        cursor.find_by_kind(false, :cursor_union) do |struct|
-          result << visit_struct(struct)
+        cursor.find_by_kind(false, :cursor_union) do |union|
+          result << visit_union(union)
         end
 
         # Define any embedded structures
@@ -2046,7 +2046,7 @@ module RubyBindgen
         # Define any embedded callbacks
         cursor.find_by_kind(false, :cursor_field_decl) do |field|
           if field.type.is_a?(::FFI::Clang::Types::Pointer) && field.type.function?
-            callback_name = "#{cursor.ruby}_#{field.ruby}_callback"
+            callback_name = "#{cursor.ruby_name}_#{field.ruby_name}_callback"
             result << self.visit_callback(callback_name, field.parameters, field.type.pointee)
           end
         end

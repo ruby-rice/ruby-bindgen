@@ -45,6 +45,11 @@ class FfiTest < AbstractTest
       library_names: ["constants"], library_versions: [])
   end
 
+  def test_unions
+    run_ffi_test("unions.h", project: "unions",
+      library_names: ["unions"], library_versions: [])
+  end
+
   def test_filtering
     run_ffi_test("filtering.h", project: "filtering",
       library_names: ["filtering"], library_versions: [],

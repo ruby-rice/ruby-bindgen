@@ -311,9 +311,9 @@ module RubyBindgen
         result = Hash.new { |h, k| h[k] = [] }
 
         # Define any embedded unions
-        cursor.find_by_kind(false, :cursor_union).each do |struct|
-          version = @symbols.version(struct)
-          result[version] << visit_struct(struct)
+        cursor.find_by_kind(false, :cursor_union).each do |union|
+          version = @symbols.version(union)
+          result[version] << visit_union(union)
         end
 
         # Define any embedded structures
