@@ -26,6 +26,7 @@ module VersionGuards
     )
 
     typedef :double, :new_typedef
+    attach_function :overridden_function, :overriddenFunction, [:int, :int, :int], :bool
   end
   if version_guards_version >= 30000
     attach_function :future_function, :futureFunction, [:int, :int], :int

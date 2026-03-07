@@ -1496,7 +1496,7 @@ module RubyBindgen
         # Infer traits from operator* return type
         # Use recursive iteration to find inherited methods from base classes
         # Note: Iterators without operator* (like OpenCV's SparseMatConstIterator which uses node())
-        # cannot have traits auto-generated. Add them to symbols with action: skip in the config.
+        # cannot have traits auto-generated. Add them to the skip list in the symbols config.
         value_type = nil
         value_type_decl = nil
         decl.each do |child, _|

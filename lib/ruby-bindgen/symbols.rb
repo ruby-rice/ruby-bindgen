@@ -5,17 +5,17 @@ module RubyBindgen
       @regex = []
 
       (config[:skip] || []).each do |name|
-        add_entry(name, action: :skip, version: nil)
+        add_entry(name, skip: true)
       end
 
       (config[:versions] || {}).each do |version, names|
         names.each do |name|
-          add_entry(name, action: :version, version: version)
+          add_entry(name, version: version)
         end
       end
 
       (config[:overrides] || {}).each do |name, signature|
-        add_entry(name.to_s, action: :override, version: nil, signature: signature)
+        add_entry(name.to_s, signature: signature)
       end
     end
 
@@ -126,16 +126,16 @@ module RubyBindgen
     end
 
     # Look up a symbol by trying each candidate in order.
-    # Returns the value hash ({action: :skip, ...}) or nil.
+    # Returns a SymbolEntry or nil.
     def lookup(candidates)
       candidates.each do |name|
         result = @exact[normalize_signature(name)]
         return result if result
       end
 
-      @regex.each do |pattern, value|
+      @regex.each do |pattern, entry|
         candidates.each do |name|
-          return value if pattern.match?(normalize_signature(name))
+          return entry if pattern.match?(normalize_signature(name))
         end
       end
       nil
@@ -143,31 +143,31 @@ module RubyBindgen
 
     # Iterate over exact (non-regex) skip symbol keys.
     def each(&block)
-      @exact.each do |key, value|
-        yield key if value[:action] == :skip
+      @exact.each do |key, entry|
+        yield key if entry.skip?
       end
     end
 
     # Check if a cursor should be skipped based on symbols config.
     def skip?(cursor)
-      result = lookup(build_candidates(cursor))
-      result && result[:action] == :skip
+      entry = lookup(build_candidates(cursor))
+      entry&.skip? || false
     end
 
     # Returns the version guard value for a cursor, or nil if not version-guarded.
     def version(cursor)
-      result = lookup(build_candidates(cursor))
-      result[:version] if result && result[:action] == :version
+      entry = lookup(build_candidates(cursor))
+      entry&.version
     end
 
     # Returns the override signature string for a cursor, or nil if not overridden.
     def override(cursor)
-      result = lookup(build_candidates(cursor))
-      result[:signature] if result && result[:action] == :override
+      entry = lookup(build_candidates(cursor))
+      entry&.signature
     end
 
     def has_versions?
-      @exact.any? { |_, v| v[:action] == :version } || @regex.any? { |_, v| v[:action] == :version }
+      @exact.any? { |_, entry| entry.version } || @regex.any? { |_, entry| entry.version }
     end
 
     private
@@ -182,12 +182,17 @@ module RubyBindgen
         .strip
     end
 
-    def add_entry(name, action:, version:, signature: nil)
-      value = { action: action, version: version, signature: signature }
+    def add_entry(name, skip: false, version: nil, signature: nil)
       if name.start_with?('/') && name.end_with?('/')
-        @regex << [Regexp.new(name[1..-2]), value]
+        @regex << [Regexp.new(name[1..-2]), SymbolEntry.new(skip: skip, version: version, signature: signature)]
       else
-        @exact[normalize_signature(name)] = value
+        key = normalize_signature(name)
+        existing = @exact[key]
+        if existing
+          existing.merge(skip: skip, version: version, signature: signature)
+        else
+          @exact[key] = SymbolEntry.new(skip: skip, version: version, signature: signature)
+        end
       end
     end
   end

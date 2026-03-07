@@ -47,3 +47,7 @@ typedef double NewTypedef;
 // --- Versioned at 30000 ---
 
 int futureFunction(int a, int b);
+
+// --- Versioned at 20000 with override ---
+
+int overriddenFunction(int x, int y, int z);

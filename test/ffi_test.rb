@@ -36,8 +36,9 @@ class FfiTest < AbstractTest
   def test_version_guards
     run_ffi_test("version_guards.h", project: "version_guards",
       library_names: ["version_guards"], library_versions: [], version_check: "version_guards_version",
-      symbols: { versions: { 20000 => ["newFunction", "NewStruct", "NewEnum", "NewTypedef"],
-                              30000 => ["futureFunction"] } })
+      symbols: { versions: { 20000 => ["newFunction", "NewStruct", "NewEnum", "NewTypedef", "overriddenFunction"],
+                              30000 => ["futureFunction"] },
+                 overrides: { "overriddenFunction" => "[:int, :int, :int], :bool" } })
   end
 
   def test_constants

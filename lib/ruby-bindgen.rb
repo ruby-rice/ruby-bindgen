@@ -7,6 +7,7 @@ require 'ruby-bindgen/outputter'
 require 'ruby-bindgen/parser'
 require 'ruby-bindgen/name_mapper'
 require 'ruby-bindgen/namer'
+require 'ruby-bindgen/symbol_entry'
 require 'ruby-bindgen/symbols'
 
 require 'ruby-bindgen/generators/generator'
