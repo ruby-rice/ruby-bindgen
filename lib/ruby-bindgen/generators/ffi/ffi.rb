@@ -240,14 +240,18 @@ module RubyBindgen
 
         # Define any embedded structures
         cursor.find_by_kind(false, :cursor_struct).each do |struct|
+          content = visit_struct(struct)
+          next unless content
           version = @symbols.version(struct)
-          result[version] << visit_struct(struct)
+          result[version] << content
         end
 
         # Define any embedded unions
         cursor.find_by_kind(false, :cursor_union).each do |union|
+          content = visit_union(union)
+          next unless content
           version = @symbols.version(union)
-          result[version] << visit_union(union)
+          result[version] << content
         end
 
         # Define any embedded callbacks
@@ -311,14 +315,18 @@ module RubyBindgen
 
         # Define any embedded unions
         cursor.find_by_kind(false, :cursor_union).each do |union|
+          content = visit_union(union)
+          next unless content
           version = @symbols.version(union)
-          result[version] << visit_union(union)
+          result[version] << content
         end
 
         # Define any embedded structures
         cursor.find_by_kind(false, :cursor_struct).each do |struct|
+          content = visit_struct(struct)
+          next unless content
           version = @symbols.version(struct)
-          result[version] << visit_struct(struct)
+          result[version] << content
         end
 
         # Define any embedded callbacks

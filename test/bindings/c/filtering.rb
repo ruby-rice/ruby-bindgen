@@ -15,4 +15,9 @@ module Filtering
   )
 
   typedef :int, :included_typedef
+
+  class ContainerStruct < FFI::Struct
+    layout :member, SkippedEmbedded,
+           :value, :int
+  end
 end

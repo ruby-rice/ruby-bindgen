@@ -60,7 +60,8 @@ class FfiTest < AbstractTest
                         "/internal_helper.*/",
                         "SkippedStruct",
                         "SkippedEnum",
-                        "SkippedTypedef"] })
+                        "SkippedTypedef",
+                        "SkippedEmbedded"] })
   end
 
   def test_rename

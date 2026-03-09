@@ -69,3 +69,15 @@ typedef int SkippedTypedef;
 
 // Normal typedef - should be INCLUDED
 typedef int IncludedTypedef;
+
+// --- Embedded skipped struct ---
+
+// Struct containing an embedded struct that is skipped
+struct ContainerStruct
+{
+    struct SkippedEmbedded
+    {
+        int a;
+    } member;
+    int value;
+};
