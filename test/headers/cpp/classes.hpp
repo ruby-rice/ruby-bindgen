@@ -138,6 +138,16 @@ namespace Outer
     int array_field[3];                       // array field (currently skipped)
   };
 
+  // Test anonymous struct member with no field name (GCC/MSVC extension).
+  // The anonymous struct's fields are promoted into the parent class.
+  // anonymous_definer() returns nil for this case — generator must not crash.
+  class AnonymousMemberTest
+  {
+  public:
+    struct { int x; int y; };  // anonymous struct, no field name, no typedef
+    int z;
+  };
+
   // Test word boundary matching in template argument qualification.
   // The class "foo" should not match "foo" inside "foobar" namespace.
   // This tests the fix for the cvflann::anyimpl::choose_policy<any> bug

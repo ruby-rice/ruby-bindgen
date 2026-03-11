@@ -100,6 +100,10 @@ void Init_Classes()
     .define_attr("protected_assign_field", &Outer::AttributeTest::protected_assign_field, Rice::AttrAccess::Read)
     .define_attr("array_field", &Outer::AttributeTest::array_field, Rice::AttrAccess::Read);
 
+  Rice::Data_Type<Outer::AnonymousMemberTest> rb_cOuterAnonymousMemberTest = define_class_under<Outer::AnonymousMemberTest>(rb_mOuter, "AnonymousMemberTest")
+    .define_constructor(Constructor<Outer::AnonymousMemberTest>())
+    .define_attr("z", &Outer::AnonymousMemberTest::z);
+
   Rice::Data_Type<Outer::foo> rb_cOuterFoo = define_class_under<Outer::foo>(rb_mOuter, "Foo")
     .define_constructor(Constructor<Outer::foo>())
     .define_attr("value", &Outer::foo::value);

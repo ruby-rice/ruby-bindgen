@@ -37,7 +37,7 @@ All 16 Rice tests: classes, enums, functions, inheritance, template, constructor
 
 ## Test Coverage Requirements
 
-**Every bug fix MUST include test coverage.** Add test cases to the appropriate header file in `test/headers/cpp/` and update the expected output in `test/bindings/cpp/`.
+**Every bug fix MUST include test coverage.** Write a failing test FIRST, then implement the fix. Add test cases to the appropriate header file in `test/headers/cpp/` and update the expected output in `test/bindings/cpp/`.
 
 **Mocks are NEVER allowed in tests.** All tests must use real headers and real generator output.
 

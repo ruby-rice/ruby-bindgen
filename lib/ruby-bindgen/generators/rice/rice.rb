@@ -357,6 +357,10 @@ module RubyBindgen
         # Skip explicitly listed symbols
         return if skip_symbol?(cursor)
 
+        # Skip anonymous types with no definer (no typedef, field, or variable name).
+        # These are unnameable in C++ and cannot be meaningfully bound.
+        return if cursor.anonymous? && !cursor.anonymous_definer
+
         result = Hash.new { |h, k| h[k] = [] }
 
         # Determine containing module
@@ -433,8 +437,10 @@ module RubyBindgen
         cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
           next if child_cursor.opaque_declaration?
+          content = visit_class_decl(child_cursor)
+          next unless content
           version = @symbols.version(child_cursor)
-          result[version] << visit_class_decl(child_cursor)
+          result[version] << content
         end
 
         # Define any named embedded enums (anonymous enums are chained above)

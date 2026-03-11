@@ -235,6 +235,7 @@ module RubyBindgen
         return if cursor.forward_declaration?
         return if cursor.opaque_declaration?
         return if @symbols.skip?(cursor)
+        return if cursor.anonymous? && !cursor.anonymous_definer
 
         result = Hash.new { |h, k| h[k] = [] }
 
@@ -310,6 +311,7 @@ module RubyBindgen
         return if cursor.forward_declaration?
         return if cursor.opaque_declaration?
         return if @symbols.skip?(cursor)
+        return if cursor.anonymous? && !cursor.anonymous_definer
 
         result = Hash.new { |h, k| h[k] = [] }
 
@@ -438,7 +440,8 @@ module RubyBindgen
             return ":pointer"
           end
           if type.anonymous?
-            return type.declaration.anonymous_definer.spelling.camelize
+            definer = type.declaration.anonymous_definer
+            return definer ? definer.spelling.camelize : ":pointer"
           end
 
           case

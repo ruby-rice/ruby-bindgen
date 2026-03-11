@@ -11,7 +11,8 @@ module RubyBindgen
       if cursor.anonymous? && cursor.kind == :cursor_namespace
         "Anonymous"
       elsif cursor.anonymous?
-        cursor.anonymous_definer.spelling.camelize
+        definer = cursor.anonymous_definer
+        definer ? definer.spelling.camelize : nil
       else
         case cursor.kind
           when :cursor_translation_unit
