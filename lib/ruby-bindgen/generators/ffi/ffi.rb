@@ -112,7 +112,8 @@ module RubyBindgen
             next :continue
           end
 
-          unless child_cursor.location.from_main_file?
+          # Note: from_main_file? doesn't work when -include is used, so manually check.
+          unless child_cursor.file_location.file == child_cursor.translation_unit.file.name
             next :continue
           end
 
