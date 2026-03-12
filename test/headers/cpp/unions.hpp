@@ -1,3 +1,10 @@
+// Top-level union (no namespace) - should use define_class, not define_class_under
+union TopLevelUnion
+{
+  int i;
+  float f;
+};
+
 namespace Unions
 {
   union SimpleUnion

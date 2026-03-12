@@ -2086,9 +2086,11 @@ module RubyBindgen
           result << content if content
         end
 
+        under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
+
         children = render_children(cursor, indentation: 2, chain: true, terminate: true, strip: true,
                                            exclude_kinds: Set[:cursor_struct, :cursor_union])
-        result << self.render_cursor(cursor, "union", :children => children)
+        result << self.render_cursor(cursor, "union", :under => under, :children => children)
         result.map { |s| s.chomp }.join("\n\n")
       end
 

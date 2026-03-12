@@ -7,9 +7,13 @@ using namespace Rice;
 
 void Init_Unions()
 {
+  Rice::Data_Type<TopLevelUnion> top_level_union = define_class<TopLevelUnion>("TopLevelUnion")
+    .define_attr("i", &TopLevelUnion::i)
+    .define_attr("f", &TopLevelUnion::f);
+
   Module rb_mUnions = define_module("Unions");
 
-  Rice::Data_Type<Unions::SimpleUnion> simple_union = define_class<Unions::SimpleUnion>("SimpleUnion")
+  Rice::Data_Type<Unions::SimpleUnion> simple_union = define_class_under<Unions::SimpleUnion>(rb_mUnions, "SimpleUnion")
     .define_attr("i", &Unions::SimpleUnion::i)
     .define_attr("d", &Unions::SimpleUnion::d);
 
@@ -17,7 +21,7 @@ void Init_Unions()
     .define_attr("x", &Unions::NestedUnion::Inner::x)
     .define_attr("y", &Unions::NestedUnion::Inner::y);
 
-  Rice::Data_Type<Unions::NestedUnion> nested_union = define_class<Unions::NestedUnion>("NestedUnion")
+  Rice::Data_Type<Unions::NestedUnion> nested_union = define_class_under<Unions::NestedUnion>(rb_mUnions, "NestedUnion")
     .define_attr("inner", &Unions::NestedUnion::inner)
     .define_attr("z", &Unions::NestedUnion::z);
 
@@ -26,14 +30,14 @@ void Init_Unions()
     .define_attr("a", &Unions::UnionWithStruct::Data::a)
     .define_attr("b", &Unions::UnionWithStruct::Data::b);
 
-  Rice::Data_Type<Unions::UnionWithStruct> union_with_struct = define_class<Unions::UnionWithStruct>("UnionWithStruct")
+  Rice::Data_Type<Unions::UnionWithStruct> union_with_struct = define_class_under<Unions::UnionWithStruct>(rb_mUnions, "UnionWithStruct")
     .define_attr("data", &Unions::UnionWithStruct::data)
     .define_attr("raw", &Unions::UnionWithStruct::raw);
 
-  Rice::Data_Type<Unions::UnionWithAnonymousStruct> union_with_anonymous_struct = define_class<Unions::UnionWithAnonymousStruct>("UnionWithAnonymousStruct")
+  Rice::Data_Type<Unions::UnionWithAnonymousStruct> union_with_anonymous_struct = define_class_under<Unions::UnionWithAnonymousStruct>(rb_mUnions, "UnionWithAnonymousStruct")
     .define_attr("raw", &Unions::UnionWithAnonymousStruct::raw);
 
-  Rice::Data_Type<Unions::UnionWithCallback> union_with_callback = define_class<Unions::UnionWithCallback>("UnionWithCallback")
+  Rice::Data_Type<Unions::UnionWithCallback> union_with_callback = define_class_under<Unions::UnionWithCallback>(rb_mUnions, "UnionWithCallback")
     .define_attr("handler", &Unions::UnionWithCallback::handler)
     .define_attr("raw", &Unions::UnionWithCallback::raw);
 }
