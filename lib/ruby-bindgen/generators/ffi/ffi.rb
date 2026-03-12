@@ -406,8 +406,6 @@ module RubyBindgen
             ":long"
           when :type_longlong
             ":long_long"
-          when :type_uint8
-            ":uint8"
           when :type_ulong
             ":ulong"
           when :type_ulonglong
@@ -420,8 +418,20 @@ module RubyBindgen
             ":ushort"
           when :type_char_s
             ":char"
-          when :type_uchar
+          when :type_uchar, :type_char_u
             ":uchar"
+          when :type_schar
+            ":int8"
+          when :type_wchar
+            figure_ffi_type(type.canonical, context)
+          when :type_char16
+            ":uint16"
+          when :type_char32
+            ":uint32"
+          when :type_longdouble
+            ":long_double"
+          when :type_int128, :type_uint128
+            raise("Unsupported 128-bit integer type: #{type.kind}")
           when :type_void
             ":void"
           when :type_elaborated
