@@ -22,3 +22,18 @@ inline Rice::Data_Type<Outer::DeprecatedTemplate<T>> DeprecatedTemplate_instanti
 {
   return Rice::define_class_under<Outer::DeprecatedTemplate<T>>(parent, name);
 }
+
+template<typename T, int N>
+inline Rice::Data_Type<Outer::Vec<T, N>> Vec_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Outer::Vec<T, N>>(parent, name)
+    .define_attr("data", &Outer::Vec<T, N>::data, Rice::AttrAccess::Read);
+}
+
+template<typename T>
+inline Rice::Data_Type<Outer::DataType<T>> DataType_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Outer::DataType<T>>(parent, name)
+    .define_constructor(Constructor<Outer::DataType<T>>())
+    .template define_method<void(Outer::DataType<T>::*)()>("info", &Outer::DataType<T>::info);
+}

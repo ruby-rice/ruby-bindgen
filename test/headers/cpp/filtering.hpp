@@ -248,4 +248,38 @@ namespace Outer
 
     void doWork();
   };
+
+  // --- Nested template argument skip tests ---
+  // Tests that skip matching works with nested angle brackets like Vec<float, 3>
+
+  template<typename T, int N>
+  class Vec
+  {
+  public:
+    T data[N];
+  };
+
+  template<typename T>
+  class MY_EXPORT DataType
+  {
+  public:
+    DataType();
+    void info();
+  };
+
+  // This specialization should be SKIPPED via "Outer::DataType<Outer::Vec<float, 3>>"
+  template<> class MY_EXPORT DataType<Vec<float, 3>>
+  {
+  public:
+    DataType();
+    void info();
+  };
+
+  // This specialization should be INCLUDED (not in skip list)
+  template<> class MY_EXPORT DataType<int>
+  {
+  public:
+    DataType();
+    void info();
+  };
 }

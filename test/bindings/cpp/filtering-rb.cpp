@@ -75,4 +75,8 @@ void Init_Filtering()
   Rice::Data_Type<Outer::ConstructorWithNsParam> rb_cOuterConstructorWithNsParam = define_class_under<Outer::ConstructorWithNsParam>(rb_mOuter, "ConstructorWithNsParam")
     .define_constructor(Constructor<Outer::ConstructorWithNsParam>())
     .define_method<void(Outer::ConstructorWithNsParam::*)()>("do_work", &Outer::ConstructorWithNsParam::doWork);
+
+  Rice::Data_Type<Outer::DataType<int>> rb_cOuterDataTypeInt = define_class_under<Outer::DataType<int>>(rb_mOuter, "DataTypeInt")
+    .define_constructor(Constructor<Outer::DataType<int>>())
+    .define_method<void(Outer::DataType<int>::*)()>("info", &Outer::DataType<int>::info);
 }

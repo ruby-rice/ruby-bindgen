@@ -65,7 +65,7 @@ module RubyBindgen
           if n > 0
             qualified_args = (0...n).map { |i| cursor.type.template_argument_type(i).spelling }
             qualified_args_str = "<#{qualified_args.join(', ')}>"
-            fq_display = display.sub(/<[^>]+>/, qualified_args_str)
+            fq_display = sub_template_args(display, qualified_args_str)
             if fq_display != display
               qualified_names.each do |qn|
                 fq_qualified_display = qn.sub(cursor.spelling, fq_display)
@@ -174,6 +174,23 @@ module RubyBindgen
 
     # Normalize type signatures so that whitespace differences don't prevent matching.
     # Clang spells types like "const int *" (space before *) but users may write "const int*".
+    # Replace the first balanced <...> group in str with replacement.
+    # Handles nested angle brackets like DataType<Vec<float, 3>>.
+    def sub_template_args(str, replacement)
+      start = str.index('<')
+      return str unless start
+
+      depth = 0
+      (start...str.length).each do |i|
+        depth += 1 if str[i] == '<'
+        depth -= 1 if str[i] == '>'
+        if depth == 0
+          return str[0...start] + replacement + str[(i + 1)..]
+        end
+      end
+      str
+    end
+
     def normalize_signature(str)
       str
         .gsub(/\s+/, ' ')
