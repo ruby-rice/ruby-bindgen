@@ -23,12 +23,12 @@ module RubyBindgen
     def each
       raise(ArgumentError, "No block given") unless block_given?
 
+      seen = Set.new
       self.globs.each do |glob|
         search = File.join(self.base_path, glob)
         Dir.glob(search).each do |path|
-          if exclude.include?(path)
-            next
-          end
+          next if exclude.include?(path)
+          next unless seen.add?(path)
 
           relative_path = Pathname.new(path).relative_path_from(self.base_path)
           yield path, relative_path.to_path
