@@ -2069,14 +2069,16 @@ module RubyBindgen
 
         result = Array.new
 
-        # Define any embedded unions
+        # Define any embedded unions (skip anonymous/skipped ones that return nil)
         cursor.find_by_kind(false, :cursor_union) do |union|
-          result << visit_union(union)
+          content = visit_union(union)
+          result << content if content
         end
 
-        # Define any embedded structures
+        # Define any embedded structures (skip anonymous/skipped ones that return nil)
         cursor.find_by_kind(false, :cursor_struct) do |struct|
-          result << visit_struct(struct)
+          content = visit_struct(struct)
+          result << content if content
         end
 
         children = render_children(cursor, indentation: 2, chain: true, terminate: true, strip: true,

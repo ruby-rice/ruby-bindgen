@@ -26,6 +26,18 @@ namespace Unions
     long raw;
   };
 
+  // Union with an anonymous embedded struct - visit_struct returns nil
+  // for anonymous types without a definer, which must not crash.
+  union UnionWithAnonymousStruct
+  {
+    struct
+    {
+      int x;
+      int y;
+    };
+    long raw;
+  };
+
   // Union with a function pointer field — must not crash the Rice generator.
   // Rice has no visit_callback; these fields should be silently skipped.
   union UnionWithCallback

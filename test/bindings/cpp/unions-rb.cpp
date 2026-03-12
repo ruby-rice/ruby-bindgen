@@ -30,6 +30,9 @@ void Init_Unions()
     .define_attr("data", &Unions::UnionWithStruct::data)
     .define_attr("raw", &Unions::UnionWithStruct::raw);
 
+  Rice::Data_Type<Unions::UnionWithAnonymousStruct> union_with_anonymous_struct = define_class<Unions::UnionWithAnonymousStruct>("UnionWithAnonymousStruct")
+    .define_attr("raw", &Unions::UnionWithAnonymousStruct::raw);
+
   Rice::Data_Type<Unions::UnionWithCallback> union_with_callback = define_class<Unions::UnionWithCallback>("UnionWithCallback")
     .define_attr("handler", &Unions::UnionWithCallback::handler)
     .define_attr("raw", &Unions::UnionWithCallback::raw);
