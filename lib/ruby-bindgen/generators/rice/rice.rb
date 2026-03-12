@@ -863,7 +863,7 @@ module RubyBindgen
             canonical_name = arg_type.canonical.spelling
             if typedef_name != canonical_name
               # Replace the resolved canonical form with the original typedef name
-              result.gsub!(canonical_name, typedef_name)
+              result.gsub!(/\b#{Regexp.escape(canonical_name)}\b/, typedef_name)
             end
           end
 
