@@ -238,6 +238,21 @@ This generates properly nested `module Proj` / `module Api` with correct indenta
 - [`rename_types`](configuration.md#name-mappings) — override generated Ruby module/class names
 - [`rename_methods`](configuration.md#name-mappings) — override generated Ruby method names
 
+## Filtering
+
+### Automatic Skipping
+
+The following are automatically skipped:
+
+- **Deprecated**: Functions marked with `__attribute__((deprecated))` or `[[deprecated]]`
+- **Variadic**: Functions with `...` parameters (cannot be called via FFI)
+- **Private/Protected**: Non-public members
+- **System headers**: Declarations from system include paths
+
+### Manual Filtering
+
+See the [Customization](#customization) section above for `symbols: skip:`, `export_macros`, and other options.
+
 ## Version Detection
 
 When `symbols.versions` has entries, `ruby-bindgen` generates version-guarded Ruby conditionals and a `{project}_version.rb` skeleton file. The user implements the version detection method in that file — typically by calling the library's own version API.

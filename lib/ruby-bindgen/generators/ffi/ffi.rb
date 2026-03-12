@@ -216,6 +216,7 @@ module RubyBindgen
       end
 
       def visit_function(cursor)
+        return if cursor.availability == :deprecated
         return if @symbols.skip?(cursor)
         return unless has_export_macro?(cursor)
 

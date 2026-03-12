@@ -288,13 +288,10 @@ module Proj
     attach_function :proj_init_info, :proj_init_info, [:string], PjInitInfo.by_value
     attach_function :proj_list_operations, :proj_list_operations, [], PjList.by_ref
     attach_function :proj_list_ellps, :proj_list_ellps, [], PjEllps.by_ref
-    attach_function :proj_list_units, :proj_list_units, [], PjUnits.by_ref
-    attach_function :proj_list_angular_units, :proj_list_angular_units, [], PjUnits.by_ref
     attach_function :proj_list_prime_meridians, :proj_list_prime_meridians, [], PjPrimeMeridians.by_ref
     attach_function :proj_torad, :proj_torad, [:double], :double
     attach_function :proj_todeg, :proj_todeg, [:double], :double
     attach_function :proj_dmstor, :proj_dmstor, [:string, :pointer], :double
-    attach_function :proj_rtodms, :proj_rtodms, [:pointer, :double, :int, :int], :pointer
     attach_function :proj_rtodms2, :proj_rtodms2, [:pointer, :size_t, :double, :int, :int], :pointer
     typedef :pointer, :proj_string_list
 

@@ -14,8 +14,7 @@ See [`symbols`](../configuration.md#symbols) in the configuration documentation.
 
 The following are automatically skipped:
 
-- **Deprecated**: Functions with `__attribute__((deprecated))`
-- **Internal**: Functions ending with underscore (`func_`)
+- **Deprecated**: Functions marked with `__attribute__((deprecated))` or `[[deprecated]]`
 - **Variadic**: Functions with `...` parameters
 - **Deleted**: Methods marked `= delete`
 - **Private/Protected**: Non-public members
