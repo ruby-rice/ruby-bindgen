@@ -1448,7 +1448,6 @@ module RubyBindgen
       def skip_callable?(cursor)
         skip_symbol?(cursor) ||
           cursor.availability == :deprecated ||
-          cursor.spelling.end_with?('_') ||
           cursor.type.variadic?
       end
 
