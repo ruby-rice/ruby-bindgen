@@ -2044,19 +2044,10 @@ module RubyBindgen
           result << visit_struct(struct)
         end
 
-        # Define any embedded callbacks
-        cursor.find_by_kind(false, :cursor_field_decl) do |field|
-          if field.type.is_a?(::FFI::Clang::Types::Pointer) && field.type.function?
-            callback_name = "#{cursor.ruby_name}_#{field.ruby_name}_callback"
-            parameters = field.find_by_kind(false, :cursor_parm_decl)
-            result << self.visit_callback(callback_name, parameters, field.type.pointee)
-          end
-        end
-
-        children = render_children(cursor, indentation: 2, chain: true, terminate: true,
+        children = render_children(cursor, indentation: 2, chain: true, terminate: true, strip: true,
                                            exclude_kinds: Set[:cursor_struct, :cursor_union])
         result << self.render_cursor(cursor, "union", :children => children)
-        result.join("\n")
+        result.map { |s| s.chomp }.join("\n\n")
       end
 
       def visit_variable(cursor)
