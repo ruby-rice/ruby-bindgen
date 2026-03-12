@@ -52,7 +52,10 @@ class AbstractTest < Minitest::Test
   end
 
   def validate_result(outputter)
+    generated_paths = Set.new
+
     outputter.output_paths.each do |path, content|
+      generated_paths << path
       if ENV["UPDATE_EXPECTED"]
         File.open(path, 'wb') do |file|
           file << content
@@ -60,6 +63,23 @@ class AbstractTest < Minitest::Test
       else
         expected = File.read(path, mode: "rb")
         assert_equal(expected, content, "Mismatch in #{path}")
+      end
+    end
+
+    # Detect stale expected files that were not generated this run.
+    # Group generated files by base name prefix (e.g., "classes-rb") and check
+    # for extra files on disk with the same prefix.
+    prefixes = generated_paths.map { |p| File.basename(p).sub(/\.(cpp|hpp|ipp|rb)$/, '') }.uniq
+    prefixes.each do |prefix|
+      dir = File.dirname(generated_paths.first)
+      Dir.glob(File.join(dir, "#{prefix}.*")).each do |existing|
+        next if generated_paths.include?(existing)
+        if ENV["UPDATE_EXPECTED"]
+          File.delete(existing)
+          $stderr.puts "Deleted stale expected file: #{existing}"
+        else
+          flunk "Stale expected file not generated: #{existing}"
+        end
       end
     end
   end
