@@ -220,6 +220,7 @@ module RubyBindgen
       def visit_start
         # Clear caches from previous runs
         @class_template_typedefs = {}
+        @class_static_members = {}
       end
 
       def visit_end
@@ -1352,7 +1353,6 @@ module RubyBindgen
         parent_kind = class_cursor.kind
         return spelling unless parent_kind == :cursor_class_decl || parent_kind == :cursor_struct
 
-        @class_static_members ||= {}
         cache_key = class_cursor.usr
         member_info = @class_static_members[cache_key] ||= begin
           names = []
