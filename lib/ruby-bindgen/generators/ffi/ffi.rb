@@ -524,10 +524,6 @@ module RubyBindgen
         end
       end
 
-      def figure_template(cursor)
-        name = cursor.kind.to_s.delete_prefix("cursor_")
-        File.join(__dir__, "#{name.underscore}.erb")
-      end
 
       def add_indentation(content, indentation)
         content.lines.map do |line|
