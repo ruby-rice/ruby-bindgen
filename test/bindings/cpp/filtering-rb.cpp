@@ -56,6 +56,17 @@ void Init_Filtering()
     .define_constructor(Constructor<Outer::guard_v1::GuardedClass>())
     .define_method<void(Outer::guard_v1::GuardedClass::*)()>("normal_method", &Outer::guard_v1::GuardedClass::normalMethod);
 
+  Rice::Data_Type<Outer::SkippedClassExtended> rb_cOuterSkippedClassExtended = define_class_under<Outer::SkippedClassExtended>(rb_mOuter, "SkippedClassExtended")
+    .define_constructor(Constructor<Outer::SkippedClassExtended>())
+    .define_method<void(Outer::SkippedClassExtended::*)()>("work", &Outer::SkippedClassExtended::work);
+
+  Rice::Data_Type<Outer::UsesNonSkippedType> rb_cOuterUsesNonSkippedType = define_class_under<Outer::UsesNonSkippedType>(rb_mOuter, "UsesNonSkippedType")
+    .define_constructor(Constructor<Outer::UsesNonSkippedType>())
+    .define_constructor(Constructor<Outer::UsesNonSkippedType, const Outer::SkippedClassExtended&>(),
+      Arg("ext"))
+    .define_method<void(Outer::UsesNonSkippedType::*)(Outer::SkippedClassExtended*)>("process", &Outer::UsesNonSkippedType::process,
+      Arg("ext"));
+
   Rice::Data_Type<Outer::MyParam> rb_cOuterMyParam = define_class_under<Outer::MyParam>(rb_mOuter, "MyParam")
     .define_constructor(Constructor<Outer::MyParam>())
     .define_attr("value", &Outer::MyParam::value);

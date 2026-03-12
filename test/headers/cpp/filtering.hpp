@@ -204,6 +204,26 @@ namespace Outer
     };
   }
 
+  // --- Word boundary tests for skip matching ---
+  // "SkippedClass" is in the skip list, but "SkippedClassExtended" should NOT be skipped
+  // (must not substring-match). Similarly, "SkippedClassHelper" should NOT be skipped.
+
+  class MY_EXPORT SkippedClassExtended
+  {
+  public:
+    SkippedClassExtended();
+    void work();
+  };
+
+  // Method taking SkippedClassExtended should be INCLUDED (not skipped)
+  class MY_EXPORT UsesNonSkippedType
+  {
+  public:
+    UsesNonSkippedType();
+    UsesNonSkippedType(const SkippedClassExtended& ext);
+    void process(SkippedClassExtended* ext);
+  };
+
   // --- Namespace-qualified parameter type tests ---
   // When a constructor takes a same-namespace type, clang may spell
   // the arg type without the namespace (e.g., "MyParam" instead of "Outer::MyParam").

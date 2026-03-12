@@ -166,17 +166,41 @@ module RubyBindgen
         parser.generate(self)
       end
 
-      # Check if a type's spelling contains a skipped symbol.
-      # Used to filter out methods/constructors that reference skipped types.
+      # Check if a type references a skipped symbol by examining its declaration.
+      # Unwraps pointers/references and checks template arguments recursively.
       def type_references_skipped_symbol?(type)
-        spelling = type.spelling
-        @symbols.each do |skip|
-          # Check if the type spelling contains the skipped symbol
-          # Also check simple name (last component) since type spelling may omit namespaces
-          # e.g., type spelling "const MatCommaInitializer_<_Tp>&" should match "cv::MatCommaInitializer_"
-          simple_name = skip.split('::').last
-          return true if spelling.include?(skip) || spelling.include?(simple_name)
+        # Unwrap pointers and references to get the underlying type
+        if [:type_pointer, :type_lvalue_ref, :type_rvalue_ref].include?(type.kind) && type.respond_to?(:pointee)
+          return type_references_skipped_symbol?(type.pointee)
         end
+
+        # Check the type's own declaration (try both non-canonical and canonical
+        # since dependent types like SkippedClass<T> may not resolve canonically)
+        [type, type.canonical].each do |t|
+          decl = t.declaration
+          next if decl.kind == :cursor_no_decl_found
+          return true if @symbols.skip?(decl)
+        end
+
+        # For dependent/unexposed types where no declaration is found (e.g., SkippedClass<T>
+        # inside a class template), fall back to checking the type spelling
+        if type.declaration.kind == :cursor_no_decl_found && type.canonical.declaration.kind == :cursor_no_decl_found
+          spelling = type.spelling
+          @symbols.each do |skip|
+            simple_name = skip.split('::').last
+            return true if spelling.match?(/\b#{Regexp.escape(simple_name)}\b/)
+          end
+        end
+
+        # Check template arguments recursively
+        if type.num_template_arguments > 0
+          type.num_template_arguments.times do |i|
+            arg_type = type.template_argument_type(i)
+            next if arg_type.kind == :type_invalid
+            return true if type_references_skipped_symbol?(arg_type)
+          end
+        end
+
         false
       end
 
