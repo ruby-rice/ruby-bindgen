@@ -129,7 +129,8 @@ module RubyBindgen
             next :continue
           end
 
-          unless child_cursor.declaration? || child_cursor.kind == :cursor_macro_definition
+          unless child_cursor.declaration? || child_cursor.kind == :cursor_macro_definition ||
+                 child_cursor.kind == :cursor_linkage_spec
             next :continue
           end
 
@@ -209,6 +210,12 @@ module RubyBindgen
 
       def visit_enum_constant_decl(cursor)
         self.render_cursor(cursor,"enum_constant_decl")
+      end
+
+      # extern "C" {} — transparent wrapper, recurse into children
+      def visit_linkage_spec(cursor)
+        versions = visit_children(cursor)
+        merge_children(versions)
       end
 
       def visit_function(cursor)

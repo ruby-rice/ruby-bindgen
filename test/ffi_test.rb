@@ -65,6 +65,12 @@ class FfiTest < AbstractTest
                         "SkippedEmbedded"] })
   end
 
+  def test_linkage_spec
+    run_ffi_test("linkage_spec.h", project: "linkage_spec",
+      library_names: ["linkage_spec"], library_versions: [],
+      clang_args: ["-xc++"])
+  end
+
   def test_rename
     run_ffi_test("rename.h", project: "rename",
       library_names: ["rename"], library_versions: [],
