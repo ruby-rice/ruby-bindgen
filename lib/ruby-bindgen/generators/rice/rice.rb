@@ -864,7 +864,7 @@ module RubyBindgen
       # that canonical resolved to underlying types. For example, canonical resolves
       # size_t to "unsigned long" (Linux) or "unsigned long long" (MSVC). We want the
       # better namespace qualification from canonical but need to keep "size_t".
-      def restore_typedefs(base, canonical, type)
+      def restore_typedefs(canonical, type)
         result = canonical
         collect_typedef_restorations(type, result)
         result
@@ -1070,7 +1070,7 @@ module RubyBindgen
               # instead of LMSolver::Callback). But canonical also resolves typedefs like
               # size_t to platform-specific types (unsigned long on Linux, unsigned long long
               # on MSVC). Restore any typedef names that canonical resolved.
-              base = restore_typedefs(base, canonical, type)
+              base = restore_typedefs(canonical, type)
             end
           end
 
