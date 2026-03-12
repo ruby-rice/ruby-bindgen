@@ -7,7 +7,7 @@ add_subdirectory ("<%= directory.relative_path_from(directory.parent) %>")
 
 # Sources
 <% if !files.empty? -%>
-target_sources(${CMAKE_PROJECT_NAME} PUBLIC
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   <% files.each do |file| -%>
   "<%= file.relative_path_from(file.parent) %>"
   <% end -%>
