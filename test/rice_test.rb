@@ -63,7 +63,8 @@ class RiceTest < AbstractTest
                                      "Outer::MyClass::overloaded(int, const int*)",
                                      "Outer::GuardedClass::GuardedClass(const int*)",
                                      "Outer::ConstructorWithNsParam::ConstructorWithNsParam(const Outer::MyParam*)",
-                                     "Outer::DataType<Outer::Vec<float, 3>>"] })
+                                     "Outer::DataType<Outer::Vec<float, 3>>",
+                                     "Outer::DataType<double>::DataType(const double*)"] })
   end
 
   def test_buffers

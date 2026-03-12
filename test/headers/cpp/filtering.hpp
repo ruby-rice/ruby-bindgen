@@ -292,6 +292,19 @@ namespace Outer
     void info();
   };
 
+  // --- Skip constructor by qualified name with template args ---
+  // Tests that build_candidates replaces the last occurrence of the spelling,
+  // not the first (namespace). "Outer::DataType<int>::DataType(const int*)"
+  // must match, not "Outer::DataType<int>::DataType<int>(const int*)"
+  template<> class MY_EXPORT DataType<double>
+  {
+  public:
+    DataType();
+    // This constructor should be SKIPPED via qualified name
+    DataType(const double* data);
+    void info();
+  };
+
   // This specialization should be INCLUDED (not in skip list)
   template<> class MY_EXPORT DataType<int>
   {

@@ -51,7 +51,7 @@ module RubyBindgen
       display = cursor.display_name
       if display != cursor.spelling
         qualified_names.each do |qn|
-          qualified_display = qn.sub(cursor.spelling, display)
+          qualified_display = sub_last(qn, cursor.spelling, display)
           candidates << display unless candidates.include?(display)
           candidates << qualified_display unless candidates.include?(qualified_display)
         end
@@ -68,7 +68,7 @@ module RubyBindgen
             fq_display = sub_template_args(display, qualified_args_str)
             if fq_display != display
               qualified_names.each do |qn|
-                fq_qualified_display = qn.sub(cursor.spelling, fq_display)
+                fq_qualified_display = sub_last(qn, cursor.spelling, fq_display)
                 candidates << fq_display unless candidates.include?(fq_display)
                 candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
               end
@@ -89,7 +89,7 @@ module RubyBindgen
             qualified_args_str = "<#{type_refs.join(', ')}>"
             fq_display = display.sub('<>', qualified_args_str)
             qualified_names.each do |qn|
-              fq_qualified_display = qn.sub(cursor.spelling, fq_display)
+              fq_qualified_display = sub_last(qn, cursor.spelling, fq_display)
               candidates << fq_display unless candidates.include?(fq_display)
               candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
             end
@@ -189,6 +189,15 @@ module RubyBindgen
         end
       end
       str
+    end
+
+    # Replace the last occurrence of `target` in `str` with `replacement`.
+    # Used when building qualified candidates for constructors, where the
+    # spelling (e.g., "DataType") appears both as namespace and method name.
+    def sub_last(str, target, replacement)
+      i = str.rindex(target)
+      return str unless i
+      str[0...i] + replacement + str[(i + target.length)..]
     end
 
     def normalize_signature(str)
