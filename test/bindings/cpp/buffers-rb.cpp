@@ -5,8 +5,6 @@
 
 using namespace Rice;
 
-
-
 void Init_Buffers()
 {
   Module rb_mBufferNS = define_module("BufferNS");

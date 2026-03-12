@@ -15,7 +15,6 @@ namespace std
     using pointer = iter::Pixel*;
     using reference = iter::Pixel&;
   };
-
 }
 
 using namespace Rice;

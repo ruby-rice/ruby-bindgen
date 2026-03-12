@@ -5,8 +5,6 @@
 
 using namespace Rice;
 
-
-
 void Init_Overloads()
 {
   Module rb_mOuter = define_module("Outer");

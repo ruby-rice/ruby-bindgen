@@ -5,8 +5,6 @@
 
 using namespace Rice;
 
-
-
 void Init_InlineNamespaces()
 {
   Class(rb_cObject).define_constant("OPENCV_DNN_API_VERSION", OPENCV_DNN_API_VERSION);

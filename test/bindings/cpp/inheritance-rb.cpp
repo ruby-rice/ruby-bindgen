@@ -5,8 +5,6 @@
 
 using namespace Rice;
 
-
-
 void Init_Inheritance()
 {
   Enum<NotificationType> rb_cNotificationType = define_enum<NotificationType>("NotificationType")

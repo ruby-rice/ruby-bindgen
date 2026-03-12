@@ -5,8 +5,6 @@
 
 using namespace Rice;
 
-
-
 void Init_Unions()
 {
   Module rb_mUnions = define_module("Unions");
