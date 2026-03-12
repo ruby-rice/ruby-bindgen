@@ -211,6 +211,11 @@ module RubyBindgen
         end
       end
 
+      # Check if the return type of a callable references a skipped symbol.
+      def has_skipped_return_type?(cursor)
+        type_references_skipped_symbol?(cursor.type.result_type)
+      end
+
       # Check if template arguments string contains any skipped symbol.
       # Used when auto-instantiating templates like cv::DefaultDeleter<CvHaarClassifierCascade>.
       def template_args_reference_skipped_symbol?(template_args)
@@ -1452,6 +1457,7 @@ module RubyBindgen
         return if cursor.lexical_parent != cursor.semantic_parent
         return if skip_callable?(cursor)
         return if has_skipped_param_type?(cursor)
+        return if has_skipped_return_type?(cursor)
 
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
@@ -1684,6 +1690,7 @@ module RubyBindgen
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
         return if skip_callable?(cursor)
         return if has_skipped_param_type?(cursor)
+        return if has_skipped_return_type?(cursor)
         return unless has_export_macro?(cursor)
 
         if cursor.spelling.start_with?('operator') && !cursor.spelling.match?(/^operator\w/)

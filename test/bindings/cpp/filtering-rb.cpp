@@ -68,6 +68,12 @@ void Init_Filtering()
     .define_method<void(Outer::UsesNonSkippedType::*)(Outer::SkippedClassExtended*)>("process", &Outer::UsesNonSkippedType::process,
       Arg("ext"));
 
+  Rice::Data_Type<Outer::HasSkippedReturnType> rb_cOuterHasSkippedReturnType = define_class_under<Outer::HasSkippedReturnType>(rb_mOuter, "HasSkippedReturnType")
+    .define_constructor(Constructor<Outer::HasSkippedReturnType>())
+    .define_method<int(Outer::HasSkippedReturnType::*)()>("get_normal", &Outer::HasSkippedReturnType::getNormal);
+
+  rb_mOuter.define_module_function<int(*)()>("create_normal", &Outer::createNormal);
+
   Rice::Data_Type<Outer::MyParam> rb_cOuterMyParam = define_class_under<Outer::MyParam>(rb_mOuter, "MyParam")
     .define_constructor(Constructor<Outer::MyParam>())
     .define_attr("value", &Outer::MyParam::value);

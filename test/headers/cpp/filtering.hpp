@@ -226,6 +226,23 @@ namespace Outer
     void process(SkippedClassExtended* ext);
   };
 
+  // --- Methods/functions with skipped return types ---
+
+  class MY_EXPORT HasSkippedReturnType
+  {
+  public:
+    HasSkippedReturnType();
+    // This method returns a skipped type - should be SKIPPED
+    SkippedClass* getSkipped();
+    // This method returns a non-skipped type - should be INCLUDED
+    int getNormal();
+  };
+
+  // Free function returning a skipped type - should be SKIPPED
+  MY_EXPORT SkippedClass* createSkipped();
+  // Free function returning a non-skipped type - should be INCLUDED
+  MY_EXPORT int createNormal();
+
   // --- Namespace-qualified parameter type tests ---
   // When a constructor takes a same-namespace type, clang may spell
   // the arg type without the namespace (e.g., "MyParam" instead of "Outer::MyParam").

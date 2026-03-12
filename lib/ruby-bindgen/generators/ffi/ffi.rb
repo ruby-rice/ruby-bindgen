@@ -218,6 +218,7 @@ module RubyBindgen
       def visit_function(cursor)
         return if cursor.availability == :deprecated
         return if @symbols.skip?(cursor)
+        return if references_skipped_type?(cursor.type.result_type)
         return unless has_export_macro?(cursor)
 
         signature = @symbols.override(cursor)
@@ -388,6 +389,14 @@ module RubyBindgen
       def figure_method(cursor)
         name = cursor.kind.to_s.delete_prefix("cursor_")
         "visit_#{name.underscore}".to_sym
+      end
+
+      # Check if a type references a skipped symbol (unwrapping pointers).
+      def references_skipped_type?(type)
+        type = type.pointee while [:type_pointer, :type_lvalue_ref, :type_rvalue_ref].include?(type.kind)
+        decl = type.declaration
+        return false if decl.kind == :cursor_no_decl_found
+        @symbols.skip?(decl)
       end
 
       def figure_ffi_type(type, context = nil)

@@ -15,6 +15,7 @@ module Filtering
   )
 
   typedef :int, :included_typedef
+  attach_function :create_included_struct, :createIncludedStruct, [], IncludedStruct.by_ref
 
   class ContainerStruct < FFI::Struct
     layout :member, SkippedEmbedded,

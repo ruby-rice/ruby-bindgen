@@ -70,6 +70,14 @@ typedef int SkippedTypedef;
 // Normal typedef - should be INCLUDED
 typedef int IncludedTypedef;
 
+// --- Functions returning skipped types ---
+
+// Returns a skipped struct pointer - should be SKIPPED
+MY_EXPORT struct SkippedStruct* createSkippedStruct(void);
+
+// Returns a normal struct pointer - should be INCLUDED
+MY_EXPORT struct IncludedStruct* createIncludedStruct(void);
+
 // --- Embedded skipped struct ---
 
 // Struct containing an embedded struct that is skipped
