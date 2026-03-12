@@ -234,6 +234,19 @@ void Init_Operators()
       return self;
     });
 
+  Module rb_mStringIndex = define_module("StringIndex");
+
+  Rice::Data_Type<string_index::StringMap> rb_cStringIndexStringMap = define_class_under<string_index::StringMap>(rb_mStringIndex, "StringMap")
+    .define_constructor(Constructor<string_index::StringMap>())
+    .define_method<std::string&(string_index::StringMap::*)(const std::string&)>("[]", &string_index::StringMap::operator[],
+      Arg("key"))
+    .define_method("[]=", [](string_index::StringMap&self, const std::string& key, std::string& value)
+    {
+        self[key] = value;
+    })
+    .define_method<const std::string&(string_index::StringMap::*)(const std::string&) const>("[]", &string_index::StringMap::operator[],
+      Arg("key"));
+
   rb_cMatrix
     .define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
     {

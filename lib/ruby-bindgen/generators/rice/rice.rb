@@ -1485,8 +1485,13 @@ module RubyBindgen
         # Special handling for implementing #[](index, value)
         if cursor.spelling == "operator[]" && cursor.result_type.kind == :type_lvalue_ref &&
            !cursor.result_type.non_reference_type.const_qualified? && !cursor.const?
+          index_param = cursor.find_by_kind(false, :cursor_parm_decl).first
+          index_type = type_spelling(cursor.type.arg_type(0))
+          index_name = index_param&.spelling&.empty? ? "index" : index_param.spelling
           result << self.render_cursor(cursor, "operator[]",
-                                       :name => name)
+                                       :name => name,
+                                       :index_type => index_type,
+                                       :index_name => index_name)
         end
         result
       end

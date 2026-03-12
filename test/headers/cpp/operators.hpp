@@ -269,3 +269,17 @@ typedef std::string MyString;
 // If not skipped, generated code would try to add methods to rb_cString
 // which is Ruby's built-in String class.
 MyString& operator<<(MyString& out, const Printable& p);
+
+// Test subscript operator with non-int index type.
+// The operator[] setter template must use the actual parameter type, not hardcoded int.
+namespace string_index
+{
+    class StringMap
+    {
+    public:
+        StringMap() {}
+
+        std::string& operator[](const std::string& key);
+        const std::string& operator[](const std::string& key) const;
+    };
+}
