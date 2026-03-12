@@ -14,6 +14,38 @@ module VersionGuards
   )
 
   typedef :int, :stable_typedef
+  if version_guards_version >= 30000
+    class MixedStruct < FFI::Struct
+      layout :stable_field, :int,
+             :versioned_field, :int,
+             :future_field, :double
+    end
+  elsif version_guards_version >= 20000
+    class MixedStruct < FFI::Struct
+      layout :stable_field, :int,
+             :versioned_field, :int
+    end
+  else
+    class MixedStruct < FFI::Struct
+      layout :stable_field, :int
+    end
+  end
+  if version_guards_version >= 30000
+    MixedEnum = enum(
+      :MIXED_A, 0,
+      :MIXED_B, 1,
+      :MIXED_C, 2
+    )
+  elsif version_guards_version >= 20000
+    MixedEnum = enum(
+      :MIXED_A, 0,
+      :MIXED_B, 1
+    )
+  else
+    MixedEnum = enum(
+      :MIXED_A, 0
+    )
+  end
   if version_guards_version >= 20000
     attach_function :new_function, :newFunction, [:double], :void
 

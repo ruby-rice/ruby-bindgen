@@ -196,8 +196,15 @@ module RubyBindgen
       def visit_enum_decl(cursor)
         return if @symbols.skip?(cursor)
 
-        children = render_children(cursor, indentation: 2, comma: true, strip: true)
-        self.render_cursor(cursor, "enum_decl", :children => children)
+        versions = visit_children(cursor)
+        has_versioned_constants = versions.keys.any? { |k| !k.nil? }
+
+        if has_versioned_constants
+          render_versioned_enum(cursor, versions)
+        else
+          children = merge_children(versions, indentation: 2, comma: true, strip: true)
+          self.render_cursor(cursor, "enum_decl", :children => children)
+        end
       end
 
       def visit_enum_constant_decl(cursor)
@@ -264,10 +271,15 @@ module RubyBindgen
           end
         end
 
-        children = render_children(cursor, indentation: 9, comma: true, strip: true,
-                                           exclude_kinds: [:cursor_struct, :cursor_union])
+        versions = visit_children(cursor, exclude_kinds: [:cursor_struct, :cursor_union])
+        has_versioned_fields = versions.keys.any? { |k| !k.nil? }
 
-        result[nil] << self.render_cursor(cursor, "struct", :children => children.lstrip)
+        if has_versioned_fields
+          result[nil] << render_versioned_layout(cursor, versions, "struct")
+        else
+          children = merge_children(versions, indentation: 9, comma: true, strip: true)
+          result[nil] << self.render_cursor(cursor, "struct", :children => children.lstrip)
+        end
         merge_children(result)
       end
 
@@ -340,10 +352,15 @@ module RubyBindgen
           end
         end
 
-        children = render_children(cursor, indentation: 9, comma: true, strip: true,
-                                   exclude_kinds: [:cursor_struct, :cursor_union])
+        versions = visit_children(cursor, exclude_kinds: [:cursor_struct, :cursor_union])
+        has_versioned_fields = versions.keys.any? { |k| !k.nil? }
 
-        result[nil] << self.render_cursor(cursor, "union", :children => children.lstrip)
+        if has_versioned_fields
+          result[nil] << render_versioned_layout(cursor, versions, "union")
+        else
+          children = merge_children(versions, indentation: 9, comma: true, strip: true)
+          result[nil] << self.render_cursor(cursor, "union", :children => children.lstrip)
+        end
         merge_children(result)
       end
 
@@ -505,6 +522,72 @@ module RubyBindgen
             " " * indentation + line
           end
         end.join
+      end
+
+      # Render a struct/union with versioned fields as separate definitions per version threshold.
+      # Each version gets a complete definition with cumulative fields up to that version.
+      # Output is wrapped in if/elsif/else guards.
+      def render_versioned_layout(cursor, versions, template)
+        # Build sorted version thresholds (nil = unversioned, always included)
+        thresholds = versions.keys.compact.sort.reverse
+
+        # Build cumulative field lists: each threshold includes all fields from lower versions
+        lines = []
+        first = true
+        thresholds.each do |threshold|
+          guard = first ? "if" : "elsif"
+          first = false
+          lines << "#{guard} #{@version_check} >= #{threshold}"
+
+          # Collect all fields: unversioned + all versions <= threshold
+          cumulative_fields = (versions[nil] || []).dup
+          versions.keys.compact.sort.each do |v|
+            cumulative_fields.concat(versions[v]) if v <= threshold
+          end
+
+          children = cumulative_fields.map(&:rstrip).join(",\n" + " " * 9)
+          lines << add_indentation(render_cursor(cursor, template, :children => children).strip, 2)
+        end
+
+        # else branch: only unversioned fields
+        base_fields = versions[nil] || []
+        if base_fields.any?
+          lines << "else"
+          children = base_fields.map(&:rstrip).join(",\n" + " " * 9)
+          lines << add_indentation(render_cursor(cursor, template, :children => children).strip, 2)
+        end
+        lines << "end"
+        lines.join("\n")
+      end
+
+      # Render an enum with versioned constants as separate definitions per version threshold.
+      def render_versioned_enum(cursor, versions)
+        thresholds = versions.keys.compact.sort.reverse
+
+        lines = []
+        first = true
+        thresholds.each do |threshold|
+          guard = first ? "if" : "elsif"
+          first = false
+          lines << "#{guard} #{@version_check} >= #{threshold}"
+
+          cumulative = (versions[nil] || []).dup
+          versions.keys.compact.sort.each do |v|
+            cumulative.concat(versions[v]) if v <= threshold
+          end
+
+          children = add_indentation(cumulative.map(&:rstrip).join(",\n"), 2)
+          lines << add_indentation(render_cursor(cursor, "enum_decl", :children => children).strip, 2)
+        end
+
+        base = versions[nil] || []
+        if base.any?
+          lines << "else"
+          children = add_indentation(base.map(&:rstrip).join(",\n"), 2)
+          lines << add_indentation(render_cursor(cursor, "enum_decl", :children => children).strip, 2)
+        end
+        lines << "end"
+        lines.join("\n")
       end
 
       def render_cursor(cursor, template, local_variables = {})

@@ -51,3 +51,22 @@ int futureFunction(int a, int b);
 // --- Versioned at 20000 with override ---
 
 int overriddenFunction(int x, int y, int z);
+
+// --- Mixed: struct with versioned fields ---
+// stable_field is always present, versioned_field added at 20000, future_field at 30000
+
+struct MixedStruct
+{
+    int stable_field;
+    int versioned_field;
+    double future_field;
+};
+
+// --- Mixed: enum with versioned constants ---
+
+enum MixedEnum
+{
+    MIXED_A = 0,
+    MIXED_B = 1,
+    MIXED_C = 2
+};
