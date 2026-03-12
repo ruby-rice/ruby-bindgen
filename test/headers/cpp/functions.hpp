@@ -77,6 +77,12 @@ namespace nontype_args
 }
 
 // =============================================================================
+// Functions with "operator" in the name (but NOT actual operator overloads)
+// Should be generated as regular functions, not routed to operator handling
+// =============================================================================
+const char* get_operator_name(int op_code);
+
+// =============================================================================
 // Variadic functions - should be SKIPPED (cannot be bound to Ruby)
 // =============================================================================
 

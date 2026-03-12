@@ -94,6 +94,9 @@ void Init_Functions()
     .define_method<void(nontype_args::User::*)(const nontype_args::Container<double, nontype_args::Config::Size>&)>("use", &nontype_args::User::use,
       Arg("data"));
 
+  define_global_function<const char*(*)(int)>("get_operator_name", &get_operator_name,
+    Arg("op_code"));
+
   Rice::Data_Type<Logger> rb_cLogger = define_class<Logger>("Logger")
     .define_constructor(Constructor<Logger>())
     .define_singleton_function<void(*)(int)>("set_level", &Logger::setLevel,

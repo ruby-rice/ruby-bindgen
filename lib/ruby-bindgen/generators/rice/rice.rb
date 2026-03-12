@@ -1686,7 +1686,7 @@ module RubyBindgen
         return if has_skipped_param_type?(cursor)
         return unless has_export_macro?(cursor)
 
-        if cursor.spelling.match(/operator/)
+        if cursor.spelling.start_with?('operator') && !cursor.spelling.match?(/^operator\w/)
           return self.visit_operator_non_member(cursor)
         end
 
