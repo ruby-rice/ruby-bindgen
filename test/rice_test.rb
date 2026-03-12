@@ -64,7 +64,8 @@ class RiceTest < AbstractTest
                                      "Outer::GuardedClass::GuardedClass(const int*)",
                                      "Outer::ConstructorWithNsParam::ConstructorWithNsParam(const Outer::MyParam*)",
                                      "Outer::DataType<Outer::Vec<float, 3>>",
-                                     "Outer::DataType<double>::DataType(const double*)"] })
+                                     "Outer::DataType<double>::DataType(const double*)",
+                                     "operator float"] })
   end
 
   def test_buffers

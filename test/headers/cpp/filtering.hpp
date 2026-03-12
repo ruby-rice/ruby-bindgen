@@ -186,6 +186,9 @@ namespace Outer
 
     // Non-deprecated conversion operator - should be INCLUDED
     operator int() const;
+
+    // Conversion operator skipped via symbols - should be SKIPPED
+    operator float() const;
   };
 
   // --- Inline Namespace Tests ---

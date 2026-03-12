@@ -1625,8 +1625,7 @@ module RubyBindgen
         # For now only deal with member functions
         return unless CURSOR_CLASSES.include?(cursor.lexical_parent.kind)
 
-        # Skip deprecated conversion operators
-        return if cursor.availability == :deprecated
+        return if skip_callable?(cursor)
 
         return unless cursor.type.args_size == 0
 
