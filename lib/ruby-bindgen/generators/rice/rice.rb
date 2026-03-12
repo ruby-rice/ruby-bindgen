@@ -1838,7 +1838,7 @@ module RubyBindgen
               # Determine the appropriate return statement based on result type
               if result_type == "void"
                 return_stmt = "self #{op_symbol} other;"
-              elsif result_type.include?("&") && result_type.include?(arg0_type.gsub(/[&\s]/, ''))
+              elsif result_type.include?("&") && result_type.include?(arg0_type.delete("&").strip)
                 # Returns reference to self (e.g., FileStorage& operator<<)
                 return_stmt = "self #{op_symbol} other;\n  return self;"
               else
