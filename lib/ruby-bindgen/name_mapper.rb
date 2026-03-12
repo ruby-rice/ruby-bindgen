@@ -1,5 +1,8 @@
 module RubyBindgen
   class NameMapper
+    attr_reader :exact, :regex
+    protected :exact, :regex
+
     def initialize(mappings = [])
       @exact = {}
       @regex = []
@@ -52,8 +55,8 @@ module RubyBindgen
 
     # Merge two tables. Other's entries override self's.
     def merge(other)
-      exact_mappings = @exact.merge(other.instance_variable_get(:@exact)).map { |k, v| [k, v] }
-      regex_mappings = other.instance_variable_get(:@regex) + @regex
+      exact_mappings = @exact.merge(other.exact).map { |k, v| [k, v] }
+      regex_mappings = other.regex + @regex
       self.class.new(exact_mappings + regex_mappings)
     end
 
