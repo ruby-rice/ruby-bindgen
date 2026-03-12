@@ -48,6 +48,7 @@ module RubyBindgen
       hash.transform_keys { |k| k.is_a?(String) ? k.to_sym : k }.transform_values do |value|
         case value
         when Hash then symbolize_keys(value)
+        when Array then value.map { |v| v.is_a?(Hash) ? symbolize_keys(v) : v }
         else value
         end
       end
