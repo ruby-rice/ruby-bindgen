@@ -1209,7 +1209,8 @@ module RubyBindgen
 
           begin
             # For typedefs in class templates, preserve template parameters in the qualified name
-            qualified_name = if ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
+            is_dependent_typedef = ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
+            qualified_name = if is_dependent_typedef
                                "#{ref.semantic_parent.qualified_display_name}::#{ref.spelling}"
                              else
                                ref.qualified_name
@@ -1232,6 +1233,12 @@ module RubyBindgen
             if ref.kind == :cursor_class_template
               display_name = ref.qualified_display_name
               default_text = default_text.gsub(/#{Regexp.escape(qualified_name)}(?=\s*::)/, display_name)
+            end
+
+            # Add 'typename' for dependent typedef names used as types (not as qualifiers before ::)
+            # e.g., SearchIndex<Distance>::ElementType() needs typename, but Vec3Type::all() does not
+            if is_dependent_typedef
+              default_text = default_text.gsub(/(?<!typename )#{Regexp.escape(qualified_name)}(?!\s*::)/, "typename #{qualified_name}")
             end
           rescue ArgumentError
             # Skip if we can't get qualified name (e.g., invalid cursor)

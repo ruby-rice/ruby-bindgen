@@ -118,5 +118,5 @@ inline Rice::Data_Type<Tests::SearchIndex<Distance>> SearchIndex_instantiate(Ric
     .define_constructor(Constructor<Tests::SearchIndex<Distance>, const Tests::SearchIndex<Distance>&, int>(),
       Arg("other"), Arg("flags") = static_cast<int>(0))
     .template define_method<void(Tests::SearchIndex<Distance>::*)(int, typename Tests::SearchIndex<Distance>::ElementType)>("search", &Tests::SearchIndex<Distance>::search,
-      Arg("count"), Arg("max_dist") = static_cast<typename Tests::SearchIndex<Distance>::ElementType>(Tests::SearchIndex<Distance>::ElementType()));
+      Arg("count"), Arg("max_dist") = static_cast<typename Tests::SearchIndex<Distance>::ElementType>(typename Tests::SearchIndex<Distance>::ElementType()));
 }
