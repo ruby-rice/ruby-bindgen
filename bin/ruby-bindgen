@@ -63,9 +63,9 @@ module RubyBindgen
         raise "Output path must be a directory: #{@config[:output]}"
       end
 
-      # Validate project name is a valid C/C++ identifier (if provided)
-      if @config[:project] && !@config[:project].match?(/\A[A-Za-z_][A-Za-z0-9_]*\z/)
-        raise "Project name must be a valid C/C++ identifier: #{@config[:project]}"
+      # Validate project name (if provided). Hyphens are allowed and normalized to underscores.
+      if @config[:project] && !@config[:project].match?(/\A[A-Za-z_][A-Za-z0-9_-]*\z/)
+        raise "Project name must be a valid C/C++ identifier (hyphens allowed): #{@config[:project]}"
       end
     end
 
