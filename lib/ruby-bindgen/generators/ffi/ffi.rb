@@ -201,7 +201,8 @@ module RubyBindgen
           render_versioned_enum(cursor, versions)
         else
           children = merge_children(versions, indentation: 2, comma: true, strip: true)
-          self.render_cursor(cursor, "enum_decl", :children => children)
+          template = cursor.anonymous? ? "enum_decl_anonymous" : "enum_decl"
+          self.render_cursor(cursor, template, :children => children)
         end
       end
 
