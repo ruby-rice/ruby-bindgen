@@ -36,13 +36,9 @@ module RubyBindgen
       def has_export_macro?(cursor)
         return true if @export_macros.empty?
 
-        begin
-          source_text = cursor.extent.text
-          return false if source_text.nil?
-          @export_macros.any? { |macro| source_text.include?(macro) }
-        rescue StandardError
-          false
-        end
+        source_text = cursor.extent.text
+        return false if source_text.nil?
+        @export_macros.any? { |macro| source_text.include?(macro) }
       end
 
       def visit_start
