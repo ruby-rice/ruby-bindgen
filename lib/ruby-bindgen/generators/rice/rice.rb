@@ -1299,7 +1299,8 @@ module RubyBindgen
                                enum_parent = ref.semantic_parent.semantic_parent
                                if enum_parent && enum_parent.kind == :cursor_namespace
                                  "#{enum_parent.qualified_name}::#{simple_name}"
-                               elsif ref.semantic_parent.anonymous?
+                               elsif ref.semantic_parent.anonymous? &&
+                                     enum_parent && enum_parent.kind != :cursor_translation_unit
                                  # Anonymous enum in class: cv::Mat::AUTO_STEP, not cv::Mat::(unnamed)::AUTO_STEP
                                  "#{enum_parent.qualified_name}::#{simple_name}"
                                else
