@@ -9,7 +9,15 @@ repo_url = "https://github.com/ruby-rice/ruby-bindgen"
 
 nav = [
   { "Home" = "index.md" },
-  { "C Bindings" = "c_bindings.md" },
+  { "C Bindings" = [
+    { "Overview" = "c/c_bindings.md" },
+    { "Filtering" = "c/filtering.md" },
+    { "Type Mapping" = "c/types.md" },
+    { "Constants" = "c/constants.md" },
+    { "Library Loading" = "c/library_loading.md" },
+    { "Version Guards" = "c/version_guards.md" },
+    { "Customizing" = "c/customizing.md" },
+  ]},
   { "C++ Bindings" = [
     { "Overview" = "cpp/cpp_bindings.md" },
     { "Filtering" = "cpp/filtering.md" },

@@ -6,7 +6,7 @@
 ruby-bindgen rice-bindings.yaml
 ```
 
-For end-to-end examples, see [C Bindings](c_bindings.md), [C++ Bindings](cpp/cpp_bindings.md), and [CMake Bindings](cmake_bindings.md).
+For end-to-end examples, see [C Bindings](c/c_bindings.md), [C++ Bindings](cpp/cpp_bindings.md), and [CMake Bindings](cmake_bindings.md).
 
 ## Required Options
 
@@ -186,7 +186,7 @@ This generates:
 #endif
 ```
 
-For **FFI** (C), this requires the `version_check` option to be set to a Ruby method name. The generator wraps version-specific symbols in `if version_check >= version` Ruby conditionals and generates a `{project}_version.rb` skeleton file. The user implements the version detection method — typically by calling the library's own version API. See [Version Detection](c_bindings.md#version-detection) for a full example.
+For **FFI** (C), this requires the `version_check` option to be set to a Ruby method name. The generator wraps version-specific symbols in `if version_check >= version` Ruby conditionals and generates a `{project}_version.rb` skeleton file. The user implements the version detection method — typically by calling the library's own version API. See [Version Detection](c/version_guards.md) for a full example.
 
 ```yaml
 format: FFI
@@ -210,7 +210,7 @@ if proj_version >= 60100
 end
 ```
 
-See [Version Guards](version_guards.md) for the Rice guide and [Version Detection](c_bindings.md#version-detection) for a full FFI example.
+See [Version Guards](version_guards.md) for the Rice guide and [Version Detection](c/version_guards.md) for a full FFI example.
 
 ### Overrides (FFI only)
 

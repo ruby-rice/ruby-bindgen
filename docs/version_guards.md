@@ -66,4 +66,4 @@ For C libraries, version detection happens at runtime. When `symbols.versions` h
 2. Adds `require_relative '{project}_version'` to the project loader file
 3. Generates a `{project}_version.rb` skeleton (once — won't overwrite if it already exists)
 
-The user implements the version method by calling the library's own version API. See [Version Detection](c_bindings.md#version-detection) for a complete example using PROJ.
+The user implements the version method by calling the library's own version API. See [Version Detection](c/version_guards.md) for a complete example using PROJ.
