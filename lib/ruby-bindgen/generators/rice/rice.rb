@@ -1455,6 +1455,7 @@ module RubyBindgen
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
         return if skip_callable?(cursor)
+        return if has_skipped_param_type?(cursor)
 
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
@@ -1686,6 +1687,7 @@ module RubyBindgen
         # Can't return arrays in C++
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
         return if skip_callable?(cursor)
+        return if has_skipped_param_type?(cursor)
         return unless has_export_macro?(cursor)
 
         if cursor.spelling.match(/operator/)

@@ -62,7 +62,7 @@ namespace Outer
     // Method to skip by name - should be SKIPPED
     void skippedMethod();
 
-    // Internal method (underscore suffix) - should be SKIPPED
+    // Internal method (underscore suffix) - now included (use skip symbols to skip)
     void internal_();
 
     // --- Overload-specific skip tests ---
@@ -122,6 +122,8 @@ namespace Outer
     // This constructor should be skipped because SkippedTemplateClass is in symbols
     UsesSkippedType(const SkippedTemplateClass<T>& skipped);
     void normalMethod();
+    // This method should be skipped because its parameter references a skipped type
+    void methodWithSkippedParam(const SkippedTemplateClass<T>& skipped);
   };
 
   typedef UsesSkippedType<int> UsesSkippedTypeInt;
