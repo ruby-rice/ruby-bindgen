@@ -570,13 +570,11 @@ module RubyBindgen
           lines << add_indentation(render_cursor(cursor, template, :children => children).strip, 2)
         end
 
-        # else branch: only unversioned fields
+        # else branch: unversioned fields only (may be empty, but type must still be defined)
         base_fields = versions[nil] || []
-        if base_fields.any?
-          lines << "else"
-          children = base_fields.map(&:rstrip).join(",\n" + " " * 9)
-          lines << add_indentation(render_cursor(cursor, template, :children => children).strip, 2)
-        end
+        lines << "else"
+        children = base_fields.map(&:rstrip).join(",\n" + " " * 9)
+        lines << add_indentation(render_cursor(cursor, template, :children => children).strip, 2)
         lines << "end"
         lines.join("\n")
       end
@@ -601,12 +599,11 @@ module RubyBindgen
           lines << add_indentation(render_cursor(cursor, "enum_decl", :children => children).strip, 2)
         end
 
+        # else branch: unversioned constants only (may be empty, but enum must still be defined)
         base = versions[nil] || []
-        if base.any?
-          lines << "else"
-          children = add_indentation(base.map(&:rstrip).join(",\n"), 2)
-          lines << add_indentation(render_cursor(cursor, "enum_decl", :children => children).strip, 2)
-        end
+        lines << "else"
+        children = add_indentation(base.map(&:rstrip).join(",\n"), 2)
+        lines << add_indentation(render_cursor(cursor, "enum_decl", :children => children).strip, 2)
         lines << "end"
         lines.join("\n")
       end
