@@ -18,8 +18,8 @@ module RubyBindgen
     # Factory: parses YAML config array of {from:, to:} entries
     def self.from_config(mappings)
       parsed = mappings.map do |entry|
-        key = entry["from"]
-        replacement = entry["to"]
+        key = entry[:from] || entry["from"]
+        replacement = entry[:to] || entry["to"]
         if key.start_with?('/') && key.end_with?('/')
           [Regexp.new(key[1..-2]), replacement]
         else
