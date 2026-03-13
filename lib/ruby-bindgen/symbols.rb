@@ -141,17 +141,25 @@ module RubyBindgen
       nil
     end
 
-    # Iterate over exact (non-regex) skip symbol keys.
-    def each(&block)
-      @exact.each do |key, entry|
-        yield key if entry.skip?
-      end
-    end
-
     # Check if a cursor should be skipped based on symbols config.
     def skip?(cursor)
       entry = lookup(build_candidates(cursor))
       entry&.skip? || false
+    end
+
+    # Check if a type spelling matches any skip symbol using word boundaries.
+    # Used as a fallback for dependent/unexposed types where no declaration is available.
+    def skip_spelling?(spelling)
+      @exact.each do |key, entry|
+        next unless entry.skip?
+        simple_name = key.split('::').last
+        return true if spelling.match?(/\b#{Regexp.escape(simple_name)}\b/)
+      end
+      @regex.each do |pattern, entry|
+        next unless entry.skip?
+        return true if pattern.match?(spelling)
+      end
+      false
     end
 
     # Returns the version guard value for a cursor, or nil if not version-guarded.

@@ -185,11 +185,7 @@ module RubyBindgen
         # For dependent/unexposed types where no declaration is found (e.g., SkippedClass<T>
         # inside a class template), fall back to checking the type spelling
         if type.declaration.kind == :cursor_no_decl_found && type.canonical.declaration.kind == :cursor_no_decl_found
-          spelling = type.spelling
-          @symbols.each do |skip|
-            simple_name = skip.split('::').last
-            return true if spelling.match?(/\b#{Regexp.escape(simple_name)}\b/)
-          end
+          return true if @symbols.skip_spelling?(type.spelling)
         end
 
         # Check template arguments recursively
@@ -216,34 +212,13 @@ module RubyBindgen
         type_references_skipped_symbol?(cursor.type.result_type)
       end
 
-      # Check if template arguments string contains any skipped symbol.
-      # Used when auto-instantiating templates like cv::DefaultDeleter<CvHaarClassifierCascade>.
-      def template_args_reference_skipped_symbol?(template_args)
-        @symbols.each do |skip|
-          simple_name = skip.split('::').last.strip
-          return true if template_args.include?(skip) || template_args.include?(simple_name)
-        end
-        false
-      end
-
       # Check if a cursor should be skipped based on symbols config.
-      # Adds Rice-specific template-argument and prefix matching on top of basic lookup.
+      # Adds Rice-specific template-argument matching on top of basic lookup.
       def skip_symbol?(cursor)
         return true if @symbols.skip?(cursor)
 
-        # Check template arguments from display_name
-        # e.g., display_name "DefaultDeleter<CvHaarClassifierCascade>" while spelling is just "DefaultDeleter"
-        if (match = cursor.display_name.match(/<(.+)>\z/))
-          return true if template_args_reference_skipped_symbol?(match[1])
-        end
-
-        # Prefix match (template instantiation or nested name)
-        qualified_name = @symbols.build_candidates(cursor)[1]
-        @symbols.each do |skip|
-          return true if qualified_name.start_with?("#{skip}<") ||
-                         qualified_name.start_with?("#{skip}::")
-        end
-        false
+        # Check if any template argument type references a skipped symbol
+        type_references_skipped_symbol?(cursor.type)
       end
 
       def visit_start
@@ -516,7 +491,7 @@ module RubyBindgen
             instantiated_type = qualify_class_static_members(instantiated_type, cursor)
             next if @typedef_map[instantiated_type]
 
-            code = auto_instantiate_template(decl, instantiated_type, under)
+            code = auto_instantiate_template(decl, instantiated_type, type, under)
             result << code unless code.empty?
           end
         end
@@ -1985,14 +1960,13 @@ module RubyBindgen
       end
 
       # Auto-instantiate a class template used as a parameter type without a typedef.
-      def auto_instantiate_template(cursor_template, instantiated_type, under)
+      def auto_instantiate_template(cursor_template, instantiated_type, type, under)
         return "" unless cursor_template
         match = instantiated_type.match(/\<(.*)\>/)
         return "" unless match
 
-        # Skip if template arguments contain skipped symbols
-        template_args = match[1]
-        return "" if template_args_reference_skipped_symbol?(template_args)
+        # Skip if template arguments reference skipped symbols
+        return "" if type_references_skipped_symbol?(type)
 
         ruby_class_name = instantiated_type.gsub(/::|<|>|,|\s+/, ' ').split.map(&:capitalize).join
         ruby_class_name = @namer.apply_rename_types(ruby_class_name)
