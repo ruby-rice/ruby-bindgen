@@ -114,8 +114,8 @@ module Sqlite3
   attach_function :sqlite3_shutdown, :sqlite3_shutdown, [], :int
   attach_function :sqlite3_os_init, :sqlite3_os_init, [], :int
   attach_function :sqlite3_os_end, :sqlite3_os_end, [], :int
-  attach_function :sqlite3_config, :sqlite3_config, [:int], :int
-  attach_function :sqlite3_db_config, :sqlite3_db_config, [:pointer, :int], :int
+  attach_function :sqlite3_config, :sqlite3_config, [:int, :varargs], :int
+  attach_function :sqlite3_db_config, :sqlite3_db_config, [:pointer, :int, :varargs], :int
   callback :sqlite3_mem_methods_x_malloc_callback, [:int], :pointer
   callback :sqlite3_mem_methods_x_free_callback, [:pointer], :void
   callback :sqlite3_mem_methods_x_realloc_callback, [:pointer, :int], :pointer
@@ -151,10 +151,8 @@ module Sqlite3
   attach_function :sqlite3_busy_timeout, :sqlite3_busy_timeout, [:pointer, :int], :int
   attach_function :sqlite3_get_table, :sqlite3_get_table, [:pointer, :string, :pointer, :pointer, :pointer, :pointer], :int
   attach_function :sqlite3_free_table, :sqlite3_free_table, [:pointer], :void
-  attach_function :sqlite3_mprintf, :sqlite3_mprintf, [:string], :pointer
-  attach_function :sqlite3_vmprintf, :sqlite3_vmprintf, [:string, :varargs], :pointer
-  attach_function :sqlite3_snprintf, :sqlite3_snprintf, [:int, :pointer, :string], :pointer
-  attach_function :sqlite3_vsnprintf, :sqlite3_vsnprintf, [:int, :pointer, :string, :varargs], :pointer
+  attach_function :sqlite3_mprintf, :sqlite3_mprintf, [:string, :varargs], :pointer
+  attach_function :sqlite3_snprintf, :sqlite3_snprintf, [:int, :pointer, :string, :varargs], :pointer
   attach_function :sqlite3_malloc, :sqlite3_malloc, [:int], :pointer
   attach_function :sqlite3_malloc64, :sqlite3_malloc64, [:ulong_long], :pointer
   attach_function :sqlite3_realloc, :sqlite3_realloc, [:pointer, :int], :pointer
@@ -532,15 +530,14 @@ module Sqlite3
   attach_function :sqlite3_mutex_notheld, :sqlite3_mutex_notheld, [:pointer], :int
   attach_function :sqlite3_db_mutex, :sqlite3_db_mutex, [:pointer], :pointer
   attach_function :sqlite3_file_control, :sqlite3_file_control, [:pointer, :string, :int, :pointer], :int
-  attach_function :sqlite3_test_control, :sqlite3_test_control, [:int], :int
+  attach_function :sqlite3_test_control, :sqlite3_test_control, [:int, :varargs], :int
   attach_function :sqlite3_keyword_count, :sqlite3_keyword_count, [], :int
   attach_function :sqlite3_keyword_name, :sqlite3_keyword_name, [:int, :pointer, :pointer], :int
   attach_function :sqlite3_keyword_check, :sqlite3_keyword_check, [:string, :int], :int
   typedef :pointer, :Sqlite3Str
   attach_function :sqlite3_str_new, :sqlite3_str_new, [:pointer], :pointer
   attach_function :sqlite3_str_finish, :sqlite3_str_finish, [:pointer], :pointer
-  attach_function :sqlite3_str_appendf, :sqlite3_str_appendf, [:pointer, :string], :void
-  attach_function :sqlite3_str_vappendf, :sqlite3_str_vappendf, [:pointer, :string, :varargs], :void
+  attach_function :sqlite3_str_appendf, :sqlite3_str_appendf, [:pointer, :string, :varargs], :void
   attach_function :sqlite3_str_append, :sqlite3_str_append, [:pointer, :string, :int], :void
   attach_function :sqlite3_str_appendall, :sqlite3_str_appendall, [:pointer, :string], :void
   attach_function :sqlite3_str_appendchar, :sqlite3_str_appendchar, [:pointer, :int, :char], :void
@@ -624,13 +621,13 @@ module Sqlite3
   attach_function :sqlite3_strnicmp, :sqlite3_strnicmp, [:string, :string, :int], :int
   attach_function :sqlite3_strglob, :sqlite3_strglob, [:string, :string], :int
   attach_function :sqlite3_strlike, :sqlite3_strlike, [:string, :string, :uint], :int
-  attach_function :sqlite3_log, :sqlite3_log, [:int, :string], :void
+  attach_function :sqlite3_log, :sqlite3_log, [:int, :string, :varargs], :void
   callback :sqlite3_wal_hook__callback, [:pointer, :pointer, :string, :int], :int
   attach_function :sqlite3_wal_hook, :sqlite3_wal_hook, [:pointer, :sqlite3_wal_hook__callback, :pointer], :pointer
   attach_function :sqlite3_wal_autocheckpoint, :sqlite3_wal_autocheckpoint, [:pointer, :int], :int
   attach_function :sqlite3_wal_checkpoint, :sqlite3_wal_checkpoint, [:pointer, :string], :int
   attach_function :sqlite3_wal_checkpoint_v2, :sqlite3_wal_checkpoint_v2, [:pointer, :string, :int, :pointer, :pointer], :int
-  attach_function :sqlite3_vtab_config, :sqlite3_vtab_config, [:pointer, :int], :int
+  attach_function :sqlite3_vtab_config, :sqlite3_vtab_config, [:pointer, :int, :varargs], :int
   attach_function :sqlite3_vtab_on_conflict, :sqlite3_vtab_on_conflict, [:pointer], :int
   attach_function :sqlite3_vtab_nochange, :sqlite3_vtab_nochange, [:pointer], :int
   attach_function :sqlite3_vtab_collation, :sqlite3_vtab_collation, [Sqlite3IndexInfo.by_ref, :int], :string

@@ -65,6 +65,11 @@ class FfiTest < AbstractTest
                         "SkippedEmbedded"] })
   end
 
+  def test_functions
+    run_ffi_test("functions.h", project: "functions",
+      library_names: ["functions"], library_versions: [])
+  end
+
   def test_linkage_spec
     run_ffi_test("linkage_spec.h", project: "linkage_spec",
       library_names: ["linkage_spec"], library_versions: [],

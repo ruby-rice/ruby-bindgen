@@ -220,6 +220,7 @@ module RubyBindgen
         return if cursor.availability == :deprecated
         return if @symbols.skip?(cursor)
         return if references_skipped_type?(cursor.type.result_type)
+        return if has_va_list_param?(cursor)
         return unless has_export_macro?(cursor)
 
         signature = @symbols.override(cursor)
@@ -241,6 +242,7 @@ module RubyBindgen
             figure_ffi_type(parameter.type, :function)
           end
         end
+        parameter_types << ":varargs" if cursor.type.variadic?
         result << self.render_cursor(cursor, "function", :parameter_types => parameter_types, :signature => nil)
         result.join("\n")
       end
@@ -392,6 +394,16 @@ module RubyBindgen
         "visit_#{name.underscore}".to_sym
       end
 
+      # Check if any parameter is a va_list type, which cannot be constructed from Ruby.
+      def has_va_list_param?(cursor)
+        cursor.find_by_kind(false, :cursor_parm_decl).any? do |param|
+          type = param.type
+          type = type.canonical if type.kind == :type_elaborated
+          type.kind == :type_record && type.declaration.spelling == "__va_list_tag" ||
+            param.type.kind == :type_elaborated && param.type.declaration.spelling == "va_list"
+        end
+      end
+
       # Check if a type references a skipped symbol (unwrapping pointers).
       def references_skipped_type?(type)
         type = type.pointee while [:type_pointer, :type_lvalue_ref, :type_rvalue_ref].include?(type.kind)
@@ -471,7 +483,9 @@ module RubyBindgen
 
       def figure_ffi_elaborated_type(type, context = nil)
         if type.declaration.spelling == "va_list"
-          ":varargs"
+          # va_list cannot be constructed from Ruby — functions with va_list
+          # params are skipped in visit_function. Map to :pointer as fallback.
+          ":pointer"
         elsif type.canonical.kind == :type_pointer && type.canonical.function?
           # Typedef'd function pointer (callback) — use the callback name
           ":#{type.declaration.ruby_name}"

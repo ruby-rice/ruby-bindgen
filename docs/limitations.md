@@ -24,3 +24,5 @@ This page summarizes current limitations and constraints in `ruby-bindgen`.
 ## FFI Generation
 
 - Runtime loading depends on correct `library_names` / `library_versions` and system loader paths.
+- Functions with `va_list` parameters are skipped (`va_list` cannot be constructed from Ruby). Use the variadic (`...`) version of the function instead.
+- Variadic callbacks are not supported (FFI does not support `:varargs` in callback definitions).
