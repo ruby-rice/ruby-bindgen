@@ -51,7 +51,9 @@ void Init_Templates()
 
   Rice::Data_Type<Tests::TypeTraits<Tests::lowercase_type>> rb_cTestsTypeTraitsLowercaseType = define_class_under<Tests::TypeTraits<Tests::lowercase_type>>(rb_mTests, "TypeTraitsLowercaseType")
     .define_constructor(Constructor<Tests::TypeTraits<Tests::lowercase_type>>())
-    .define_constant("Type", Tests::TypeTraits<Tests::lowercase_type>::type);
+    .define_constant("Type", Tests::TypeTraits<Tests::lowercase_type>::type)
+    .define_singleton_function<int(*)()>("depth", &Tests::TypeTraits<Tests::lowercase_type>::depth)
+    .define_attr("scale", &Tests::TypeTraits<Tests::lowercase_type>::scale);
 
   Rice::Data_Type<Tests::Wrapper<Tests::lowercase_type>> rb_cWrappedLowercase = Wrapper_instantiate<Tests::lowercase_type>(rb_mTests, "WrappedLowercase");
 

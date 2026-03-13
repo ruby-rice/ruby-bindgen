@@ -1424,7 +1424,7 @@ module RubyBindgen
         if cursor.kind == :cursor_function || cursor.static?
           signature << "#{result_type}(*)(#{param_types.join(', ')})"
         else
-          signature << "#{result_type}(#{cursor.semantic_parent.qualified_display_name}::*)(#{param_types.join(', ')})"
+          signature << "#{result_type}(#{qualified_display_name_cpp(cursor.semantic_parent)}::*)(#{param_types.join(', ')})"
         end
 
         if cursor.const?
@@ -1476,12 +1476,14 @@ module RubyBindgen
         return_buffer = buffer_type?(cursor.result_type)
 
         is_template = cursor.semantic_parent.kind == :cursor_class_template
+        qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
         result << self.render_cursor(cursor, "cxx_method",
                                      :name => name,
                                      :is_template => is_template,
                                      :signature => signature,
                                      :args => args,
-                                     :return_buffer => return_buffer)
+                                     :return_buffer => return_buffer,
+                                     :qualified_parent => qualified_parent)
 
         # Special handling for implementing #[](index, value)
         if cursor.spelling == "operator[]" && cursor.result_type.kind == :type_lvalue_ref &&
@@ -1492,7 +1494,8 @@ module RubyBindgen
           result << self.render_cursor(cursor, "operator[]",
                                        :name => name,
                                        :index_type => index_type,
-                                       :index_name => index_name)
+                                       :index_name => index_name,
+                                       :qualified_parent => qualified_parent)
         end
         result
       end
@@ -1616,10 +1619,12 @@ module RubyBindgen
           @incomplete_iterators[traits[:iterator_type]] = traits
         end
 
+        qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
         self.render_cursor(cursor, "cxx_iterator_method", :name => iterator_name,
                            :begin_method => begin_method, :end_method => end_method,
                            :signature => signature,
-                           :is_template => is_template)
+                           :is_template => is_template,
+                           :qualified_parent => qualified_parent)
       end
 
       def visit_conversion_function(cursor)
@@ -1664,9 +1669,11 @@ module RubyBindgen
           ruby_name = cursor.ruby_name
         end
 
+        qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
         self.render_cursor(cursor, "conversion_function",
                            :ruby_name => ruby_name, :result_type => result_type_spelling,
-                           :is_const => is_const)
+                           :is_const => is_const,
+                           :qualified_parent => qualified_parent)
       end
 
       def visit_enum_decl(cursor)
@@ -1755,7 +1762,9 @@ module RubyBindgen
       def visit_field_decl(cursor)
         return unless cursor.public?
 
-        self.render_cursor(cursor, "field_decl")
+        qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
+        self.render_cursor(cursor, "field_decl",
+                           :qualified_parent => qualified_parent)
       end
 
       def visit_operator_non_member(cursor)
@@ -2114,7 +2123,9 @@ module RubyBindgen
             visit_variable_constant(cursor)
           else
             # Static class fields use define_singleton_attr on Data_Type<T>
-            self.render_cursor(cursor, "variable")
+            qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
+            self.render_cursor(cursor, "variable",
+                               :qualified_parent => qualified_parent)
           end
         end
       end

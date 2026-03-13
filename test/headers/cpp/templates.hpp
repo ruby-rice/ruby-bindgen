@@ -134,6 +134,8 @@ namespace Tests
     struct TypeTraits<lowercase_type>
     {
         static const int type = 4;
+        static int depth() { return 42; }
+        float scale;
     };
 
     template<typename T>

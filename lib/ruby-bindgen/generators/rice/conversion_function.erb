@@ -1,4 +1,4 @@
-define_method("<%= ruby_name %>", [](<%= is_const ? "const " : "" %><%= cursor.semantic_parent.qualified_display_name %>& self) -> <%= result_type %>
+define_method("<%= ruby_name %>", [](<%= is_const ? "const " : "" %><%= qualified_parent %>& self) -> <%= result_type %>
 {
   return self;
 })

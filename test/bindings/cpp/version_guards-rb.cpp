@@ -50,7 +50,7 @@ void Init_VersionGuards()
 
   Rice::Data_Type<Guards::DataType<Guards::HalfFloat>> rb_cGuardsDataTypeHalfFloat = define_class_under<Guards::DataType<Guards::HalfFloat>>(rb_mGuards, "DataTypeHalfFloat")
     .define_constructor(Constructor<Guards::DataType<Guards::HalfFloat>>())
-    .define_singleton_function<int(*)()>("depth", &Guards::DataType<HalfFloat>::depth);
+    .define_singleton_function<int(*)()>("depth", &Guards::DataType<Guards::HalfFloat>::depth);
 
   rb_mGuards.define_module_function<Guards::HalfFloat(*)(int)>("saturate_cast", &Guards::saturate_cast,
     Arg("v"));
