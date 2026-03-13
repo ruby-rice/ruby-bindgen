@@ -234,6 +234,18 @@ void Init_Operators()
       return self;
     });
 
+  Rice::Data_Type<Vec> rb_cVec = define_class<Vec>("Vec")
+    .define_attr("x", &Vec::x)
+    .define_constructor(Constructor<Vec>())
+    .define_constructor(Constructor<Vec, int>(),
+      Arg("v"));
+
+  Rice::Data_Type<VecExpr> rb_cVecExpr = define_class<VecExpr>("VecExpr")
+    .define_attr("x", &VecExpr::x)
+    .define_constructor(Constructor<VecExpr>())
+    .define_constructor(Constructor<VecExpr, int>(),
+      Arg("v"));
+
   Module rb_mStringIndex = define_module("StringIndex");
 
   Rice::Data_Type<string_index::StringMap> rb_cStringIndexStringMap = define_class_under<string_index::StringMap>(rb_mStringIndex, "StringMap")
@@ -299,5 +311,11 @@ void Init_Operators()
     {
       self << other;
       return self;
+    });
+  
+  rb_cVec
+    .define_method("+", [](Vec& self, const VecExpr& other) -> VecExpr&
+    {
+      return self + other;
     });
 }

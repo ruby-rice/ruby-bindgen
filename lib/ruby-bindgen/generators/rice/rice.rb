@@ -113,6 +113,12 @@ module RubyBindgen
         ['const char *', 's'],
       ]).freeze
 
+      # std:: types that Rice converts to native Ruby types (no Rice wrapper exists).
+      # string→String, string_view→String, complex→Complex, monostate→NilClass, tuple→Array.
+      # Checked by declaration spelling (not qualified_name) to avoid inline namespace issues
+      # (e.g., std::__cxx11::basic_string on libstdc++).
+      RICE_NATIVE_TYPES = Set.new(%w[basic_string basic_string_view complex monostate tuple]).freeze
+
       FUNDAMENTAL_TYPES = [
         :type_void, :type_bool,
         :type_char_u, :type_uchar, :type_char16, :type_char32, :type_char_s,
@@ -475,9 +481,9 @@ module RubyBindgen
             type = type.non_reference_type while type.kind == :type_lvalue_ref || type.kind == :type_rvalue_ref
             type = type.pointee while type.kind == :type_pointer
 
-            # Skip if not a template instantiation or is std::
+            # Skip if not a template instantiation or is from a system header (std::, etc.)
             next unless type.num_template_arguments > 0
-            next if type.canonical.spelling.start_with?("std::")
+            next if type.canonical.declaration.location.in_system_header?
 
             # Find class template declaration
             template_ref = param.find_first_by_kind(true, :cursor_template_ref)
@@ -1763,13 +1769,12 @@ module RubyBindgen
         # Rice already provides bitwise operators (&, |, ^, ~, <<, >>) for enums automatically
         return if class_cursor.kind == :cursor_enum_decl
 
-        # Strip const/volatile qualifiers for type checking
-        canonical = arg0_type.canonical.spelling.gsub(/\b(const|volatile)\s+/, '')
-
         # Skip types that Rice converts to native Ruby types (no Rice wrapper exists).
-        # These map to Ruby builtins: string→String, string_view→String, complex→Complex,
-        # monostate→NilClass, tuple→Array. Note: std::vector, std::pair, etc. ARE wrapped.
-        return if canonical.match?(/\bstd::basic_string<|\bstd::basic_string_view<|\bstd::complex<|\bstd::monostate\b|\bstd::tuple</)
+        # Note: std::vector, std::pair, etc. ARE wrapped by Rice.
+        canonical_decl = arg0_type.canonical.declaration
+        return if canonical_decl.kind != :cursor_no_decl_found &&
+                  canonical_decl.location.in_system_header? &&
+                  RICE_NATIVE_TYPES.include?(canonical_decl.spelling)
 
         # Use the class cursor directly - operators should be attached to the actual class
         # (e.g., rb_cCvMat for cv::Mat), not to typedefs (e.g., rb_cMatND which is typedef for Mat)
@@ -1789,7 +1794,9 @@ module RubyBindgen
             class_cursor = op[:class_cursor]
 
             # Handle ostream << specially - generates inspect method on the second arg's class
-            if cursor.spelling.match(/<</) && cursor.type.arg_type(0).spelling.match(/ostream/)
+            arg0_decl = cursor.type.arg_type(0).non_reference_type.declaration
+            if cursor.spelling.include?("<<") && arg0_decl.location.in_system_header? &&
+               arg0_decl.spelling.end_with?("ostream")
               arg1_non_ref = cursor.type.arg_type(1).non_reference_type
               # Use Type#declaration to get the typedef/class cursor directly
               target_cursor = arg1_non_ref.declaration
@@ -1825,9 +1832,10 @@ module RubyBindgen
               ruby_name = cursor.ruby_name
 
               # Determine the appropriate return statement based on result type
-              if result_type == "void"
+              if cursor.result_type.kind == :type_void
                 return_stmt = "self #{op_symbol} other;"
-              elsif result_type.include?("&") && result_type.include?(arg0_type.delete("&").strip)
+              elsif cursor.result_type.kind == :type_lvalue_ref &&
+                    cursor.result_type.non_reference_type == cursor.type.arg_type(0).non_reference_type
                 # Returns reference to self (e.g., FileStorage& operator<<)
                 return_stmt = "self #{op_symbol} other;\n  return self;"
               else
@@ -1868,8 +1876,8 @@ module RubyBindgen
         return if @classes.key?(cursor.cruby_name)
 
         # Skip typedefs to std:: types - Rice handles these automatically
-        canonical = cursor.underlying_type.canonical.spelling
-        return if canonical.start_with?("std::")
+        canonical_decl = cursor.underlying_type.canonical.declaration
+        return if canonical_decl.kind != :cursor_no_decl_found && canonical_decl.location.in_system_header?
 
         cursor_template_ref = cursor.find_first_by_kind(false, :cursor_template_ref)
 
@@ -1923,8 +1931,7 @@ module RubyBindgen
           # Also check the base template's own namespace since resolve_base_instantiation
           # may incorrectly use the derived class's namespace (e.g., "cv::shared_ptr").
           base_template_decl = base_ref.find_first_by_kind(false, :cursor_type_ref, :cursor_template_ref)&.referenced
-          base_in_std = base_spelling&.start_with?("std::") ||
-                        base_template_decl&.qualified_name&.start_with?("std::")
+          base_in_std = base_template_decl&.location&.in_system_header?
           if base_spelling && !base_in_std
             base_typedef = @typedef_map[base_spelling]
             if base_typedef

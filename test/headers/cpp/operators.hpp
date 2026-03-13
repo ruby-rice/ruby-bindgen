@@ -270,6 +270,30 @@ typedef std::string MyString;
 // which is Ruby's built-in String class.
 MyString& operator<<(MyString& out, const Printable& p);
 
+// Test that operator return type detection uses type equality, not substring matching.
+// "Vec" is a prefix of "VecExpr", so substring matching on type names would falsely
+// detect operator+(Vec&, VecExpr) -> VecExpr& as "returns reference to self".
+class Vec
+{
+public:
+    int x;
+    Vec() : x(0) {}
+    Vec(int v) : x(v) {}
+};
+
+class VecExpr
+{
+public:
+    int x;
+    VecExpr() : x(0) {}
+    VecExpr(int v) : x(v) {}
+};
+
+// Returns VecExpr& (NOT Vec&) — this is NOT "returns reference to self"
+// because arg0 is Vec& but return is VecExpr&.
+// With substring matching, "Vec" matches inside "VecExpr" → wrong code path.
+VecExpr& operator+(Vec& a, const VecExpr& b);
+
 // Test subscript operator with non-int index type.
 // The operator[] setter template must use the actual parameter type, not hardcoded int.
 namespace string_index
