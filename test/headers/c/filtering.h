@@ -78,6 +78,14 @@ MY_EXPORT struct SkippedStruct* createSkippedStruct(void);
 // Returns a normal struct pointer - should be INCLUDED
 MY_EXPORT struct IncludedStruct* createIncludedStruct(void);
 
+// --- Functions taking skipped types as parameters ---
+
+// Takes a skipped struct pointer param - should be SKIPPED
+MY_EXPORT void processSkippedStruct(struct SkippedStruct* s);
+
+// Takes a normal struct pointer param - should be INCLUDED
+MY_EXPORT void processIncludedStruct(struct IncludedStruct* s);
+
 // --- Embedded skipped struct ---
 
 // Struct containing an embedded struct that is skipped

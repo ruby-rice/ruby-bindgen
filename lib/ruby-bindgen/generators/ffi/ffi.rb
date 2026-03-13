@@ -220,6 +220,7 @@ module RubyBindgen
         return if cursor.availability == :deprecated
         return if @symbols.skip?(cursor)
         return if references_skipped_type?(cursor.type.result_type)
+        return if has_skipped_param_type?(cursor)
         return if has_va_list_param?(cursor)
         return unless has_export_macro?(cursor)
 
@@ -401,6 +402,13 @@ module RubyBindgen
           type = type.canonical if type.kind == :type_elaborated
           type.kind == :type_record && type.declaration.spelling == "__va_list_tag" ||
             param.type.kind == :type_elaborated && param.type.declaration.spelling == "va_list"
+        end
+      end
+
+      # Check if any parameter type of a function references a skipped symbol.
+      def has_skipped_param_type?(cursor)
+        (0...cursor.type.args_size).any? do |i|
+          references_skipped_type?(cursor.type.arg_type(i))
         end
       end
 
