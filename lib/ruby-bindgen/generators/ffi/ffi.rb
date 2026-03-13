@@ -396,12 +396,24 @@ module RubyBindgen
       end
 
       # Check if any parameter is a va_list type, which cannot be constructed from Ruby.
+      # va_list representation varies by platform:
+      #   Linux x86_64: elaborated(va_list) -> typedef(__builtin_va_list) -> struct __va_list_tag[1]
+      #   Other targets: may use __builtin_va_list, __gnuc_va_list, or other forms
+      # The typedef declaration spelling is the most reliable check.
+      VA_LIST_NAMES = Set.new(%w[va_list __builtin_va_list __gnuc_va_list]).freeze
+
       def has_va_list_param?(cursor)
         cursor.find_by_kind(false, :cursor_parm_decl).any? do |param|
           type = param.type
-          type = type.canonical if type.kind == :type_elaborated
-          type.kind == :type_record && type.declaration.spelling == "__va_list_tag" ||
-            param.type.kind == :type_elaborated && param.type.declaration.spelling == "va_list"
+          # Check declaration spelling (works for elaborated and typedef types)
+          decl = type.declaration
+          next true if decl.kind == :cursor_typedef_decl && VA_LIST_NAMES.include?(decl.spelling)
+
+          # Fallback: check canonical type for __va_list_tag (Linux x86_64 array form)
+          canonical = type.canonical
+          canonical.kind == :type_constant_array &&
+            canonical.element_type.kind == :type_record &&
+            canonical.element_type.declaration.spelling == "__va_list_tag"
         end
       end
 
