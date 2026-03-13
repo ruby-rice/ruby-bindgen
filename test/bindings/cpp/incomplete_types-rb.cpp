@@ -153,7 +153,8 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::SizeTInTemplateArgs> rb_cOuterInnerSizeTInTemplateArgs = define_class_under<Outer::Inner::SizeTInTemplateArgs>(rb_mOuterInner, "SizeTInTemplateArgs")
     .define_constructor(Constructor<Outer::Inner::SizeTInTemplateArgs>())
-    .define_method<std::unordered_map<std::size_t, std::vector<Outer::Inner::Marker>>(Outer::Inner::SizeTInTemplateArgs::*)() const>("get_tracked_objects", &Outer::Inner::SizeTInTemplateArgs::getTrackedObjects);
+    .define_method<std::unordered_map<std::size_t, std::vector<Outer::Inner::Marker>>(Outer::Inner::SizeTInTemplateArgs::*)() const>("get_tracked_objects", &Outer::Inner::SizeTInTemplateArgs::getTrackedObjects)
+    .define_method<std::pair<std::size_t, uint64_t>(Outer::Inner::SizeTInTemplateArgs::*)() const>("get_mixed_types", &Outer::Inner::SizeTInTemplateArgs::getMixedTypes);
 
   Rice::Data_Type<Outer::Inner::Holder<Outer::Inner::Solver::Callback>> rb_cOuterInnerHolderOuterInnerSolverCallback = Holder_instantiate<Outer::Inner::Solver::Callback>(rb_mOuterInner, "HolderOuterInnerSolverCallback");
 

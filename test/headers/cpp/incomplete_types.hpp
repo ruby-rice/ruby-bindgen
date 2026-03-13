@@ -328,6 +328,10 @@ namespace Outer
       // Return type has size_t as a template argument — must preserve size_t,
       // not resolve to unsigned long or unsigned long long
       std::unordered_map<size_t, std::vector<Marker>> getTrackedObjects() const;
+
+      // Both size_t (unsigned long) and uint64_t (unsigned long long) as template args.
+      // Restoring size_t must not corrupt uint64_t into "size_t long".
+      std::pair<size_t, uint64_t> getMixedTypes() const;
     };
 
     // =========================================================================

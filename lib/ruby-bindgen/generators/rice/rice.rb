@@ -841,14 +841,21 @@ module RubyBindgen
       # size_t to "unsigned long" (Linux) or "unsigned long long" (MSVC). We want the
       # better namespace qualification from canonical but need to keep "size_t".
       def restore_typedefs(canonical, type)
+        restorations = {}
+        collect_typedef_restorations(type, restorations)
+
         result = canonical
-        collect_typedef_restorations(type, result)
+        # Apply longest canonical names first so "unsigned long long" is replaced
+        # before "unsigned long" (which would otherwise match inside it)
+        restorations.sort_by { |canonical_name, _| -canonical_name.length }.each do |canonical_name, typedef_name|
+          result = result.gsub(/\b#{Regexp.escape(canonical_name)}\b/, typedef_name)
+        end
         result
       end
 
       # Scan template arguments for typedefs whose canonical form differs from their
-      # typedef name. Replace the canonical form back with the typedef name in result.
-      def collect_typedef_restorations(type, result)
+      # typedef name. Collects canonical_name => typedef_name pairs.
+      def collect_typedef_restorations(type, restorations)
         return if type.nil? || type.kind == :type_invalid
         return unless type.num_template_arguments > 0
 
@@ -861,14 +868,11 @@ module RubyBindgen
           if decl.kind == :cursor_typedef_decl || decl.kind == :cursor_type_alias_decl
             typedef_name = arg_type.spelling
             canonical_name = arg_type.canonical.spelling
-            if typedef_name != canonical_name
-              # Replace the resolved canonical form with the original typedef name
-              result.gsub!(/\b#{Regexp.escape(canonical_name)}\b/, typedef_name)
-            end
+            restorations[canonical_name] = typedef_name if typedef_name != canonical_name
           end
 
           # Recurse into nested template arguments
-          collect_typedef_restorations(arg_type, result)
+          collect_typedef_restorations(arg_type, restorations)
         end
       end
 
