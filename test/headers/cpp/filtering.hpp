@@ -269,6 +269,30 @@ namespace Outer
     void doWork();
   };
 
+  // --- Skipped Enum Tests ---
+
+  // This enum should be SKIPPED via symbols
+  enum class SkippedEnum { A, B, C };
+
+  // This enum should be INCLUDED (not in skip list)
+  enum class IncludedEnum { X, Y, Z };
+
+  // --- Skipped Union Tests ---
+
+  // This union should be SKIPPED via symbols
+  union SkippedUnion { int i; float f; };
+
+  // This union should be INCLUDED (not in skip list)
+  union IncludedUnion { int i; double d; };
+
+  // --- Skipped Variable Tests ---
+
+  // This variable should be SKIPPED via symbols
+  MY_EXPORT extern const int skippedVariable;
+
+  // This variable should be INCLUDED (not in skip list)
+  MY_EXPORT extern const int includedVariable;
+
   // --- Nested template argument skip tests ---
   // Tests that skip matching works with nested angle brackets like Vec<float, 3>
 

@@ -82,6 +82,17 @@ void Init_Filtering()
     .define_constructor(Constructor<Outer::ConstructorWithNsParam>())
     .define_method<void(Outer::ConstructorWithNsParam::*)()>("do_work", &Outer::ConstructorWithNsParam::doWork);
 
+  Enum<Outer::IncludedEnum> rb_cOuterIncludedEnum = define_enum_under<Outer::IncludedEnum>("IncludedEnum", rb_mOuter)
+    .define_value("X", Outer::IncludedEnum::X)
+    .define_value("Y", Outer::IncludedEnum::Y)
+    .define_value("Z", Outer::IncludedEnum::Z);
+
+  Rice::Data_Type<Outer::IncludedUnion> included_union = define_class_under<Outer::IncludedUnion>(rb_mOuter, "IncludedUnion")
+    .define_attr("i", &Outer::IncludedUnion::i)
+    .define_attr("d", &Outer::IncludedUnion::d);
+
+  rb_mOuter.define_constant("IncludedVariable", Outer::includedVariable);
+
   Rice::Data_Type<Outer::DataType<double>> rb_cOuterDataTypeDouble = define_class_under<Outer::DataType<double>>(rb_mOuter, "DataTypeDouble")
     .define_constructor(Constructor<Outer::DataType<double>>())
     .define_method<void(Outer::DataType<double>::*)()>("info", &Outer::DataType<double>::info);

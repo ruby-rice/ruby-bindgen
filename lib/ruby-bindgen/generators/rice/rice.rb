@@ -1670,6 +1670,7 @@ module RubyBindgen
 
       def visit_enum_decl(cursor)
         return if CURSOR_CLASSES.include?(cursor.semantic_parent.kind) && !cursor.public?
+        return if !cursor.anonymous? && skip_symbol?(cursor)
 
         if cursor.anonymous? && CURSOR_CLASSES.include?(cursor.semantic_parent.kind)
           # Anonymous enum inside a class — return constants as chainable strings
@@ -1878,6 +1879,7 @@ module RubyBindgen
 
       def visit_typedef_decl(cursor)
         return if cursor.semantic_parent.kind == :cursor_class_decl || cursor.semantic_parent.kind == :cursor_struct
+        return if skip_symbol?(cursor)
 
         # Skip if already processed (can happen when force-generating base classes)
         return if @classes.key?(cursor.cruby_name)
@@ -2072,6 +2074,7 @@ module RubyBindgen
       def visit_union(cursor)
         return if cursor.forward_declaration?
         return if cursor.anonymous?
+        return if skip_symbol?(cursor)
 
         result = Array.new
 
@@ -2100,6 +2103,7 @@ module RubyBindgen
           !cursor.public?
           return
         end
+        return if skip_symbol?(cursor)
 
         # Skip compiler/cuda keywords like __device__ __forceinline__
         return if cursor.spelling.match(/^__.*__$/)
