@@ -1,10 +1,10 @@
 # Version Detection
 
-When `symbols.versions` has entries, `ruby-bindgen` generates version-guarded Ruby conditionals and a `{project}_version.rb` skeleton file. The user implements the version detection method in that file — typically by calling the library's own version API.
+When [`symbols.versions`](../configuration.md#versions) has entries, `ruby-bindgen` generates version-guarded Ruby conditionals and a `{project}_version.rb` skeleton file. You must implement the version detection method in that file — typically by calling the library's own version API.
 
 ## Configuration
 
-This example is from [proj4rb](https://github.com/cfis/proj4rb), Ruby bindings for the [PROJ](https://proj.org/) coordinate transformation library. PROJ's API has grown significantly across versions — `proj_normalize_for_visualization` was added in 6.1.0, `proj_cleanup` in 6.2.0, and so on.
+This example is from [proj4rb](https://github.com/cfis/proj4rb), Ruby bindings for the [PROJ](https://proj.org/) coordinate transformation library. PROJ's API has grown significantly across versions — `proj_normalize_for_visualization` was added in 6.1.0, `proj_cleanup` in 6.2.0, and so forth.
 
 ```yaml
 format: FFI
@@ -17,8 +17,8 @@ library_names:
 
 symbols:
   skip:
-    - PJ_INFO       # manually defined in version file
-    - proj_info      # manually defined in version file
+    - PJ_INFO   # manually defined in version file
+    - proj_info # manually defined in version file
 
   versions:
     # 6.1.0

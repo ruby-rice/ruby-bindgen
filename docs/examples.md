@@ -27,7 +27,6 @@ clang:
 Run:
 
 ```bash
-mkdir -p ./ext/generated
 ruby-bindgen rice-bindings.yaml
 ```
 
@@ -64,7 +63,6 @@ clang:
 Run:
 
 ```bash
-mkdir -p ./lib/generated
 ruby-bindgen ffi-bindings.yaml
 ```
 
@@ -107,7 +105,6 @@ include_dirs:
 Run:
 
 ```bash
-mkdir -p ./ext/generated
 ruby-bindgen rice-bindings.yaml
 ruby-bindgen cmake-bindings.yaml
 ```

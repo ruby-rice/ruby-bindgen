@@ -1,10 +1,10 @@
 # Library Loading
 
-FFI needs to find and load the C shared library at runtime. The `library_names`, `library_versions`, and `library_search_path` configuration options control how `ruby-bindgen` generates the library search logic.
+FFI loads the target shared library at runtime. The `library_names`, `library_versions`, and `library_search_path` configuration options specify where to find the library.
 
 ## Library Names
 
-`library_names` specifies the base names of the shared library. The generated loader turns each base name into one or more search names and passes them to `ffi_lib`:
+`library_names` specifies the base names of the shared library. The loader turns each base name into one or more search names and passes them to `ffi_lib`:
 
 | Platform | `library_names: ["proj"]` searches for              |
 |----------|-----------------------------------------------------|
@@ -32,13 +32,13 @@ library_versions:
   - "15"    # PROJ 6.0
 ```
 
-This generates search names like `libproj.so.25`, `libproj.so.22`, etc. on Linux, `libproj.25` on macOS, `libproj-25` on MinGW, and `proj_25` on MSVC. The generated loader sorts the version suffixes descending before emitting them, so newer versions are tried first.
+This generates search names like `libproj.so.25`, `libproj.so.22`, etc. on Linux, `libproj.25` on macOS, `libproj-25` on MinGW, and `proj_25` on MSVC. The loader sorts the version suffixes in descending order before emitting them, so newer versions are tried first.
 
 If `library_versions` is omitted, only the unversioned name is searched. This works on most systems where the package manager creates an unversioned symlink (e.g., `libproj.so` → `libproj.so.25`).
 
 ## Library Search Path
 
-If the library is installed outside the standard loader search path, use `library_search_path`:
+If the library is installed outside standard operating system search paths, use `library_search_path`:
 
 ```yaml
 library_names:

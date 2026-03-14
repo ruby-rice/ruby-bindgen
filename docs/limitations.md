@@ -1,4 +1,4 @@
-# Known Limitations
+# Limitations
 
 This page summarizes current limitations and constraints in `ruby-bindgen`.
 
