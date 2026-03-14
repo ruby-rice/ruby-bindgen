@@ -45,6 +45,8 @@ For typedef-related issues, use `cross_file_base.hpp` and `cross_file_derived.hp
 
 ## Git Commits
 
+One commit per fix. Do not batch multiple unrelated fixes into a single commit.
+
 Do not add Co-Authored-By or any other author attribution to commit messages.
 
 ## Regenerate opencv-ruby bindings
