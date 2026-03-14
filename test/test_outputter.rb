@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'find'
 require 'pathname'
 require 'stringio'
 
