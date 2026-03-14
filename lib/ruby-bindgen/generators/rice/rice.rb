@@ -250,11 +250,18 @@ module RubyBindgen
         File.join(File.dirname(relative), "#{File.basename(relative, '.*')}-rb.ipp")
       end
 
-      # Generate default Rice include header if user didn't specify one
+      # Generate default Rice include header if user didn't specify one.
+      # If the file already exists on disk, preserve it so user customizations are not lost.
       def create_rice_include_header
         return if @include_header  # User specified their own header
 
         header_path = rice_include_header
+        output_path = self.outputter.output_path(header_path)
+        if File.exist?(output_path)
+          STDOUT << "  Preserving: " << header_path << "\n"
+          return
+        end
+
         STDOUT << "  Writing: " << header_path << "\n"
         content = render_template("rice_include.hpp")
         self.outputter.write(header_path, content)
