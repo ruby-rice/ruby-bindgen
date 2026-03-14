@@ -158,7 +158,7 @@ flowchart TD
   B --> G["Init_*_Refinements (manual, optional)"]
 ```
 
-The extension `Init_<extension>` function is the top-level entry point and calls all per-header `Init_*` functions. Refinement init functions are optional manual hooks that run after generated definitions. See [refinements](customizing.md#refinements-separate-manual-code) for details.
+The extension `Init_<extension>` function is the top-level entry point and calls all per-header `Init_*` functions. Refinement init functions are optional manual hooks that run after generated definitions. See [refinements](customizing.md#refinements) for details.
 
 ## Build System
 

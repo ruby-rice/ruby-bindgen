@@ -12,7 +12,7 @@ For end-to-end examples, see [C Bindings](c/c_bindings.md), [C++ Bindings](cpp/c
 
 | Option   | Description                                                                                                       |
 |----------|-------------------------------------------------------------------------------------------------------------------|
-| `input`  | Directory containing the header files to parse. Can be absolute or relative to the config file location.          |
+| `input`  | Directory containing the header files to parse. Required for `FFI` and `Rice`. For `CMake`, if omitted it defaults to `output` so the generator scans previously generated `*-rb.cpp` files. Can be absolute or relative to the config file location. |
 | `output` | Directory where generated binding files will be written. Can be absolute or relative to the config file location. |
 | `format` | Type of bindings to generate: `Rice` for C++, `FFI` for C, or `CMake` for CMakeLists.txt. |
 
@@ -24,7 +24,7 @@ These options apply to all formats.
 
 | Option          | Default            | Description                                                                               |
 |-----------------|--------------------|-------------------------------------------------------------------------------------------|
-| `match`         | `["**/*.{h,hpp}"]` | Array of glob pattern specifying which header files to process. **Note:** removing a header from `match` does not delete its previously generated `*-rb.cpp` file. You must manually delete stale output files when removing headers. Auto-cleanup is not performed because `match` is often temporarily narrowed to regenerate a single file. |
+| `match`         | `["**/*.{h,hpp}"]` for `FFI`/`Rice`, `["**/*-rb.cpp"]` for `CMake` | Array of glob patterns specifying which files to process. **Note:** removing a header from `match` does not delete its previously generated `*-rb.cpp` file. You must manually delete stale output files when removing headers. Auto-cleanup is not performed because `match` is often temporarily narrowed to regenerate a single file. |
 | `skip`          | `[]`               | Array of glob patterns specifying which files to skip. For Rice/FFI, these match header file paths. For CMake, these match generated `*-rb.cpp` file paths. In most cases, it's better to add skips to the Rice/FFI config so the files are never generated, rather than skipping them in CMake after the fact. |
 | `symbols`       | `{}`               | Symbol actions and name mappings grouped by type. See [Symbols](#symbols).                  |
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
@@ -58,8 +58,8 @@ These options apply to all formats.
 
 `ruby-bindgen` uses top-level toolchain keys to configure compiler settings for different platforms:
 
-- **`clang-cl:`** - Used when Ruby is built with MSVC (`RUBY_PLATFORM` contains `mswin`)
-- **`clang:`** - Used for all other platforms (Linux, macOS, MinGW)
+- **`clang-cl:`** - Used when `RUBY_PLATFORM` contains `mswin` or `mingw`
+- **`clang:`** - Used on Linux and macOS
 
 | Option     | Default     | Description |
 |------------|-------------|-------------|
@@ -73,7 +73,7 @@ You only need to include the toolchain sections for platforms you target.
 ```mermaid
 flowchart TD
   A["config.yaml location"] --> B["Resolve relative input/output paths"]
-  B --> C{"RUBY_PLATFORM contains mswin?"}
+  B --> C{"RUBY_PLATFORM contains mswin or mingw?"}
   C -->|Yes| D["Use clang-cl section"]
   C -->|No| E["Use clang section"]
   D --> F["Set LIBCLANG from toolchain libclang (if provided)"]

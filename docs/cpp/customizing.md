@@ -19,7 +19,7 @@ Some issues are best solved via the [configuration](../configuration.md) file ra
 
 ## Refinements
 
-Ruby classes are open, meaning you can reopen an existing class and add methods to it. Refinements take advantage of this to extend generated bindings with additional functionality. Note this is not quite the same as Ruby's [refinements](https://docs.ruby-lang.org/en/master/syntax/refinements_rdoc.html) functionality since which are scoped — these additions are global.
+Ruby classes are open, meaning you can reopen an existing class and add methods to it. Refinements take advantage of this to extend generated bindings with additional functionality. Note that this is not the same as Ruby's built-in [refinements](https://docs.ruby-lang.org/en/master/syntax/refinements_rdoc.html), which are scoped. These additions are global.
 
 Common reasons to add refinements include:
 
@@ -42,26 +42,28 @@ To do this, create a directory to contain additions. The directory can be named 
 
 ```
 ext/
-├── myextension           # Generated files
+├── generated/            # Generated files (output: ./ext/generated)
 │   ├── matrix-rb.hpp
-│   ├── matrix-rb.hpp
-│   └── ...
+│   ├── matrix-rb.cpp
+│   ├── matrix-rb.ipp
+│   └── my_extension-rb.cpp
+├── include/
+│   └── matrix.hpp
 ├── refinements/          # Manual additions (never overwritten)
 │   ├── CMakeLists.txt
-│   ├── matrix-rb.hpp     # to_s, template instantiations
-│   ├── matrix-rb.cpp     # to_s, template_instantiations
+│   ├── matrix_refinements.hpp
+│   ├── matrix_refinements.cpp
 │   └── ...
-└── myextension-rb.cpp    # Main init file, calls Init_*_Refinements()
 ```
 
-Create a new file in refinements for each generated Rice file you want to override. For example, if you want to add functionality to `matrix-rb.cpp`, then create `refinements/matrix-rb.hpp` and `refinements/matrix-rb.cpp`. As part of those files, define a new init function called `Init_Matrix_Refinements`.
+Create a new file in `refinements/` for each generated Rice file you want to extend. For example, if you want to add functionality to `matrix-rb.cpp`, create `refinements/matrix_refinements.hpp` and `refinements/matrix_refinements.cpp`. Define a new init function such as `Init_Matrix_Refinements` in those files.
 
-Next add the .cpp file to `refinements/CMakeLists.txt`:
+Next add the `.cpp` file to `refinements/CMakeLists.txt`:
    ```cmake
    target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-                 "matrix-rb.cpp")
+     "matrix_refinements.cpp")
    ```
-Then in the main `Init_MyExtension` function in the project `my_extension-rb.cpp` file, include the header and call the `Init_Matrix_Refinements` method.
+Then in the generated `generated/my_extension-rb.cpp` file, include the refinement header and call `Init_Matrix_Refinements()`.
 
 Using refinements has a lot of advantages:
 
@@ -70,12 +72,14 @@ Using refinements has a lot of advantages:
 
 ### Example
 
-Here is an example `refinements/matrix-rb.cpp` refinements file:
+Here is an example `refinements/matrix_refinements.cpp` file:
 
 ```cpp
-#include <matrix>
-#include "matrix-rb.hpp"                    // Generated header
-#include "../ext/matrix-rb.ipp"    // Generated _instantiate functions
+#include <sstream>
+#include "../include/matrix.hpp"
+#include "../generated/matrix-rb.hpp"
+#include "../generated/matrix-rb.ipp"
+#include "matrix_refinements.hpp"
 
 using namespace Rice;
 
@@ -96,11 +100,13 @@ void Init_Matrix_Refinements()
   rb_alias(matrix, rb_intern("[]"), rb_intern("call"));
 
   // Instantiate additional templates not in the generated code
-  Matrix_instantiate<double>(rb_mMyExtensin, "MatrixDouble");
+  Matrix_instantiate<double>(rb_mMyExtension, "MatrixDouble");
 }
 ```
 
 ## Fixes
+
+### Manual Edits
 
 Sometimes you need to **modify** the generated Rice code. Common reasons include:
 
@@ -115,4 +121,4 @@ Sometimes you need to **modify** the generated Rice code. Common reasons include
 - Watch fluent chain syntax when commenting out methods: change the preceding `.` to `;` to terminate the chain
 - Refinements can include generated `.ipp` files to reuse `_instantiate` functions with additional type arguments
 
-If you have manual edits, you'll will need a strategy for preserving them when you [regenerate bindings](../updating_bindings.md).
+If you have manual edits, you will need a strategy for preserving them when you [regenerate bindings](../updating_bindings.md).

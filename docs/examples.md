@@ -41,6 +41,7 @@ Output:
 `ffi-bindings.yaml`:
 
 ```yaml
+project: mylib
 input: ./include
 output: ./lib/generated
 format: FFI
@@ -68,7 +69,8 @@ ruby-bindgen ffi-bindings.yaml
 ```
 
 Output:
-- One Ruby file per header with `FFI::Library`, enum/struct/callback definitions, and `attach_function` calls
+- A project loader file (`mylib_ffi.rb`) with `require 'ffi'`, `ffi_lib`, and `require_relative` calls
+- One Ruby content file per header with enums, structs, callbacks, and `attach_function` calls
 
 ## CMake (for Rice output)
 
@@ -94,9 +96,9 @@ clang:
 
 ```yaml
 project: sample_ext
-input: ./include
 output: ./ext/generated
 format: CMake
+# input defaults to output for CMake and scans ./ext/generated for *-rb.cpp
 
 include_dirs:
   - "${CMAKE_CURRENT_SOURCE_DIR}/../include"

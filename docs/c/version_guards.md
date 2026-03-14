@@ -10,6 +10,7 @@ This example is from [proj4rb](https://github.com/cfis/proj4rb), Ruby bindings f
 format: FFI
 project: proj
 module: Proj::Api
+version_check: proj_version
 
 library_names:
   - proj

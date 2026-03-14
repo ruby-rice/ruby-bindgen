@@ -68,18 +68,22 @@ flowchart TD
 
 If a library provides both C and C++ APIs, use the C API! It is usually simpler to wrap and maintain and does not require users to compile extensions.
 
-Once you have decided the format, create a simple [configuration](configuration.md) file and set its `format` field to `FFI`, `Rice` or `CMake`. In addition, specify a `project` name, the `input` path to header files and the `output` path for generated bindings.
+Once you have decided the format, create a simple [configuration](configuration.md) file and set its `format` field to `FFI`, `Rice` or `CMake`.
 
-For example:
+- `output` is always required
+- `input` is required for `FFI` and `Rice`; for `CMake` it defaults to `output`
+- `project` is required for `FFI` and optional for `Rice` and `CMake`
+
+For example, a minimal Rice configuration looks like:
 
 ```yaml
 project: my_extension
 input: /path/to/headers
 output: /path/to/output
-format: Rice     # or FFI/CMake
+format: Rice
 
 match:
-  - "**/*.hpp"   # or "**/*.h" for C headers
+  - "**/*.hpp"   # use "**/*.h" for C headers in FFI configs
 
 clang:
   args:
@@ -99,7 +103,7 @@ For much more details, jump to the documentation page for each format:
 Finally generate bindings by running the command:
 
 ```bash
-ruby-bindgen rice-bindings.yaml
+ruby-bindgen /path/to/bindings.yaml
 ```
 
 ## Naming Conventions

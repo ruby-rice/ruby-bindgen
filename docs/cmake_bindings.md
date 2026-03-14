@@ -11,6 +11,8 @@ Rice supports building extensions with either [extconf.rb](https://ruby-rice.git
 ```yaml
 format: CMake
 project: my_extension
+output: ./ext/generated
+# input defaults to output for CMake and scans ./ext/generated for *-rb.cpp
 
 include_dirs:
   - "${CMAKE_CURRENT_SOURCE_DIR}/../headers"

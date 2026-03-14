@@ -16,7 +16,7 @@ The rest of this page discusses strategies for more complex cases where you want
 
 ## Preserving Refinements
 
-[Refinements](cpp/customizing.md#refinements-separate-manual-code) live in a separate directory that `ruby-bindgen` never touches, so the source files survive regeneration automatically. However, the top-level `-rb.cpp` file is regenerated, so you will need to re-add the `#include` directives and `Init_*_Refinement` calls.
+[Refinements](cpp/customizing.md#refinements) live in a separate directory that `ruby-bindgen` never touches, so the source files survive regeneration automatically. However, the top-level `-rb.cpp` file is regenerated, so you will need to re-add the `#include` directives and `Init_*_Refinements` calls.
 
 ## Preserving Manual Edits
 
@@ -53,4 +53,3 @@ Maintain a structured document (`manual_updates.md`) that describes each change 
 **Pros**: Survives large formatting changes, human-readable, an AI assistant can apply the instructions even when line numbers shift.
 
 **Cons**: Must be kept in sync with actual changes.
-

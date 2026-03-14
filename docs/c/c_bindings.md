@@ -14,7 +14,7 @@ First create a configuration file named `ffi-bindings.yaml`:
 
 ```yaml
 input: ./include
-output: ./lib/bindings
+output: ./lib/generated
 format: FFI
 project: mylib
 
@@ -132,7 +132,7 @@ See [test/headers/c](../../test/headers/c) for the input headers and [test/bindi
 Since C is procedural rather than object-oriented, you may want to wrap the generated FFI bindings in Ruby classes to provide a more idiomatic API:
 
 ```ruby
-require_relative 'generated/mylib'
+require_relative 'generated/mylib_ffi'
 
 class MyLibWrapper
   def initialize
