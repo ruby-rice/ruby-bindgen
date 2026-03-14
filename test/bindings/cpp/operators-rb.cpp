@@ -246,6 +246,19 @@ void Init_Operators()
     .define_constructor(Constructor<VecExpr, int>(),
       Arg("v"));
 
+  Module rb_mUnnamedIndex = define_module("UnnamedIndex");
+
+  Rice::Data_Type<unnamed_index::Lookup> rb_cUnnamedIndexLookup = define_class_under<unnamed_index::Lookup>(rb_mUnnamedIndex, "Lookup")
+    .define_constructor(Constructor<unnamed_index::Lookup>())
+    .define_method<int&(unnamed_index::Lookup::*)(int)>("[]", &unnamed_index::Lookup::operator[],
+      Arg("arg_0"))
+    .define_method("[]=", [](unnamed_index::Lookup&self, int index, int& value)
+    {
+        self[index] = value;
+    })
+    .define_method<const int&(unnamed_index::Lookup::*)(int) const>("[]", &unnamed_index::Lookup::operator[],
+      Arg("arg_0"));
+
   Module rb_mStringIndex = define_module("StringIndex");
 
   Rice::Data_Type<string_index::StringMap> rb_cStringIndexStringMap = define_class_under<string_index::StringMap>(rb_mStringIndex, "StringMap")

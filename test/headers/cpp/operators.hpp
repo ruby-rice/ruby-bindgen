@@ -294,6 +294,20 @@ public:
 // With substring matching, "Vec" matches inside "VecExpr" → wrong code path.
 VecExpr& operator+(Vec& a, const VecExpr& b);
 
+// Test subscript operator with unnamed parameter.
+// operator[] should default the parameter name to "index" when unnamed.
+namespace unnamed_index
+{
+    class Lookup
+    {
+    public:
+        Lookup() {}
+
+        int& operator[](int);
+        const int& operator[](int) const;
+    };
+}
+
 // Test subscript operator with non-int index type.
 // The operator[] setter template must use the actual parameter type, not hardcoded int.
 namespace string_index

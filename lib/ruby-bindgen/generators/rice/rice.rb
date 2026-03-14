@@ -1482,7 +1482,7 @@ module RubyBindgen
            !cursor.result_type.non_reference_type.const_qualified? && !cursor.const?
           index_param = cursor.find_by_kind(false, :cursor_parm_decl).first
           index_type = type_spelling(cursor.type.arg_type(0))
-          index_name = index_param&.spelling&.empty? ? "index" : index_param.spelling
+          index_name = index_param&.spelling.to_s.empty? ? "index" : index_param.spelling
           result << self.render_cursor(cursor, "operator[]",
                                        :name => name,
                                        :index_type => index_type,
