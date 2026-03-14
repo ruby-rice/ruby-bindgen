@@ -139,9 +139,9 @@ target_precompile_headers(my_extension PRIVATE
 )
 ```
 
-You can specify a custom include file by setting the `include` option in the configuration file. This will replace the default `rice_include.hpp` file and thus allow you to specify your own `include` files if necessary. Your custom header must include the Rice headers, plus any addition includes or definitions you want to be global.
+You can specify a custom include file by setting the `include` option in the configuration file. This will replace the default `rice_include.hpp` file and thus allow you to specify your own `include` files if necessary. Your custom header must include the Rice headers, plus any additional includes or definitions you want to be global.
 
-For example, it is a good place to add support for custom smart pointers. For example, OpenCV defines `cv::Ptr<T>` which inherits from `std::smart_pointer<T>`. The opencv-ruby bindings wrapp this smart pointer in a custom header file that is then added to `rice_includes.hpp`. That means all translation units see it, preventing ODR violations.
+For example, it is a good place to add support for custom smart pointers. For example, OpenCV defines `cv::Ptr<T>` which inherits from `std::smart_pointer<T>`. The opencv-ruby bindings wrap this smart pointer in a custom header file that is then added to `rice_includes.hpp`. That means all translation units see it, preventing ODR violations.
 
 A custom include file will not be overwritten by `ruby-bindgen`.
 

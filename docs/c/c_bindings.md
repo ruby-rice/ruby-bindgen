@@ -105,7 +105,7 @@ end
 
 `ruby-bindgen` supports the following FFI features:
 
-- [Functions](https://github.com/ffi/ffi/wiki/Basic-Usage) - C functions mapped to Ruby module methods via `attach_function`, including variadic functions (`:varargs`)
+- [Functions](https://github.com/ffi/ffi/wiki/Basic-Usage) - C functions mapped to Ruby module methods via `attach_function`, including variadic functions (`:varargs`). Functions taking `va_list` parameters are skipped since `va_list` cannot be constructed from Ruby.
 - [Structs](https://github.com/ffi/ffi/wiki/Structs) - C structs mapped to `FFI::Struct` classes with proper layouts
 - Unions - C unions mapped to `FFI::Union` classes
 - [Enums](https://github.com/ffi/ffi/wiki/Enums) - C enums mapped to FFI enum types

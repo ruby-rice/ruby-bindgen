@@ -15,6 +15,6 @@ See [`symbols`](../configuration.md#symbols) in the configuration documentation.
 The following are automatically skipped:
 
 - **Deprecated**: Functions marked with `__attribute__((deprecated))` or `[[deprecated]]`
-- **Variadic**: Functions with `...` parameters (cannot be called via FFI)
+- **va_list**: Functions taking `va_list` parameters (cannot be constructed from Ruby; use the variadic `...` version instead)
 - **Private/Protected**: Non-public members
 - **System headers**: Declarations from system include paths

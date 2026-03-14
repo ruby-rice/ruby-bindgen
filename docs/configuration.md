@@ -140,11 +140,11 @@ The `symbols` option groups per-symbol actions and name mappings by type. The ac
 
 ### Skip
 
-The `skip` key lists symbols to exclude from bindings. This is useful when:
+The `skip` key lists symbols to exclude from bindings. This works for functions, classes, enums, typedefs, unions, and variables. This is useful when:
 
-- Functions have export macros but still aren't available (build configuration issues)
-- Functions are internal/private APIs not meant for external use
-- Functions cause linker errors due to missing symbols
+- Symbols have export macros but still aren't available (build configuration issues)
+- Symbols are internal/private APIs not meant for external use
+- Symbols cause linker errors due to missing definitions
 
 Symbol names support:
 
@@ -160,6 +160,9 @@ symbols:
     - cv::ocl::PlatformInfo::versionMinor    # Skips only this specific method
     - "cv::Mat_::zeros(int, const int *)"    # Skips only this overload (others remain)
     - /cv::dnn::.*Layer::init.*/             # Regex: skips all init* methods on any Layer class
+    - DeprecatedEnum                           # Skips an enum
+    - InternalUnion                            # Skips a union
+    - debugVariable                            # Skips a variable
 ```
 
 ### Versions
