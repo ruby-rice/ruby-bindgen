@@ -1,6 +1,8 @@
 # CMake Bindings
 
-The `CMake` format generates `CMakeLists.txt` and `CMakePresets.json` files for building Rice C++ bindings. This is run as a second pass after generating the Rice binding source files.
+The `CMake` format generates `CMakeLists.txt` and `CMakePresets.json` files for building Rice C++ bindings.
+
+**Important:** CMake generation must run after Rice generation because it scans the output directory for `*-rb.cpp` files. If no Rice output exists, the generated CMake source lists will be empty.
 
 Rice supports building extensions with either [extconf.rb](https://ruby-rice.github.io/4.x/packaging/extconf.rb/) or [CMake](https://ruby-rice.github.io/4.x/packaging/cmake/). While `extconf.rb` works for simple bindings, CMake is vastly superior for anything more complex — it provides better cross-platform support, dependency management, and build configuration.
 

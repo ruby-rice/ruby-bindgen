@@ -32,6 +32,11 @@ The components of the toolchain include:
 - [Rice](https://github.com/ruby-rice/rice) - handles C++/Ruby type conversion and native extension integration.
 - [CMake](https://cmake.org/) - builds generated Rice wrappers into loadable extension binaries.
 
+## Prerequisites
+
+- Ruby 3.2 or later
+- libclang (provided by LLVM/Clang)
+
 ## Installation
 
 To install `ruby-bindgen` run the following command:
@@ -112,9 +117,13 @@ In addition, methods that return boolean values have `?` appended to their names
 
 Out of the box, `ruby-bindgen` applies sensible defaults and heuristics. For most libraries you will need to fine-tune the output. The [configuration](configuration.md) file provides several knobs:
 
-- **[Symbol filtering](configuration.md#symbols)** — skip functions, structs, or enums by name or regex pattern. Useful for internal APIs, linker-error symbols, or platform-specific code.
+- **[Symbol filtering](configuration.md#symbols)** — skip functions, classes, enums, typedefs, unions, or variables by name or regex pattern. Useful for internal APIs, linker-error symbols, or platform-specific code.
 - **[Symbol overrides](configuration.md#overrides-ffi-only)** (FFI) — replace a generated function signature when the heuristics pick the wrong type (e.g., `int` → `:bool`, `ulong` → `:size_t`).
 - **[Version guards](configuration.md#versions)** — wrap symbols in `#if VERSION >= N` preprocessor guards so bindings compile against multiple library versions.
 - **[Name mappings](configuration.md#name-mappings)** — override generated Ruby class and method names with exact strings or regex patterns with capture-group substitution.
 - **[Export macros](configuration.md#export-macros)** — only include functions marked with specific visibility macros (e.g., `CV_EXPORTS`), preventing linker errors from internal symbols.
 - **[Module naming](configuration.md#c-ffi-options)** (FFI) — set the Ruby module name, including nested modules like `Proj::Api`.
+
+## Packaging
+
+For Rice (C++) bindings, see the Rice [Packaging](https://ruby-rice.github.io/4.x/packaging/packaging/) documentation for how to package your extension as a gem.

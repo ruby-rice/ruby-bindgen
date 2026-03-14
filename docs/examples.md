@@ -72,7 +72,7 @@ Output:
 
 ## CMake (for Rice output)
 
-Generate Rice code first, then CMake files.
+**Important:** CMake generation must run after Rice generation because it scans the output directory for `*-rb.cpp` files.
 
 `rice-bindings.yaml`:
 

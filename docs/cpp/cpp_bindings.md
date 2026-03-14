@@ -164,6 +164,10 @@ The extension `Init_<extension>` function is the top-level entry point and calls
 
 After generating Rice bindings, you will need to setup a build system for your extension. `ruby-bindgen` can generate [CMake build files](../cmake_bindings.md) to compile and link the generated bindings.
 
+## Packaging
+
+For packaging your extension as a gem, see the Rice [Packaging](https://ruby-rice.github.io/4.x/packaging/packaging/) documentation.
+
 ## Example
 
 For a complete, fully automated example see [BitmapPlusPlus-ruby](https://ruby-rice.github.io/BitmapPlusPlus-ruby/).

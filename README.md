@@ -2,6 +2,11 @@
 
 Generate Ruby bindings from C and C++ headers.
 
+## Prerequisites
+
+- Ruby 3.2 or later
+- libclang (provided by LLVM/Clang)
+
 ## Install
 
 ```console
