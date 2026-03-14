@@ -218,7 +218,7 @@ module RubyBindgen
 
     def add_entry(name, skip: false, version: nil, signature: nil)
       return if name.nil?
-      if name.start_with?('/') && name.end_with?('/')
+      if name.start_with?('/') && name.end_with?('/') && name.length > 2
         @regex << [Regexp.new(name[1..-2]), SymbolEntry.new(skip: skip, version: version, signature: signature)]
       else
         key = normalize_signature(name)

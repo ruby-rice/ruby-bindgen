@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'find'
 require 'pathname'
 
 module RubyBindgen
@@ -32,6 +31,7 @@ module RubyBindgen
         translation_unit = @index.parse_translation_unit(path, self.clang_args, [],
                                                          [:detailed_preprocessing_record, :skip_function_bodies])
 
+        raise "Failed to parse: #{path}" if translation_unit.nil?
         check_diagnostics(translation_unit, path)
         visitor.visit_translation_unit(translation_unit, path, relative_path)
       end

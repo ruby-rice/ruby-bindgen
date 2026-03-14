@@ -1079,7 +1079,7 @@ module RubyBindgen
 
         if spelling.include?('<')
           "#{const_prefix}#{qualify_template_args(spelling, type)}"
-        elsif qualified.end_with?(spelling.sub(/^const\s+/, ''))
+        elsif qualified&.end_with?(spelling.sub(/^const\s+/, ''))
           "#{const_prefix}#{qualified}"
         else
           spelling

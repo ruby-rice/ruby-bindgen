@@ -21,7 +21,7 @@ module RubyBindgen
         key = entry[:from] || entry["from"]
         replacement = entry[:to] || entry["to"]
         next if key.nil?
-        if key.start_with?('/') && key.end_with?('/')
+        if key.start_with?('/') && key.end_with?('/') && key.length > 2
           [Regexp.new(key[1..-2]), replacement]
         else
           [key, replacement]

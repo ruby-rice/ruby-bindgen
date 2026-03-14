@@ -480,8 +480,6 @@ module RubyBindgen
             figure_ffi_pointer_type(type, context)
           when :type_enum
             type.declaration.ruby_name
-            #match = type.spelling.match(/enum\s*(\S*)$/)
-            #match ? match[1].camelize : type.spelling
           when :type_constant_array
             case context
               when :structure
