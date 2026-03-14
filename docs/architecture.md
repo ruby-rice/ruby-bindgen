@@ -27,7 +27,7 @@ namespace (cv)
         └── cxx_method (empty)
 ```
 
-For C and C++ bindings, `ruby-bindgen` uses the [visitor pattern](https://en.wikipedia.org/wiki/Visitor_pattern) to walk this tree. Each cursor kind is dispatched to a corresponding `visit_*` method (e.g., `visit_class_decl`, `visit_cxx_method`), which generates binding code via ERB templates.
+For C and C++ bindings, `ruby-bindgen` uses a [visitor pattern](https://en.wikipedia.org/wiki/Visitor_pattern)-style traversal to walk this tree. Each cursor kind is dispatched to a corresponding `visit_*` method (e.g., `visit_class_decl`, `visit_cxx_method`), which generates binding code via ERB templates.
 
 ``` mermaid
 flowchart TD
@@ -43,7 +43,7 @@ flowchart TD
     end
 
     subgraph "Code Generation"
-        V1["Visitor"]
+        V1["Generator"]
         ERB1["ERB templates"]
         V1 --> ERB1
     end
@@ -68,7 +68,7 @@ flowchart TD
     end
 
     subgraph "Code Generation"
-        V2["CMake visitor"]
+        V2["CMake generator"]
         ERB2["ERB templates"]
         V2 --> ERB2
     end
@@ -84,7 +84,7 @@ flowchart TD
 
 ## Source Layout
 
-The [key classes](#key-classes) live under `lib/ruby-bindgen/`. Each output format (Rice, FFI, CMake) has its own directory under `visitors/` containing both the visitor implementation and its ERB templates.
+The [key classes](#key-classes) live under `lib/ruby-bindgen/`. Each output format (Rice, FFI, CMake) has its own directory under `generators/` containing both the generator implementation and its ERB templates.
 
 ```
 lib/ruby-bindgen/
@@ -92,29 +92,31 @@ lib/ruby-bindgen/
 ├── inputter.rb                # Header file discovery
 ├── outputter.rb               # File writing with cleanup
 ├── parser.rb                  # ffi-clang AST parsing
+├── name_mapper.rb             # Exact/regex name remapping
 ├── namer.rb                   # C++ → Ruby name conversion
+├── symbols.rb                 # skip/version/override matching
 ├── version.rb
 ├── refinements/               # Extensions to ffi-clang classes
 │   ├── cursor.rb
+│   ├── source_range.rb
 │   ├── type.rb
-│   ├── translation_unit.rb
 │   ├── string.rb
-│   └── source_range.rb
-└── visitors/
+└── generators/
+    ├── generator.rb           # Base class shared by generators
     ├── rice/                  # C++ Rice binding generator
-    │   ├── rice.rb            # Visitor (~2100 lines)
+    │   ├── rice.rb            # Main C++ generator
     │   └── *.erb              # ERB templates
     ├── ffi/                   # C FFI binding generator
-    │   ├── ffi.rb             # Visitor
+    │   ├── ffi.rb             # Main C generator
     │   └── *.erb              # ERB templates
     └── cmake/                 # CMake build file generator
-        ├── cmake.rb           # Visitor
+        ├── cmake.rb           # Main CMake generator
         └── *.erb              # ERB templates
 ```
 
-Most visitor methods delegate to ERB templates for code generation. Each template receives the current cursor and any visitor state as local variables, and outputs a string of generated code.
+Most generator methods delegate to ERB templates for code generation. Each template receives the current cursor and any generator state as local variables, and outputs a string of generated code.
 
-For example, the Rice visitor's `cxx_method.erb` template generates a `define_method` call:
+For example, the Rice generator's `cxx_method.erb` template generates a `define_method` call:
 
 ```cpp
 define_method<<%= method_signature(cursor) %>("<%= cursor.ruby_name %>", &<%= cursor.qualified_name %>,
@@ -125,7 +127,7 @@ define_method<<%= method_signature(cursor) %>("<%= cursor.ruby_name %>", &<%= cu
 
 ### Config
 
-The `Config` class loads the YAML configuration file and resolves platform-specific settings. It detects whether to use `clang:` or `clang-cl:` based on `RUBY_PLATFORM`, resolves relative paths against the config file's directory, and provides hash-like access to all configuration values.
+The `Config` class loads the YAML configuration file and resolves platform-specific settings. It detects whether to use `clang:` or `clang-cl:` based on `RUBY_PLATFORM` (`mswin` and `mingw` use `clang-cl:`), resolves relative paths against the config file's directory, and provides hash-like access to all configuration values.
 
 ### Inputter
 
@@ -152,6 +154,7 @@ end
 For each header file, it calls `parse_translation_unit`, which returns a translation unit object. Visitors access the root cursor via `translation_unit.cursor`.
 
 Parse options include `:skip_function_bodies` (we only need declarations, not implementations) and `:detailed_preprocessing_record` (to see preprocessor directives).
+The parser also checks diagnostics after each translation unit and raises on fatal/error diagnostics.
 
 ### Outputter
 
@@ -176,17 +179,16 @@ The `Namer` class converts C++ names to Ruby conventions:
 
 - **Cursor** - adds `ruby_name`, `cruby_name`, `qualified_name`, `class_name_cpp`, and methods for finding children by kind
 - **Type** - adds `fully_qualified_spelling` for reconstructing C++ type names with proper namespace qualification and template arguments
-- **TranslationUnit** - adds `includes` to extract `#include` directives
 - **String** - adds `camelize` and `underscore` for name conversion
 - **SourceRange** - adds `text` for extracting source text from a range
 
-## Rice Visitor Details
+## Rice Generator Details
 
-The Rice visitor is the most complex (~2100 lines) because C++ has the most features to handle. Some notable aspects:
+The Rice generator is the largest part of the codebase because C++ has the most features to handle. Some notable aspects:
 
 ### Traversal
 
-The visitor traverses the AST recursively. Each cursor kind is dispatched to a `visit_*` method (e.g., `visit_class_decl`, `visit_cxx_method`) which checks whether the cursor should be skipped and, if not, renders an ERB template to generate the binding code.
+The generator traverses the AST recursively. Each cursor kind is dispatched to a `visit_*` method (e.g., `visit_class_decl`, `visit_cxx_method`) which checks whether the cursor should be skipped and, if not, renders an ERB template to generate the binding code.
 
 ### Filtering
 
@@ -215,4 +217,3 @@ Libclang provides limited information about default argument values. `ruby-bindg
 // Generated:
 Arg("value") = static_cast<const cv::Scalar&>(cv::Scalar())
 ```
-

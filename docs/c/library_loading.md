@@ -1,16 +1,19 @@
 # Library Loading
 
-FFI needs to find and load the C shared library at runtime. The `library_names` and `library_versions` configuration options control how `ruby-bindgen` generates the library search logic.
+FFI needs to find and load the C shared library at runtime. The `library_names`, `library_versions`, and `library_search_path` configuration options control how `ruby-bindgen` generates the library search logic.
 
 ## Library Names
 
-`library_names` specifies the base names of the shared library. The generated code prepends `lib` and appends the platform-appropriate suffix:
+`library_names` specifies the base names of the shared library. The generated loader turns each base name into one or more search names and passes them to `ffi_lib`:
 
 | Platform | `library_names: ["proj"]` searches for              |
 |----------|-----------------------------------------------------|
 | Linux    | `libproj`, `libproj.so.{version}`                   |
-| macOS    | `libproj`, `libproj.{version}.dylib`                |
-| Windows  | `libproj`, `libproj-{version}`, `libproj_{version}` |
+| macOS    | `libproj`, `libproj.{version}`                      |
+| MinGW    | `libproj`, `libproj-{version}`                      |
+| MSVC     | `libproj`, `proj_{version}`                         |
+
+The unversioned `libproj` entry is always included as a fallback.
 
 ## Library Versions
 
@@ -29,6 +32,18 @@ library_versions:
   - "15"    # PROJ 6.0
 ```
 
-This generates search names like `libproj.so.25`, `libproj.so.22`, etc. on Linux, `libproj.25.dylib` on macOS, and `libproj-25` on Windows. FFI tries each name in order until one succeeds. The unversioned `libproj` is always included as a fallback.
+This generates search names like `libproj.so.25`, `libproj.so.22`, etc. on Linux, `libproj.25` on macOS, `libproj-25` on MinGW, and `proj_25` on MSVC. The generated loader sorts the version suffixes descending before emitting them, so newer versions are tried first.
 
 If `library_versions` is omitted, only the unversioned name is searched. This works on most systems where the package manager creates an unversioned symlink (e.g., `libproj.so` → `libproj.so.25`).
+
+## Library Search Path
+
+If the library is installed outside the standard loader search path, use `library_search_path`:
+
+```yaml
+library_names:
+  - proj
+library_search_path: PROJ_LIB_PATH
+```
+
+This generates loader code that checks `ENV["PROJ_LIB_PATH"]` at runtime and prepends that directory to every generated search name before falling back to the default search list.

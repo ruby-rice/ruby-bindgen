@@ -11,7 +11,7 @@ This page summarizes current limitations and constraints in `ruby-bindgen`.
 
 - Generated code may not compile without [manual fixes](cpp/customizing.md#fixes).
 - Default argument reconstruction is heuristic and can fail for complex C++ expressions.
-- Some APIs need explicit skipping via `symbols` with `action: skip` to avoid compile/link failures.
+- Some APIs need explicit skipping via `symbols.skip` to avoid compile/link failures.
 - Functions/methods with unsupported signatures may be skipped (for example variadic callables).
 - Methods returning pointers/references to incomplete types are skipped.
 - Deprecated APIs are skipped.

@@ -4,8 +4,11 @@ Guidelines for changing `ruby-bindgen` and its generated-output tests.
 
 ## Key Files
 
-- `lib/ruby-bindgen/visitors/rice/rice.rb` - main AST visitor for Rice code generation
-- `lib/ruby-bindgen/visitors/rice/*.erb` - Rice templates
+- `lib/ruby-bindgen/generators/generator.rb` - base class shared by all generators
+- `lib/ruby-bindgen/generators/rice/rice.rb` - main AST walker for Rice code generation
+- `lib/ruby-bindgen/generators/rice/*.erb` - Rice templates
+- `lib/ruby-bindgen/generators/ffi/ffi.rb` - main AST walker for FFI code generation
+- `lib/ruby-bindgen/generators/cmake/cmake.rb` - CMake file generator
 - `test/headers/cpp/*.hpp` - C++ input headers for tests
 - `test/bindings/cpp/*-rb.cpp` - expected generated output (golden files)
 
@@ -49,12 +52,16 @@ For cross-file typedef issues, use:
 
 ## Regenerating opencv-ruby Bindings
 
-Use the project config in:
-- `/mnt/c/Source/opencv-ruby/ext/bindings.yaml`
+Use the project configs in:
+- `/mnt/c/Source/opencv-ruby/ext/rice-bindings.yaml`
+- `/mnt/c/Source/opencv-ruby/ext/cmake-bindings.yaml`
 
 Generate with:
 
 ```bash
 cd /mnt/c/Source/ruby-bindgen
-bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/bindings.yaml
+# 1. Generate Rice source files
+bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/rice-bindings.yaml
+# 2. Generate CMake files
+bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/cmake-bindings.yaml
 ```

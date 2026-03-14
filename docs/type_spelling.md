@@ -183,14 +183,15 @@ The current design reflects these constraints deliberately.
 
 ## Code Locations
 
-- Core logic:  
-  `lib/ruby-bindgen/visitors/rice/rice.rb`  
+- Core logic:
+  `lib/ruby-bindgen/generators/rice/rice.rb`
   (`type_spelling`, `type_spelling_elaborated`)
 
-- Qualified name helpers:  
-  `lib/ruby-bindgen/refinements/type.rb`  
+- Qualified name helpers:
+  `lib/ruby-bindgen/refinements/type.rb`
   (`fully_qualified_spelling`)
 
-- Template argument qualification:  
+- Template argument qualification:
+  `lib/ruby-bindgen/generators/rice/rice.rb`
   `qualify_template_args`  
   `qualify_dependent_types_in_template_args`

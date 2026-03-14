@@ -102,7 +102,7 @@ Common causes:
 - Symbols declared in headers but not exported by the library
 
 Fix:
-- Use `symbols` with `action: skip` for problematic APIs
+- Use `symbols.skip` for problematic APIs, including overload-specific signatures when needed
 - Add refinement files for custom behavior
 - See [Updating Bindings](updating_bindings.md) for durable maintenance workflows
 
@@ -123,4 +123,5 @@ Cause:
 Fix:
 - Set `library_names` to base names
 - Add likely version suffixes to `library_versions`
+- If the library is outside the standard loader path, use `library_search_path` and set the corresponding environment variable at runtime
 - Confirm installation path is on loader search path

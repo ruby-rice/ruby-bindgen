@@ -62,8 +62,8 @@ When `version_check` is set, the generator looks up each symbol's version via th
 
 For C libraries, version detection happens at runtime. When `symbols.versions` has entries, the generator:
 
-1. Wraps version-specific symbols in `if {project}_version >= version` conditionals
+1. Wraps version-specific symbols in `if {version_check} >= version` conditionals
 2. Adds `require_relative '{project}_version'` to the project loader file
 3. Generates a `{project}_version.rb` skeleton (once — won't overwrite if it already exists)
 
-The user implements the version method by calling the library's own version API. See [Version Detection](c/version_guards.md) for a complete example using PROJ.
+The user implements the `version_check` method by calling the library's own version API. See [Version Detection](c/version_guards.md) for a complete example using PROJ.
