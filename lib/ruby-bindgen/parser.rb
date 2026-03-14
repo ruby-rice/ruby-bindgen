@@ -32,10 +32,21 @@ module RubyBindgen
         translation_unit = @index.parse_translation_unit(path, self.clang_args, [],
                                                          [:detailed_preprocessing_record, :skip_function_bodies])
 
+        check_diagnostics(translation_unit, path)
         visitor.visit_translation_unit(translation_unit, path, relative_path)
       end
 
       visitor.visit_end
+    end
+
+    private
+
+    def check_diagnostics(translation_unit, path)
+      errors = translation_unit.diagnostics.select { |d| d.severity == :fatal || d.severity == :error }
+      return if errors.empty?
+
+      messages = errors.map { |d| "  #{d.severity}: #{d.spelling}" }.join("\n")
+      raise "Parse errors in #{path}:\n#{messages}"
     end
   end
 end

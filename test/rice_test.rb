@@ -140,4 +140,21 @@ class RiceTest < AbstractTest
     # which has typedef BaseMatrix4d in cross_file_base.hpp.
     run_rice_test(["cross_file_base.hpp", "cross_file_derived.hpp"])
   end
+
+  def test_parse_errors_raise
+    require 'tmpdir'
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, "broken.hpp"), "class Broken { int x }")
+
+      config = load_config(File.join(__dir__, "headers", "cpp"))
+      config[:match] = ["broken.hpp"]
+
+      inputter = RubyBindgen::Inputter.new(dir, config[:match])
+      outputter = create_outputter("cpp")
+      generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+      error = assert_raises(RuntimeError) { generator.generate }
+      assert_match(/Parse errors in/, error.message)
+    end
+  end
 end
