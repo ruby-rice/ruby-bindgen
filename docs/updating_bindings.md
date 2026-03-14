@@ -4,7 +4,7 @@ After generating bindings with `ruby-bindgen`, you'll need to regenerate them pe
 
 ## Simple Case
 
-If you have no [customizations](cpp/customizing.md) to preserve, then you can simply regenerate the bindings:
+If you have no [manual edits or refinements](cpp/customizing.md) to preserve, you can simply regenerate the bindings. Configuration changes such as adding new skip patterns or version guards are fine — they are read from the YAML file each time.
 
 ```bash
 ruby-bindgen bindings.yaml

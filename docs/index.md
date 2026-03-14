@@ -62,7 +62,7 @@ flowchart TD
 
   click B "c/c_bindings.md" "C Bindings"
   click C "cpp/cpp_bindings.md" "C++ Bindings"
-  click E "cmake_bindings.md" "CMake Bindings"
+  click E "cmake/cmake_bindings.md" "CMake Bindings"
   click D "https://ruby-rice.github.io/4.x/packaging/extconf/" "Rice extconf.rb packaging"
 ```
 
@@ -98,7 +98,7 @@ For much more details, jump to the documentation page for each format:
 |-----------|-------------------------------------|
 | **FFI**   | [C Bindings](c/c_bindings.md)       |
 | **Rice**  | [C++ Bindings](cpp/cpp_bindings.md)     |
-| **CMake** | [CMake Bindings](cmake_bindings.md) |
+| **CMake** | [CMake Bindings](cmake/cmake_bindings.md) |
 
 Finally generate bindings by running the command:
 

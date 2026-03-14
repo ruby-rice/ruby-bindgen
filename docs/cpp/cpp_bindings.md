@@ -18,7 +18,7 @@ See [Rice Output](output.md) for details on the generated files, including heade
 
 ## Build System
 
-After generating Rice bindings, you will need to setup a build system for your extension. `ruby-bindgen` can generate [CMake build files](../cmake_bindings.md) to compile and link the generated bindings.
+After generating Rice bindings, you will need to setup a build system for your extension. `ruby-bindgen` can generate [CMake build files](../cmake/cmake_bindings.md) to compile and link the generated bindings.
 
 ## Packaging
 

@@ -14,7 +14,7 @@ This page lists related projects and adjacent tools that influenced, overlap wit
 
 - Project: [ffi_gen](https://github.com/ffi/ffi_gen)
 - Scope: Generate Ruby FFI wrappers for C APIs
-- Notes: Has not been updated in over a decade and includes liblang findings versus using [ffi-clang](https://github.com/ioquatix/ffi-clang).
+- Notes: Has not been updated in over a decade and includes custom libclang bindings versus using [ffi-clang](https://github.com/ioquatix/ffi-clang).
 
 ### rbind
 

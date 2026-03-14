@@ -6,7 +6,7 @@
 ruby-bindgen rice-bindings.yaml
 ```
 
-For end-to-end examples, see [C Bindings](c/c_bindings.md), [C++ Bindings](cpp/cpp_bindings.md), and [CMake Bindings](cmake_bindings.md).
+For end-to-end examples, see [C Bindings](c/c_bindings.md), [C++ Bindings](cpp/cpp_bindings.md), and [CMake Bindings](cmake/cmake_bindings.md).
 
 ## Required Options
 
@@ -45,7 +45,7 @@ These options apply to all formats.
 | Option          | Default        | Description |
 |-----------------|----------------|-------------|
 | `project`       | none           | Project name for the Ruby extension. Used for the `Init_` function name and project wrapper file names. Must be a valid C/C++ identifier. When provided, generates project wrapper files (`{project}-rb.cpp`, `{project}-rb.hpp`). When omitted, only per-file bindings are generated. |
-| `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/cpp_bindings.md#include-header). |
+| `include`       | auto-generated | Path to a custom Rice include header. See [Include Header](cpp/output.md#include-header). |
 
 ## CMake Options
 
@@ -58,8 +58,8 @@ These options apply to all formats.
 
 `ruby-bindgen` uses top-level toolchain keys to configure compiler settings for different platforms:
 
-- **`clang-cl:`** - Used when `RUBY_PLATFORM` contains `mswin` or `mingw`
-- **`clang:`** - Used on Linux and macOS
+- **`clang-cl:`** - Used when `RUBY_PLATFORM` contains `mswin` (MSVC toolchain)
+- **`clang:`** - Used on Linux, macOS, and MinGW
 
 | Option     | Default     | Description |
 |------------|-------------|-------------|
@@ -73,9 +73,9 @@ You only need to include the toolchain sections for platforms you target.
 ```mermaid
 flowchart TD
   A["config.yaml location"] --> B["Resolve relative input/output paths"]
-  B --> C{"RUBY_PLATFORM contains mswin or mingw?"}
+  B --> C{"RUBY_PLATFORM contains mswin?"}
   C -->|Yes| D["Use clang-cl section"]
-  C -->|No| E["Use clang section"]
+  C -->|No| E["Use clang section (Linux, macOS, MinGW)"]
   D --> F["Set LIBCLANG from toolchain libclang (if provided)"]
   E --> F
   F --> G["Pass toolchain args to libclang parser"]
@@ -256,7 +256,6 @@ Regex patterns are enclosed in forward slashes (`/pattern/`) and are matched aga
 `ruby-bindgen` automatically skips:
 
 - Deprecated functions (marked with `__attribute__((deprecated))`)
-- Internal functions (names ending with `_`)
 - Methods returning pointers to incomplete types (pimpl pattern)
 
 ## Export Macros

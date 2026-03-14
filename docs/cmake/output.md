@@ -1,50 +1,4 @@
-# CMake Bindings
-
-The `CMake` format generates `CMakeLists.txt` and `CMakePresets.json` files for building Rice C++ bindings.
-
-**Important:** CMake generation must run after Rice generation because it scans the output directory for `*-rb.cpp` files. If no Rice output exists, the generated CMake source lists will be empty.
-
-Rice supports building extensions with either [extconf.rb](https://ruby-rice.github.io/4.x/packaging/extconf.rb/) or [CMake](https://ruby-rice.github.io/4.x/packaging/cmake/). While `extconf.rb` works for simple bindings, CMake is vastly superior for anything more complex — it provides better cross-platform support, dependency management, and build configuration.
-
-## Configuration
-
-```yaml
-format: CMake
-project: my_extension
-output: ./ext/generated
-# input defaults to output for CMake and scans ./ext/generated for *-rb.cpp
-
-include_dirs:
-  - "${CMAKE_CURRENT_SOURCE_DIR}/../headers"
-```
-
-See [configuration](configuration.md) for details on all options.
-
-## Usage
-
-Generate bindings in two passes:
-
-```bash
-# 1. Generate Rice C++ source files
-ruby-bindgen rice-bindings.yaml
-
-# 2. Generate CMake build files
-ruby-bindgen cmake-bindings.yaml
-```
-
-Then build:
-
-```bash
-cd /path/to/output
-cmake --preset linux-debug    # or msvc-debug, macos-debug, etc.
-cmake --build build/linux-debug
-```
-
-## Skipping Files
-
-The CMake config supports a `skip` option to exclude specific `*-rb.cpp` files from the generated `CMakeLists.txt`. However, in most cases it's better to add skip patterns to your Rice/FFI config instead — that way the problematic files are never generated, and CMake won't find them to include. The CMake `skip` is useful as a quick fix when you have stale generated files on disk that you don't want to recompile.
-
-## Output
+# CMake Output
 
 The CMake format scans the output directory for `*-rb.cpp` files and generates:
 
@@ -65,11 +19,11 @@ flowchart LR
     RB --> C1 & C2
 ```
 
-### Project Files (requires `project`)
+## Project Files
 
 When the `project` option is set, `ruby-bindgen` generates the root `CMakeLists.txt` and `CMakePresets.json`. When `project` is omitted, these files are **not** generated — only subdirectory `CMakeLists.txt` files are produced. This is useful when you want to create and manage the root project files yourself and only regenerate subdirectory files on subsequent runs.
 
-### Top Level
+## Top-level CMakeLists.txt
 
 The top-level `CMakeLists.txt` is a complete project file that configures the entire build:
 
@@ -81,6 +35,8 @@ The top-level `CMakeLists.txt` is a complete project file that configures the en
 - Subdirectory includes and `*-rb.cpp` source file listing
 
 For a well-documented example, see the [BitmapPlusPlus-ruby CMakeLists.txt](https://github.com/ruby-rice/BitmapPlusPlus-ruby/blob/main/ext/CMakeLists.txt). For details on how Rice uses CMake, see the Rice [CMake](https://ruby-rice.github.io/4.x/packaging/cmake/) documentation.
+
+## CMakePresets.json
 
 The top-level directory also gets a `CMakePresets.json` with build presets for all major platforms. For an example, see the [BitmapPlusPlus-ruby CMakePresets.json](https://github.com/ruby-rice/BitmapPlusPlus-ruby/blob/main/ext/CMakePresets.json). For details, see the Rice [CMakePresets.json](https://ruby-rice.github.io/4.x/packaging/cmake/#cmakepresetsjson) documentation.
 
@@ -94,9 +50,22 @@ The top-level directory also gets a `CMakePresets.json` with build presets for a
 
 All presets use [Ninja](https://ninja-build.org/) as the build generator and include appropriate compiler flags for each platform (visibility settings, debug info, optimization levels).
 
-### Subdirectories
+## Subdirectories
 
 Each subdirectory containing `*-rb.cpp` files gets a minimal `CMakeLists.txt` that lists its source files and any nested subdirectories:
+
+```
+ext/generated/
+  CMakeLists.txt          # root project (requires project option)
+  CMakePresets.json       # build presets
+  core/
+    CMakeLists.txt        # add_subdirectory("hal") + target_sources(...)
+    matrix-rb.cpp
+    image-rb.cpp
+    hal/
+      CMakeLists.txt      # target_sources(...)
+      interface-rb.cpp
+```
 
 ```cmake
 # Subdirectories

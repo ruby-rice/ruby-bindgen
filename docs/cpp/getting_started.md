@@ -63,7 +63,7 @@ Then run it **after** the Rice generation:
 ruby-bindgen cmake-bindings.yaml
 ```
 
-See [CMake Bindings](../cmake_bindings.md) for details.
+See [CMake Bindings](../cmake/cmake_bindings.md) for details.
 
 ## 4. Build the extension
 

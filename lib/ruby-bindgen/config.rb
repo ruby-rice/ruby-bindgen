@@ -22,7 +22,7 @@ module RubyBindgen
     private
 
     def resolve_toolchain
-      toolchain = RUBY_PLATFORM =~ /mswin|mingw/ ? :'clang-cl' : :clang
+      toolchain = RUBY_PLATFORM =~ /mswin/ ? :'clang-cl' : :clang
 
       toolchain_config = @data[toolchain]
       if toolchain_config.is_a?(Hash)
