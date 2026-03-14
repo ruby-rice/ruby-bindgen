@@ -126,8 +126,7 @@ module RubyBindgen
             next :continue
           end
 
-          unless child_cursor.declaration? || child_cursor.kind == :cursor_macro_definition ||
-                 child_cursor.kind == :cursor_linkage_spec
+          unless child_cursor.declaration? || child_cursor.kind == :cursor_linkage_spec
             next :continue
           end
 
@@ -381,7 +380,7 @@ module RubyBindgen
           tokens = cursor.translation_unit.tokenize(cursor.extent)
           eq_index = tokens.tokens.index { |t| t.spelling == "=" }
           if eq_index && tokens.tokens[eq_index + 1]&.kind == :literal
-            return render_cursor(cursor, "macro_definition",
+            return render_cursor(cursor, "constant",
                                  name: cursor.ruby_name,
                                  value: tokens.tokens[eq_index + 1].spelling)
           end
