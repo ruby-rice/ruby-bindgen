@@ -24,7 +24,7 @@ These options apply to all formats.
 
 | Option          | Default            | Description                                                                               |
 |-----------------|--------------------|-------------------------------------------------------------------------------------------|
-| `match`         | `["**/*.{h,hpp}"]` | Array of glob pattern specifying which header files to process.                           |
+| `match`         | `["**/*.{h,hpp}"]` | Array of glob pattern specifying which header files to process. **Note:** removing a header from `match` does not delete its previously generated `*-rb.cpp` file. You must manually delete stale output files when removing headers. Auto-cleanup is not performed because `match` is often temporarily narrowed to regenerate a single file. |
 | `skip`          | `[]`               | Array of glob patterns specifying which files to skip. For Rice/FFI, these match header file paths. For CMake, these match generated `*-rb.cpp` file paths. In most cases, it's better to add skips to the Rice/FFI config so the files are never generated, rather than skipping them in CMake after the fact. |
 | `symbols`       | `{}`               | Symbol actions and name mappings grouped by type. See [Symbols](#symbols).                  |
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
