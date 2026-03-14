@@ -9,7 +9,7 @@ module RubyBindgen
 
     def initialize(base_path)
       @base_path = base_path
-      @output_paths = []
+      @output_paths = {}
     end
 
     def output_path(relative_path)
@@ -18,11 +18,12 @@ module RubyBindgen
 
     def write(relative_path, content)
       path = self.output_path(relative_path)
+      cleaned = cleanup_whitespace(content)
       FileUtils.mkdir_p(File.dirname(path))
       File.open(path, "wb") do |file|
-        file << cleanup_whitespace(content)
+        file << cleaned
       end
-      @output_paths << path
+      @output_paths[path] = cleaned
     end
 
     private

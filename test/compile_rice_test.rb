@@ -25,7 +25,7 @@ class CompileRiceTest < AbstractTest
       output, success = run_cmake("--build", "build/#{preset}")
       unless success
         # Link errors are expected (no implementations). Only fail on compile errors.
-        compile_errors = output.lines.select { |line| line.include?("error") && !line.include?("LNK") }
+        compile_errors = output.lines.select { |line| line =~ / error:/ || line =~ /error C\d{4}/ }
         flunk "Compile errors:\n#{compile_errors.join}" unless compile_errors.empty?
       end
     end
