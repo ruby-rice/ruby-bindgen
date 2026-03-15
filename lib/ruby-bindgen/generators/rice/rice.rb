@@ -532,14 +532,17 @@ module RubyBindgen
 
         base_template_ref = base_specifier.find_first_by_kind(false, :cursor_template_ref)
         if base_template_ref
+          ref = base_template_ref.referenced
+          return nil unless ref
+
+          # Skip system-header base classes (e.g., std::shared_ptr)
+          return nil if ref.location.in_system_header?
+
           # Template base: use type spelling which has template params (e.g., Matx<_Tp, cn, 1>)
           base_spelling = base_specifier.type&.spelling
           return nil unless base_spelling
 
           # Qualify with namespace if needed
-          ref = base_template_ref.referenced
-          return base_spelling unless ref
-
           ref_qualified = ref.qualified_name
           ref_spelling = ref.spelling
           return base_spelling unless ref_qualified && ref_spelling
@@ -552,8 +555,12 @@ module RubyBindgen
         else
           # Non-template base: use qualified name
           base_type_ref = base_specifier.find_first_by_kind(false, :cursor_type_ref)
-          result = base_type_ref&.referenced&.qualified_name
-          result
+          return nil unless base_type_ref
+
+          ref = base_type_ref.referenced
+          return nil if ref&.location&.in_system_header?
+
+          ref.qualified_name
         end
       end
 
@@ -564,10 +571,7 @@ module RubyBindgen
                                           indentation: 4, chain: true,
                                           terminate: true, strip: true)
 
-        # TODO: Calling get_base_spelling crashes libclang on certain templates.
-        # Fix the instantiate functions by hand for now.
-        #base_spelling = get_base_spelling(cursor)
-        base_spelling = nil
+        base_spelling = get_base_spelling(cursor)
 
         template_parameter_kinds = [:cursor_template_type_parameter,
                                     :cursor_non_type_template_parameter,
@@ -2021,6 +2025,7 @@ module RubyBindgen
         return "" unless base_template_ref
 
         base_template = base_template_ref.referenced
+        return "" if base_template.location.in_system_header?
         base_template_arguments = base_spelling.match(/<(.+)>\z/)&.[](1) || template_arguments
         return "" unless base_template_arguments
 

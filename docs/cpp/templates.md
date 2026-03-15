@@ -47,8 +47,6 @@ class PlaneWarper : public WarperBase<PlaneProjector>
 
 For template typedefs with base classes, the entire inheritance chain is resolved and generated in the correct order.
 
-> **Warning:** Template class `_instantiate` functions do not currently include base class information due to a libclang crash when resolving base classes on certain templates. If your template class inherits from a base class, you will need to fix the generated `_instantiate` function by hand to add the base class parameter.
-
 ## Template Instantiate Files (.ipp)
 
 When a header contains class templates with specializations (via `typedef` or `using`), `ruby-bindgen` generates reusable `_instantiate` template functions. These are placed in a separate `.ipp` file to enable reuse without duplicate symbol errors.
