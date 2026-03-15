@@ -85,12 +85,19 @@ module FFI
       end
 
       # Find first child cursor matching any of the given kinds.
-      # Short-circuits on first match to avoid building full array.
+      # Short-circuits on first match via :break to properly terminate
+      # clang_visitChildren (a non-local return would skip CXChildVisit_Break
+      # and corrupt the outer visitor state).
       def find_first_by_kind(recurse, *kinds)
+        result = nil
+        kinds_set = kinds.to_set
         self.each(recurse) do |child, parent|
-          return child if kinds.include?(child.kind)
+          if kinds_set.include?(child.kind)
+            result = child
+            next :break
+          end
         end
-        nil
+        result
       end
 
       # Monkey patch to use Set for faster lookup and support block/enumerator.
