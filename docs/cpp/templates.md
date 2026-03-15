@@ -47,6 +47,12 @@ class PlaneWarper : public WarperBase<PlaneProjector>
 
 For template typedefs with base classes, the entire inheritance chain is resolved and generated in the correct order.
 
+### Cross-File Duplicate Instantiations
+
+When a template typedef in one header inherits from a template defined in another header, `ruby-bindgen` will re-instantiate the ancestor chain in the derived file even if those ancestors were already instantiated in the base file. For example, if `types.hpp` has `typedef Scalar_<double> Scalar` and `Scalar_` inherits from `Vec<double, 4>` which inherits from `Matx<double, 4, 1>`, the generated `types-rb.cpp` will include instantiation calls for all three — even though `Vec4d` and `Matx41d` were already emitted in `matx-rb.cpp`.
+
+Rice handles this gracefully at runtime (re-registering an already-registered type is a no-op), so the duplicate instantiations are harmless but redundant. If this causes issues, you can remove the duplicate lines from the generated file by hand or use a [refinement file](customizing.md) to control instantiation order.
+
 ## Template Instantiate Files (.ipp)
 
 When a header contains class templates with specializations (via `typedef` or `using`), `ruby-bindgen` generates reusable `_instantiate` template functions. These are placed in a separate `.ipp` file to enable reuse without duplicate symbol errors.
