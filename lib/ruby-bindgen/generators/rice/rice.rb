@@ -1772,8 +1772,11 @@ module RubyBindgen
         arg0_type = cursor.type.arg_type(0).non_reference_type
         class_cursor = arg0_type.declaration
 
-        # This can happen when the first operator is a fundamental type like double
+        # Skip when the first argument is a fundamental type (e.g., double) or a
+        # typedef to one (e.g., ptrdiff_t -> long long).  There is no Rice wrapper
+        # for these types so Data_Type<T>() would be invalid.
         return if class_cursor.kind == :cursor_no_decl_found
+        return if FUNDAMENTAL_TYPES.include?(arg0_type.canonical.kind)
         # Rice already provides bitwise operators (&, |, ^, ~, <<, >>) for enums automatically
         return if class_cursor.kind == :cursor_enum_decl
 

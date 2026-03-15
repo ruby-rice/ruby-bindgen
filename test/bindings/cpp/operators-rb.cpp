@@ -259,6 +259,12 @@ void Init_Operators()
     .define_method<const int&(unnamed_index::Lookup::*)(int) const>("[]", &unnamed_index::Lookup::operator[],
       Arg("arg_0"));
 
+  Rice::Data_Type<Iterator> rb_cIterator = define_class<Iterator>("Iterator")
+    .define_attr("pos", &Iterator::pos)
+    .define_constructor(Constructor<Iterator>())
+    .define_constructor(Constructor<Iterator, int>(),
+      Arg("p"));
+
   Module rb_mStringIndex = define_module("StringIndex");
 
   Rice::Data_Type<string_index::StringMap> rb_cStringIndexStringMap = define_class_under<string_index::StringMap>(rb_mStringIndex, "StringMap")

@@ -308,6 +308,21 @@ namespace unnamed_index
     };
 }
 
+// Test that non-member operators where the first arg is a typedef to a
+// fundamental type (like ptrdiff_t) are SKIPPED.  ptrdiff_t is just an
+// alias for int/long/long long — there is no Rice wrapper for it.
+#include <cstddef>
+
+class Iterator
+{
+public:
+    int pos;
+    Iterator() : pos(0) {}
+    Iterator(int p) : pos(p) {}
+};
+
+Iterator operator+(ptrdiff_t n, const Iterator& it);
+
 // Test subscript operator with non-int index type.
 // The operator[] setter template must use the actual parameter type, not hardcoded int.
 namespace string_index
