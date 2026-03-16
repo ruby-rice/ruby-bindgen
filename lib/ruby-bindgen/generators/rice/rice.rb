@@ -1691,6 +1691,7 @@ module RubyBindgen
       end
 
       def visit_enum_constant_decl(cursor)
+        return if skip_symbol?(cursor)
         self.render_cursor(cursor, "enum_constant_decl")
       end
 

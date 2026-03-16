@@ -124,6 +124,10 @@ namespace Outer
     void normalMethod();
     // This method should be skipped because its parameter references a skipped type
     void methodWithSkippedParam(const SkippedTemplateClass<T>& skipped);
+
+    // Anonymous enum with a sentinel — _dummy_enum_finalizer should be SKIPPED via symbols
+    // (like OpenCV's cv::Vec::_dummy_enum_finalizer pattern)
+    enum { NORMAL_CONST = 42, _dummy_enum_finalizer = 0 };
   };
 
   typedef UsesSkippedType<int> UsesSkippedTypeInt;

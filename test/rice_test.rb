@@ -68,7 +68,8 @@ class RiceTest < AbstractTest
                                      "Outer::ConstructorWithNsParam::ConstructorWithNsParam(const Outer::MyParam*)",
                                      "Outer::DataType<Outer::Vec<float, 3>>",
                                      "Outer::DataType<double>::DataType(const double*)",
-                                     "operator float"] })
+                                     "operator float",
+                                     "/_dummy_enum_finalizer/"] })
   end
 
   def test_buffers

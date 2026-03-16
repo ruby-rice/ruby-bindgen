@@ -5,7 +5,8 @@ inline Rice::Data_Type<Outer::UsesSkippedType<T>> UsesSkippedType_instantiate(Ri
 {
   return Rice::define_class_under<Outer::UsesSkippedType<T>>(parent, name)
     .define_constructor(Constructor<Outer::UsesSkippedType<T>>())
-    .template define_method<void(Outer::UsesSkippedType<T>::*)()>("normal_method", &Outer::UsesSkippedType<T>::normalMethod);
+    .template define_method<void(Outer::UsesSkippedType<T>::*)()>("normal_method", &Outer::UsesSkippedType<T>::normalMethod)
+    .define_constant("NORMAL_CONST", (int)Outer::UsesSkippedType<T>::NORMAL_CONST);
 }
 
 template<typename T>
