@@ -128,6 +128,11 @@ namespace Outer
     // Anonymous enum with a sentinel — _dummy_enum_finalizer should be SKIPPED via symbols
     // (like OpenCV's cv::Vec::_dummy_enum_finalizer pattern)
     enum { NORMAL_CONST = 42, _dummy_enum_finalizer = 0 };
+
+    // Field that should be SKIPPED via symbols
+    T _skipped_field;
+    // Field that should be INCLUDED
+    T normal_field;
   };
 
   typedef UsesSkippedType<int> UsesSkippedTypeInt;

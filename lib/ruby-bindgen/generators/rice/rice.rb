@@ -1759,6 +1759,7 @@ module RubyBindgen
 
       def visit_field_decl(cursor)
         return unless cursor.public?
+        return if skip_symbol?(cursor)
 
         qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
         self.render_cursor(cursor, "field_decl",

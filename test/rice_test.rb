@@ -69,7 +69,8 @@ class RiceTest < AbstractTest
                                      "Outer::DataType<Outer::Vec<float, 3>>",
                                      "Outer::DataType<double>::DataType(const double*)",
                                      "operator float",
-                                     "/_dummy_enum_finalizer/"] })
+                                     "/_dummy_enum_finalizer/",
+                                     "_skipped_field"] })
   end
 
   def test_buffers
