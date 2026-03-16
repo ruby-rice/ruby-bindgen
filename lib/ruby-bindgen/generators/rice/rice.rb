@@ -1948,17 +1948,33 @@ module RubyBindgen
           # may incorrectly use the derived class's namespace (e.g., "cv::shared_ptr").
           base_template_decl = base_ref.find_first_by_kind(false, :cursor_type_ref, :cursor_template_ref)&.referenced
           base_in_std = base_template_decl&.location&.in_system_header?
+          # Use cursor_template_ref specifically to get the base class template declaration
+          # (cursor_type_ref may resolve to a template parameter like T instead)
+          base_class_template = base_ref.find_first_by_kind(false, :cursor_template_ref)&.referenced
+          base_in_current_file = base_class_template &&
+            base_class_template.file_location.file == base_class_template.translation_unit.file.name
           if base_spelling && !base_in_std
-            base_typedef = @typedef_map[base_spelling]
-            if base_typedef
-              # Base has a typedef - check if it has been generated yet
-              unless @classes.key?(base_typedef.cruby_name)
-                # Force generate the typedef first (recursively handles its bases)
-                result = visit_typedef_decl(base_typedef) || ""
+            if base_in_current_file
+              base_typedef = @typedef_map[base_spelling]
+              if base_typedef
+                # Base has a typedef - check if it has been generated yet
+                unless @classes.key?(base_typedef.cruby_name)
+                  # Force generate the typedef first (recursively handles its bases)
+                  result = visit_typedef_decl(base_typedef) || ""
+                end
+              elsif !@auto_generated_bases.include?(base_spelling)
+                # No typedef - auto-generate
+                result = auto_generate_base_class(base_ref, base_spelling, template_arguments, under)
               end
-            elsif !@auto_generated_bases.include?(base_spelling)
-              # No typedef - auto-generate
-              result = auto_generate_base_class(base_ref, base_spelling, template_arguments, under)
+            elsif base_class_template && !base_class_template.location.in_system_header?
+              # Base template is from an included file — include its .ipp so the
+              # _instantiate builder is available for the derived class
+              builder_ipp = ipp_path_for_cursor(base_class_template)
+              current_ipp = File.join(@relative_dir, "#{@basename}.ipp")
+              if builder_ipp != current_ipp
+                ipp_relative = Pathname.new(builder_ipp).relative_path_from(Pathname.new(@relative_dir)).to_s
+                @includes << "#include \"#{ipp_relative}\""
+              end
             end
           end
         end
@@ -2026,6 +2042,8 @@ module RubyBindgen
 
         base_template = base_template_ref.referenced
         return "" if base_template.location.in_system_header?
+        # Skip base templates from included files — their own output handles registration
+        return "" unless base_template.file_location.file == base_template.translation_unit.file.name
         base_template_arguments = base_spelling.match(/<(.+)>\z/)&.[](1) || template_arguments
         return "" unless base_template_arguments
 

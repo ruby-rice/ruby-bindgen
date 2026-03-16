@@ -12,7 +12,6 @@ void Init_CrossFileDerived()
 {
   Module rb_mCrossFile = define_module("CrossFile");
 
-  Rice::Data_Type<CrossFile::BaseMatrix<double, 4>> rb_cBaseMatrix4d = BaseMatrix_instantiate<double, 4>(rb_mCrossFile, "BaseMatrix4d");
   Rice::Data_Type<CrossFile::DerivedVector<double, 4>> rb_cDerivedVector4d = DerivedVector_instantiate<double, 4>(rb_mCrossFile, "DerivedVector4d");
 
   Rice::Data_Type<CrossFile::SimpleRange> rb_cCrossFileSimpleRange = define_class_under<CrossFile::SimpleRange>(rb_mCrossFile, "SimpleRange")
@@ -22,7 +21,7 @@ void Init_CrossFileDerived()
     .define_constructor(Constructor<CrossFile::SimpleRange, int, int>(),
       Arg("s"), Arg("e"));
 
-  rb_cBaseMatrix4d
+  Data_Type<CrossFile::BaseMatrix4d>()
     .define_method("*", [](const CrossFile::BaseMatrix4d& self, double other) -> CrossFile::BaseMatrix4d
     {
       return self * other;
