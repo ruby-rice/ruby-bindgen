@@ -1,5 +1,9 @@
 #pragma once
 
+// Macro constants — SKIPPED_MACRO should be filtered via symbols
+#define INCLUDED_MACRO 100
+#define SKIPPED_MACRO 999
+
 namespace Guards
 {
   // Class with methods, constructors, and anonymous enum constants

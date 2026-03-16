@@ -1729,6 +1729,7 @@ module RubyBindgen
         return unless tokens.size == 2
         return unless tokens.tokens[0].kind == :identifier
         return unless tokens.tokens[1].kind == :literal
+        return if skip_symbol?(cursor)
 
         self.render_cursor(cursor, "constant",
                            :name => tokens.tokens[0].spelling.upcase_first,

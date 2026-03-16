@@ -9,6 +9,8 @@ using namespace Rice;
 
 void Init_VersionGuards()
 {
+  Class(rb_cObject).define_constant("INCLUDED_MACRO", INCLUDED_MACRO);
+
   Module rb_mGuards = define_module("Guards");
 
   Rice::Data_Type<Guards::MyClass> rb_cGuardsMyClass = define_class_under<Guards::MyClass>(rb_mGuards, "MyClass")

@@ -107,7 +107,8 @@ class RiceTest < AbstractTest
   def test_version_guards
     run_rice_test("version_guards.hpp",
                   version_check: "TEST_VERSION",
-                  symbols: { versions: {
+                  symbols: { skip: ["SKIPPED_MACRO"],
+                             versions: {
                     20000 => ["Guards::MyClass::newMethod",
                               "Guards::MyClass::NEW_CONST",
                               "Guards::MyClass::overloaded(int, bool)",
