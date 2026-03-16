@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "bug_tracker_uri"   => "https://github.com/ruby-rice/ruby-bindgen/issues",
-    "changelog_uri"     => "https://github.com/ruby-rice/ruby-bindgen/blob/main/CHANGES",
+    "changelog_uri"     => "https://github.com/ruby-rice/ruby-bindgen/blob/main/CHANGES.md",
     "source_code_uri"   => "https://github.com/ruby-rice/ruby-bindgen/tree/v#{spec.version}",
   }
 
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.require_path = "lib"
   spec.bindir = "bin"
   spec.executables = ["ruby-bindgen"]
-  spec.files = Dir['CHANGES',
+  spec.files = Dir['CHANGES.md',
                    'LICENSE',
                    'Rakefile',
                    'README.md',
@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
                    'lib/**/*',
 ]
 
-  spec.test_files = Dir["test/test_*.rb"]
+  spec.test_files = Dir["test/*_test.rb"]
   spec.required_ruby_version = '>= 3.2.0'
   spec.date = Time.now.strftime('%Y-%m-%d')
   spec.homepage = 'https://github.com/ruby-rice/ruby-bindgen'
