@@ -1,5 +1,3 @@
-require 'set'
-
 module FFI
   module Clang
     class Cursor
@@ -69,52 +67,6 @@ module FFI
         result
       end
 
-      # Monkey patch to handle extern "C" linkage spec in qualified names.
-      # See https://github.com/ioquatix/ffi-clang/pull/97
-      def qualified_name
-        if self.kind != :cursor_translation_unit
-          if self.semantic_parent.kind == :cursor_invalid_file
-            raise(ArgumentError, "Invalid semantic parent: #{self}")
-          end
-          if self.kind == :cursor_linkage_spec
-            return self.semantic_parent.qualified_name
-          end
-          result = self.semantic_parent.qualified_name
-          result && !result.empty? ? "#{result}::#{self.spelling}" : self.spelling
-        end
-      end
-
-      # Find first child cursor matching any of the given kinds.
-      # Short-circuits on first match via :break to properly terminate
-      # clang_visitChildren (a non-local return would skip CXChildVisit_Break
-      # and corrupt the outer visitor state).
-      def find_first_by_kind(recurse, *kinds)
-        result = nil
-        kinds_set = kinds.to_set
-        self.each(recurse) do |child, parent|
-          if kinds_set.include?(child.kind)
-            result = child
-            next :break
-          end
-        end
-        result
-      end
-
-      # Monkey patch to use Set for faster lookup and support block/enumerator.
-      # See https://github.com/ioquatix/ffi-clang/pull/99
-      def find_by_kind(recurse, *kinds, &block)
-        unless (recurse == nil || recurse == true || recurse == false)
-          raise("Recurse parameter must be nil or a boolean value. Value was: #{recurse}")
-        end
-
-        return enum_for(__method__, recurse, *kinds) unless block_given?
-
-        kinds_set = kinds.to_set
-
-        self.each(recurse) do |child, parent|
-          yield child if kinds_set.include?(child.kind)
-        end
-      end
     end
   end
 end

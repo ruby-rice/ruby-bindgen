@@ -17,7 +17,7 @@ void Init_Unions()
     .define_attr("i", &Unions::SimpleUnion::i)
     .define_attr("d", &Unions::SimpleUnion::d);
 
-  Rice::Data_Type<Unions::NestedUnion::Inner> inner = define_class<Unions::NestedUnion::Inner>("Inner")
+  Rice::Data_Type<Unions::NestedUnion::Inner> inner = define_class_under<Unions::NestedUnion::Inner>(rb_mUnions, "Inner")
     .define_attr("x", &Unions::NestedUnion::Inner::x)
     .define_attr("y", &Unions::NestedUnion::Inner::y);
 
@@ -25,7 +25,7 @@ void Init_Unions()
     .define_attr("inner", &Unions::NestedUnion::inner)
     .define_attr("z", &Unions::NestedUnion::z);
 
-  Rice::Data_Type<Unions::UnionWithStruct::Data> rb_cUnionsUnionWithStructData = define_class<Unions::UnionWithStruct::Data>("Data")
+  Rice::Data_Type<Unions::UnionWithStruct::Data> rb_cUnionsUnionWithStructData = define_class_under<Unions::UnionWithStruct::Data>(rb_mUnions, "Data")
     .define_constructor(Constructor<Unions::UnionWithStruct::Data>())
     .define_attr("a", &Unions::UnionWithStruct::Data::a)
     .define_attr("b", &Unions::UnionWithStruct::Data::b);

@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/ruby-rice/ruby-bindgen'
 
   spec.add_dependency 'ffi', '>= 1.16'
-  spec.add_dependency 'ffi-clang', '>= 0.14'
+  spec.add_dependency 'ffi-clang', '>= 0.15'
 
   spec.add_development_dependency 'logger'
   spec.add_development_dependency 'minitest'
