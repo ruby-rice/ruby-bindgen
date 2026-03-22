@@ -710,107 +710,37 @@ module RubyBindgen
       end
 
       # Get full template arguments including default values.
-      # When a typedef uses a template with default arguments, the canonical spelling
-      # may omit those defaults (e.g., Matx<uchar, 2> instead of Matx<uchar, 2, 1>).
-      # This method compares the actual arguments with the template parameters and
-      # appends any missing default values.
-      def get_full_template_arguments(underlying_type, cursor_template)
-        # Extract template arguments from canonical spelling, qualified
-        qualified_spelling = qualify_template_args(underlying_type.canonical.spelling, underlying_type)
-        match = qualified_spelling.match(/\<(.*)\>/)
-        return "" unless match
+      # When a typedef uses a template with default arguments, libclang reports
+      # only the written arguments. Type arguments come from the semantic type
+      # API, while non-type and template-template args fall back to source text
+      # so expressions like `1 + 2` and names like `Box` are preserved.
+      #
+      # Examples:
+      #   ExprValue<1 + 2>
+      # stays
+      #   ExprValue_instantiate<1 + 2>
+      #
+      #   Matrix<int, 2>
+      # becomes
+      #   Matrix_instantiate<int, 2, 1>
+      def get_full_template_arguments(cursor, underlying_type, cursor_template)
+        actual_args = specialization_template_arguments(cursor, underlying_type, cursor_template)
 
-        extracted_args = match[1]
+        return actual_args.join(", ") if cursor_template.nil?
 
-        # Get template parameters from class template
         template_params = template_parameters(cursor_template)
-        expected_count = template_params.length
-
-        # Count extracted arguments (handle nested templates by counting only top-level commas)
-        extracted_count = count_template_args(extracted_args)
-
-        return extracted_args if extracted_count >= expected_count
+        return actual_args.join(", ") if actual_args.length >= template_params.length
 
         # Need to fill in defaults for missing parameters
-        missing_params = template_params.last(expected_count - extracted_count)
+        missing_params = template_params.drop(actual_args.length)
         default_values = missing_params.map do |param|
           get_template_param_default(param)
         end.compact
 
         # If we couldn't get all defaults, return what we have
-        return extracted_args if default_values.length != missing_params.length
+        return actual_args.join(", ") if default_values.length != missing_params.length
 
-        extracted_args + ", " + default_values.join(", ")
-      end
-
-      # Count template arguments at the top level.
-      #
-      # Examples:
-      #   'int, float'
-      #   => 2
-      #
-      #   'void (*)(int, int)'
-      #   => 1
-      #
-      #   'Box<int>, Holder<float, double>'
-      #   => 2
-      #
-      # Nested commas inside template args, function types, arrays, and braced
-      # expressions must not be mistaken for separators between top-level
-      # template arguments.
-      def count_template_args(args_string)
-        return 0 if args_string.nil? || args_string.empty?
-
-        count = 1
-        angle_depth = 0
-        paren_depth = 0
-        bracket_depth = 0
-        brace_depth = 0
-        in_single_quote = false
-        in_double_quote = false
-        escaped = false
-
-        args_string.each_char do |char|
-          if in_single_quote || in_double_quote
-            if escaped
-              escaped = false
-            elsif char == '\\'
-              escaped = true
-            elsif in_single_quote && char == "'"
-              in_single_quote = false
-            elsif in_double_quote && char == '"'
-              in_double_quote = false
-            end
-          else
-            case char
-            when "'"
-              in_single_quote = true
-            when '"'
-              in_double_quote = true
-            when '<'
-              angle_depth += 1
-            when '>'
-              angle_depth -= 1 if angle_depth > 0
-            when '('
-              paren_depth += 1
-            when ')'
-              paren_depth -= 1 if paren_depth > 0
-            when '['
-              bracket_depth += 1
-            when ']'
-              bracket_depth -= 1 if bracket_depth > 0
-            when '{'
-              brace_depth += 1
-            when '}'
-              brace_depth -= 1 if brace_depth > 0
-            when ','
-              if angle_depth.zero? && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
-                count += 1
-              end
-            end
-          end
-        end
-        count
+        (actual_args + default_values).join(", ")
       end
 
       def template_parameters(template_cursor)
@@ -866,14 +796,27 @@ module RubyBindgen
           next if child.kind == :cursor_type_ref
           next if child.kind == :cursor_template_ref && child.referenced == template_cursor
 
-          source_text = case child.kind
-                        when :cursor_decl_ref_expr, :cursor_template_ref
-                          range = child.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
-                          range&.text
-                        else
-                          child.extent.text
-                        end
-          source_text = child.extent.text if source_text.nil? || source_text.empty?
+          source_text = child.extent.text
+          source_offset = child.extent.start.offset
+
+          if child.kind == :cursor_template_ref
+            range = child.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+            source_text = range&.text || source_text
+            ref = child.referenced
+            if ref && !ref.spelling.empty? && ref.spelling != ref.qualified_name
+              source_text = replacement_from_name_span(source_text, ref.spelling, ref.qualified_name) || source_text
+            end
+          else
+            source_text = qualify_source_default_references(child, source_text, source_offset)
+
+            ref = child.referenced
+            if ref &&
+               [:cursor_function, :cursor_function_template, :cursor_cxx_method].include?(ref.kind) &&
+               !source_text.lstrip.start_with?('&')
+              source_text = "&#{source_text}"
+            end
+          end
+
           source_text
         rescue ArgumentError
           child.extent.text
@@ -2440,7 +2383,7 @@ module RubyBindgen
       def visit_template_specialization(cursor, cursor_template, underlying_type)
         under = find_under(cursor)
         # Get template arguments including any default values that were omitted in the typedef
-        template_arguments = get_full_template_arguments(underlying_type, cursor_template)
+        template_arguments = get_full_template_arguments(cursor, underlying_type, cursor_template)
 
         result = ""
 

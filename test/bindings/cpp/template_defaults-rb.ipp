@@ -89,3 +89,10 @@ inline Rice::Data_Type<FunctionTypeDefault<T, U>> FunctionTypeDefault_instantiat
     .define_attr("first", &FunctionTypeDefault<T, U>::first)
     .define_attr("second", &FunctionTypeDefault<T, U>::second);
 }
+
+template<int N>
+inline Rice::Data_Type<ExprValue<N>> ExprValue_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<ExprValue<N>>(parent, name)
+    .define_constant("Value", ExprValue<N>::value);
+}

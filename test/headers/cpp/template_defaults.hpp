@@ -162,3 +162,17 @@ public:
 };
 
 typedef FunctionTypeDefault<void (*)(int, int)> FunctionTypeDefaultFn;
+
+// Explicit non-type template arguments should preserve the source-written
+// expression instead of taking the folded canonical value:
+//   ExprValue<1 + 2>
+// not:
+//   ExprValue<3>
+template<int N = 0>
+class ExprValue
+{
+public:
+    static constexpr int value = N;
+};
+
+typedef ExprValue<1 + 2> ExprValueSum;

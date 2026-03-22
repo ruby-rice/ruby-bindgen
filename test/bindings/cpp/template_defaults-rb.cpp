@@ -53,4 +53,6 @@ void Init_TemplateDefaults()
   Rice::Data_Type<TemplateTemplateDefaults::HolderWithInnerDefault<float>> rb_cHolderWithInnerDefaultFloat = HolderWithInnerDefault_instantiate<float, TemplateTemplateDefaults::BoxWithInnerDefault>(Rice::Module(rb_cObject), "HolderWithInnerDefaultFloat");
 
   Rice::Data_Type<FunctionTypeDefault<void (*)(int, int)>> rb_cFunctionTypeDefaultFn = FunctionTypeDefault_instantiate<void (*)(int, int), int>(Rice::Module(rb_cObject), "FunctionTypeDefaultFn");
+
+  Rice::Data_Type<ExprValue<1 + 2>> rb_cExprValueSum = ExprValue_instantiate<1 + 2>(Rice::Module(rb_cObject), "ExprValueSum");
 }
