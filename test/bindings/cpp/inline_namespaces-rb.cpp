@@ -19,6 +19,12 @@ void Init_InlineNamespaces()
     .define_constructor(Constructor<cv::dnn::dnn4_v20241223::Net>())
     .define_attr("layers", &cv::dnn::dnn4_v20241223::Net::layers);
 
+  Module rb_mLib = define_module("Lib");
+
+  Rice::Data_Type<lib::Widget> rb_cLibWidget = define_class_under<lib::Widget>(rb_mLib, "Widget")
+    .define_constructor(Constructor<lib::v2::Widget>())
+    .define_attr("id", &lib::v2::Widget::id);
+
   Module rb_mCvMcc = define_module_under(rb_mCv, "Mcc");
 
   Rice::Data_Type<cv::mcc::CCheckerDetector> rb_cCvMccCCheckerDetector = define_class_under<cv::mcc::CCheckerDetector>(rb_mCvMcc, "CCheckerDetector")

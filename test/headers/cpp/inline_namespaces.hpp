@@ -37,6 +37,19 @@ CV__DNN_INLINE_NS_END
 }
 }
 
+// Test true C++ inline namespaces (e.g., libc++ __1, abseil lts_*).
+// The inline namespace should NOT create a Ruby module — its members
+// belong to the enclosing namespace.
+namespace lib {
+  inline namespace v2 {
+    class Widget
+    {
+    public:
+      int id;
+    };
+  }
+}
+
 namespace cv
 {
   namespace mcc

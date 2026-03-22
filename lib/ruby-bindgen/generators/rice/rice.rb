@@ -383,7 +383,7 @@ module RubyBindgen
         result = Hash.new { |h, k| h[k] = [] }
 
         # Determine containing module
-        under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
+        under = find_under(cursor)
 
         # Is there a base class?
         base = nil
@@ -596,7 +596,7 @@ module RubyBindgen
         fully_qualified_type = "#{cursor.qualified_name}<#{param_names}>"
 
         # Determine containing module
-        under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
+        under = find_under(cursor)
 
         # Render class
         result = Array.new
@@ -607,6 +607,13 @@ module RubyBindgen
                                      :children => children_content)
 
         merge_children({ nil => result })
+      end
+
+      # Find the nearest enclosing module (namespace, class, or struct), skipping
+      # inline namespaces which don't map to Ruby modules.
+      def find_under(cursor)
+        cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace)
+              .find { |a| a.kind != :cursor_namespace || !a.inline_namespace? }
       end
 
       # Check if cursor has one of the required export macros in its source text
@@ -1554,7 +1561,7 @@ module RubyBindgen
           return render_children(cursor, strip: true)
         end
 
-        under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
+        under = find_under(cursor)
         children = render_children(cursor, indentation: 2, chain: true, terminate: true, strip: true)
         self.render_cursor(cursor, "enum_decl", :under => under, :children => children)
       end
@@ -1584,7 +1591,8 @@ module RubyBindgen
         # Check if return type should use ReturnBuffer
         return_buffer = buffer_type?(cursor.type.result_type)
 
-        under = cursor.ancestors_by_kind(:cursor_namespace).first
+        under = cursor.ancestors_by_kind(:cursor_namespace)
+                     .find { |a| !a.inline_namespace? }
         self.render_cursor(cursor, "function",
                            :under => under,
                            :name => name,
@@ -1609,6 +1617,13 @@ module RubyBindgen
         # Skip anonymous namespaces - they're internal implementation details
         return if cursor.anonymous?
 
+        # Inline namespaces (e.g., std::__1, abseil's lts_*) should not create
+        # Ruby modules — their members belong to the enclosing namespace.
+        # Recurse into children without registering a new module.
+        if cursor.inline_namespace?
+          return self.render_children(cursor)
+        end
+
         result = Array.new
 
         # Don't redefine a namespace twice. It doesn't matter to Ruby, but C++ wrapper
@@ -1618,7 +1633,7 @@ module RubyBindgen
         qualified_display_name = cursor.qualified_display_name
         unless @namespaces.include?(qualified_display_name)
           @namespaces << qualified_display_name
-          under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
+          under = find_under(cursor)
           result << self.render_cursor(cursor, "namespace", :under => under)
         end
 
@@ -1795,7 +1810,7 @@ module RubyBindgen
       end
 
       def visit_template_specialization(cursor, cursor_template, underlying_type)
-        under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
+        under = find_under(cursor)
         # Get template arguments including any default values that were omitted in the typedef
         template_arguments = get_full_template_arguments(underlying_type, cursor_template)
 
@@ -1988,7 +2003,7 @@ module RubyBindgen
           result << content if content
         end
 
-        under = cursor.ancestors_by_kind(:cursor_class_decl, :cursor_struct, :cursor_namespace).first
+        under = find_under(cursor)
 
         children = render_children(cursor, indentation: 2, chain: true, terminate: true, strip: true,
                                            exclude_kinds: Set[:cursor_struct, :cursor_union])
