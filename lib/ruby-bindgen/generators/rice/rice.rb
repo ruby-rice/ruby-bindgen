@@ -1348,7 +1348,9 @@ module RubyBindgen
         # We need this to traverse child cursors and find what needs qualification.
         # Note: cursor_paren_expr is included for Windows where macros like 'stdout' wrap in parens.
         default_value_kinds = [:cursor_unexposed_expr, :cursor_call_expr, :cursor_decl_ref_expr,
-                               :cursor_cxx_typeid_expr, :cursor_paren_expr] + CURSOR_LITERALS
+                               :cursor_c_style_cast_expr, :cursor_cxx_static_cast_expr,
+                               :cursor_cxx_functional_cast_expr, :cursor_cxx_typeid_expr,
+                               :cursor_paren_expr] + CURSOR_LITERALS
         default_expr = param.find_by_kind(false, *default_value_kinds).find do |expr|
           # Filter out decl_ref_expr that reference template parameters (part of type, not default value)
           if expr.kind == :cursor_decl_ref_expr

@@ -253,8 +253,10 @@ namespace quoted_type
   {
   public:
     Widget();
+    explicit Widget(const char* name);
     static Widget named(const char* name);
   };
 
   void call(Widget value = Widget::named("Widget"));
+  void call_ctor(Widget value = Widget("Widget"));
 }
