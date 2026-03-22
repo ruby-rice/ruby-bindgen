@@ -257,19 +257,51 @@ module RubyBindgen
       private
 
       def specialization_template_arguments(specialization_cursor, specialized_type, template_cursor)
+        argument_cursor = specialization_argument_cursor(specialized_type)
+        # The specialized declaration cursor includes omitted default arguments,
+        # but the type API reports only the arguments written at the use site.
         count = specialized_type.num_template_arguments
         return [] if count <= 0
 
         source_fallbacks = specialization_template_argument_source_texts(specialization_cursor, template_cursor)
 
         count.times.filter_map do |index|
-          arg_type = specialized_type.template_argument_type(index)
-          arg_type.kind == :type_invalid ? source_fallbacks.shift : @type_speller.type_spelling(arg_type)
+          specialization_template_argument_text(argument_cursor, specialized_type, index, source_fallbacks)
         end
       end
 
+      def specialization_argument_cursor(specialized_type)
+        declaration = specialized_type.declaration
+        return nil if declaration.kind == :cursor_no_decl_found
+        return declaration if declaration.num_template_arguments >= 0
+
+        nil
+      end
+
+      def specialization_template_argument_text(argument_cursor, specialized_type, index, source_fallbacks)
+        if argument_cursor
+          case argument_cursor.template_argument_kind(index)
+          when :template_argument_type
+            return @type_speller.type_spelling(argument_cursor.template_argument_type(index))
+          when :template_argument_integral
+            return source_fallbacks.shift || argument_cursor.template_argument_value(index).to_s
+          when :template_argument_null_ptr
+            return source_fallbacks.shift || "nullptr"
+          when :template_argument_template, :template_argument_template_expansion,
+               :template_argument_expression, :template_argument_declaration,
+               :template_argument_pack
+            return source_fallbacks.shift
+          end
+        end
+
+        arg_type = specialized_type.template_argument_type(index)
+        return nil if arg_type.kind == :type_invalid
+
+        @type_speller.type_spelling(arg_type)
+      end
+
       # Collect source-written template arguments that libclang does not expose
-      # through Type#template_argument_type.
+      # through the cursor template-argument APIs.
       #
       # Examples:
       #   typedef Vec<unsigned char, 2> Vec2b;

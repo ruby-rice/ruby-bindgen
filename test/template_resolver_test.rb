@@ -36,4 +36,27 @@ class TemplateResolverTest < RiceAbstractTest
     assert_equal "Support::Base<int>",
                  resolver.resolve_base_instantiation(derived_typedef, derived_typedef.underlying_type)
   end
+
+  def test_preserves_mixed_template_argument_kinds
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace Support {
+        template<typename T>
+        struct Wrap {};
+
+        template<typename T, int N, template<typename> class C>
+        struct Box {};
+      }
+
+      namespace Tests {
+        typedef Support::Box<int, 1 + 2, Support::Wrap> ExprBox;
+      }
+    CPP
+
+    resolver = collaborators[:template_resolver]
+    expr_typedef = find_cursor(parsed.translation_unit.cursor, :cursor_typedef_decl, "ExprBox")
+    box_template = expr_typedef.find_first_by_kind(false, :cursor_template_ref).referenced
+
+    assert_equal ["int", "1 + 2", "Support::Wrap"],
+                 resolver.full_template_arguments(expr_typedef, expr_typedef.underlying_type, box_template)
+  end
 end
