@@ -1,32 +1,8 @@
-#include <vector>
 #include <iterator>
 #include <cstddef>
-#include <map>
-#include <string>
 
 namespace iter
 {
-  // Typedef that should be qualified in iterator template arguments
-  // Similar to cv::String being a typedef for std::string
-  typedef std::string String;
-
-  // A simple value type for the map
-  class DictValue
-  {
-  public:
-    DictValue();
-    int value;
-  };
-
-  // Class with iterator returning std::map<String, DictValue>::const_iterator
-  // The "String" should be qualified to "iter::String" in the generated binding
-  class Dict
-  {
-  public:
-    Dict();
-    std::map<String, DictValue>::const_iterator begin() const;
-    std::map<String, DictValue>::const_iterator end() const;
-  };
   class Pixel
   {
   public:
@@ -194,38 +170,4 @@ namespace iter
   };
 
   typedef TemplateContainer<Pixel> PixelContainer;
-
-  // Test with std::vector iterator types (like BitmapPlusPlus)
-  class VectorBitmap
-  {
-  public:
-    VectorBitmap();
-
-    // Regular iterators
-    std::vector<Pixel>::iterator begin() noexcept;
-    std::vector<Pixel>::iterator end() noexcept;
-
-    // Const iterators (method is const)
-    std::vector<Pixel>::const_iterator begin() const noexcept;
-    std::vector<Pixel>::const_iterator end() const noexcept;
-
-    // Explicit const iterators (cbegin/cend)
-    std::vector<Pixel>::const_iterator cbegin() const noexcept;
-    std::vector<Pixel>::const_iterator cend() const noexcept;
-
-    // Reverse iterators
-    std::vector<Pixel>::reverse_iterator rbegin() noexcept;
-    std::vector<Pixel>::reverse_iterator rend() noexcept;
-
-    // Const reverse iterators (method is const)
-    std::vector<Pixel>::const_reverse_iterator rbegin() const noexcept;
-    std::vector<Pixel>::const_reverse_iterator rend() const noexcept;
-
-    // Explicit const reverse iterators (crbegin/crend)
-    std::vector<Pixel>::const_reverse_iterator crbegin() const noexcept;
-    std::vector<Pixel>::const_reverse_iterator crend() const noexcept;
-
-  private:
-    std::vector<Pixel> m_pixels;
-  };
 }

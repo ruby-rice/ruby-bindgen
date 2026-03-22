@@ -25,16 +25,6 @@ void Init_Iterators()
 {
   Module rb_mIter = define_module("Iter");
 
-  Rice::Data_Type<iter::DictValue> rb_cIterDictValue = define_class_under<iter::DictValue>(rb_mIter, "DictValue")
-    .define_constructor(Constructor<iter::DictValue>())
-    .define_attr("value", &iter::DictValue::value);
-
-  Rice::Data_Type<iter::Dict> rb_cIterDict = define_class_under<iter::Dict>(rb_mIter, "Dict")
-    .define_constructor(Constructor<iter::Dict>())
-    .define_iterator<std::map<std::basic_string<char, std::char_traits<char>, std::allocator<char>>, iter::DictValue, std::less<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>, std::allocator<std::pair<const std::basic_string<char, std::char_traits<char>, std::allocator<char>>, iter::DictValue>>>::const_iterator(iter::Dict::*)() const>(&iter::Dict::begin, &iter::Dict::end, "each_const");
-
-  Rice::detail::protect(rb_alias, rb_cIterDict, rb_intern("each"), rb_intern("each_const"));
-
   Rice::Data_Type<iter::Pixel> rb_cIterPixel = define_class_under<iter::Pixel>(rb_mIter, "Pixel")
     .define_constructor(Constructor<iter::Pixel>())
     .define_constructor(Constructor<iter::Pixel, int, int, int>(),
@@ -101,11 +91,4 @@ void Init_Iterators()
     .define_iterator<iter::IncompleteIterator(iter::IncompleteBitmap::*)()>(&iter::IncompleteBitmap::begin, &iter::IncompleteBitmap::end, "each");
 
   Rice::Data_Type<iter::TemplateContainer<iter::Pixel>> rb_cPixelContainer = TemplateContainer_instantiate<iter::Pixel>(rb_mIter, "PixelContainer");
-
-  Rice::Data_Type<iter::VectorBitmap> rb_cIterVectorBitmap = define_class_under<iter::VectorBitmap>(rb_mIter, "VectorBitmap")
-    .define_constructor(Constructor<iter::VectorBitmap>())
-    .define_iterator<std::vector<iter::Pixel, std::allocator<iter::Pixel>>::iterator(iter::VectorBitmap::*)() noexcept>(&iter::VectorBitmap::begin, &iter::VectorBitmap::end, "each")
-    .define_iterator<std::vector<iter::Pixel, std::allocator<iter::Pixel>>::const_iterator(iter::VectorBitmap::*)() const noexcept>(&iter::VectorBitmap::begin, &iter::VectorBitmap::end, "each_const")
-    .define_iterator<std::vector<iter::Pixel, std::allocator<iter::Pixel>>::reverse_iterator(iter::VectorBitmap::*)() noexcept>(&iter::VectorBitmap::rbegin, &iter::VectorBitmap::rend, "each_reverse")
-    .define_iterator<std::vector<iter::Pixel, std::allocator<iter::Pixel>>::const_reverse_iterator(iter::VectorBitmap::*)() const noexcept>(&iter::VectorBitmap::rbegin, &iter::VectorBitmap::rend, "each_reverse_const");
 }

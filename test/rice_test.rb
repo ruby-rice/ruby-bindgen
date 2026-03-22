@@ -39,6 +39,15 @@ class RiceTest < AbstractTest
     run_rice_test("iterators.hpp")
   end
 
+  # STL container iterators (std::vector, std::map) whose fully_qualified_name
+  # expands default template args on LLVM 21+. The compat shim cannot expand
+  # defaults, so this test only runs on LLVM 21+.
+  def test_iterators_stl
+    require 'ffi/clang'
+    skip "Requires LLVM 21+ for default template arg expansion" if FFI::Clang.clang_version < Gem::Version.new("21.0.0")
+    run_rice_test("iterators_stl.hpp")
+  end
+
   def test_template_inheritance
     run_rice_test("template_inheritance.hpp")
   end
