@@ -1,4 +1,4 @@
-define_method("[]=", [](<%= qualified_parent %>&self, <%= index_type %> <%= index_name %>, <%= type_spelling(cursor.result_type) %> value)
+define_method("[]=", [](<%= qualified_parent %>&self, <%= index_type %> <%= index_name %>, <%= value_type %> value)
 {
     self[<%= index_name %>] = value;
 })

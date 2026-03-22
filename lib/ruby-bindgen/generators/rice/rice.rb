@@ -438,11 +438,18 @@ module RubyBindgen
         result[nil] << auto_instantiated unless auto_instantiated.empty?
 
         # Render class
-        @classes[cursor.cruby_name] = qualified_class_name_cpp(cursor)
+        cpp_type = qualified_class_name_cpp(cursor)
+        raw_class_name = cursor.type.spelling.split("::").last
+        ruby_class_name = @namer.apply_rename_types(raw_class_name, raw_class_name.camelize)
+        has_incomplete_classes = !incomplete_classes_content.to_s.empty?
+        @classes[cursor.cruby_name] = cpp_type
         result[nil] << self.render_cursor(cursor, "class", :under => under, :base => base,
                                      :auto_generated_base => auto_generated_base,
                                      :incomplete_classes => incomplete_classes_content,
-                                     :children => children_content)
+                                     :children => children_content,
+                                     :cpp_type => cpp_type,
+                                     :ruby_class_name => ruby_class_name,
+                                     :has_incomplete_classes => has_incomplete_classes)
 
         # Alias each_const to each if the class only has const iterators
         iterator_names = @class_iterator_names[cursor.cruby_name]
@@ -2060,11 +2067,13 @@ module RubyBindgen
           index_param = cursor.find_by_kind(false, :cursor_parm_decl).first
           index_type = type_spelling(cursor.type.arg_type(0))
           index_name = index_param&.spelling.to_s.empty? ? "index" : index_param.spelling
+          value_type = type_spelling(cursor.result_type)
           result << self.render_cursor(cursor, "operator[]",
                                        :name => name,
                                        :index_type => index_type,
                                        :index_name => index_name,
-                                       :qualified_parent => qualified_parent)
+                                       :qualified_parent => qualified_parent,
+                                       :value_type => value_type)
         end
         result
       end
@@ -2265,7 +2274,19 @@ module RubyBindgen
 
       def visit_enum_constant_decl(cursor)
         return if skip_symbol?(cursor)
-        self.render_cursor(cursor, "enum_constant_decl")
+        enum_parent = cursor.semantic_parent
+        enum_scope = enum_parent.semantic_parent
+        anonymous_parent = enum_parent.anonymous?
+        anonymous_class_scope = anonymous_parent &&
+          [:cursor_class_decl, :cursor_struct, :cursor_class_template].include?(enum_scope.kind)
+        qualified_name = "#{qualified_display_name_cpp(enum_scope)}::#{cursor.spelling}"
+
+        self.render_cursor(cursor, "enum_constant_decl",
+                           :anonymous_parent => anonymous_parent,
+                           :anonymous_class_scope => anonymous_class_scope,
+                           :owner_cruby_name => enum_scope.cruby_name,
+                           :qualified_name => qualified_name,
+                           :value_name => cursor.qualified_display_name)
       end
 
       def visit_function(cursor)
@@ -2734,7 +2755,9 @@ module RubyBindgen
 
         children = render_children(cursor, indentation: 2, chain: true, terminate: true, strip: true,
                                            exclude_kinds: Set[:cursor_struct, :cursor_union])
-        result << self.render_cursor(cursor, "union", :under => under, :children => children)
+        result << self.render_cursor(cursor, "union", :under => under, :children => children,
+                                     :cpp_type => qualified_class_name_cpp(cursor),
+                                     :ruby_name => cursor.ruby_name)
         result.map { |s| s.chomp }.join("\n\n")
       end
 

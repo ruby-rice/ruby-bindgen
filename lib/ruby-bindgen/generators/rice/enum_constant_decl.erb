@@ -1,8 +1,7 @@
-<%- qualified_name = "#{qualified_display_name_cpp(cursor.semantic_parent.semantic_parent)}::#{cursor.spelling}" -%>
-<%- if cursor.semantic_parent.anonymous? && [:cursor_class_decl, :cursor_struct, :cursor_class_template].include?(cursor.semantic_parent.semantic_parent.kind) -%>
+<%- if anonymous_class_scope -%>
 define_constant("<%= cursor.spelling.upcase_first  %>", (int)<%= qualified_name %>)
-<%- elsif cursor.semantic_parent.anonymous? -%>
-<%= cursor.semantic_parent.semantic_parent.cruby_name %>.define_constant("<%= cursor.spelling.upcase_first %>", (int)<%= qualified_name %>);
+<%- elsif anonymous_parent -%>
+<%= owner_cruby_name %>.define_constant("<%= cursor.spelling.upcase_first %>", (int)<%= qualified_name %>);
 <%- else -%>
-define_value("<%= cursor.spelling %>", <%= cursor.qualified_display_name %>)
+define_value("<%= cursor.spelling %>", <%= value_name %>)
 <%- end -%>

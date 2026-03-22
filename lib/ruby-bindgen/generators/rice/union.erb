@@ -1,5 +1,5 @@
 <%- if under -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class_under<<%= qualified_class_name_cpp(cursor) %>>(<%= under.cruby_name %>, "<%= cursor.ruby_name %>")<%= children %>
+Rice::Data_Type<<%= cpp_type %>> <%= cursor.cruby_name %> = define_class_under<<%= cpp_type %>>(<%= under.cruby_name %>, "<%= ruby_name %>")<%= children %>
 <%- else -%>
-Rice::Data_Type<<%= qualified_class_name_cpp(cursor) %>> <%= cursor.cruby_name %> = define_class<<%= qualified_class_name_cpp(cursor) %>>("<%= cursor.ruby_name %>")<%= children %>
+Rice::Data_Type<<%= cpp_type %>> <%= cursor.cruby_name %> = define_class<<%= cpp_type %>>("<%= ruby_name %>")<%= children %>
 <%- end -%>
