@@ -142,3 +142,20 @@ inline Rice::Data_Type<Tests::NestedDependent<T>> NestedDependent_instantiate(Ri
     .define_constructor(Constructor<Tests::NestedDependent<T>, const Tests::Inner_<typename Tests::Outer_<Tests::Outer_<T>>::type> &>(),
       Arg("value"));
 }
+
+template<typename T, int N>
+inline Rice::Data_Type<Tests::FixedBuffer<T, N>> FixedBuffer_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::FixedBuffer<T, N>>(parent, name)
+    .define_constructor(Constructor<Tests::FixedBuffer<T, N>>());
+}
+
+template<int N>
+inline Rice::Data_Type<Tests::StaticSized<N>> StaticSized_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::StaticSized<N>>(parent, name)
+    .define_constant("Size", Tests::StaticSized<N>::Size)
+    .define_constructor(Constructor<Tests::StaticSized<N>>())
+    .define_constructor(Constructor<Tests::StaticSized<N>, const Tests::FixedBuffer<int, Tests::StaticSized<N>::Size> &>(),
+      Arg("value"));
+}

@@ -72,4 +72,6 @@ void Init_Templates()
   Rice::Data_Type<Tests::SearchIndex<Tests::L2Distance>> rb_cL2SearchIndex = SearchIndex_instantiate<Tests::L2Distance>(rb_mTests, "L2SearchIndex");
 
   Rice::Data_Type<Tests::NestedDependent<int>> rb_cNestedDependenti = NestedDependent_instantiate<int>(rb_mTests, "NestedDependenti");
+
+  Rice::Data_Type<Tests::StaticSized<4>> rb_cStaticSized4 = StaticSized_instantiate<4>(rb_mTests, "StaticSized4");
 }

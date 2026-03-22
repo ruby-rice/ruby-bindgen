@@ -1037,6 +1037,9 @@ module RubyBindgen
             if cursor.semantic_parent&.kind == :cursor_class_template
               params = params.map { |pt| qualify_class_template_typedefs(pt, cursor.semantic_parent) }
             end
+            if parent
+              params = params.map { |pt| qualify_class_static_members(pt, parent) }
+            end
             signature += params
 
           when :cursor_class_decl, :cursor_struct
@@ -1414,11 +1417,18 @@ module RubyBindgen
       # but the generated binding code is outside the class, so it needs
       # Vec<double, GPCPatchDescriptor::nFeatures>. qualify_template_args then handles
       # qualifying GPCPatchDescriptor to cv::optflow::GPCPatchDescriptor.
+      #
+      # Class templates need their template parameters preserved:
+      #   FixedBuffer<int, Size>
+      # becomes
+      #   FixedBuffer<int, Tests::StaticSized<N>::Size>
       def qualify_class_static_members(spelling, class_cursor)
         return spelling unless class_cursor
 
         parent_kind = class_cursor.kind
-        return spelling unless parent_kind == :cursor_class_decl || parent_kind == :cursor_struct
+        return spelling unless parent_kind == :cursor_class_decl ||
+                              parent_kind == :cursor_struct ||
+                              parent_kind == :cursor_class_template
 
         cache_key = class_cursor.usr
         member_info = @class_static_members[cache_key] ||= begin
@@ -1428,7 +1438,12 @@ module RubyBindgen
               names << child.spelling
             end
           end
-          { names: names, qualified_parent: class_cursor.qualified_name }
+          qualified_parent = if parent_kind == :cursor_class_template
+                               qualified_display_name_cpp(class_cursor)
+                             else
+                               class_cursor.qualified_name
+                             end
+          { names: names, qualified_parent: qualified_parent }
         end
 
         return spelling if member_info[:names].empty?

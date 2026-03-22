@@ -255,4 +255,28 @@ namespace Tests
     };
 
     typedef NestedDependent<int> NestedDependenti;
+
+    // Test bare static members used as non-type template args inside class templates.
+    // The generated builder is outside the class scope, so `Size` must become:
+    //   Tests::StaticSized<N>::Size
+    // NOT:
+    //   Size
+    template<typename T, int N>
+    class FixedBuffer
+    {
+    public:
+        FixedBuffer() = default;
+    };
+
+    template<int N>
+    class StaticSized
+    {
+    public:
+        static constexpr int Size = N;
+
+        StaticSized() = default;
+        explicit StaticSized(const FixedBuffer<int, Size>& value);
+    };
+
+    typedef StaticSized<4> StaticSized4;
 }
