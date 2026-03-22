@@ -47,6 +47,11 @@ typedef TypeDefault<double, float> TypeDefaultDF;   // TypeDefault<double, float
 
 namespace QualifiedDefaults
 {
+    enum Counts
+    {
+        DefaultCount = 7
+    };
+
     struct Tag
     {
         int value;
@@ -82,7 +87,20 @@ namespace QualifiedDefaults
         T first;
         U second;
     };
+
+    // Non-type defaults need the same qualification treatment when the builder
+    // emits the instantiated template outside this namespace:
+    //   QualifiedValueDefault<int, QualifiedDefaults::DefaultCount>
+    // not:
+    //   QualifiedValueDefault<int, DefaultCount>
+    template<typename T, int N = DefaultCount>
+    class QualifiedValueDefault
+    {
+    public:
+        static constexpr int value = N;
+    };
 }
 
 typedef QualifiedDefaults::QualifiedTypeDefault<int> QualifiedTypeDefaultInt;
 typedef QualifiedDefaults::QualifiedNestedDefault<int> QualifiedNestedDefaultInt;
+typedef QualifiedDefaults::QualifiedValueDefault<int> QualifiedValueDefaultInt;

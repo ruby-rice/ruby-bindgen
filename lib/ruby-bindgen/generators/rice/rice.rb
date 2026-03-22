@@ -772,16 +772,170 @@ module RubyBindgen
       # Extract default value from a template parameter
       def get_template_param_default(param)
         if param.kind == :cursor_non_type_template_parameter
-          # For non-type params (int, etc.), look for literal child
-          default_child = nil
-          param.each(false) do |child, _|
-            default_child = child
-          end
-          return default_child.extent.text if default_child
+          return qualify_template_non_type_default(param)
         elsif param.kind == :cursor_template_type_parameter
           return qualify_template_type_default(param)
         end
         nil
+      end
+
+      # Qualify source-written references within extracted default text by using
+      # source ranges only for span location and semantic cursor data for the
+      # replacement text.
+      #
+      # Examples:
+      #   text = 'Box<Tag>'
+      # becomes
+      #   'QualifiedDefaults::Box<QualifiedDefaults::Tag>'
+      #
+      #   text = 'DefaultCount'
+      # becomes
+      #   'QualifiedDefaults::DefaultCount'
+      #
+      # The source is intentionally unqualified in the original namespace or
+      # class scope. When the generated binding emits the same text outside that
+      # scope, we need the fully qualified names from libclang, not the written
+      # tokens from the source range.
+      def qualify_source_default_references(root_cursor, source_text, source_text_offset, qualify_decl_refs: true)
+        range_replacements = []
+        type_fallbacks = []
+
+        root_cursor.find_by_kind(true, :cursor_type_ref, :cursor_template_ref) do |type_ref|
+          ref = type_ref.referenced
+          next unless ref && ref.kind != :cursor_invalid_file
+
+          # Template type parameters stay visible by bare name in generated
+          # template code, so they should not be qualified here.
+          next if ref.kind == :cursor_template_type_parameter
+
+          begin
+            is_dependent_typedef = ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
+            qualified_name = if is_dependent_typedef
+                               "#{ref.semantic_parent.qualified_display_name}::#{ref.spelling}"
+                             else
+                               ref.qualified_name
+                             end
+            simple_name = ref.spelling
+            next if simple_name.nil? || simple_name.empty?
+            next if simple_name == qualified_name
+
+            range = type_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+            replacement = source_range_replacement(source_text, source_text_offset, range)
+            if replacement
+              start_index = replacement[:start_offset] - source_text_offset
+              end_index = replacement[:end_offset] - source_text_offset
+              start_index = expand_name_start_to_qualifier(source_text, start_index)
+              replacement = replacement.merge(start_offset: source_text_offset + start_index)
+              span_text = source_text.byteslice(start_index, end_index - start_index)
+              trailing_scope = source_text.byteslice(end_index, 2).to_s == '::'
+
+              replacement_name = if ref.kind == :cursor_class_template && trailing_scope && !span_text.include?('<')
+                                   ref.qualified_display_name
+                                 else
+                                   qualified_name
+                                 end
+              replacement_text = replacement_from_name_span(span_text, simple_name, replacement_name)
+              if is_dependent_typedef && replacement_text && !trailing_scope &&
+                 !preceded_by_typename?(source_text, start_index)
+                replacement_text = "typename #{replacement_text}"
+              end
+
+              if replacement_text && replacement_text != span_text
+                range_replacements << replacement.merge(replacement: replacement_text, kind: :type)
+                next
+              end
+            end
+
+            type_fallbacks << [ref, simple_name, qualified_name, is_dependent_typedef]
+          rescue ArgumentError
+            # Skip if we can't get qualified name (e.g., invalid cursor)
+          end
+        end
+
+        decl_fallbacks = []
+        if qualify_decl_refs
+          decl_refs = root_cursor.find_by_kind(true, :cursor_decl_ref_expr).to_a
+          decl_refs = [root_cursor] + decl_refs if root_cursor.kind == :cursor_decl_ref_expr
+          decl_refs.each do |decl_ref|
+            ref = decl_ref.referenced
+            next unless ref && ref.kind != :cursor_invalid_file
+
+            begin
+              simple_name = ref.spelling
+              next if simple_name.nil? || simple_name.empty?
+
+              if ref.kind == :cursor_cxx_method
+                next if source_text.match?(/::#{Regexp.escape(simple_name)}\s*\(/)
+              end
+
+              qualified_name = if ref.kind == :cursor_enum_constant_decl &&
+                                  ref.semantic_parent.kind == :cursor_enum_decl &&
+                                  !ref.semantic_parent.enum_scoped?
+                                 enum_parent = ref.semantic_parent.semantic_parent
+                                 if enum_parent && enum_parent.kind == :cursor_namespace
+                                   "#{enum_parent.qualified_name}::#{simple_name}"
+                                 elsif ref.semantic_parent.anonymous? &&
+                                       enum_parent && enum_parent.kind != :cursor_translation_unit
+                                   "#{enum_parent.qualified_name}::#{simple_name}"
+                                 else
+                                   ref.qualified_name
+                                 end
+                               elsif ref.semantic_parent.kind == :cursor_class_template
+                                 "#{ref.semantic_parent.qualified_display_name}::#{simple_name}"
+                               else
+                                 ref.qualified_name
+                               end
+
+              next if simple_name == qualified_name
+              next if qualified_name.start_with?('::')
+              next unless qualified_name.end_with?(simple_name)
+
+              range = if decl_ref.extent.text.include?('<')
+                        decl_ref.spelling_name_range(0)
+                      else
+                        decl_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+                      end
+              replacement = source_range_replacement(source_text, source_text_offset, range)
+              if replacement
+                start_index = replacement[:start_offset] - source_text_offset
+                end_index = replacement[:end_offset] - source_text_offset
+                span_text = source_text.byteslice(start_index, end_index - start_index)
+                replacement_text = replacement_from_name_span(span_text, simple_name, qualified_name)
+                if replacement_text && replacement_text != span_text
+                  range_replacements << replacement.merge(replacement: replacement_text, kind: :decl)
+                  next
+                end
+              end
+
+              decl_fallbacks << [simple_name, qualified_name]
+            rescue ArgumentError
+              # Skip if we can't get qualified name
+            end
+          end
+
+          decl_replacements = range_replacements.select { |replacement| replacement[:kind] == :decl }
+          range_replacements.reject! do |replacement|
+            replacement[:kind] == :type &&
+              decl_replacements.any? do |decl_replacement|
+                decl_replacement[:start_offset] <= replacement[:start_offset] &&
+                  decl_replacement[:end_offset] >= replacement[:end_offset]
+              end
+          end
+        end
+
+        source_text = apply_source_replacements(source_text, source_text_offset, range_replacements) unless range_replacements.empty?
+
+        type_fallbacks.each do |type_fallback|
+          ref, simple_name, qualified_name, is_dependent_typedef = type_fallback
+          source_text = fallback_qualify_type_reference(source_text, ref, simple_name, qualified_name, is_dependent_typedef)
+        end
+
+        decl_fallbacks.each do |decl_fallback|
+          simple_name, qualified_name = decl_fallback
+          source_text = fallback_qualify_declaration_reference(source_text, simple_name, qualified_name)
+        end
+
+        source_text
       end
 
       # Qualify a template type default using source spans for location and cursor
@@ -804,65 +958,26 @@ module RubyBindgen
         return nil unless extracted
 
         default_text, default_text_offset = extracted
-        range_replacements = []
-        fallbacks = []
+        qualify_source_default_references(param, default_text, default_text_offset, qualify_decl_refs: false)
+      end
 
-        param.find_by_kind(true, :cursor_type_ref, :cursor_template_ref) do |type_ref|
-          ref = type_ref.referenced
-          next unless ref && ref.kind != :cursor_invalid_file
-          next if ref.kind == :cursor_template_type_parameter
+      # Qualify a template non-type default using the same span-based rewrite as
+      # function defaults.
+      #
+      # Examples:
+      #   'int N = DefaultCount'
+      # becomes
+      #   'QualifiedDefaults::DefaultCount'
+      #
+      #   'int N = Holder<Tag>::value'
+      # becomes
+      #   'QualifiedDefaults::Holder<QualifiedDefaults::Tag>::value'
+      def qualify_template_non_type_default(param)
+        extracted = extract_default_text(param)
+        return nil unless extracted
 
-          begin
-            is_dependent_typedef = ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
-            qualified_name = if is_dependent_typedef
-                               "#{ref.semantic_parent.qualified_display_name}::#{ref.spelling}"
-                             else
-                               ref.qualified_name
-                             end
-            simple_name = ref.spelling
-            next if simple_name.nil? || simple_name.empty?
-            next if simple_name == qualified_name
-
-            range = type_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
-            replacement = source_range_replacement(default_text, default_text_offset, range)
-            if replacement
-              start_index = replacement[:start_offset] - default_text_offset
-              end_index = replacement[:end_offset] - default_text_offset
-              start_index = expand_name_start_to_qualifier(default_text, start_index)
-              replacement = replacement.merge(start_offset: default_text_offset + start_index)
-              span_text = default_text.byteslice(start_index, end_index - start_index)
-              trailing_scope = default_text.byteslice(end_index, 2).to_s == '::'
-
-              replacement_name = if ref.kind == :cursor_class_template && trailing_scope && !span_text.include?('<')
-                                   ref.qualified_display_name
-                                 else
-                                   qualified_name
-                                 end
-              replacement_text = replacement_from_name_span(span_text, simple_name, replacement_name)
-              if is_dependent_typedef && replacement_text && !trailing_scope &&
-                 !preceded_by_typename?(default_text, start_index)
-                replacement_text = "typename #{replacement_text}"
-              end
-
-              if replacement_text && replacement_text != span_text
-                range_replacements << replacement.merge(replacement: replacement_text)
-                next
-              end
-            end
-
-            fallbacks << [ref, simple_name, qualified_name, is_dependent_typedef]
-          rescue ArgumentError
-            # Skip if we can't get qualified name (e.g., invalid cursor)
-          end
-        end
-
-        default_text = apply_source_replacements(default_text, default_text_offset, range_replacements) unless range_replacements.empty?
-
-        fallbacks.each do |ref, simple_name, qualified_name, is_dependent_typedef|
-          default_text = fallback_qualify_type_reference(default_text, ref, simple_name, qualified_name, is_dependent_typedef)
-        end
-
-        default_text
+        default_text, default_text_offset = extracted
+        qualify_source_default_references(param, default_text, default_text_offset)
       end
 
       # Qualify template arguments in a type spelling
@@ -1441,162 +1556,7 @@ module RubyBindgen
         end
         return nil unless default_expr
 
-        source_text = default_text
-        range_replacements = []
-        type_fallbacks = []
-
-        # Phase 1: Qualify type references (e.g., Range::all() -> cv::Range::all())
-        # Find type_ref and template_ref cursors to identify types that need namespace qualification.
-        default_expr.find_by_kind(true, :cursor_type_ref, :cursor_template_ref) do |type_ref|
-          ref = type_ref.referenced
-          next unless ref && ref.kind != :cursor_invalid_file
-
-          # Skip template type parameters — they're visible by name in the generated
-          # template code and should not be qualified (e.g., Distance() stays as Distance(),
-          # not cvflann::CompositeIndex::Distance() which is invalid without template args)
-          next if ref.kind == :cursor_template_type_parameter
-
-          begin
-            # For typedefs in class templates, preserve template parameters in the qualified name
-            is_dependent_typedef = ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
-            qualified_name = if is_dependent_typedef
-                               "#{ref.semantic_parent.qualified_display_name}::#{ref.spelling}"
-                             else
-                               ref.qualified_name
-                             end
-            simple_name = ref.spelling
-            next if simple_name.nil? || simple_name.empty?
-            next if simple_name == qualified_name
-
-            range = type_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
-            replacement = source_range_replacement(source_text, default_text_offset, range)
-            if replacement
-              start_index = replacement[:start_offset] - default_text_offset
-              end_index = replacement[:end_offset] - default_text_offset
-              start_index = expand_name_start_to_qualifier(source_text, start_index)
-              replacement = replacement.merge(start_offset: default_text_offset + start_index)
-              span_text = source_text.byteslice(start_index, end_index - start_index)
-              trailing_scope = source_text.byteslice(end_index, 2).to_s == '::'
-
-              replacement_name = if ref.kind == :cursor_class_template && trailing_scope && !span_text.include?('<')
-                                   ref.qualified_display_name
-                                 else
-                                   qualified_name
-                                 end
-              replacement_text = replacement_from_name_span(span_text, simple_name, replacement_name)
-              if is_dependent_typedef && replacement_text && !trailing_scope &&
-                 !preceded_by_typename?(source_text, start_index)
-                replacement_text = "typename #{replacement_text}"
-              end
-
-              if replacement_text && replacement_text != span_text
-                range_replacements << replacement.merge(replacement: replacement_text, kind: :type)
-                next
-              end
-            end
-
-            type_fallbacks << [ref, simple_name, qualified_name, is_dependent_typedef]
-          rescue ArgumentError
-            # Skip if we can't get qualified name (e.g., invalid cursor)
-          end
-        end
-
-        # Phase 2: Qualify declaration references (functions, enum values, static members)
-        # For example: noArray() -> cv::noArray(), NORM_L2 -> cv::NORM_L2
-        decl_fallbacks = []
-        decl_refs = default_expr.find_by_kind(true, :cursor_decl_ref_expr).to_a
-        decl_refs = [default_expr] + decl_refs if default_expr.kind == :cursor_decl_ref_expr
-        decl_refs.each do |decl_ref|
-          ref = decl_ref.referenced
-          next unless ref && ref.kind != :cursor_invalid_file
-
-          begin
-            # Use ref.spelling (the symbol's declared name) rather than extent.text.
-            # This gives us what the symbol is actually named, not what text appears in source.
-            simple_name = ref.spelling
-            next if simple_name.nil? || simple_name.empty?
-
-            # Skip methods already qualified in source (e.g., Range::all() has 'all' after '::')
-            if ref.kind == :cursor_cxx_method
-              next if default_text.match?(/::#{Regexp.escape(simple_name)}\s*\(/)
-            end
-
-            # Determine the correct qualified name based on declaration context
-            qualified_name = if ref.kind == :cursor_enum_constant_decl &&
-                                ref.semantic_parent.kind == :cursor_enum_decl &&
-                                !ref.semantic_parent.enum_scoped?
-                               # Unscoped (C-style) enum: values are in enclosing scope, not under enum type
-                               # e.g., cv::DECOMP_SVD (correct), not cv::DecompTypes::DECOMP_SVD
-                               enum_parent = ref.semantic_parent.semantic_parent
-                               if enum_parent && enum_parent.kind == :cursor_namespace
-                                 "#{enum_parent.qualified_name}::#{simple_name}"
-                               elsif ref.semantic_parent.anonymous? &&
-                                     enum_parent && enum_parent.kind != :cursor_translation_unit
-                                 # Anonymous enum in class: cv::Mat::AUTO_STEP, not cv::Mat::(unnamed)::AUTO_STEP
-                                 "#{enum_parent.qualified_name}::#{simple_name}"
-                               else
-                                 ref.qualified_name
-                               end
-                             elsif ref.semantic_parent.kind == :cursor_class_template
-                               # Class template members need qualified_display_name to preserve template params
-                               "#{ref.semantic_parent.qualified_display_name}::#{simple_name}"
-                             else
-                               ref.qualified_name
-                             end
-
-            next if simple_name == qualified_name
-            next if qualified_name.start_with?('::')
-
-            # Skip macro identifiers: if qualified_name doesn't end with simple_name, the cursor
-            # resolved through a macro to a different symbol (e.g., stdout -> __acrt_iob_func on Windows).
-            # We want to keep the original source text in these cases.
-            next unless qualified_name.end_with?(simple_name)
-
-            range = if decl_ref.extent.text.include?('<')
-                      decl_ref.spelling_name_range(0)
-                    else
-                      decl_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
-                    end
-            replacement = source_range_replacement(source_text, default_text_offset, range)
-            if replacement
-              start_index = replacement[:start_offset] - default_text_offset
-              end_index = replacement[:end_offset] - default_text_offset
-              span_text = source_text.byteslice(start_index, end_index - start_index)
-              replacement_text = replacement_from_name_span(span_text, simple_name, qualified_name)
-              if replacement_text && replacement_text != span_text
-                range_replacements << replacement.merge(replacement: replacement_text, kind: :decl)
-                next
-              end
-            end
-
-            decl_fallbacks << [simple_name, qualified_name]
-          rescue ArgumentError
-            # Skip if we can't get qualified name
-          end
-        end
-
-        decl_replacements = range_replacements.select { |replacement| replacement[:kind] == :decl }
-        range_replacements.reject! do |replacement|
-          replacement[:kind] == :type &&
-            decl_replacements.any? do |decl_replacement|
-              decl_replacement[:start_offset] <= replacement[:start_offset] &&
-                decl_replacement[:end_offset] >= replacement[:end_offset]
-            end
-        end
-
-        default_text = apply_source_replacements(source_text, default_text_offset, range_replacements) unless range_replacements.empty?
-
-        type_fallbacks.each do |type_fallback|
-          ref, simple_name, qualified_name, is_dependent_typedef = type_fallback
-          default_text = fallback_qualify_type_reference(default_text, ref, simple_name, qualified_name, is_dependent_typedef)
-        end
-
-        decl_fallbacks.each do |decl_fallback|
-          simple_name, qualified_name = decl_fallback
-          default_text = fallback_qualify_declaration_reference(default_text, simple_name, qualified_name)
-        end
-
-        default_text
+        qualify_source_default_references(default_expr, default_text, default_text_offset)
       end
 
       # Qualify nested typedefs from a class template in a type spelling

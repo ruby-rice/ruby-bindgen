@@ -46,3 +46,10 @@ inline Rice::Data_Type<QualifiedDefaults::QualifiedNestedDefault<T, U>> Qualifie
     .define_attr("first", &QualifiedDefaults::QualifiedNestedDefault<T, U>::first)
     .define_attr("second", &QualifiedDefaults::QualifiedNestedDefault<T, U>::second);
 }
+
+template<typename T, int N>
+inline Rice::Data_Type<QualifiedDefaults::QualifiedValueDefault<T, N>> QualifiedValueDefault_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<QualifiedDefaults::QualifiedValueDefault<T, N>>(parent, name)
+    .define_constant("Value", QualifiedDefaults::QualifiedValueDefault<T, N>::value);
+}

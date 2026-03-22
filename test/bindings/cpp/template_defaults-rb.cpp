@@ -33,6 +33,9 @@ void Init_TemplateDefaults()
 
   Module rb_mQualifiedDefaults = define_module("QualifiedDefaults");
 
+  Enum<QualifiedDefaults::Counts> rb_cQualifiedDefaultsCounts = define_enum_under<QualifiedDefaults::Counts>("Counts", rb_mQualifiedDefaults)
+    .define_value("DefaultCount", QualifiedDefaults::Counts::DefaultCount);
+
   Rice::Data_Type<QualifiedDefaults::Tag> rb_cQualifiedDefaultsTag = define_class_under<QualifiedDefaults::Tag>(rb_mQualifiedDefaults, "Tag")
     .define_constructor(Constructor<QualifiedDefaults::Tag>())
     .define_attr("value", &QualifiedDefaults::Tag::value);
@@ -40,4 +43,6 @@ void Init_TemplateDefaults()
   Rice::Data_Type<QualifiedDefaults::QualifiedTypeDefault<int>> rb_cQualifiedTypeDefaultInt = QualifiedTypeDefault_instantiate<int, QualifiedDefaults::Tag>(Rice::Module(rb_cObject), "QualifiedTypeDefaultInt");
 
   Rice::Data_Type<QualifiedDefaults::QualifiedNestedDefault<int>> rb_cQualifiedNestedDefaultInt = QualifiedNestedDefault_instantiate<int, QualifiedDefaults::Box<QualifiedDefaults::Tag>>(Rice::Module(rb_cObject), "QualifiedNestedDefaultInt");
+
+  Rice::Data_Type<QualifiedDefaults::QualifiedValueDefault<int>> rb_cQualifiedValueDefaultInt = QualifiedValueDefault_instantiate<int, QualifiedDefaults::DefaultCount>(Rice::Module(rb_cObject), "QualifiedValueDefaultInt");
 }
