@@ -115,6 +115,8 @@ inline Rice::Data_Type<Tests::SearchIndex<Distance>> SearchIndex_instantiate(Ric
   return Rice::define_class_under<Tests::SearchIndex<Distance>>(parent, name)
     .define_constructor(Constructor<Tests::SearchIndex<Distance>, const typename Tests::SearchIndex<Distance>::ElementType &>(),
       Arg("element"))
+    .template define_method<void(Tests::SearchIndex<Distance>::*)(const typename Tests::SearchIndex<Distance>::ElementType &)>("search_qualified", &Tests::SearchIndex<Distance>::searchQualified,
+      Arg("qualified_element"))
     .define_constructor(Constructor<Tests::SearchIndex<Distance>, const Tests::SearchIndex<Distance> &, int>(),
       Arg("other"), Arg("flags") = static_cast<int>(0))
     .template define_method<void(Tests::SearchIndex<Distance>::*)(int, typename Tests::SearchIndex<Distance>::ElementType)>("search", &Tests::SearchIndex<Distance>::search,

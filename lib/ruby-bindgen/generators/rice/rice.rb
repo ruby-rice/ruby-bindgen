@@ -1333,7 +1333,7 @@ module RubyBindgen
                           else
                             display
                           end
-            "#{const_prefix}typename #{full_parent}::#{type.unqualified_type.spelling}"
+            "#{const_prefix}typename #{full_parent}::#{decl.spelling}"
           else
             type.fully_qualified_name(@printing_policy)
           end

@@ -214,6 +214,13 @@ namespace Tests
         // Constructor with dependent typedef param (Bug 1: needs qualification in Constructor<>)
         SearchIndex(const ElementType& element);
 
+        // Self-qualified dependent typedefs should still resolve to the current
+        // template instantiation exactly once:
+        //   typename Tests::SearchIndex<Distance>::ElementType
+        // not:
+        //   typename Tests::SearchIndex<Distance>::SearchIndex<Distance>::ElementType
+        void searchQualified(const SearchIndex::ElementType& qualified_element);
+
         // Constructor with default value referencing self (Bug 3: needs template args)
         SearchIndex(const SearchIndex& other, int flags = 0);
 
