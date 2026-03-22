@@ -76,7 +76,7 @@ module FFI
           case decl.kind
           when :cursor_typedef_decl, :cursor_type_alias_decl
             # Preserve the typedef/alias name and qualify with namespace.
-            spelling = self.spelling.sub(/^const\s+/, '')
+            spelling = self.unqualified_type.spelling
             qualified = decl.qualified_name
 
             if spelling.include?('::')
@@ -121,7 +121,7 @@ module FFI
 
           qualified = decl.qualified_name
           const_prefix = self.const_qualified? ? "const " : ""
-          bare_spelling = self.spelling.sub(/^const\s+/, '')
+          bare_spelling = self.unqualified_type.spelling
 
           # qualified_name drops template args — recover them from spelling
           template_args = bare_spelling.include?('<') ? bare_spelling[/<.*/] : ''

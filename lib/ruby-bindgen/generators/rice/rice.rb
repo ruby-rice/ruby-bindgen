@@ -501,7 +501,7 @@ module RubyBindgen
             next unless (decl.location.file == cursor.location.file rescue false)
 
             # Auto-instantiate if no typedef exists
-            instantiated_type = type_spelling(type).sub(/^const\s+/, '')
+            instantiated_type = type_spelling(type.unqualified_type)
             instantiated_type = qualify_class_static_members(instantiated_type, cursor)
             next if @typedef_map[instantiated_type]
 
@@ -949,7 +949,7 @@ module RubyBindgen
                           else
                             display
                           end
-            "#{const_prefix}typename #{full_parent}::#{type.spelling.sub("const ", "")}"
+            "#{const_prefix}typename #{full_parent}::#{type.unqualified_type.spelling}"
           else
             type.fully_qualified_name(@printing_policy)
           end
