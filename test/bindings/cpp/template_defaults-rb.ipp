@@ -53,3 +53,17 @@ inline Rice::Data_Type<QualifiedDefaults::QualifiedValueDefault<T, N>> Qualified
   return Rice::define_class_under<QualifiedDefaults::QualifiedValueDefault<T, N>>(parent, name)
     .define_constant("Value", QualifiedDefaults::QualifiedValueDefault<T, N>::value);
 }
+
+template<typename T>
+inline Rice::Data_Type<TemplateTemplateDefaults::Box<T>> Box_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<TemplateTemplateDefaults::Box<T>>(parent, name)
+    .define_attr("value", &TemplateTemplateDefaults::Box<T>::value);
+}
+
+template<typename T, template<typename> class Container>
+inline Rice::Data_Type<TemplateTemplateDefaults::Holder<T, Container>> Holder_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<TemplateTemplateDefaults::Holder<T, Container>>(parent, name)
+    .define_attr("value", &TemplateTemplateDefaults::Holder<T, Container>::value);
+}

@@ -582,14 +582,8 @@ module RubyBindgen
         # — they have empty spelling and produce invalid C++ like `<T, >`
         template_parameters = cursor.find_by_kind(false, *template_parameter_kinds)
                                     .reject { |p| p.spelling.empty? }
-        template_signature = template_parameters.map do |template_parameter|
-          if template_parameter.kind == :cursor_template_type_parameter
-            "typename #{template_parameter.spelling}"
-          else
-            type_spelling = template_parameter.type&.spelling || "int"
-            "#{type_spelling} #{template_parameter.spelling}"
-          end
-        end.join(", ")
+        template_signature = template_parameters.map { |template_parameter| template_parameter_signature(template_parameter) }
+                                               .join(", ")
 
         # Build fully qualified type using template params (e.g., Tests::Matrix<T, Rows, Columns>)
         param_names = template_parameters.map(&:spelling).join(", ")
@@ -775,8 +769,42 @@ module RubyBindgen
           return qualify_template_non_type_default(param)
         elsif param.kind == :cursor_template_type_parameter
           return qualify_template_type_default(param)
+        elsif param.kind == :cursor_template_template_parameter
+          return qualify_template_template_default(param)
         end
         nil
+      end
+
+      # Render a class template parameter for the instantiate helper's own
+      # template declaration.
+      #
+      # Examples:
+      #   `typename T`
+      # stays
+      #   `typename T`
+      #
+      #   `int N = 4`
+      # becomes
+      #   `int N`
+      #
+      #   `template<typename> class Container = Box`
+      # becomes
+      #   `template<typename> class Container`
+      def template_parameter_signature(template_parameter)
+        case template_parameter.kind
+        when :cursor_template_type_parameter
+          "typename #{template_parameter.spelling}"
+        when :cursor_non_type_template_parameter
+          type_spelling = template_parameter.type&.spelling || "int"
+          "#{type_spelling} #{template_parameter.spelling}"
+        when :cursor_template_template_parameter
+          declaration = template_parameter.extent.text
+          return "template<typename> class #{template_parameter.spelling}" if declaration.nil? || declaration.empty?
+
+          declaration.partition('=').first.rstrip
+        else
+          raise("Unsupported template parameter kind: #{template_parameter.kind}")
+        end
       end
 
       # Qualify source-written references within extracted default text by using
@@ -978,6 +1006,25 @@ module RubyBindgen
 
         default_text, default_text_offset = extracted
         qualify_source_default_references(param, default_text, default_text_offset)
+      end
+
+      # Qualify a template-template default using the same source-span rewrite as
+      # type defaults.
+      #
+      # Examples:
+      #   'template<typename> class Container = Box'
+      # becomes
+      #   'TemplateTemplateDefaults::Box'
+      #
+      #   'template<typename> class Container = inner::Box'
+      # becomes
+      #   'Outer::inner::Box'
+      def qualify_template_template_default(param)
+        extracted = extract_default_text(param)
+        return nil unless extracted
+
+        default_text, default_text_offset = extracted
+        qualify_source_default_references(param, default_text, default_text_offset, qualify_decl_refs: false)
       end
 
       # Qualify template arguments in a type spelling

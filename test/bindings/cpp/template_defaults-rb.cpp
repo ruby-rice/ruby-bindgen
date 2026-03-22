@@ -45,4 +45,8 @@ void Init_TemplateDefaults()
   Rice::Data_Type<QualifiedDefaults::QualifiedNestedDefault<int>> rb_cQualifiedNestedDefaultInt = QualifiedNestedDefault_instantiate<int, QualifiedDefaults::Box<QualifiedDefaults::Tag>>(Rice::Module(rb_cObject), "QualifiedNestedDefaultInt");
 
   Rice::Data_Type<QualifiedDefaults::QualifiedValueDefault<int>> rb_cQualifiedValueDefaultInt = QualifiedValueDefault_instantiate<int, QualifiedDefaults::DefaultCount>(Rice::Module(rb_cObject), "QualifiedValueDefaultInt");
+
+  Module rb_mTemplateTemplateDefaults = define_module("TemplateTemplateDefaults");
+
+  Rice::Data_Type<TemplateTemplateDefaults::Holder<int>> rb_cHolderInt = Holder_instantiate<int, TemplateTemplateDefaults::Box>(Rice::Module(rb_cObject), "HolderInt");
 }

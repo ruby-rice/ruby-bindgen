@@ -104,3 +104,26 @@ namespace QualifiedDefaults
 typedef QualifiedDefaults::QualifiedTypeDefault<int> QualifiedTypeDefaultInt;
 typedef QualifiedDefaults::QualifiedNestedDefault<int> QualifiedNestedDefaultInt;
 typedef QualifiedDefaults::QualifiedValueDefault<int> QualifiedValueDefaultInt;
+
+namespace TemplateTemplateDefaults
+{
+    template<typename T>
+    class Box
+    {
+    public:
+        T value;
+    };
+
+    // Template-template defaults need to be appended when omitted from a typedef:
+    //   Holder<int, TemplateTemplateDefaults::Box>
+    // not:
+    //   Holder<int>
+    template<typename T, template<typename> class Container = Box>
+    class Holder
+    {
+    public:
+        Container<T> value;
+    };
+}
+
+typedef TemplateTemplateDefaults::Holder<int> HolderInt;
