@@ -2,6 +2,26 @@
 
 namespace Tests
 {
+  // Actual template arguments should come from libclang's template argument APIs,
+  // not from splitting the specialization spelling on commas. Function pointer
+  // type arguments contain commas inside the parameter list:
+  //   FunctionBase<void (*)(int, int)>
+  // not:
+  //   FunctionBase<void (*)(int>
+  template<typename Signature>
+  struct FunctionBase
+  {
+    FunctionBase() = default;
+  };
+
+  template<typename Signature>
+  struct FunctionDerived : public FunctionBase<Signature>
+  {
+    FunctionDerived() : FunctionBase<Signature>() {}
+  };
+
+  typedef FunctionDerived<void (*)(int, int)> FunctionDerivedFn;
+
   // Base template class
   template <typename T>
   struct BasePtr

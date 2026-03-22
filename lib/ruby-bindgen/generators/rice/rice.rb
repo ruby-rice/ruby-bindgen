@@ -723,10 +723,7 @@ module RubyBindgen
         extracted_args = match[1]
 
         # Get template parameters from class template
-        template_parameter_kinds = [:cursor_template_type_parameter,
-                                    :cursor_non_type_template_parameter,
-                                    :cursor_template_template_parameter]
-        template_params = cursor_template.find_by_kind(false, *template_parameter_kinds).to_a
+        template_params = template_parameters(cursor_template)
         expected_count = template_params.length
 
         # Count extracted arguments (handle nested templates by counting only top-level commas)
@@ -814,6 +811,73 @@ module RubyBindgen
           end
         end
         count
+      end
+
+      def template_parameters(template_cursor)
+        template_parameter_kinds = [:cursor_template_type_parameter,
+                                    :cursor_non_type_template_parameter,
+                                    :cursor_template_template_parameter]
+        template_cursor.find_by_kind(false, *template_parameter_kinds).to_a
+      end
+
+      # Get the actual template arguments for a specialization by preferring
+      # libclang's semantic type arguments and only falling back to source text
+      # for non-type or template-template arguments.
+      #
+      # Examples:
+      #   typedef FunctionDerived<void (*)(int, int)> FunctionDerivedFn;
+      #   => ['void (*)(int, int)']
+      #
+      #   typedef Vec<unsigned char, 2> Vec2b;
+      #   => ['unsigned char', '2']
+      #
+      # Type arguments come from Type#template_argument_type, so commas inside a
+      # function pointer type stay attached to that one argument instead of
+      # being split into separate arguments.
+      def specialization_template_arguments(specialization_cursor, specialized_type, template_cursor)
+        count = specialized_type.num_template_arguments
+        return [] if count <= 0
+
+        source_fallbacks = specialization_template_argument_source_texts(specialization_cursor, template_cursor)
+
+        count.times.filter_map do |index|
+          arg_type = specialized_type.template_argument_type(index)
+          arg_type.kind == :type_invalid ? source_fallbacks.shift : type_spelling(arg_type)
+        end
+      end
+
+      # Collect source-written template arguments that libclang does not expose
+      # through Type#template_argument_type.
+      #
+      # Examples:
+      #   typedef Vec<unsigned char, 2> Vec2b;
+      #   => ['2']
+      #
+      #   typedef Holder<int, Support::Box> HolderInt;
+      #   => ['Support::Box']
+      #
+      # We skip the outer template name itself and any child cursors that are
+      # only details of a type argument, such as the `int` parameter cursors
+      # inside `void (*)(int, int)`.
+      def specialization_template_argument_source_texts(specialization_cursor, template_cursor)
+        specialization_cursor.each(false).filter_map do |child|
+          next if child.kind == :cursor_namespace_ref
+          next if child.kind == :cursor_parm_decl
+          next if child.kind == :cursor_type_ref
+          next if child.kind == :cursor_template_ref && child.referenced == template_cursor
+
+          source_text = case child.kind
+                        when :cursor_decl_ref_expr, :cursor_template_ref
+                          range = child.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+                          range&.text
+                        else
+                          child.extent.text
+                        end
+          source_text = child.extent.text if source_text.nil? || source_text.empty?
+          source_text
+        rescue ArgumentError
+          child.extent.text
+        end
       end
 
       # Extract default value from a template parameter
@@ -2479,10 +2543,44 @@ module RubyBindgen
       # e.g., "Tests::Matx<unsigned char, 2, 1>" -> "MatxUnsignedChar21"
       def ruby_name_from_template(base_spelling, template_arguments)
         base_name = base_spelling.sub(/<.*>\z/, "").split("::").last.camelize
-        args_name = split_template_args(template_arguments).map { |t|
-          t.split("::").last.camelize
-        }.join
+        argument_values = template_arguments.is_a?(Array) ? template_arguments : split_template_args(template_arguments)
+        args_name = argument_values.map { |argument| ruby_name_from_template_argument(argument) }.join
         @namer.apply_rename_types(base_name + args_name)
+      end
+
+      # Collapse one template argument spelling into a Ruby-safe class-name
+      # fragment for auto-generated base classes.
+      #
+      # Examples:
+      #   'unsigned char'
+      #   => 'UnsignedChar'
+      #
+      #   'void (*)(int, int)'
+      #   => 'VoidPtrIntInt'
+      #
+      #   'Support::Box<Support::Tag>'
+      #   => 'BoxTag'
+      def ruby_name_from_template_argument(argument)
+        tokens = argument.scan(/::|&&|&|\*|[A-Za-z_]\w*|\d+/)
+
+        tokens.each_with_index.filter_map do |token, index|
+          next_token = tokens[index + 1]
+
+          case token
+          when '::'
+            nil
+          when '&&'
+            'RvalueRef'
+          when '&'
+            'Ref'
+          when '*'
+            'Ptr'
+          else
+            next if next_token == '::'
+
+            token.camelize
+          end
+        end.join
       end
 
       # Auto-generate a base class definition when no typedef exists for it.
@@ -2495,8 +2593,15 @@ module RubyBindgen
         return "" if base_template.location.in_system_header?
         # Skip base templates from included files — their own output handles registration
         return "" unless base_template.file_location.file == base_template.translation_unit.file.name
-        base_template_arguments = base_spelling.match(/<(.+)>\z/)&.[](1) || template_arguments
-        return "" unless base_template_arguments
+        base_template_arguments = if template_arguments.is_a?(Array)
+                                    template_arguments
+                                  else
+                                    extracted_arguments = base_spelling.match(/<(.+)>\z/)&.[](1) || template_arguments
+                                    return "" unless extracted_arguments
+                                    split_template_args(extracted_arguments)
+                                  end
+        base_template_arguments_text = base_template_arguments.join(', ')
+        return "" if base_template_arguments.empty?
 
         result = ""
         base_base_spelling = nil
@@ -2510,16 +2615,15 @@ module RubyBindgen
               base_base_qualified_name = base_base_template_ref.referenced.qualified_name
 
               # Build substitution map from template params to actual values
-              template_params = base_template.find_by_kind(false, :cursor_template_type_parameter,
-                                                           :cursor_non_type_template_parameter).map(&:spelling)
-              template_arg_values = split_template_args(base_template_arguments)
+              template_params = template_parameters(base_template).map(&:spelling)
+              template_arg_values = base_template_arguments
               subs = template_params.each_with_index.to_h { |param, i| [param, template_arg_values[i]] }
 
               # Substitute template parameters with actual values
               base_base_type_spelling = base_base_ref.type.spelling
               if base_base_type_spelling =~ /<(.+)>\z/
-                base_base_args = split_template_args($1).map { |arg| subs[arg] || arg }.join(', ')
-                base_base_spelling = "#{base_base_qualified_name}<#{base_base_args}>"
+                base_base_args = split_template_args($1).map { |arg| subs[arg] || arg }
+                base_base_spelling = "#{base_base_qualified_name}<#{base_base_args.join(', ')}>"
 
                 if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
                   result = auto_generate_base_class(base_base_ref, base_base_spelling, base_base_args, under)
@@ -2537,14 +2641,20 @@ module RubyBindgen
         result + render_template("auto_generated_base_class",
                         :cruby_name => cruby_name, :ruby_name => ruby_name,
                         :base_spelling => base_spelling, :base_base_spelling => base_base_spelling,
-                        :base_template => base_template, :template_arguments => base_template_arguments,
+                        :base_template => base_template, :template_arguments => base_template_arguments_text,
                         :under => under)
       end
 
       # Auto-generate a template base class for a non-template derived class.
       # For example: class PlaneWarper : public WarperBase<PlaneProjector>
       def auto_generate_template_base_for_class(base_specifier, base_spelling, under)
-        auto_generate_base_class(base_specifier, base_spelling, nil, under, recursive: false)
+        base_template = base_specifier.find_first_by_kind(false, :cursor_template_ref)&.referenced
+        template_arguments = if base_template
+                               specialization_template_arguments(base_specifier, base_specifier.type, base_template)
+                             else
+                               nil
+                             end
+        auto_generate_base_class(base_specifier, base_spelling, template_arguments, under, recursive: false)
       end
 
       def visit_union(cursor)
@@ -2837,22 +2947,9 @@ module RubyBindgen
           return base_type_ref&.referenced&.qualified_name
         end
 
-        # Extract template arguments from the canonical spelling of the typedef
-        canonical = underlying_type.canonical.spelling
-        return nil unless canonical =~ /<(.+)>\z/
-
-        template_args_str = $1
-
         # Get template parameter names from the derived template
-        template_params = []
-        derived_template.each do |c|
-          if c.kind == :cursor_template_type_parameter || c.kind == :cursor_non_type_template_parameter
-            template_params << c.spelling
-          end
-        end
-
-        # Parse template argument values (handling nested templates with commas)
-        template_arg_values = split_template_args(template_args_str)
+        template_params = template_parameters(derived_template).map(&:spelling)
+        template_arg_values = specialization_template_arguments(cursor, underlying_type, derived_template)
 
         # Build substitution map: param_name -> actual_value
         subs = {}
