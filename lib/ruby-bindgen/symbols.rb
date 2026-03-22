@@ -66,7 +66,7 @@ module RubyBindgen
         end
       end
 
-      add_parameter_candidates(candidates, cursor, qualified_names) if cursor.type.respond_to?(:args_size)
+      add_parameter_candidates(candidates, cursor, qualified_names) if cursor.type.is_a?(FFI::Clang::Types::Function)
 
       if ENV['BINDGEN_DEBUG_SYMBOLS']
         $stderr.puts "Candidates for #{cursor.spelling}: #{candidates.inspect}"
