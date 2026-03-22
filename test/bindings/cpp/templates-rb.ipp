@@ -159,3 +159,13 @@ inline Rice::Data_Type<Tests::StaticSized<N>> StaticSized_instantiate(Rice::Modu
     .define_constructor(Constructor<Tests::StaticSized<N>, const Tests::FixedBuffer<int, Tests::StaticSized<N>::Size> &>(),
       Arg("value"));
 }
+
+template<int N>
+inline Rice::Data_Type<Tests::EnumSized<N>> EnumSized_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::EnumSized<N>>(parent, name)
+    .define_constant("Size", (int)Tests::EnumSized<N>::Size)
+    .define_constructor(Constructor<Tests::EnumSized<N>>())
+    .define_constructor(Constructor<Tests::EnumSized<N>, const Tests::FixedBuffer<int, Tests::EnumSized<N>::Size> &>(),
+      Arg("value"));
+}

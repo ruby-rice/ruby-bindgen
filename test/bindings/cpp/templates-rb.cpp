@@ -74,4 +74,6 @@ void Init_Templates()
   Rice::Data_Type<Tests::NestedDependent<int>> rb_cNestedDependenti = NestedDependent_instantiate<int>(rb_mTests, "NestedDependenti");
 
   Rice::Data_Type<Tests::StaticSized<4>> rb_cStaticSized4 = StaticSized_instantiate<4>(rb_mTests, "StaticSized4");
+
+  Rice::Data_Type<Tests::EnumSized<4>> rb_cEnumSized4 = EnumSized_instantiate<4>(rb_mTests, "EnumSized4");
 }

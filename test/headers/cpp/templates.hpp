@@ -279,4 +279,21 @@ namespace Tests
     };
 
     typedef StaticSized<4> StaticSized4;
+
+    // Anonymous enum constants behave like class members in source, so the
+    // generated builder still needs to qualify them outside the class scope:
+    //   Tests::EnumSized<N>::Size
+    // not:
+    //   Size
+    template<int N>
+    class EnumSized
+    {
+    public:
+        enum { Size = N };
+
+        EnumSized() = default;
+        explicit EnumSized(const FixedBuffer<int, Size>& value);
+    };
+
+    typedef EnumSized<4> EnumSized4;
 }

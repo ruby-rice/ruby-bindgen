@@ -1590,11 +1590,17 @@ module RubyBindgen
         result
       end
 
-      # Qualify bare static const/constexpr member names used as non-type template args.
-      # Within a class like GPCPatchDescriptor, a member can write Vec<double, nFeatures>
-      # but the generated binding code is outside the class, so it needs
-      # Vec<double, GPCPatchDescriptor::nFeatures>. qualify_template_args then handles
-      # qualifying GPCPatchDescriptor to cv::optflow::GPCPatchDescriptor.
+      # Qualify bare class members used as non-type template args.
+      # Within a class like GPCPatchDescriptor, a member can write
+      # Vec<double, nFeatures> but the generated binding code is outside the
+      # class, so it needs Vec<double, GPCPatchDescriptor::nFeatures>.
+      # qualify_template_args then handles qualifying GPCPatchDescriptor to
+      # cv::optflow::GPCPatchDescriptor.
+      #
+      # Unscoped enum constants need the same treatment:
+      #   FixedBuffer<int, Size>
+      # becomes
+      #   FixedBuffer<int, Tests::EnumSized<N>::Size>
       #
       # Class templates need their template parameters preserved:
       #   FixedBuffer<int, Size>
@@ -1614,6 +1620,10 @@ module RubyBindgen
           class_cursor.each(false) do |child|
             if child.kind == :cursor_variable
               names << child.spelling
+            elsif child.kind == :cursor_enum_decl && !child.enum_scoped?
+              child.each(false) do |enum_child|
+                names << enum_child.spelling if enum_child.kind == :cursor_enum_constant_decl
+              end
             end
           end
           qualified_parent = if parent_kind == :cursor_class_template
