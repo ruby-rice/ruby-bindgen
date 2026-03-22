@@ -121,10 +121,29 @@ inline Rice::Data_Type<Support::ForeignBase<T>> ForeignBase_instantiate(Rice::Mo
 }
 
 template<typename T>
+inline Rice::Data_Type<Support::HiddenBase<T>> HiddenBase_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Support::HiddenBase<T>>(parent, name)
+    .define_attr("value", &Support::HiddenBase<T>::value)
+    .define_constructor(Constructor<Support::HiddenBase<T>>())
+    .define_constructor(Constructor<Support::HiddenBase<T>, T>(),
+      Arg("value_"));
+}
+
+template<typename T>
 inline Rice::Data_Type<Tests::ForeignDerived<T>> ForeignDerived_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::ForeignDerived<T>, Support::ForeignBase<T>>(parent, name)
     .define_constructor(Constructor<Tests::ForeignDerived<T>>())
     .define_constructor(Constructor<Tests::ForeignDerived<T>, T>(),
+      Arg("value_"));
+}
+
+template<typename T>
+inline Rice::Data_Type<Tests::HiddenDerived<T>> HiddenDerived_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::HiddenDerived<T>, Support::HiddenBase<T>>(parent, name)
+    .define_constructor(Constructor<Tests::HiddenDerived<T>>())
+    .define_constructor(Constructor<Tests::HiddenDerived<T>, T>(),
       Arg("value_"));
 }

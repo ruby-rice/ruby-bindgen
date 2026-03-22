@@ -82,4 +82,27 @@ class TemplateResolverTest < RiceAbstractTest
     assert_equal ["int", "Support::Base<int>"],
                  resolver.full_template_arguments(holder_typedef, holder_typedef.underlying_type, holder_template)
   end
+
+  def test_resolves_base_instantiation_for_alias_of_template_specialization
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace Support {
+        template<typename T>
+        struct Base {};
+      }
+
+      namespace Tests {
+        template<typename T>
+        struct Derived : Support::Base<T> {};
+
+        typedef Derived<int> DerivedImpl;
+        typedef DerivedImpl DerivedAlias;
+      }
+    CPP
+
+    resolver = collaborators[:template_resolver]
+    derived_alias = find_cursor(parsed.translation_unit.cursor, :cursor_typedef_decl, "DerivedAlias")
+
+    assert_equal "Support::Base<int>",
+                 resolver.resolve_base_instantiation(derived_alias, derived_alias.underlying_type)
+  end
 end

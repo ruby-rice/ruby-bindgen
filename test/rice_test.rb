@@ -56,7 +56,8 @@ class RiceTest < AbstractTest
   end
 
   def test_template_inheritance
-    run_rice_test("template_inheritance.hpp")
+    run_rice_test("template_inheritance.hpp",
+                  symbols: { skip: ["HiddenDerivediImpl"] })
   end
 
   def test_overloads

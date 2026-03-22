@@ -61,4 +61,7 @@ void Init_TemplateInheritance()
   Rice::Data_Type<Support::ForeignBase<int>> rb_cForeignBasei = ForeignBase_instantiate<int>(rb_mSupport, "ForeignBasei");
 
   Rice::Data_Type<Tests::ForeignDerived<int>> rb_cForeignDerivedi = ForeignDerived_instantiate<int>(rb_mTests, "ForeignDerivedi");
+
+  Rice::Data_Type<Support::HiddenBase<int>> rb_cHiddenBaseInt = HiddenBase_instantiate<int>(rb_mTests, "HiddenBaseInt");
+  Rice::Data_Type<Tests::HiddenDerived<int>> rb_cHiddenDerivedi = HiddenDerived_instantiate<int>(rb_mTests, "HiddenDerivedi");
 }

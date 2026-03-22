@@ -204,10 +204,13 @@ module RubyBindgen
       # template parameters (e.g., Vec<_Tp, cn> : public Matx<_Tp, cn, 1>).
       # Returns the resolved base class spelling or nil if no base class exists.
       def resolve_base_instantiation(cursor, underlying_type)
-        template_ref = cursor.find_first_by_kind(false, :cursor_template_ref)
-        return nil unless template_ref
+        derived_template = specialized_template_cursor(underlying_type)
+        if derived_template.nil?
+          template_ref = cursor.find_first_by_kind(false, :cursor_template_ref)
+          derived_template = template_ref&.referenced
+        end
+        return nil unless derived_template
 
-        derived_template = template_ref.referenced
         base_spec = derived_template.find_first_by_kind(false, :cursor_cxx_base_specifier)
         return nil unless base_spec
 
@@ -256,6 +259,18 @@ module RubyBindgen
       end
 
       private
+
+      def specialized_template_cursor(type)
+        [type, type.canonical].each do |check_type|
+          declaration = check_type.declaration
+          next if declaration.kind == :cursor_no_decl_found
+
+          template = declaration.specialized_template
+          return template unless template.kind == :cursor_invalid_file
+        end
+
+        nil
+      end
 
       def specialization_template_arguments(specialization_cursor, specialized_type, template_cursor)
         argument_cursor = specialization_argument_cursor(specialized_type)

@@ -187,6 +187,16 @@ namespace Support
   };
 
   typedef ForeignBase<int> ForeignBasei;
+
+  template<typename T>
+  class HiddenBase
+  {
+  public:
+    T value;
+
+    HiddenBase() : value() {}
+    explicit HiddenBase(T value_) : value(value_) {}
+  };
 }
 
 namespace Tests
@@ -200,4 +210,20 @@ namespace Tests
   };
 
   typedef ForeignDerived<int> ForeignDerivedi;
+
+  // Alias typedefs should still resolve inherited template bases through the
+  // semantic specialized type, even when the direct typedef is skipped:
+  //   Support::HiddenBase<int>
+  // not:
+  //   nil / no base registration
+  template<typename T>
+  class HiddenDerived : public Support::HiddenBase<T>
+  {
+  public:
+    HiddenDerived() : Support::HiddenBase<T>() {}
+    explicit HiddenDerived(T value_) : Support::HiddenBase<T>(value_) {}
+  };
+
+  typedef HiddenDerived<int> HiddenDerivediImpl;
+  typedef HiddenDerivediImpl HiddenDerivedi;
 }
