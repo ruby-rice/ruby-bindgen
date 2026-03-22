@@ -1175,31 +1175,39 @@ module RubyBindgen
         canonical_decl = cursor.underlying_type.canonical.declaration
         return if canonical_decl.kind != :cursor_no_decl_found && canonical_decl.location.in_system_header?
 
-        cursor_template_ref = cursor.find_first_by_kind(false, :cursor_template_ref)
+        template_specialization = template_specialization_target(cursor)
+        return unless template_specialization
 
-        # Handle template case. For example:
-        #   typedef Point_<int> Point2i;
-        if cursor_template_ref
-          # Skip if the template class is in symbols
-          return if skip_symbol?(cursor_template_ref.referenced)
+        cursor_template, underlying_type = template_specialization
+        return if skip_symbol?(cursor_template)
 
-          visit_template_specialization(cursor, cursor_template_ref.referenced, cursor.underlying_type)
-        else
-          # Check for reference to template reference. For example:
-          #   typedef Point2i Point;
-          cursor_ref = cursor.find_first_by_kind(false, :cursor_type_ref)
-          if cursor_ref
-            cursor_template_ref = cursor_ref.referenced.find_first_by_kind(false, :cursor_template_ref)
-            if cursor_template_ref
-              visit_template_specialization(cursor, cursor_template_ref.referenced, cursor_ref.referenced.underlying_type)
-            end
-          end
-        end
+        visit_template_specialization(cursor, cursor_template, underlying_type)
       end
 
       # Handle C++11 'using' type alias declarations the same as typedef
       def visit_type_alias_decl(cursor)
         visit_typedef_decl(cursor)
+      end
+
+      # Resolve a typedef or type alias to the class template specialization it names.
+      # Handles both direct specializations:
+      #   typedef Point_<int> Point2i;
+      # and aliases through an existing typedef:
+      #   typedef Point2i Point;
+      def template_specialization_target(cursor)
+        type = cursor.underlying_type
+
+        loop do
+          declaration = type.declaration
+          return nil if declaration.kind == :cursor_no_decl_found
+
+          template_cursor = declaration.specialized_template
+          return [template_cursor, type] unless template_cursor.kind == :cursor_invalid_file
+
+          return nil unless declaration.kind == :cursor_typedef_decl || declaration.kind == :cursor_type_alias_decl
+
+          type = declaration.underlying_type
+        end
       end
 
       def visit_template_specialization(cursor, cursor_template, underlying_type)

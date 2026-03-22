@@ -3,6 +3,7 @@
 require_relative './abstract_test'
 require_relative './type_index_test'
 require_relative './reference_qualifier_test'
+require_relative './rice_generator_test'
 require_relative './symbols_test'
 require_relative './type_speller_test'
 require_relative './template_resolver_test'
