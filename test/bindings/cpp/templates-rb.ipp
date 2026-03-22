@@ -159,6 +159,8 @@ inline Rice::Data_Type<Tests::StaticSized<N>> StaticSized_instantiate(Rice::Modu
     .define_constant("Size", Tests::StaticSized<N>::Size)
     .define_constructor(Constructor<Tests::StaticSized<N>>())
     .define_constructor(Constructor<Tests::StaticSized<N>, const Tests::FixedBuffer<int, Tests::StaticSized<N>::Size> &>(),
+      Arg("value"))
+    .template define_method<void(Tests::StaticSized<N>::*)(const Tests::FixedBuffer<int, Tests::StaticSized<N>::Size> &)>("take_qualified", &Tests::StaticSized<N>::takeQualified,
       Arg("value"));
 }
 

@@ -283,6 +283,13 @@ namespace Tests
 
         StaticSized() = default;
         explicit StaticSized(const FixedBuffer<int, Size>& value);
+
+        // Self-qualified static members still need the full namespace-qualified
+        // class template name in generated code:
+        //   Tests::StaticSized<N>::Size
+        // not:
+        //   StaticSized<N>::Size
+        void takeQualified(const FixedBuffer<int, StaticSized::Size>& value);
     };
 
     typedef StaticSized<4> StaticSized4;

@@ -1781,7 +1781,13 @@ module RubyBindgen
 
         result = spelling.dup
         qualified_parent = typedef_info[:qualified_parent]
+        display_name = class_template.display_name
         typedef_info[:names].each do |name|
+          if display_name && !display_name.empty? && display_name != qualified_parent
+            partially_qualified = /(?<![:\w])#{Regexp.escape(display_name)}::#{Regexp.escape(name)}(?![:\w])/
+            result = result.gsub(partially_qualified, "typename #{qualified_parent}::#{name}")
+          end
+
           unqualified = /(?<![:\w])#{Regexp.escape(name)}(?![:\w])/
           result = result.gsub(unqualified, "typename #{qualified_parent}::#{name}")
         end
@@ -1837,7 +1843,13 @@ module RubyBindgen
 
         result = spelling.dup
         qualified_parent = member_info[:qualified_parent]
+        display_name = class_cursor.display_name
         member_info[:names].each do |name|
+          if display_name && !display_name.empty? && display_name != qualified_parent
+            partially_qualified = /(?<![:\w])#{Regexp.escape(display_name)}::#{Regexp.escape(name)}(?![:\w])/
+            result = result.gsub(partially_qualified, "#{qualified_parent}::#{name}")
+          end
+
           unqualified = /(?<![:\w])#{Regexp.escape(name)}(?![:\w])/
           result = result.gsub(unqualified, "#{qualified_parent}::#{name}")
         end
