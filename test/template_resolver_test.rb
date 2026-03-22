@@ -60,6 +60,35 @@ class TemplateResolverTest < RiceAbstractTest
                  resolver.full_template_arguments(expr_typedef, expr_typedef.underlying_type, box_template)
   end
 
+  def test_builds_template_argument_infos_before_rendering_text
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace Support {
+        template<typename T>
+        struct Wrap {};
+
+        template<typename T, int N, template<typename> class C>
+        struct Box {};
+      }
+
+      namespace Tests {
+        typedef Support::Box<int, 1 + 2, Support::Wrap> ExprBox;
+      }
+    CPP
+
+    resolver = collaborators[:template_resolver]
+    expr_typedef = find_cursor(parsed.translation_unit.cursor, :cursor_typedef_decl, "ExprBox")
+    box_template = expr_typedef.find_first_by_kind(false, :cursor_template_ref).referenced
+
+    infos = resolver.send(:specialization_template_argument_infos, expr_typedef, expr_typedef.underlying_type, box_template)
+
+    assert_equal [:template_argument_type, :template_argument_integral, :template_argument_template],
+                 infos.map(&:kind)
+    assert_equal [nil, "1 + 2", "Support::Wrap"], infos.map(&:source_text)
+    assert_equal [nil, 3, nil], infos.map(&:value)
+    assert_equal "int",
+                 collaborators[:type_speller].type_spelling(infos.first.type)
+  end
+
   def test_fills_dependent_type_defaults_from_specialized_cursor_arguments
     parsed, collaborators = parse_cpp(<<~CPP)
       namespace Support {

@@ -4,6 +4,11 @@ module RubyBindgen
     # bases using libclang's semantic APIs plus source-written fallback text when
     # libclang does not expose a complete argument string.
     class TemplateResolver
+      # Captures the semantic and source-written pieces for one template argument.
+      # TemplateResolver builds these first, then later code renders them into
+      # emitted C++ text.
+      TemplateArgumentInfo = Struct.new(:kind, :type, :value, :unsigned_value, :source_text, keyword_init: true)
+
       def initialize(reference_qualifier:, type_speller:, namer:)
         @reference_qualifier = reference_qualifier
         @type_speller = type_speller
@@ -299,17 +304,8 @@ module RubyBindgen
       end
 
       def specialization_template_arguments(specialization_cursor, specialized_type, template_cursor)
-        argument_cursor = specialization_argument_cursor(specialized_type)
-        # The specialized declaration cursor includes omitted default arguments,
-        # but the type API reports only the arguments written at the use site.
-        count = specialized_type.num_template_arguments
-        return [] if count <= 0
-
-        source_fallbacks = specialization_template_argument_source_texts(specialization_cursor, template_cursor)
-
-        count.times.filter_map do |index|
-          specialization_template_argument_text(argument_cursor, specialized_type, index, source_fallbacks)
-        end
+        specialization_template_argument_infos(specialization_cursor, specialized_type, template_cursor)
+          .filter_map { |argument_info| specialization_template_argument_text(argument_info) }
       end
 
       def specialization_argument_cursor(specialized_type)
@@ -320,26 +316,62 @@ module RubyBindgen
         nil
       end
 
-      def specialization_template_argument_text(argument_cursor, specialized_type, index, source_fallbacks)
+      def specialization_template_argument_infos(specialization_cursor, specialized_type, template_cursor)
+        argument_cursor = specialization_argument_cursor(specialized_type)
+        # The specialized declaration cursor includes omitted default arguments,
+        # but the type API reports only the arguments written at the use site.
+        count = specialized_type.num_template_arguments
+        return [] if count <= 0
+
+        source_fallbacks = specialization_template_argument_source_texts(specialization_cursor, template_cursor)
+
+        count.times.filter_map do |index|
+          specialization_template_argument_info(argument_cursor, specialized_type, index, source_fallbacks)
+        end
+      end
+
+      def specialization_template_argument_info(argument_cursor, specialized_type, index, source_fallbacks)
         if argument_cursor
-          case argument_cursor.template_argument_kind(index)
+          kind = argument_cursor.template_argument_kind(index)
+          case kind
           when :template_argument_type
-            return @type_speller.type_spelling(argument_cursor.template_argument_type(index))
+            arg_type = argument_cursor.template_argument_type(index)
+            return nil if arg_type.kind == :type_invalid
+
+            return TemplateArgumentInfo.new(kind: kind, type: arg_type)
           when :template_argument_integral
-            return source_fallbacks.shift || argument_cursor.template_argument_value(index).to_s
+            return TemplateArgumentInfo.new(kind: kind,
+                                            value: argument_cursor.template_argument_value(index),
+                                            unsigned_value: argument_cursor.template_argument_unsigned_value(index),
+                                            source_text: source_fallbacks.shift)
           when :template_argument_null_ptr
-            return source_fallbacks.shift || "nullptr"
+            return TemplateArgumentInfo.new(kind: kind, source_text: source_fallbacks.shift)
           when :template_argument_template, :template_argument_template_expansion,
                :template_argument_expression, :template_argument_declaration,
                :template_argument_pack
-            return source_fallbacks.shift
+            return TemplateArgumentInfo.new(kind: kind, source_text: source_fallbacks.shift)
           end
         end
 
         arg_type = specialized_type.template_argument_type(index)
         return nil if arg_type.kind == :type_invalid
 
-        @type_speller.type_spelling(arg_type)
+        TemplateArgumentInfo.new(kind: :template_argument_type, type: arg_type)
+      end
+
+      def specialization_template_argument_text(argument_info)
+        case argument_info.kind
+        when :template_argument_type
+          @type_speller.type_spelling(argument_info.type)
+        when :template_argument_integral
+          argument_info.source_text || argument_info.value.to_s
+        when :template_argument_null_ptr
+          argument_info.source_text || "nullptr"
+        when :template_argument_template, :template_argument_template_expansion,
+             :template_argument_expression, :template_argument_declaration,
+             :template_argument_pack
+          argument_info.source_text
+        end
       end
 
       # Collect source-written template arguments that libclang does not expose
