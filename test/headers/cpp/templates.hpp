@@ -227,4 +227,32 @@ namespace Tests
     };
 
     typedef SearchIndex<L2Distance> L2SearchIndex;
+
+    // Test nested dependent types inside template arguments.
+    // The builder must qualify both Outer_ occurrences:
+    //   Inner_<typename Tests::Outer_<Tests::Outer_<T>>::type>
+    // NOT:
+    //   Inner_<typename Outer_<Outer_<T>>::type>
+    template<typename T>
+    struct Outer_
+    {
+        typedef T type;
+    };
+
+    template<typename T>
+    class Inner_
+    {
+    public:
+        Inner_() = default;
+    };
+
+    template<typename T>
+    class NestedDependent
+    {
+    public:
+        NestedDependent() = default;
+        NestedDependent(const Inner_<typename Outer_<Outer_<T>>::type>& value);
+    };
+
+    typedef NestedDependent<int> NestedDependenti;
 }

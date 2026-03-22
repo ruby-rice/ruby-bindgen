@@ -885,21 +885,76 @@ module RubyBindgen
       # Qualify dependent types within template arguments
       # e.g., "cv::Point_<typename DataType<_Tp>::channel_type>"
       #    -> "cv::Point_<typename cv::DataType<_Tp>::channel_type>"
-      # Looks for patterns like "typename SomeClass<...>::member" and qualifies using @type_name_map
+      # Also handles nested template args such as:
+      #   "typename Outer_<Outer_<T>>::type"
+      # -> "typename Tests::Outer_<Tests::Outer_<T>>::type"
+      #
+      # The source range APIs are not available here because libclang only gives us
+      # a type spelling string at this point, so we do a small balanced parse of the
+      # dependent base name and then qualify the nested template args recursively.
+      def balanced_template_suffix(text, start_index)
+        return ["", start_index] unless text[start_index] == '<'
+
+        depth = 0
+        index = start_index
+        while index < text.length
+          case text[index]
+          when '<'
+            depth += 1
+          when '>'
+            depth -= 1
+            return [text[start_index..index], index + 1] if depth == 0
+          end
+          index += 1
+        end
+
+        ["", start_index]
+      end
+
       def qualify_dependent_types_in_template_args(spelling)
         return spelling unless spelling.include?('typename')
 
-        # Match "typename ClassName<...>::" patterns where ClassName might need qualification
-        spelling.gsub(/typename\s+([A-Za-z_][A-Za-z0-9_]*)(<[^>]+>)?::/) do |match|
-          class_name = $1
-          template_part = $2 || ''
-          qualified = @type_name_map[class_name]
-          if qualified && qualified != class_name
-            "typename #{qualified}#{template_part}::"
-          else
-            match
+        result = String.new
+        index = 0
+
+        while (match = /\btypename\b/.match(spelling, index))
+          result << spelling[index...match.end(0)]
+          index = match.end(0)
+
+          while index < spelling.length && spelling[index].match?(/\s/)
+            result << spelling[index]
+            index += 1
           end
+
+          identifier_match = /\A([A-Za-z_][A-Za-z0-9_]*)/.match(spelling[index..])
+          unless identifier_match
+            result << spelling[index]
+            index += 1
+            next
+          end
+
+          class_name = identifier_match[1]
+          name_end = index + class_name.length
+          template_part, after_template = balanced_template_suffix(spelling, name_end)
+          unless spelling[after_template, 2] == '::'
+            result << spelling[index...after_template]
+            index = after_template
+            next
+          end
+
+          qualified_name = @type_name_map[class_name] || class_name
+          qualified_template_part = if template_part.empty?
+                                      ""
+                                    else
+                                      qualify_template_args(qualify_dependent_types_in_template_args(template_part), nil)
+                                    end
+
+          result << "#{qualified_name}#{qualified_template_part}::"
+          index = after_template + 2
         end
+
+        result << spelling[index..] if index < spelling.length
+        result
       end
 
       def type_spellings(cursor)

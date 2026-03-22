@@ -70,4 +70,6 @@ void Init_Templates()
     .define_constructor(Constructor<Tests::L2Distance>());
 
   Rice::Data_Type<Tests::SearchIndex<Tests::L2Distance>> rb_cL2SearchIndex = SearchIndex_instantiate<Tests::L2Distance>(rb_mTests, "L2SearchIndex");
+
+  Rice::Data_Type<Tests::NestedDependent<int>> rb_cNestedDependenti = NestedDependent_instantiate<int>(rb_mTests, "NestedDependenti");
 }

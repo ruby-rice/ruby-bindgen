@@ -120,3 +120,25 @@ inline Rice::Data_Type<Tests::SearchIndex<Distance>> SearchIndex_instantiate(Ric
     .template define_method<void(Tests::SearchIndex<Distance>::*)(int, typename Tests::SearchIndex<Distance>::ElementType)>("search", &Tests::SearchIndex<Distance>::search,
       Arg("count"), Arg("max_dist") = static_cast<typename Tests::SearchIndex<Distance>::ElementType>(typename Tests::SearchIndex<Distance>::ElementType()));
 }
+
+template<typename T>
+inline Rice::Data_Type<Tests::Outer_<T>> Outer__instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::Outer_<T>>(parent, name);
+}
+
+template<typename T>
+inline Rice::Data_Type<Tests::Inner_<T>> Inner__instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::Inner_<T>>(parent, name)
+    .define_constructor(Constructor<Tests::Inner_<T>>());
+}
+
+template<typename T>
+inline Rice::Data_Type<Tests::NestedDependent<T>> NestedDependent_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::NestedDependent<T>>(parent, name)
+    .define_constructor(Constructor<Tests::NestedDependent<T>>())
+    .define_constructor(Constructor<Tests::NestedDependent<T>, const Tests::Inner_<typename Tests::Outer_<Tests::Outer_<T>>::type> &>(),
+      Arg("value"));
+}
