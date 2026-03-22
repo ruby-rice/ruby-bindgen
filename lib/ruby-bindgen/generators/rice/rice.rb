@@ -1308,7 +1308,7 @@ module RubyBindgen
           end
         end
 
-        template_specialization = @type_speller.type_spelling(underlying_type)
+        template_specialization = @template_resolver.specialization_spelling(cursor, underlying_type, cursor_template)
 
         # If template is defined in a different file, include its .ipp for the _instantiate builder
         unless cursor_template.file_location.file == cursor_template.translation_unit.file.name

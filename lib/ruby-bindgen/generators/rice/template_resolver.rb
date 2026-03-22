@@ -43,6 +43,32 @@ module RubyBindgen
         actual_args + default_values
       end
 
+      # Build the C++ specialization spelling for a typedef/alias specialization
+      # using the semantic template cursor plus the written template arguments.
+      #
+      # This is narrower than `full_template_arguments`: the Data_Type<T> side
+      # should preserve the number of arguments written at the use site rather
+      # than eagerly expanding omitted defaults. When libclang does not expose a
+      # complete argument list for a non-type specialization, fall back to the
+      # type speller's direct output.
+      #
+      # Examples:
+      #   typedef FunctionTemplate<callback_ints> FunctionTemplateCallback;
+      #   => Tests::FunctionTemplate<&Tests::callback_ints>
+      #
+      #   typedef MultiDefault<int> MultiDefaultInt;
+      #   => MultiDefault<int>
+      def specialization_spelling(specialization_cursor, specialized_type, template_cursor)
+        return @type_speller.type_spelling(specialized_type) unless template_cursor
+
+        actual_args = specialization_template_arguments(specialization_cursor, specialized_type, template_cursor)
+        count = specialized_type.num_template_arguments
+        return @type_speller.type_spelling(specialized_type) if count <= 0
+        return @type_speller.type_spelling(specialized_type) unless actual_args.length == count
+
+        "#{template_cursor.qualified_name}<#{actual_args.join(', ')}>"
+      end
+
       def template_parameters(template_cursor)
         template_parameter_kinds = [:cursor_template_type_parameter,
                                     :cursor_non_type_template_parameter,

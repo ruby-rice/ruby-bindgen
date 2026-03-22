@@ -90,5 +90,5 @@ void Init_Templates()
   rb_mTests.define_module_function<void(*)(int, int)>("callback_ints", &Tests::callback_ints,
     Arg("left"), Arg("right"));
 
-  Rice::Data_Type<Tests::FunctionTemplate<callback_ints>> rb_cFunctionTemplateCallback = FunctionTemplate_instantiate<&Tests::callback_ints>(rb_mTests, "FunctionTemplateCallback");
+  Rice::Data_Type<Tests::FunctionTemplate<&Tests::callback_ints>> rb_cFunctionTemplateCallback = FunctionTemplate_instantiate<&Tests::callback_ints>(rb_mTests, "FunctionTemplateCallback");
 }

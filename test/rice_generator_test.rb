@@ -83,4 +83,34 @@ class RiceGeneratorTest < RiceAbstractTest
 
     assert_includes auto_instantiated, "Container_instantiate<Tests::AliasItem>"
   end
+
+  def test_visit_template_specialization_qualifies_non_type_function_arguments
+    parsed, = parse_cpp(<<~CPP)
+      namespace Tests {
+        void callback_ints(int left, int right);
+
+        template<void (*Fn)(int, int)>
+        class FunctionTemplate
+        {
+        public:
+          static void invoke();
+        };
+
+        typedef FunctionTemplate<callback_ints> FunctionTemplateCallback;
+      }
+    CPP
+
+    config = load_config(File.join(__dir__, "headers", "cpp"))
+    inputter = RubyBindgen::Inputter.new(parsed.dir, ["fixture.hpp"])
+    rice = RubyBindgen::Generators::Rice.new(inputter, create_outputter("cpp"), config)
+    rice.instance_variable_get(:@type_speller).printing_policy = parsed.translation_unit.cursor.printing_policy
+
+    typedef_cursor = find_cursor(parsed.translation_unit.cursor, :cursor_typedef_decl, "FunctionTemplateCallback")
+    cursor_template, underlying_type = rice.send(:template_specialization_target, typedef_cursor)
+
+    rendered = rice.send(:visit_template_specialization, typedef_cursor, cursor_template, underlying_type)
+
+    assert_includes rendered, "Rice::Data_Type<Tests::FunctionTemplate<&Tests::callback_ints>>"
+    assert_includes rendered, "FunctionTemplate_instantiate<&Tests::callback_ints>"
+  end
 end
