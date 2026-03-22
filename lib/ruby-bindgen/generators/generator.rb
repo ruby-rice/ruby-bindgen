@@ -32,6 +32,18 @@ module RubyBindgen
         template.result(b)
       end
 
+      # Check whether a cursor originates from the translation unit's main file.
+      # This intentionally uses libclang file-object equality rather than comparing
+      # raw file-name strings. Cursor locations only expose the file path string,
+      # so we resolve that path back through `translation_unit.file(...)` and let
+      # libclang compare the resulting file objects.
+      def translation_unit_file?(cursor)
+        file_name = cursor.file_location.file
+        translation_unit_file = cursor.translation_unit.file
+        file = file_name && cursor.translation_unit.file(file_name)
+        file && translation_unit_file && file == translation_unit_file
+      end
+
       def self.template_dir
         raise NotImplementedError
       end

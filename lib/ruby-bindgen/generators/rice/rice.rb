@@ -1281,7 +1281,7 @@ module RubyBindgen
           # (cursor_type_ref may resolve to a template parameter like T instead)
           base_class_template = base_ref.find_first_by_kind(false, :cursor_template_ref)&.referenced
           base_in_current_file = base_class_template &&
-            base_class_template.file_location.file == base_class_template.translation_unit.file.name
+            translation_unit_file?(base_class_template)
           if base_spelling && !base_in_std
             if base_in_current_file
               base_typedef = @type_index.typedef_for(base_spelling)
@@ -1311,7 +1311,7 @@ module RubyBindgen
         template_specialization = @template_resolver.specialization_spelling(cursor, underlying_type, cursor_template)
 
         # If template is defined in a different file, include its .ipp for the _instantiate builder
-        unless cursor_template.file_location.file == cursor_template.translation_unit.file.name
+        unless translation_unit_file?(cursor_template)
           builder_ipp = ipp_path_for_cursor(cursor_template)
           current_ipp = File.join(@relative_dir, "#{@basename}.ipp")
           if builder_ipp != current_ipp
@@ -1362,7 +1362,7 @@ module RubyBindgen
         base_template = base_template_ref.referenced
         return "" if base_template.location.in_system_header?
         # Skip base templates from included files — their own output handles registration
-        return "" unless base_template.file_location.file == base_template.translation_unit.file.name
+        return "" unless translation_unit_file?(base_template)
         base_template_arguments_text = @template_resolver.template_argument_list_text(base_spelling)
         return "" unless base_template_arguments_text
 
@@ -1537,7 +1537,7 @@ module RubyBindgen
 
           # Check if class template is from the main file.
           # Note: from_main_file? doesn't work when -include is used, so manually check.
-          unless class_template_cursor.file_location.file == class_template_cursor.translation_unit.file.name
+          unless translation_unit_file?(class_template_cursor)
             next :continue
           end
 
@@ -1566,7 +1566,7 @@ module RubyBindgen
           # CV__DNN_INLINE_NS_BEGIN/CV__DNN_INLINE_NS_END in a separate header file
           # which causes from_main_file? to be false. So manually check.
           # unless child_cursor.location.from_main_file?
-          unless child_cursor.file_location.file == child_cursor.translation_unit.file.name
+          unless translation_unit_file?(child_cursor)
             next :continue
           end
 

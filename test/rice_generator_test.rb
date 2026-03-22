@@ -1,8 +1,43 @@
 # encoding: UTF-8
 
+require 'tmpdir'
+
 require_relative './rice_abstract_test'
 
 class RiceGeneratorTest < RiceAbstractTest
+  def test_translation_unit_file_predicate_distinguishes_main_and_included_headers
+    Dir.mktmpdir("generator-files") do |dir|
+      File.write(File.join(dir, "included.hpp"), <<~CPP)
+        namespace Tests {
+          class Included {};
+        }
+      CPP
+      File.write(File.join(dir, "fixture.hpp"), <<~CPP)
+        #include "included.hpp"
+
+        namespace Tests {
+          class Local {};
+        }
+      CPP
+
+      config = load_config(File.join(__dir__, "headers", "cpp"))
+      inputter = RubyBindgen::Inputter.new(dir, ["fixture.hpp"])
+      parser = RubyBindgen::Parser.new(inputter, config[:clang_args], libclang: config[:libclang])
+      capture = TranslationUnitCapture.new
+      capture_io { parser.generate(capture) }
+
+      rice = RubyBindgen::Generators::Rice.new(inputter, create_outputter("cpp"), config)
+      root = capture.translation_unit.cursor
+      local_class = root.find_by_kind(true, :cursor_class_decl).find { |child| child.spelling == "Local" }
+      included_class = root.find_by_kind(true, :cursor_class_decl).find { |child| child.spelling == "Included" }
+
+      refute_nil local_class
+      refute_nil included_class
+      assert rice.send(:translation_unit_file?, local_class)
+      refute rice.send(:translation_unit_file?, included_class)
+    end
+  end
+
   def test_template_specialization_target_finds_direct_and_aliased_specializations
     parsed, = parse_cpp(<<~CPP)
       namespace Tests {
