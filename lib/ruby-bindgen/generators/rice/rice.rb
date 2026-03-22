@@ -1,4 +1,5 @@
 require 'set'
+require_relative 'type_index'
 
 module RubyBindgen
   module Generators
@@ -143,8 +144,7 @@ module RubyBindgen
         @init_names = Hash.new
         @namespaces = Set.new
         @classes = Hash.new  # Maps cruby_name -> C++ type for Data_Type<T> declarations
-        @typedef_map = Hash.new
-        @type_name_map = Hash.new  # Maps simple type names to qualified names
+        @type_index = TypeIndex.new
         @auto_generated_bases = Set.new
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
         @export_macros = config[:export_macros] || []
@@ -270,8 +270,6 @@ module RubyBindgen
       def visit_translation_unit(translation_unit, path, relative_path)
         @namespaces.clear
         @classes.clear
-        @typedef_map.clear
-        @type_name_map.clear
         @auto_generated_bases.clear
         @non_member_operators.clear
         @incomplete_iterators.clear
@@ -279,8 +277,8 @@ module RubyBindgen
         cursor = translation_unit.cursor
         @printing_policy = cursor.printing_policy
 
-        # Build maps for typedef lookups and type name qualification
-        build_typedef_map(cursor)
+        # Build lookups for typedef resolution and simple-name qualification.
+        @type_index.build!(cursor)
 
         # Figure out relative paths for generated header and cpp file
         @basename = "#{File.basename(relative_path, ".*")}-rb"
@@ -503,7 +501,7 @@ module RubyBindgen
             # Auto-instantiate if no typedef exists
             instantiated_type = type_spelling(type.unqualified_type)
             instantiated_type = qualify_class_static_members(instantiated_type, cursor)
-            next if @typedef_map[instantiated_type]
+            next if @type_index.typedef_for(instantiated_type)
 
             code = auto_instantiate_template(decl, instantiated_type, type, under)
             result << code unless code.empty?
@@ -1142,14 +1140,14 @@ module RubyBindgen
           collect_type_qualifications(type.canonical, qualifications)
         end
 
-        # Also look up unqualified names in @type_name_map (typedefs and class templates).
+        # Also look up unqualified names in the shared type index (typedefs and class templates).
         # This handles cases like std::map<String, Value> where libclang's template_argument_type
         # returns the canonical type (std::string) instead of the typedef name (String).
         # Extract potential unqualified type names (not preceded by ::) and look them up.
         spelling.scan(/(?<![:\w])([A-Z_a-z]\w*)(?!\w)/) do |match|
           simple_name = match[0]
           next if qualifications.key?(simple_name)  # Already have qualification from type
-          qualified_name = @type_name_map[simple_name]
+          qualified_name = @type_index.qualified_name_for(simple_name)
           qualifications[simple_name] = qualified_name if qualified_name && simple_name != qualified_name
         end
 
@@ -1380,7 +1378,7 @@ module RubyBindgen
             next
           end
 
-          qualified_name = @type_name_map[class_name] || class_name
+          qualified_name = @type_index.qualified_name_for(class_name) || class_name
           qualified_template_part = if template_part.empty?
                                       ""
                                     else
@@ -1406,7 +1404,7 @@ module RubyBindgen
       # intercepts elaborated types that need generator-level context:
       # - Class template types: fqn resolves template params, but template builders need them generic
       # - Typedefs inside class templates: need 'typename' keyword for dependent types
-      # - Template instantiations: need qualify_template_args post-processing with @type_name_map
+      # - Template instantiations: need qualify_template_args post-processing with TypeIndex
       def type_spelling(type)
         case type.kind
         when :type_lvalue_ref
@@ -2542,7 +2540,7 @@ module RubyBindgen
             base_class_template.file_location.file == base_class_template.translation_unit.file.name
           if base_spelling && !base_in_std
             if base_in_current_file
-              base_typedef = @typedef_map[base_spelling]
+              base_typedef = @type_index.typedef_for(base_spelling)
               if base_typedef
                 # Base has a typedef - check if it has been generated yet
                 unless @classes.key?(base_typedef.cruby_name)
@@ -2688,7 +2686,7 @@ module RubyBindgen
               # Substitute template parameters with actual values
               base_base_spelling = resolve_base_specifier_spelling(base_base_ref, substitutions: subs)
 
-              if base_base_spelling && !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
+              if base_base_spelling && !@type_index.typedef_for(base_base_spelling) && !@auto_generated_bases.include?(base_base_spelling)
                 result = auto_generate_base_class(base_base_ref, base_base_spelling, under)
               end
             end
@@ -2935,47 +2933,6 @@ module RubyBindgen
                           exclude_kinds: Set.new, only_kinds: nil)
         versions = visit_children(cursor, exclude_kinds: exclude_kinds, only_kinds: only_kinds)
         merge_children(versions, indentation: indentation, chain: chain, terminate: terminate, strip: strip)
-      end
-
-      # Build maps for type lookups:
-      # - @typedef_map: canonical type spellings -> typedef/using declarations
-      #   Includes all files (not just main) because base classes may have typedefs in included headers
-      # - @type_name_map: simple name -> qualified name for classes, templates, and typedefs
-      #   Used by qualify_template_args to namespace-qualify names in template arguments
-      def build_typedef_map(cursor)
-        cursor.find_by_kind(true, :cursor_typedef_decl, :cursor_type_alias_decl,
-                            :cursor_class_template, :cursor_class_decl, :cursor_struct) do |child|
-          case child.kind
-          when :cursor_typedef_decl, :cursor_type_alias_decl
-            # Skip typedefs inside classes/structs (like DataType<T>::value_type)
-            parent_kind = child.semantic_parent.kind
-            next if parent_kind == :cursor_class_decl || parent_kind == :cursor_struct ||
-                    parent_kind == :cursor_class_template || parent_kind == :cursor_class_template_partial_specialization
-            canonical = child.underlying_type.canonical.spelling
-            existing = @typedef_map[canonical]
-            # Prefer non-std typedefs over std ones (e.g., cv::String over std::string)
-            if existing.nil? || (existing.qualified_name.start_with?("std::") && !child.qualified_name.start_with?("std::"))
-              @typedef_map[canonical] = child
-            end
-            # Also add to type_name_map for qualifying unqualified names in type spellings
-            # (e.g., "String" -> "cv::String" for std::map<String, Value>::iterator)
-            simple_name = child.spelling
-            qualified_name = child.qualified_name
-            if simple_name != qualified_name && !simple_name.empty?
-              # Prefer non-std over std (consistent with typedef_map preference)
-              existing_qualified = @type_name_map[simple_name]
-              if existing_qualified.nil? || (existing_qualified.start_with?("std::") && !qualified_name.start_with?("std::"))
-                @type_name_map[simple_name] = qualified_name
-              end
-            end
-          when :cursor_class_template, :cursor_class_decl, :cursor_struct
-            # Collect class/struct names for qualifying template arguments.
-            # Needed for non-type template args like Config::Size where Config is a
-            # regular class (not a template) that needs namespace qualification.
-            next if child.spelling.empty?
-            @type_name_map[child.spelling] ||= child.qualified_name
-          end
-        end
       end
 
       # Given a typedef cursor and its underlying type, resolve the base class
