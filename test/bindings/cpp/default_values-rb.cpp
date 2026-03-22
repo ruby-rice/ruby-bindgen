@@ -149,4 +149,14 @@ void Init_DefaultValues()
 
   rb_mQuoted.define_module_function<void(*)(int)>("call", &quoted::call,
     Arg("value") = static_cast<int>(quoted::helper("helper")));
+
+  Module rb_mQuotedType = define_module("QuotedType");
+
+  Rice::Data_Type<quoted_type::Widget> rb_cQuotedTypeWidget = define_class_under<quoted_type::Widget>(rb_mQuotedType, "Widget")
+    .define_constructor(Constructor<quoted_type::Widget>())
+    .define_singleton_function<quoted_type::Widget(*)(const char *)>("named", &quoted_type::Widget::named,
+      Arg("name"));
+
+  rb_mQuotedType.define_module_function<void(*)(quoted_type::Widget)>("call", &quoted_type::call,
+    Arg("value") = static_cast<quoted_type::Widget>(quoted_type::Widget::named("Widget")));
 }

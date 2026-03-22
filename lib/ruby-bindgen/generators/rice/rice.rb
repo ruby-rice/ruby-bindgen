@@ -1167,7 +1167,7 @@ module RubyBindgen
           end
       end
 
-      # Expand the written reference span to the desired fully qualified form
+      # Expand the written name span to the desired fully qualified form
       # without dropping template args or clobbering existing qualifiers.
       #
       # Examples:
@@ -1185,12 +1185,113 @@ module RubyBindgen
       #   simple_name     = 'SLOW'
       #   qualified_name  = 'multiline::PerfLevel::SLOW'
       #   => 'multiline::PerfLevel::SLOW'
-      def replacement_from_reference_span(span_text, simple_name, qualified_name)
+      def replacement_from_name_span(span_text, simple_name, qualified_name)
         return qualified_name if span_text == simple_name
         return qualified_name if span_text.include?('::') && span_text.end_with?(simple_name)
         return span_text.sub(/\A#{Regexp.escape(simple_name)}/, qualified_name) if span_text.start_with?(simple_name)
 
         nil
+      end
+
+      # Check whether the source text immediately before a replacement span already
+      # ends with `typename`, so we do not emit `typename typename Foo::Bar`.
+      #
+      # Examples:
+      #   text        = 'typename SearchIndex<Distance>::ElementType()'
+      #   start_index = index of the S in SearchIndex
+      #   => true
+      #
+      #   text        = 'SearchIndex<Distance>::ElementType()'
+      #   start_index = index of the S in SearchIndex
+      #   => false
+      def preceded_by_typename?(text, start_index)
+        text.byteslice(0, start_index).to_s.match?(/(?:\A|[^\w:])typename\s+\z/)
+      end
+
+      # Extend a name-token span backward to include a written qualifier chain.
+      #
+      # Examples:
+      #   text        = 'makePtr<inner::IndexParams>()'
+      #   start_index = index of the I in IndexParams
+      #   => index of the i in inner
+      #
+      #   text        = 'SearchIndex<Distance>::ElementType()'
+      #   start_index = index of the E in ElementType
+      #   => index of the S in SearchIndex
+      def expand_name_start_to_qualifier(text, start_index)
+        index = start_index
+
+        loop do
+          break unless index >= 2 && text.byteslice(index - 2, 2) == '::'
+
+          segment_end = index - 2
+          cursor = segment_end - 1
+          break if cursor.negative?
+
+          if text[cursor] == '>'
+            depth = 0
+            while cursor >= 0
+              case text[cursor]
+              when '>'
+                depth += 1
+              when '<'
+                depth -= 1
+                break if depth.zero?
+              end
+              cursor -= 1
+            end
+            break if cursor.negative?
+            cursor -= 1
+          end
+
+          while cursor >= 0 && text[cursor].match?(/[A-Za-z0-9_]/)
+            cursor -= 1
+          end
+
+          segment_start = cursor + 1
+          break if segment_start == segment_end
+
+          index = segment_start
+        end
+
+        index
+      end
+
+      def fallback_qualify_type_reference(text, ref, simple_name, qualified_name, is_dependent_typedef)
+        # Replace unqualified occurrences (negative lookbehind avoids already-qualified names)
+        result = text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
+
+        # Replace partially-qualified names (e.g., flann::Foo -> cv::flann::Foo)
+        # Match any prefix::simple_name that isn't already fully qualified
+        result = result.gsub(/(?<!\w)(\w+(?:::\w+)*)::#{Regexp.escape(simple_name)}\b/) do |match|
+          match == qualified_name ? match : qualified_name
+        end
+
+        # For class template refs used as qualifiers (before ::) without explicit template args,
+        # insert template parameters (e.g., CompositeIndex:: -> CompositeIndex<Distance>::)
+        if ref.kind == :cursor_class_template
+          display_name = ref.qualified_display_name
+          result = result.gsub(/#{Regexp.escape(qualified_name)}(?=\s*::)/, display_name)
+        end
+
+        # Add 'typename' for dependent typedef names used as types (not as qualifiers before ::)
+        # e.g., SearchIndex<Distance>::ElementType() needs typename, but Vec3Type::all() does not
+        if is_dependent_typedef
+          result = result.gsub(/(?<!typename )#{Regexp.escape(qualified_name)}(?!\s*::)/, "typename #{qualified_name}")
+        end
+
+        result
+      end
+
+      def fallback_qualify_declaration_reference(text, simple_name, qualified_name)
+        # Apply qualification (negative lookbehind avoids double-qualifying)
+        result = text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
+
+        # Replace partially-qualified names (e.g., fisheye::CALIB_FIX_INTRINSIC -> cv::fisheye::CALIB_FIX_INTRINSIC)
+        # Match any prefix::simple_name that isn't already fully qualified
+        result.gsub(/(?<!\w)(\w+(?:::\w+)*)::#{Regexp.escape(simple_name)}\b/) do |match|
+          match == qualified_name ? match : qualified_name
+        end
       end
 
       # Split a parameter declaration at its default-value '=' and return both
@@ -1259,6 +1360,10 @@ module RubyBindgen
         end
         return nil unless default_expr
 
+        source_text = default_text
+        range_replacements = []
+        type_fallbacks = []
+
         # Phase 1: Qualify type references (e.g., Range::all() -> cv::Range::all())
         # Find type_ref and template_ref cursors to identify types that need namespace qualification.
         default_expr.find_by_kind(true, :cursor_type_ref, :cursor_template_ref) do |type_ref|
@@ -1282,27 +1387,34 @@ module RubyBindgen
             next if simple_name.nil? || simple_name.empty?
             next if simple_name == qualified_name
 
-            # Replace unqualified occurrences (negative lookbehind avoids already-qualified names)
-            default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
+            range = type_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+            replacement = source_range_replacement(source_text, default_text_offset, range)
+            if replacement
+              start_index = replacement[:start_offset] - default_text_offset
+              end_index = replacement[:end_offset] - default_text_offset
+              start_index = expand_name_start_to_qualifier(source_text, start_index)
+              replacement = replacement.merge(start_offset: default_text_offset + start_index)
+              span_text = source_text.byteslice(start_index, end_index - start_index)
+              trailing_scope = source_text.byteslice(end_index, 2).to_s == '::'
 
-            # Replace partially-qualified names (e.g., flann::Foo -> cv::flann::Foo)
-            # Match any prefix::simple_name that isn't already fully qualified
-            default_text = default_text.gsub(/(?<!\w)(\w+(?:::\w+)*)::#{Regexp.escape(simple_name)}\b/) do |match|
-              match == qualified_name ? match : qualified_name
+              replacement_name = if ref.kind == :cursor_class_template && trailing_scope && !span_text.include?('<')
+                                   ref.qualified_display_name
+                                 else
+                                   qualified_name
+                                 end
+              replacement_text = replacement_from_name_span(span_text, simple_name, replacement_name)
+              if is_dependent_typedef && replacement_text && !trailing_scope &&
+                 !preceded_by_typename?(source_text, start_index)
+                replacement_text = "typename #{replacement_text}"
+              end
+
+              if replacement_text && replacement_text != span_text
+                range_replacements << replacement.merge(replacement: replacement_text, kind: :type)
+                next
+              end
             end
 
-            # For class template refs used as qualifiers (before ::) without explicit template args,
-            # insert template parameters (e.g., CompositeIndex:: -> CompositeIndex<Distance>::)
-            if ref.kind == :cursor_class_template
-              display_name = ref.qualified_display_name
-              default_text = default_text.gsub(/#{Regexp.escape(qualified_name)}(?=\s*::)/, display_name)
-            end
-
-            # Add 'typename' for dependent typedef names used as types (not as qualifiers before ::)
-            # e.g., SearchIndex<Distance>::ElementType() needs typename, but Vec3Type::all() does not
-            if is_dependent_typedef
-              default_text = default_text.gsub(/(?<!typename )#{Regexp.escape(qualified_name)}(?!\s*::)/, "typename #{qualified_name}")
-            end
+            type_fallbacks << [ref, simple_name, qualified_name, is_dependent_typedef]
           rescue ArgumentError
             # Skip if we can't get qualified name (e.g., invalid cursor)
           end
@@ -1310,7 +1422,7 @@ module RubyBindgen
 
         # Phase 2: Qualify declaration references (functions, enum values, static members)
         # For example: noArray() -> cv::noArray(), NORM_L2 -> cv::NORM_L2
-        replacements = []
+        decl_fallbacks = []
         decl_refs = default_expr.find_by_kind(true, :cursor_decl_ref_expr).to_a
         decl_refs = [default_expr] + decl_refs if default_expr.kind == :cursor_decl_ref_expr
         decl_refs.each do |decl_ref|
@@ -1359,33 +1471,49 @@ module RubyBindgen
             # We want to keep the original source text in these cases.
             next unless qualified_name.end_with?(simple_name)
 
-            range = decl_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
-            replacement = source_range_replacement(default_text, default_text_offset, range)
+            range = if decl_ref.extent.text.include?('<')
+                      decl_ref.spelling_name_range(0)
+                    else
+                      decl_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+                    end
+            replacement = source_range_replacement(source_text, default_text_offset, range)
             if replacement
               start_index = replacement[:start_offset] - default_text_offset
               end_index = replacement[:end_offset] - default_text_offset
-              span_text = default_text.byteslice(start_index, end_index - start_index)
-              replacement_text = replacement_from_reference_span(span_text, simple_name, qualified_name)
+              span_text = source_text.byteslice(start_index, end_index - start_index)
+              replacement_text = replacement_from_name_span(span_text, simple_name, qualified_name)
               if replacement_text && replacement_text != span_text
-                replacements << replacement.merge(replacement: replacement_text)
+                range_replacements << replacement.merge(replacement: replacement_text, kind: :decl)
                 next
               end
             end
 
-            # Apply qualification (negative lookbehind avoids double-qualifying)
-            default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
-
-            # Replace partially-qualified names (e.g., fisheye::CALIB_FIX_INTRINSIC -> cv::fisheye::CALIB_FIX_INTRINSIC)
-            # Match any prefix::simple_name that isn't already fully qualified
-            default_text = default_text.gsub(/(?<!\w)(\w+(?:::\w+)*)::#{Regexp.escape(simple_name)}\b/) do |match|
-              match == qualified_name ? match : qualified_name
-            end
+            decl_fallbacks << [simple_name, qualified_name]
           rescue ArgumentError
             # Skip if we can't get qualified name
           end
         end
 
-        default_text = apply_source_replacements(default_text, default_text_offset, replacements) unless replacements.empty?
+        decl_replacements = range_replacements.select { |replacement| replacement[:kind] == :decl }
+        range_replacements.reject! do |replacement|
+          replacement[:kind] == :type &&
+            decl_replacements.any? do |decl_replacement|
+              decl_replacement[:start_offset] <= replacement[:start_offset] &&
+                decl_replacement[:end_offset] >= replacement[:end_offset]
+            end
+        end
+
+        default_text = apply_source_replacements(source_text, default_text_offset, range_replacements) unless range_replacements.empty?
+
+        type_fallbacks.each do |type_fallback|
+          ref, simple_name, qualified_name, is_dependent_typedef = type_fallback
+          default_text = fallback_qualify_type_reference(default_text, ref, simple_name, qualified_name, is_dependent_typedef)
+        end
+
+        decl_fallbacks.each do |decl_fallback|
+          simple_name, qualified_name = decl_fallback
+          default_text = fallback_qualify_declaration_reference(default_text, simple_name, qualified_name)
+        end
 
         default_text
       end

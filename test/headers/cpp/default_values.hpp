@@ -245,3 +245,16 @@ namespace quoted
 
   void call(int value = helper("helper"));
 }
+
+// Test that type qualification does not rewrite identifier-like text inside string literals.
+namespace quoted_type
+{
+  class Widget
+  {
+  public:
+    Widget();
+    static Widget named(const char* name);
+  };
+
+  void call(Widget value = Widget::named("Widget"));
+}
