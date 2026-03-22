@@ -38,6 +38,33 @@ class RiceGeneratorTest < RiceAbstractTest
     end
   end
 
+  def test_unwrapped_indirection_type_strips_reference_and_pointer_layers
+    parsed, = parse_cpp(<<~CPP)
+      namespace Tests {
+        template<typename T>
+        class Container {};
+
+        class Item {};
+
+        class Consumer {
+        public:
+          Consumer(Container<Item>* const& items);
+        };
+      }
+    CPP
+
+    config = load_config(File.join(__dir__, "headers", "cpp"))
+    inputter = RubyBindgen::Inputter.new(parsed.dir, ["fixture.hpp"])
+    rice = RubyBindgen::Generators::Rice.new(inputter, create_outputter("cpp"), config)
+    rice.instance_variable_get(:@type_speller).printing_policy = parsed.translation_unit.cursor.printing_policy
+
+    constructor = find_cursor(parsed.translation_unit.cursor, :cursor_constructor, "Consumer")
+    unwrapped = rice.send(:unwrapped_indirection_type, constructor.argument(0).type)
+
+    assert_equal "Tests::Container<Tests::Item>",
+                 rice.instance_variable_get(:@type_speller).type_spelling(unwrapped)
+  end
+
   def test_template_specialization_target_finds_direct_and_aliased_specializations
     parsed, = parse_cpp(<<~CPP)
       namespace Tests {

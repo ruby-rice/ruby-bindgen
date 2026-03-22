@@ -425,7 +425,7 @@ module RubyBindgen
 
       # Check if a type references a skipped symbol (unwrapping pointers).
       def references_skipped_type?(type)
-        type = type.pointee while [:type_pointer, :type_lvalue_ref, :type_rvalue_ref].include?(type.kind)
+        type = unwrapped_indirection_type(type)
         decl = type.declaration
         return false if decl.kind == :cursor_no_decl_found
         @symbols.skip?(decl)

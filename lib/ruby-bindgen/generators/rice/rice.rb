@@ -194,10 +194,7 @@ module RubyBindgen
       # Check if a type references a skipped symbol by examining its declaration.
       # Unwraps pointers/references and checks template arguments recursively.
       def type_references_skipped_symbol?(type)
-        # Unwrap pointers and references to get the underlying type
-        if [:type_pointer, :type_lvalue_ref, :type_rvalue_ref].include?(type.kind) && type.respond_to?(:pointee)
-          return type_references_skipped_symbol?(type.pointee)
-        end
+        type = unwrapped_indirection_type(type)
 
         # Check the type's own declaration (try both non-canonical and canonical
         # since dependent types like SkippedClass<T> may not resolve canonically)
@@ -516,10 +513,7 @@ module RubyBindgen
 
           child.num_arguments.times do |i|
             param = child.argument(i)
-            # Unwrap reference and pointer types
-            type = param.type
-            type = type.non_reference_type while type.kind == :type_lvalue_ref || type.kind == :type_rvalue_ref
-            type = type.pointee while type.kind == :type_pointer
+            type = unwrapped_indirection_type(param.type)
 
             # Skip if not a template instantiation or is from a system header (std::, etc.)
             next unless type.num_template_arguments > 0
@@ -659,8 +653,7 @@ module RubyBindgen
       # This is used to determine if we can generate default values for parameters -
       # Rice's Arg mechanism needs to copy the default value internally.
       def copyable_type?(type)
-        # Strip references to get to the actual type
-        type = type.non_reference_type while type.kind == :type_lvalue_ref || type.kind == :type_rvalue_ref
+        type = type.non_reference_type if reference_type?(type)
 
         # Get the declaration of the type
         decl = type.declaration
