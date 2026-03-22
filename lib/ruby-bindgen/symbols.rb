@@ -59,19 +59,19 @@ module RubyBindgen
         # Also add candidates with fully-qualified template args.
         # display_name uses unqualified args (e.g., "DataType<hfloat>") but users
         # may configure symbols with qualified args (e.g., "cv::DataType<cv::hfloat>").
-        # Use clang's template_argument_type API to get the qualified arg spellings.
-        if cursor.type.respond_to?(:num_template_arguments)
-          n = cursor.type.num_template_arguments
-          if n > 0
-            qualified_args = (0...n).map { |i| cursor.type.template_argument_type(i).spelling }
-            qualified_args_str = "<#{qualified_args.join(', ')}>"
-            fq_display = sub_template_args(display, qualified_args_str)
-            if fq_display != display
-              qualified_names.each do |qn|
-                fq_qualified_display = sub_last(qn, cursor.spelling, fq_display)
-                candidates << fq_display unless candidates.include?(fq_display)
-                candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
-              end
+        # Use ffi-clang's fully-qualified type spelling for the type arguments.
+        n = cursor.type.num_template_arguments
+        if n > 0
+          qualified_args = (0...n).map do |i|
+            cursor.type.template_argument_type(i).fully_qualified_name(cursor.printing_policy)
+          end
+          qualified_args_str = "<#{qualified_args.join(', ')}>"
+          fq_display = sub_template_args(display, qualified_args_str)
+          if fq_display != display
+            qualified_names.each do |qn|
+              fq_qualified_display = sub_last(qn, cursor.spelling, fq_display)
+              candidates << fq_display unless candidates.include?(fq_display)
+              candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
             end
           end
         end
