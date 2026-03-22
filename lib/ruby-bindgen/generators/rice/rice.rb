@@ -511,24 +511,43 @@ module RubyBindgen
             next unless type.num_template_arguments > 0
             next if type.canonical.declaration.location.in_system_header?
 
-            # Find class template declaration
-            template_ref = param.find_first_by_kind(true, :cursor_template_ref)
-            next unless template_ref
-            decl = template_ref.referenced
-            next unless decl.kind == :cursor_class_template
+            # Find the class template declaration semantically so alias parameters
+            # like `using AliasContainer = Container<Item>` still auto-instantiate
+            # the underlying `Container<Item>` specialization.
+            decl, instantiated_type, instantiated_type_source = parameter_template_instantiation(type, param)
+            next unless decl && decl.kind == :cursor_class_template
             next unless (decl.location.file == cursor.location.file rescue false)
 
             # Auto-instantiate if no typedef exists
-            instantiated_type = @type_speller.type_spelling(type.unqualified_type)
             instantiated_type = @type_speller.qualify_class_static_members(instantiated_type, cursor)
             next if @type_index.typedef_for(instantiated_type)
 
-            code = auto_instantiate_template(decl, instantiated_type, type, under)
+            code = auto_instantiate_template(decl, instantiated_type, instantiated_type_source, under)
             result << code unless code.empty?
           end
         end
 
         merge_children({ nil => result })
+      end
+
+      def parameter_template_instantiation(type, param)
+        declaration = type.declaration
+        specialized_template = declaration.specialized_template
+        unless specialized_template.kind == :cursor_invalid_file
+          return [specialized_template, @type_speller.type_spelling(type.unqualified_type), type]
+        end
+
+        canonical_type = type.canonical
+        canonical_declaration = canonical_type.declaration
+        specialized_template = canonical_declaration.specialized_template
+        unless specialized_template.kind == :cursor_invalid_file
+          return [specialized_template, @type_speller.type_spelling(canonical_type.unqualified_type), canonical_type]
+        end
+
+        template_ref = param.find_first_by_kind(true, :cursor_template_ref)
+        return [nil, nil, type] unless template_ref
+
+        [template_ref.referenced, @type_speller.type_spelling(type.unqualified_type), type]
       end
 
       # Visit a forward-declared (incomplete) inner class.

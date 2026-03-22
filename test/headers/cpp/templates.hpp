@@ -117,6 +117,23 @@ namespace Tests
         Consumer(const Container<Item>& items);
     };
 
+    class AliasItem
+    {
+    public:
+        int value;
+    };
+
+    // Alias-only parameter path should still auto-instantiate Container<AliasItem>
+    // via the semantic specialized type, even though the parameter cursor has
+    // no cursor_template_ref of its own.
+    class ConsumerAlias
+    {
+    public:
+        using AliasContainer = Container<AliasItem>;
+
+        ConsumerAlias(const AliasContainer& items);
+    };
+
     // Test lowercase type names that need namespace qualification
     // Similar to cv::hfloat being used in cv::DataType<hfloat>
     class lowercase_type

@@ -45,6 +45,16 @@ void Init_Templates()
     .define_constructor(Constructor<Tests::Consumer, const Tests::Container<Tests::Item> &>(),
       Arg("items"));
 
+  Rice::Data_Type<Tests::AliasItem> rb_cTestsAliasItem = define_class_under<Tests::AliasItem>(rb_mTests, "AliasItem")
+    .define_constructor(Constructor<Tests::AliasItem>())
+    .define_attr("value", &Tests::AliasItem::value);
+
+  Rice::Data_Type<Tests::Container<Tests::AliasItem>> rb_cTestsContainerTestsAliasitem = Container_instantiate<Tests::AliasItem>(rb_mTests, "ContainerTestsAliasitem");
+
+  Rice::Data_Type<Tests::ConsumerAlias> rb_cTestsConsumerAlias = define_class_under<Tests::ConsumerAlias>(rb_mTests, "ConsumerAlias")
+    .define_constructor(Constructor<Tests::ConsumerAlias, const Tests::ConsumerAlias::AliasContainer &>(),
+      Arg("items"));
+
   Rice::Data_Type<Tests::lowercase_type> rb_cTestsLowercaseType = define_class_under<Tests::lowercase_type>(rb_mTests, "LowercaseType")
     .define_constructor(Constructor<Tests::lowercase_type>())
     .define_attr("value", &Tests::lowercase_type::value);

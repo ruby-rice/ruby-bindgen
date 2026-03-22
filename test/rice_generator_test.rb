@@ -53,4 +53,34 @@ class RiceGeneratorTest < RiceAbstractTest
     assert_equal "Tests::Base<typename Tests::Traits<T>::type>",
                  rice.send(:get_base_spelling, derived_template)
   end
+
+  def test_auto_instantiate_parameter_templates_uses_semantic_template_for_alias_parameters
+    parsed, = parse_cpp(<<~CPP)
+      namespace Tests {
+        template<typename T>
+        class Container {
+        public:
+          T value;
+        };
+
+        class AliasItem {};
+
+        class ConsumerAlias {
+        public:
+          using AliasContainer = Container<AliasItem>;
+          ConsumerAlias(const AliasContainer& items);
+        };
+      }
+    CPP
+
+    config = load_config(File.join(__dir__, "headers", "cpp"))
+    inputter = RubyBindgen::Inputter.new(parsed.dir, ["fixture.hpp"])
+    rice = RubyBindgen::Generators::Rice.new(inputter, create_outputter("cpp"), config)
+    rice.instance_variable_get(:@type_speller).printing_policy = parsed.translation_unit.cursor.printing_policy
+    consumer_alias = find_cursor(parsed.translation_unit.cursor, :cursor_class_decl, "ConsumerAlias")
+
+    auto_instantiated = rice.send(:auto_instantiate_parameter_templates, consumer_alias, nil)
+
+    assert_includes auto_instantiated, "Container_instantiate<Tests::AliasItem>"
+  end
 end
