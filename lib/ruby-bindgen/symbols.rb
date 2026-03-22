@@ -56,38 +56,12 @@ module RubyBindgen
           candidates << qualified_display unless candidates.include?(qualified_display)
         end
 
-        # Also add candidates with fully-qualified template args.
-        # display_name uses unqualified args (e.g., "DataType<hfloat>") but users
-        # may configure symbols with qualified args (e.g., "cv::DataType<cv::hfloat>").
-        # Use ffi-clang's fully-qualified type spelling for the type arguments.
-        n = cursor.type.num_template_arguments
-        if n > 0
-          qualified_args = (0...n).map do |i|
-            cursor.type.template_argument_type(i).fully_qualified_name(cursor.printing_policy)
-          end
-          qualified_args_str = "<#{qualified_args.join(', ')}>"
-          fq_display = sub_template_args(display, qualified_args_str)
-          if fq_display != display
-            qualified_names.each do |qn|
-              fq_qualified_display = sub_last(qn, cursor.spelling, fq_display)
-              candidates << fq_display unless candidates.include?(fq_display)
-              candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
-            end
-          end
-        end
-
-        # Function template specializations: clang reports display_name with empty
-        # template args (e.g., "saturate_cast<>(int)" or "takeValue<>()").
-        # Rebuild the template argument list from cursor template args so both
-        # type and non-type specializations participate in symbol matching.
-        if cursor.kind == :cursor_function && display.include?('<>')
-          specialized_display = specialized_function_display_name(cursor, display)
-          if specialized_display && specialized_display != display
-            qualified_names.each do |qn|
-              fq_qualified_display = sub_last(qn, cursor.spelling, specialized_display)
-              candidates << specialized_display unless candidates.include?(specialized_display)
-              candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
-            end
+        specialized_display = specialized_template_display_name(cursor, display)
+        if specialized_display && specialized_display != display
+          qualified_names.each do |qn|
+            fq_qualified_display = sub_last(qn, cursor.spelling, specialized_display)
+            candidates << specialized_display unless candidates.include?(specialized_display)
+            candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
           end
         end
       end
@@ -208,25 +182,123 @@ module RubyBindgen
       end
     end
 
-    def specialized_function_display_name(cursor, display)
-      args = function_template_arguments(cursor)
+    # Rebuild a template specialization display name using cursor template
+    # arguments. Type args are fully qualified semantically, while written
+    # display text is preserved for integral or other non-type args that
+    # libclang does not expose as names.
+    #
+    # Examples:
+    #   `Holder<Tag, 7>`
+    # becomes
+    #   `Holder<Outer::Tag, 7>`
+    #
+    #   `takeValue<>()`
+    # becomes
+    #   `takeValue<7>()`
+    def specialized_template_display_name(cursor, display)
+      args = template_argument_display_values(cursor, display)
       return nil if args.nil? || args.empty? || args.any?(&:nil?)
 
-      display.sub('<>', "<#{args.join(', ')}>")
+      sub_template_args(display, "<#{args.join(', ')}>")
     end
 
-    def function_template_arguments(cursor)
+    def template_argument_display_values(cursor, display)
       n = cursor.num_template_arguments
       return nil unless n > 0
 
+      written_args = template_argument_texts(display)
       (0...n).map do |index|
         case cursor.template_argument_kind(index)
         when :template_argument_type
           cursor.template_argument_type(index).fully_qualified_name(cursor.printing_policy)
         when :template_argument_integral
-          cursor.template_argument_value(index).to_s
+          written_args[index] || cursor.template_argument_value(index).to_s
+        else
+          written_args[index]
         end
       end
+    end
+
+    def template_argument_texts(display)
+      start = display.index('<')
+      return [] unless start
+
+      depth = 0
+      args_start = start + 1
+      args_end = nil
+
+      (start...display.length).each do |index|
+        depth += 1 if display[index] == '<'
+        depth -= 1 if display[index] == '>'
+        if depth.zero?
+          args_end = index
+          break
+        end
+      end
+      return [] unless args_end
+
+      args_text = display[args_start...args_end]
+      return [] if args_text.nil? || args_text.empty?
+
+      split_template_arguments(args_text)
+    end
+
+    def split_template_arguments(args_text)
+      result = []
+      current = String.new
+      angle_depth = 0
+      paren_depth = 0
+      bracket_depth = 0
+      brace_depth = 0
+      quote = nil
+      escaped = false
+
+      args_text.each_char do |char|
+        current << char
+
+        if quote
+          if escaped
+            escaped = false
+          elsif char == '\\'
+            escaped = true
+          elsif char == quote
+            quote = nil
+          end
+          next
+        end
+
+        case char
+        when '"', "'"
+          quote = char
+        when '<'
+          angle_depth += 1
+        when '>'
+          angle_depth -= 1 if angle_depth > 0
+        when '('
+          paren_depth += 1
+        when ')'
+          paren_depth -= 1 if paren_depth > 0
+        when '['
+          bracket_depth += 1
+        when ']'
+          bracket_depth -= 1 if bracket_depth > 0
+        when '{'
+          brace_depth += 1
+        when '}'
+          brace_depth -= 1 if brace_depth > 0
+        when ','
+          if angle_depth.zero? && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
+            current.chop!
+            piece = current.strip
+            result << piece unless piece.empty?
+            current = String.new
+          end
+        end
+      end
+
+      piece = current.strip
+      result << piece unless piece.empty?
+      result
     end
 
     def add_entry(name, skip: false, version: nil, signature: nil)
