@@ -790,6 +790,10 @@ module RubyBindgen
       #   `template<typename> class Container = Box`
       # becomes
       #   `template<typename> class Container`
+      #
+      #   `template<typename U = int> class Container = Box`
+      # becomes
+      #   `template<typename U = int> class Container`
       def template_parameter_signature(template_parameter)
         case template_parameter.kind
         when :cursor_template_type_parameter
@@ -801,7 +805,10 @@ module RubyBindgen
           declaration = template_parameter.extent.text
           return "template<typename> class #{template_parameter.spelling}" if declaration.nil? || declaration.empty?
 
-          declaration.partition('=').first.rstrip
+          separator_offset = top_level_default_separator_offset(declaration)
+          return declaration.rstrip unless separator_offset
+
+          declaration.byteslice(0, separator_offset).rstrip
         else
           raise("Unsupported template parameter kind: #{template_parameter.kind}")
         end
@@ -1531,8 +1538,78 @@ module RubyBindgen
         end
       end
 
-      # Split a declaration at its default-value '=' and return both the written
-      # default text and its byte offset in the source file.
+      # Find the byte offset of the declaration's top-level default-value `=`.
+      #
+      # Examples:
+      #   'FILE* stream = stdout'
+      #   => offset of the `=` before stdout
+      #
+      #   'template<typename U = int> class Container = Box'
+      #   => offset of the `=` before Box, not the inner `= int`
+      #
+      # Nested delimiters are skipped so `=` inside template parameter lists,
+      # function types, arrays, and braced expressions does not get mistaken for
+      # the declaration's own default separator.
+      def top_level_default_separator_offset(text)
+        return nil if text.nil? || text.empty?
+
+        angle_depth = 0
+        paren_depth = 0
+        bracket_depth = 0
+        brace_depth = 0
+        in_single_quote = false
+        in_double_quote = false
+        escaped = false
+        byte_offset = 0
+
+        text.each_char do |char|
+          if in_single_quote || in_double_quote
+            if escaped
+              escaped = false
+            elsif char == '\\'
+              escaped = true
+            elsif in_single_quote && char == "'"
+              in_single_quote = false
+            elsif in_double_quote && char == '"'
+              in_double_quote = false
+            end
+          else
+            case char
+            when "'"
+              in_single_quote = true
+            when '"'
+              in_double_quote = true
+            when '<'
+              angle_depth += 1
+            when '>'
+              angle_depth -= 1 if angle_depth > 0
+            when '('
+              paren_depth += 1
+            when ')'
+              paren_depth -= 1 if paren_depth > 0
+            when '['
+              bracket_depth += 1
+            when ']'
+              bracket_depth -= 1 if bracket_depth > 0
+            when '{'
+              brace_depth += 1
+            when '}'
+              brace_depth -= 1 if brace_depth > 0
+            when '='
+              if angle_depth.zero? && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
+                return byte_offset
+              end
+            end
+          end
+
+          byte_offset += char.bytesize
+        end
+
+        nil
+      end
+
+      # Split a declaration at its top-level default-value '=' and return both
+      # the written default text and its byte offset in the source file.
       #
       # Examples:
       #   'FILE* stream = stdout'
@@ -1544,6 +1621,9 @@ module RubyBindgen
       #   'typename U = Box<Tag>'
       #   => ['Box<Tag>', <offset of the B in Box<Tag>>]
       #
+      #   'template<typename U = int> class Container = Box'
+      #   => ['Box', <offset of the B in Box>]
+      #
       # This is text extraction only. Qualification happens later using cursor
       # information so we do not lose semantic information for either function
       # defaults or template parameter defaults.
@@ -1551,14 +1631,17 @@ module RubyBindgen
         param_extent = param.extent.text
         return nil unless param_extent
 
-        before, separator, after = param_extent.partition('=')
-        return nil if separator.empty?
+        separator_offset = top_level_default_separator_offset(param_extent)
+        return nil unless separator_offset
+
+        before = param_extent.byteslice(0, separator_offset)
+        after = param_extent.byteslice((separator_offset + 1)..-1).to_s
 
         leading_whitespace = after[/\A\s*/] || ""
         default_text = after.delete_prefix(leading_whitespace)
         return nil if default_text.empty?
 
-        default_text_offset = param.extent.start.offset + before.bytesize + separator.bytesize + leading_whitespace.bytesize
+        default_text_offset = param.extent.start.offset + before.bytesize + 1 + leading_whitespace.bytesize
         [default_text, default_text_offset]
       end
 

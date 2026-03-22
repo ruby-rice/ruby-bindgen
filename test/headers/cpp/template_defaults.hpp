@@ -124,6 +124,26 @@ namespace TemplateTemplateDefaults
     public:
         Container<T> value;
     };
+
+    template<typename T = int>
+    class BoxWithInnerDefault
+    {
+    public:
+        T value;
+    };
+
+    // The default separator must ignore the inner `= int` and keep the outer
+    // default `= BoxWithInnerDefault` intact:
+    //   HolderWithInnerDefault<float, TemplateTemplateDefaults::BoxWithInnerDefault>
+    // not:
+    //   HolderWithInnerDefault<float>
+    template<typename T, template<typename U = int> class Container = BoxWithInnerDefault>
+    class HolderWithInnerDefault
+    {
+    public:
+        Container<T> value;
+    };
 }
 
 typedef TemplateTemplateDefaults::Holder<int> HolderInt;
+typedef TemplateTemplateDefaults::HolderWithInnerDefault<float> HolderWithInnerDefaultFloat;

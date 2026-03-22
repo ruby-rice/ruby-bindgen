@@ -67,3 +67,17 @@ inline Rice::Data_Type<TemplateTemplateDefaults::Holder<T, Container>> Holder_in
   return Rice::define_class_under<TemplateTemplateDefaults::Holder<T, Container>>(parent, name)
     .define_attr("value", &TemplateTemplateDefaults::Holder<T, Container>::value);
 }
+
+template<typename T>
+inline Rice::Data_Type<TemplateTemplateDefaults::BoxWithInnerDefault<T>> BoxWithInnerDefault_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<TemplateTemplateDefaults::BoxWithInnerDefault<T>>(parent, name)
+    .define_attr("value", &TemplateTemplateDefaults::BoxWithInnerDefault<T>::value);
+}
+
+template<typename T, template<typename U = int> class Container>
+inline Rice::Data_Type<TemplateTemplateDefaults::HolderWithInnerDefault<T, Container>> HolderWithInnerDefault_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<TemplateTemplateDefaults::HolderWithInnerDefault<T, Container>>(parent, name)
+    .define_attr("value", &TemplateTemplateDefaults::HolderWithInnerDefault<T, Container>::value);
+}

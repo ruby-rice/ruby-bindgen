@@ -49,4 +49,6 @@ void Init_TemplateDefaults()
   Module rb_mTemplateTemplateDefaults = define_module("TemplateTemplateDefaults");
 
   Rice::Data_Type<TemplateTemplateDefaults::Holder<int>> rb_cHolderInt = Holder_instantiate<int, TemplateTemplateDefaults::Box>(Rice::Module(rb_cObject), "HolderInt");
+
+  Rice::Data_Type<TemplateTemplateDefaults::HolderWithInnerDefault<float>> rb_cHolderWithInnerDefaultFloat = HolderWithInnerDefault_instantiate<float, TemplateTemplateDefaults::BoxWithInnerDefault>(Rice::Module(rb_cObject), "HolderWithInnerDefaultFloat");
 }
