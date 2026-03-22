@@ -7,6 +7,26 @@ inline Rice::Data_Type<Tests::FunctionBase<Signature>> FunctionBase_instantiate(
     .define_constructor(Constructor<Tests::FunctionBase<Signature>>());
 }
 
+template<typename T>
+inline Rice::Data_Type<Tests::Traits<T>> Traits_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::Traits<T>>(parent, name);
+}
+
+template<typename T>
+inline Rice::Data_Type<Tests::DependentBase<T>> DependentBase_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::DependentBase<T>>(parent, name)
+    .define_constructor(Constructor<Tests::DependentBase<T>>());
+}
+
+template<typename T>
+inline Rice::Data_Type<Tests::DependentDerived<T>> DependentDerived_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::DependentDerived<T>, Tests::DependentBase<typename Tests::Traits<T>::type>>(parent, name)
+    .define_constructor(Constructor<Tests::DependentDerived<T>>());
+}
+
 template<typename Signature>
 inline Rice::Data_Type<Tests::FunctionDerived<Signature>> FunctionDerived_instantiate(Rice::Module parent, const char* name)
 {

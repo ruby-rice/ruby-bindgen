@@ -14,6 +14,31 @@ namespace Tests
     FunctionBase() = default;
   };
 
+  template<typename T>
+  struct Traits
+  {
+    using type = T;
+  };
+
+  // The class-template builder must qualify dependent types inside its base
+  // spelling when emitted outside the namespace:
+  //   Tests::DependentBase<typename Tests::Traits<T>::type>
+  // not:
+  //   Tests::DependentBase<typename Traits<T>::type>
+  template<typename T>
+  struct DependentBase
+  {
+    DependentBase() = default;
+  };
+
+  template<typename T>
+  struct DependentDerived : public DependentBase<typename Traits<T>::type>
+  {
+    DependentDerived() : DependentBase<typename Traits<T>::type>() {}
+  };
+
+  typedef DependentDerived<int> DependentDerivedInt;
+
   template<typename Signature>
   struct FunctionDerived : public FunctionBase<Signature>
   {

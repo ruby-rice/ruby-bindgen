@@ -549,38 +549,16 @@ module RubyBindgen
         base_specifier = cursor.find_first_by_kind(false, :cursor_cxx_base_specifier)
         return nil unless base_specifier
 
-        base_template_ref = base_specifier.find_first_by_kind(false, :cursor_template_ref)
-        if base_template_ref
-          ref = base_template_ref.referenced
-          return nil unless ref
+        base_declaration = base_specifier.type&.declaration
+        return nil unless base_declaration && base_declaration.kind != :cursor_no_decl_found
 
-          # Skip system-header base classes (e.g., std::shared_ptr)
-          return nil if ref.location.in_system_header?
+        specialized_template = base_declaration.specialized_template
+        base_cursor = specialized_template.kind == :cursor_invalid_file ? base_declaration : specialized_template
 
-          # Template base: use type spelling which has template params (e.g., Matx<_Tp, cn, 1>)
-          base_spelling = base_specifier.type&.spelling
-          return nil unless base_spelling
+        # Skip system-header base classes (e.g., std::shared_ptr)
+        return nil if base_cursor.location.in_system_header?
 
-          # Qualify with namespace if needed
-          ref_qualified = ref.qualified_name
-          ref_spelling = ref.spelling
-          return base_spelling unless ref_qualified && ref_spelling
-
-          base_ns = ref_qualified.sub(ref_spelling, "")
-          if !base_ns.empty? && !base_spelling.start_with?(base_ns)
-            base_spelling = "#{base_ns}#{base_spelling}"
-          end
-          base_spelling
-        else
-          # Non-template base: use qualified name
-          base_type_ref = base_specifier.find_first_by_kind(false, :cursor_type_ref)
-          return nil unless base_type_ref
-
-          ref = base_type_ref.referenced
-          return nil if ref&.location&.in_system_header?
-
-          ref.qualified_name
-        end
+        @template_resolver.resolve_base_specifier_spelling(base_specifier)
       end
 
       def visit_class_template_builder(cursor)

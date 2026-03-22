@@ -11,6 +11,9 @@ void Init_TemplateInheritance()
 {
   Module rb_mTests = define_module("Tests");
 
+  Rice::Data_Type<Tests::DependentBase<typename Tests::Traits<int>::type>> rb_cDependentBaseTypenameTraitsType = DependentBase_instantiate<typename Tests::Traits<int>::type>(rb_mTests, "DependentBaseTypenameTraitsType");
+  Rice::Data_Type<Tests::DependentDerived<int>> rb_cDependentDerivedInt = DependentDerived_instantiate<int>(rb_mTests, "DependentDerivedInt");
+
   Rice::Data_Type<Tests::FunctionBase<void (*)(int, int)>> rb_cFunctionBaseVoidPtrIntInt = FunctionBase_instantiate<void (*)(int, int)>(rb_mTests, "FunctionBaseVoidPtrIntInt");
   Rice::Data_Type<Tests::FunctionDerived<void (*)(int, int)>> rb_cFunctionDerivedFn = FunctionDerived_instantiate<void (*)(int, int)>(rb_mTests, "FunctionDerivedFn");
 
