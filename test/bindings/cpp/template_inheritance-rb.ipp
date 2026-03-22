@@ -14,6 +14,20 @@ inline Rice::Data_Type<Tests::FunctionDerived<Signature>> FunctionDerived_instan
     .define_constructor(Constructor<Tests::FunctionDerived<Signature>>());
 }
 
+template<typename Signature>
+inline Rice::Data_Type<Tests::CallbackBase<Signature>> CallbackBase_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::CallbackBase<Signature>>(parent, name)
+    .define_constructor(Constructor<Tests::CallbackBase<Signature>>());
+}
+
+template<typename Result, typename Left, typename Right>
+inline Rice::Data_Type<Tests::CallbackDerived<Result, Left, Right>> CallbackDerived_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::CallbackDerived<Result, Left, Right>, Tests::CallbackBase<Result (*)(Left, Right)>>(parent, name)
+    .define_constructor(Constructor<Tests::CallbackDerived<Result, Left, Right>>());
+}
+
 template<typename T>
 inline Rice::Data_Type<Tests::BasePtr<T>> BasePtr_instantiate(Rice::Module parent, const char* name)
 {

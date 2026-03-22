@@ -723,13 +723,13 @@ module RubyBindgen
       #   Matrix<int, 2>
       # becomes
       #   Matrix_instantiate<int, 2, 1>
-      def get_full_template_arguments(cursor, underlying_type, cursor_template)
+      def full_template_arguments(cursor, underlying_type, cursor_template)
         actual_args = specialization_template_arguments(cursor, underlying_type, cursor_template)
 
-        return actual_args.join(", ") if cursor_template.nil?
+        return actual_args if cursor_template.nil?
 
         template_params = template_parameters(cursor_template)
-        return actual_args.join(", ") if actual_args.length >= template_params.length
+        return actual_args if actual_args.length >= template_params.length
 
         # Need to fill in defaults for missing parameters
         missing_params = template_params.drop(actual_args.length)
@@ -738,9 +738,9 @@ module RubyBindgen
         end.compact
 
         # If we couldn't get all defaults, return what we have
-        return actual_args.join(", ") if default_values.length != missing_params.length
+        return actual_args if default_values.length != missing_params.length
 
-        (actual_args + default_values).join(", ")
+        actual_args + default_values
       end
 
       def template_parameters(template_cursor)
@@ -900,7 +900,7 @@ module RubyBindgen
       # class scope. When the generated binding emits the same text outside that
       # scope, we need the fully qualified names from libclang, not the written
       # tokens from the source range.
-      def qualify_source_default_references(root_cursor, source_text, source_text_offset, qualify_decl_refs: true)
+      def qualify_source_default_references(root_cursor, source_text, source_text_offset, qualify_decl_refs: true, substitutions: {})
         range_replacements = []
         type_fallbacks = []
 
@@ -908,9 +908,19 @@ module RubyBindgen
           ref = type_ref.referenced
           next unless ref && ref.kind != :cursor_invalid_file
 
+          simple_name = ref.spelling
+          if simple_name && substitutions.key?(simple_name)
+            range = type_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+            replacement = source_range_replacement(source_text, source_text_offset, range, substitutions[simple_name])
+            if replacement
+              range_replacements << replacement.merge(kind: :type)
+              next
+            end
+          end
+
           # Template type parameters stay visible by bare name in generated
           # template code, so they should not be qualified here.
-          next if ref.kind == :cursor_template_type_parameter
+          next if [:cursor_template_type_parameter, :cursor_template_template_parameter].include?(ref.kind)
 
           begin
             is_dependent_typedef = ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
@@ -967,6 +977,21 @@ module RubyBindgen
             begin
               simple_name = ref.spelling
               next if simple_name.nil? || simple_name.empty?
+
+              if substitutions.key?(simple_name)
+                range = if decl_ref.extent.text.include?('<')
+                          decl_ref.spelling_name_range(0)
+                        else
+                          decl_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+                        end
+                replacement = source_range_replacement(source_text, source_text_offset, range, substitutions[simple_name])
+                if replacement
+                  range_replacements << replacement.merge(kind: :decl)
+                  next
+                end
+              end
+
+              next if ref.kind == :cursor_non_type_template_parameter
 
               if ref.kind == :cursor_cxx_method
                 next if source_text.match?(/::#{Regexp.escape(simple_name)}\s*\(/)
@@ -1231,6 +1256,97 @@ module RubyBindgen
         end
 
         ["", start_index]
+      end
+
+      # Split a comma-separated template argument list while keeping nested
+      # templates, function pointer signatures, and string literals intact.
+      #
+      # Examples:
+      #   'unsigned char, 2, 1'
+      #   => ['unsigned char', '2', '1']
+      #
+      #   'void (*)(int, int)'
+      #   => ['void (*)(int, int)']
+      #
+      #   'Support::Box<Support::Tag>, callback_t'
+      #   => ['Support::Box<Support::Tag>', 'callback_t']
+      def template_argument_texts(args_text)
+        return [] if args_text.nil? || args_text.empty?
+
+        result = []
+        current = String.new
+        angle_depth = 0
+        paren_depth = 0
+        bracket_depth = 0
+        brace_depth = 0
+        quote = nil
+        escaped = false
+
+        args_text.each_char do |char|
+          current << char
+
+          if quote
+            if escaped
+              escaped = false
+            elsif char == '\\'
+              escaped = true
+            elsif char == quote
+              quote = nil
+            end
+            next
+          end
+
+          case char
+          when '"', "'"
+            quote = char
+          when '<'
+            angle_depth += 1
+          when '>'
+            angle_depth -= 1 if angle_depth > 0
+          when '('
+            paren_depth += 1
+          when ')'
+            paren_depth -= 1 if paren_depth > 0
+          when '['
+            bracket_depth += 1
+          when ']'
+            bracket_depth -= 1 if bracket_depth > 0
+          when '{'
+            brace_depth += 1
+          when '}'
+            brace_depth -= 1 if brace_depth > 0
+          when ','
+            if angle_depth.zero? && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
+              current.chop!
+              piece = current.strip
+              result << piece unless piece.empty?
+              current = String.new
+            end
+          end
+        end
+
+        piece = current.strip
+        result << piece unless piece.empty?
+        result
+      end
+
+      # Extract only the outer template argument list from a fully resolved
+      # instantiation spelling.
+      #
+      # Examples:
+      #   'Tests::Matx<unsigned char, 2, 1>'
+      #   => 'unsigned char, 2, 1'
+      #
+      #   'Tests::CallbackBase<void (*)(int, int)>'
+      #   => 'void (*)(int, int)'
+      def template_argument_list_text(spelling)
+        start_index = spelling.index('<')
+        return nil unless start_index
+
+        suffix, = balanced_template_suffix(spelling, start_index)
+        return nil if suffix.empty?
+
+        suffix[1..-2]
       end
 
       def qualify_dependent_types_in_template_args(spelling)
@@ -2395,7 +2511,8 @@ module RubyBindgen
       def visit_template_specialization(cursor, cursor_template, underlying_type)
         under = find_under(cursor)
         # Get template arguments including any default values that were omitted in the typedef
-        template_arguments = get_full_template_arguments(cursor, underlying_type, cursor_template)
+        template_argument_values = full_template_arguments(cursor, underlying_type, cursor_template)
+        template_arguments = template_argument_values.join(", ")
 
         result = ""
 
@@ -2434,7 +2551,7 @@ module RubyBindgen
                 end
               elsif !@auto_generated_bases.include?(base_spelling)
                 # No typedef - auto-generate
-                result = auto_generate_base_class(base_ref, base_spelling, template_arguments, under)
+                result = auto_generate_base_class(base_ref, base_spelling, under)
               end
             elsif base_class_template && !base_class_template.location.in_system_header?
               # Base template is from an included file — include its .ipp so the
@@ -2498,7 +2615,7 @@ module RubyBindgen
       # e.g., "Tests::Matx<unsigned char, 2, 1>" -> "MatxUnsignedChar21"
       def ruby_name_from_template(base_spelling, template_arguments)
         base_name = base_spelling.sub(/<.*>\z/, "").split("::").last.camelize
-        argument_values = template_arguments.is_a?(Array) ? template_arguments : split_template_args(template_arguments)
+        argument_values = template_arguments.is_a?(Array) ? template_arguments : template_argument_texts(template_arguments)
         args_name = argument_values.map { |argument| ruby_name_from_template_argument(argument) }.join
         @namer.apply_rename_types(base_name + args_name)
       end
@@ -2540,7 +2657,7 @@ module RubyBindgen
 
       # Auto-generate a base class definition when no typedef exists for it.
       # When recursive: true, also generates any base classes of the base class.
-      def auto_generate_base_class(base_ref, base_spelling, template_arguments, under, recursive: true)
+      def auto_generate_base_class(base_ref, base_spelling, under, recursive: true)
         base_template_ref = base_ref.find_first_by_kind(false, :cursor_template_ref)
         return "" unless base_template_ref
 
@@ -2548,14 +2665,10 @@ module RubyBindgen
         return "" if base_template.location.in_system_header?
         # Skip base templates from included files — their own output handles registration
         return "" unless base_template.file_location.file == base_template.translation_unit.file.name
-        base_template_arguments = if template_arguments.is_a?(Array)
-                                    template_arguments
-                                  else
-                                    extracted_arguments = base_spelling.match(/<(.+)>\z/)&.[](1) || template_arguments
-                                    return "" unless extracted_arguments
-                                    split_template_args(extracted_arguments)
-                                  end
-        base_template_arguments_text = base_template_arguments.join(', ')
+        base_template_arguments_text = template_argument_list_text(base_spelling)
+        return "" unless base_template_arguments_text
+
+        base_template_arguments = template_argument_texts(base_template_arguments_text)
         return "" if base_template_arguments.empty?
 
         result = ""
@@ -2567,22 +2680,16 @@ module RubyBindgen
           if base_base_ref
             base_base_template_ref = base_base_ref.find_first_by_kind(false, :cursor_template_ref)
             if base_base_template_ref
-              base_base_qualified_name = base_base_template_ref.referenced.qualified_name
-
               # Build substitution map from template params to actual values
               template_params = template_parameters(base_template).map(&:spelling)
               template_arg_values = base_template_arguments
               subs = template_params.each_with_index.to_h { |param, i| [param, template_arg_values[i]] }
 
               # Substitute template parameters with actual values
-              base_base_type_spelling = base_base_ref.type.spelling
-              if base_base_type_spelling =~ /<(.+)>\z/
-                base_base_args = split_template_args($1).map { |arg| subs[arg] || arg }
-                base_base_spelling = "#{base_base_qualified_name}<#{base_base_args.join(', ')}>"
+              base_base_spelling = resolve_base_specifier_spelling(base_base_ref, substitutions: subs)
 
-                if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
-                  result = auto_generate_base_class(base_base_ref, base_base_spelling, base_base_args, under)
-                end
+              if base_base_spelling && !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
+                result = auto_generate_base_class(base_base_ref, base_base_spelling, under)
               end
             end
           end
@@ -2603,13 +2710,7 @@ module RubyBindgen
       # Auto-generate a template base class for a non-template derived class.
       # For example: class PlaneWarper : public WarperBase<PlaneProjector>
       def auto_generate_template_base_for_class(base_specifier, base_spelling, under)
-        base_template = base_specifier.find_first_by_kind(false, :cursor_template_ref)&.referenced
-        template_arguments = if base_template
-                               specialization_template_arguments(base_specifier, base_specifier.type, base_template)
-                             else
-                               nil
-                             end
-        auto_generate_base_class(base_specifier, base_spelling, template_arguments, under, recursive: false)
+        auto_generate_base_class(base_specifier, base_spelling, under, recursive: false)
       end
 
       def visit_union(cursor)
@@ -2904,7 +3005,7 @@ module RubyBindgen
 
         # Get template parameter names from the derived template
         template_params = template_parameters(derived_template).map(&:spelling)
-        template_arg_values = specialization_template_arguments(cursor, underlying_type, derived_template)
+        template_arg_values = full_template_arguments(cursor, underlying_type, derived_template)
 
         # Build substitution map: param_name -> actual_value
         subs = {}
@@ -2912,52 +3013,54 @@ module RubyBindgen
           subs[param] = template_arg_values[i] if template_arg_values[i]
         end
 
-        # Get the base specifier's type spelling (e.g., "Matx<_Tp, cn, 1>")
-        base_type_spelling = base_spec.type.spelling
-        return nil unless base_type_spelling =~ /<(.+)>\z/
-
-        base_args_str = $1
-
-        # Split and substitute base template arguments
-        base_args = split_template_args(base_args_str).map do |arg|
-          subs[arg] || arg
-        end
-
-        # Construct the fully qualified base class instantiation
-        base_name = base_template_ref.referenced.qualified_name
-        resolved_args = base_args.join(', ')
-        "#{base_name}<#{resolved_args}>"
+        resolve_base_specifier_spelling(base_spec, substitutions: subs)
       end
 
-      # Split template arguments string, respecting nested angle brackets
-      # e.g., "int, std::pair<int, double>, 5" -> ["int", "std::pair<int, double>", "5"]
-      def split_template_args(args_str)
-        result = []
-        current = String.new
-        depth = 0
+      # Extract the written base instantiation starting at the template name so
+      # access specifiers do not leak into the generated spelling.
+      #
+      # Examples:
+      #   'public CallbackBase<Result (*)(Left, Right)>'
+      #   => ['CallbackBase<Result (*)(Left, Right)>', offset of the C]
+      #
+      #   'public Support::ForeignBase<T>'
+      #   => ['ForeignBase<T>', offset of the F]
+      def base_specifier_source_text(base_specifier, base_template_ref)
+        base_extent = base_specifier.extent
+        source_text = base_extent.text
+        source_offset = base_template_ref.extent.start.offset
+        start_index = source_offset - base_extent.start.offset
+        return nil if start_index.negative? || start_index >= source_text.bytesize
 
-        args_str.each_char do |c|
-          case c
-          when '<'
-            depth += 1
-            current << c
-          when '>'
-            depth -= 1
-            current << c
-          when ','
-            if depth == 0
-              result << current.strip
-              current = String.new
-            else
-              current << c
-            end
-          else
-            current << c
-          end
+        [source_text.byteslice(start_index..), source_offset]
+      rescue ArgumentError
+        nil
+      end
+
+      # Resolve a template base specifier by rewriting the written source with
+      # semantic names and any current template-parameter substitutions.
+      #
+      # Examples:
+      #   substitutions = { 'T' => 'unsigned char' }
+      #   source        = 'BasePtr<T>'
+      #   => 'Tests::BasePtr<unsigned char>'
+      #
+      #   substitutions = { 'Result' => 'void', 'Left' => 'int', 'Right' => 'int' }
+      #   source        = 'CallbackBase<Result (*)(Left, Right)>'
+      #   => 'Tests::CallbackBase<void (*)(int, int)>'
+      def resolve_base_specifier_spelling(base_specifier, substitutions: {})
+        base_template_ref = base_specifier.find_first_by_kind(false, :cursor_template_ref)
+
+        unless base_template_ref
+          base_type_ref = base_specifier.find_first_by_kind(false, :cursor_type_ref)
+          return base_type_ref&.referenced&.qualified_name
         end
 
-        result << current.strip unless current.strip.empty?
-        result
+        source = base_specifier_source_text(base_specifier, base_template_ref)
+        return nil unless source
+
+        source_text, source_offset = source
+        qualify_source_default_references(base_specifier, source_text, source_offset, substitutions: substitutions)
       end
     end
   end

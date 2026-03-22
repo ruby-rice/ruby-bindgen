@@ -14,6 +14,9 @@ void Init_TemplateInheritance()
   Rice::Data_Type<Tests::FunctionBase<void (*)(int, int)>> rb_cFunctionBaseVoidPtrIntInt = FunctionBase_instantiate<void (*)(int, int)>(rb_mTests, "FunctionBaseVoidPtrIntInt");
   Rice::Data_Type<Tests::FunctionDerived<void (*)(int, int)>> rb_cFunctionDerivedFn = FunctionDerived_instantiate<void (*)(int, int)>(rb_mTests, "FunctionDerivedFn");
 
+  Rice::Data_Type<Tests::CallbackBase<void (*)(int, int)>> rb_cCallbackBaseVoidPtrIntInt = CallbackBase_instantiate<void (*)(int, int)>(rb_mTests, "CallbackBaseVoidPtrIntInt");
+  Rice::Data_Type<Tests::CallbackDerived<void, int, int>> rb_cCallbackDerivedVoidIntInt = CallbackDerived_instantiate<void, int, int>(rb_mTests, "CallbackDerivedVoidIntInt");
+
   Rice::Data_Type<Tests::BasePtr<unsigned char>> rb_cBasePtrUnsignedChar = BasePtr_instantiate<unsigned char>(rb_mTests, "BasePtrUnsignedChar");
   Rice::Data_Type<Tests::DerivedPtr<unsigned char>> rb_cDerivedPtrb = DerivedPtr_instantiate<unsigned char>(rb_mTests, "DerivedPtrb");
 

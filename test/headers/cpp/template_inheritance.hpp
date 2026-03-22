@@ -22,6 +22,25 @@ namespace Tests
 
   typedef FunctionDerived<void (*)(int, int)> FunctionDerivedFn;
 
+  // Base-instantiation resolution still needs to substitute function pointer
+  // types built from multiple template parameters:
+  //   CallbackBase<void (*)(int, int)>
+  // not:
+  //   CallbackBase<Result (*)(Left, Right)>
+  template<typename Signature>
+  struct CallbackBase
+  {
+    CallbackBase() = default;
+  };
+
+  template<typename Result, typename Left, typename Right>
+  struct CallbackDerived : public CallbackBase<Result (*)(Left, Right)>
+  {
+    CallbackDerived() : CallbackBase<Result (*)(Left, Right)>() {}
+  };
+
+  typedef CallbackDerived<void, int, int> CallbackDerivedVoidIntInt;
+
   // Base template class
   template <typename T>
   struct BasePtr
