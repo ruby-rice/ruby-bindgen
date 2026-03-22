@@ -1,7 +1,11 @@
 # encoding: UTF-8
 
 require_relative './abstract_test'
-require_relative './rice_components_test'
+require_relative './type_index_test'
+require_relative './reference_qualifier_test'
+require_relative './type_speller_test'
+require_relative './template_resolver_test'
+require_relative './signature_builder_test'
 
 class RiceTest < AbstractTest
   def test_classes

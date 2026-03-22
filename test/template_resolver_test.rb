@@ -1,0 +1,39 @@
+# encoding: UTF-8
+
+require_relative './rice_abstract_test'
+
+class TemplateResolverTest < RiceAbstractTest
+  def test_fills_defaults_and_resolves_base_instantiations
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace Support {
+        struct Tag {};
+
+        template<typename T>
+        struct Base {};
+      }
+
+      namespace Tests {
+        template<typename T, typename U = Support::Tag>
+        struct Holder {};
+
+        typedef Holder<int> HolderInt;
+
+        template<typename T>
+        struct Derived : Support::Base<T> {};
+
+        typedef Derived<int> DerivedInt;
+      }
+    CPP
+
+    resolver = collaborators[:template_resolver]
+
+    holder_typedef = find_cursor(parsed.translation_unit.cursor, :cursor_typedef_decl, "HolderInt")
+    holder_template = holder_typedef.find_first_by_kind(false, :cursor_template_ref).referenced
+    assert_equal ["int", "Support::Tag"],
+                 resolver.full_template_arguments(holder_typedef, holder_typedef.underlying_type, holder_template)
+
+    derived_typedef = find_cursor(parsed.translation_unit.cursor, :cursor_typedef_decl, "DerivedInt")
+    assert_equal "Support::Base<int>",
+                 resolver.resolve_base_instantiation(derived_typedef, derived_typedef.underlying_type)
+  end
+end
