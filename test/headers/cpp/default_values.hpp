@@ -237,3 +237,11 @@ namespace outer
     Matcher(inner::IndexParams* params = makePtr<inner::IndexParams>());
   };
 }
+
+// Test that qualification does not rewrite identifier-like text inside string literals.
+namespace quoted
+{
+  int helper(const char* name);
+
+  void call(int value = helper("helper"));
+}

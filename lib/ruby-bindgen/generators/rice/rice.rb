@@ -1050,6 +1050,109 @@ module RubyBindgen
         end
       end
 
+      # Convert a libclang source range into offsets relative to the extracted
+      # default-expression text so semantic replacements can be applied safely.
+      #
+      # Example:
+      #   text        = 'makePtr<inner::IndexParams>()'
+      #   base_offset = 1200
+      #   range       = source range for 'makePtr<inner::IndexParams>'
+      #
+      # Returns offsets relative to the file:
+      #   { start_offset: 1200, end_offset: 1228, replacement: ... }
+      #
+      # Those offsets are later converted back into indexes relative to `text`
+      # before patching only that exact span.
+      def source_range_replacement(text, base_offset, range, replacement = nil)
+        return nil if range.nil? || range.null?
+
+        start_offset = range.start.offset
+        end_offset = range.end.offset
+        text_end_offset = base_offset + text.bytesize
+        return nil if start_offset < base_offset || end_offset > text_end_offset || end_offset < start_offset
+
+        { start_offset: start_offset, end_offset: end_offset, replacement: replacement }
+      rescue ArgumentError
+        nil
+      end
+
+      # Apply non-overlapping source replacements from right to left so earlier
+      # offsets remain valid while rewriting a default expression.
+      #
+      # Example:
+      #   text = 'helper("helper")'
+      #   replacements = [{start_offset: ..., end_offset: ..., replacement: 'quoted::helper'}]
+      #
+      # Produces:
+      #   'quoted::helper("helper")'
+      #
+      # The string literal stays untouched because only the decl-ref span is replaced.
+      def apply_source_replacements(text, base_offset, replacements)
+        replacements
+          .uniq { |r| [r[:start_offset], r[:end_offset], r[:replacement]] }
+          .sort_by { |r| -r[:start_offset] }
+          .reduce(text.dup) do |result, replacement|
+            start_index = replacement[:start_offset] - base_offset
+            end_index = replacement[:end_offset] - base_offset
+            result.byteslice(0, start_index) +
+              replacement[:replacement] +
+              result.byteslice(end_index..-1).to_s
+          end
+      end
+
+      # Expand the written reference span to the desired fully qualified form
+      # without dropping template args or clobbering existing qualifiers.
+      #
+      # Examples:
+      #   span_text       = 'helper'
+      #   simple_name     = 'helper'
+      #   qualified_name  = 'quoted::helper'
+      #   => 'quoted::helper'
+      #
+      #   span_text       = 'makePtr<inner::IndexParams>'
+      #   simple_name     = 'makePtr'
+      #   qualified_name  = 'outer::makePtr'
+      #   => 'outer::makePtr<inner::IndexParams>'
+      #
+      #   span_text       = 'PerfLevel::SLOW'
+      #   simple_name     = 'SLOW'
+      #   qualified_name  = 'multiline::PerfLevel::SLOW'
+      #   => 'multiline::PerfLevel::SLOW'
+      def replacement_from_reference_span(span_text, simple_name, qualified_name)
+        return qualified_name if span_text == simple_name
+        return qualified_name if span_text.include?('::') && span_text.end_with?(simple_name)
+        return span_text.sub(/\A#{Regexp.escape(simple_name)}/, qualified_name) if span_text.start_with?(simple_name)
+
+        nil
+      end
+
+      # Split a parameter declaration at its default-value '=' and return both
+      # the written default expression and its byte offset in the source file.
+      #
+      # Examples:
+      #   'FILE* stream = stdout'
+      #   => ['stdout', <offset of the s in stdout>]
+      #
+      #   "PerfLevel level\n      = PerfLevel::SLOW"
+      #   => ['PerfLevel::SLOW', <offset of the P in PerfLevel::SLOW>]
+      #
+      # This is text extraction only. Qualification happens later using cursor
+      # information so we do not lose semantic information.
+      def extract_default_text(param)
+        param_extent = param.extent.text
+        return nil unless param_extent
+
+        before, separator, after = param_extent.partition('=')
+        return nil if separator.empty?
+
+        leading_whitespace = after[/\A\s*/] || ""
+        default_text = after.delete_prefix(leading_whitespace)
+        return nil if default_text.empty?
+
+        default_text_offset = param.extent.start.offset + before.bytesize + separator.bytesize + leading_whitespace.bytesize
+        [default_text, default_text_offset]
+      end
+
       # Finds the default value expression for a parameter and returns it with qualified type/function names.
       # For example, transforms "Range::all()" to "cv::Range::all()" and "noArray()" to "cv::noArray()".
       # Returns nil if no default value.
@@ -1065,18 +1168,13 @@ module RubyBindgen
       # @param param [Cursor] A parameter cursor that may have a default value
       # @return [String, nil] The default value with qualified names, or nil if no default value
       def find_default_value(param)
-        # Get the parameter's source text and verify it has a default value.
-        # Template arguments like '4' in 'Vec<_Tp, 4>' also appear as literal children,
-        # but they won't have '=' in the extent.
-        param_extent = param.extent.text
-        return nil unless param_extent&.include?('=')
-
         # Extract default value text from param_extent (everything after '=').
         # This gives us the original source text, unaffected by macro expansion.
-        # Use /m flag so '.' matches newlines — the '=' may be on a different line
-        # than the parameter type (e.g., "PERF_LEVEL perfPreset\n        = NV_OF_PERF_LEVEL_SLOW").
-        default_text = param_extent.sub(/.*?=\s*/m, '')
-        return nil if default_text.empty?
+        # The '=' may be on a different line than the parameter type
+        # (e.g., "PERF_LEVEL perfPreset\n        = NV_OF_PERF_LEVEL_SLOW").
+        extracted = extract_default_text(param)
+        return nil unless extracted
+        default_text, default_text_offset = extracted
 
         # Find the default value expression cursor for semantic analysis.
         # We need this to traverse child cursors and find what needs qualification.
@@ -1145,6 +1243,7 @@ module RubyBindgen
 
         # Phase 2: Qualify declaration references (functions, enum values, static members)
         # For example: noArray() -> cv::noArray(), NORM_L2 -> cv::NORM_L2
+        replacements = []
         decl_refs = default_expr.find_by_kind(true, :cursor_decl_ref_expr).to_a
         decl_refs = [default_expr] + decl_refs if default_expr.kind == :cursor_decl_ref_expr
         decl_refs.each do |decl_ref|
@@ -1193,6 +1292,19 @@ module RubyBindgen
             # We want to keep the original source text in these cases.
             next unless qualified_name.end_with?(simple_name)
 
+            range = decl_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+            replacement = source_range_replacement(default_text, default_text_offset, range)
+            if replacement
+              start_index = replacement[:start_offset] - default_text_offset
+              end_index = replacement[:end_offset] - default_text_offset
+              span_text = default_text.byteslice(start_index, end_index - start_index)
+              replacement_text = replacement_from_reference_span(span_text, simple_name, qualified_name)
+              if replacement_text && replacement_text != span_text
+                replacements << replacement.merge(replacement: replacement_text)
+                next
+              end
+            end
+
             # Apply qualification (negative lookbehind avoids double-qualifying)
             default_text = default_text.gsub(/(?<!::)\b#{Regexp.escape(simple_name)}\b/, qualified_name)
 
@@ -1205,6 +1317,8 @@ module RubyBindgen
             # Skip if we can't get qualified name
           end
         end
+
+        default_text = apply_source_replacements(default_text, default_text_offset, replacements) unless replacements.empty?
 
         default_text
       end

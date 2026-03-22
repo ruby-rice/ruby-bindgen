@@ -141,4 +141,12 @@ void Init_DefaultValues()
   Rice::Data_Type<outer::Matcher> rb_cOuterMatcher = define_class_under<outer::Matcher>(rb_mOuter, "Matcher")
     .define_constructor(Constructor<outer::Matcher, outer::inner::IndexParams *>(),
       Arg("params") = static_cast<outer::inner::IndexParams *>(outer::makePtr<outer::inner::IndexParams>()));
+
+  Module rb_mQuoted = define_module("Quoted");
+
+  rb_mQuoted.define_module_function<int(*)(const char *)>("helper", &quoted::helper,
+    Arg("name"));
+
+  rb_mQuoted.define_module_function<void(*)(int)>("call", &quoted::call,
+    Arg("value") = static_cast<int>(quoted::helper("helper")));
 }
