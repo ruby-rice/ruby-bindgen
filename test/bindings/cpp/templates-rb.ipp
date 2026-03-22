@@ -169,3 +169,10 @@ inline Rice::Data_Type<Tests::EnumSized<N>> EnumSized_instantiate(Rice::Module p
     .define_constructor(Constructor<Tests::EnumSized<N>, const Tests::FixedBuffer<int, Tests::EnumSized<N>::Size> &>(),
       Arg("value"));
 }
+
+template<void (*Fn)(int, int)>
+inline Rice::Data_Type<Tests::FunctionTemplate<Fn>> FunctionTemplate_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::FunctionTemplate<Fn>>(parent, name)
+    .template define_singleton_function<void(*)()>("invoke", &Tests::FunctionTemplate<Fn>::invoke);
+}

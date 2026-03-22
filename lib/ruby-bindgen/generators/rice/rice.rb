@@ -840,6 +840,10 @@ module RubyBindgen
       # becomes
       #   `int N`
       #
+      #   `void (*Fn)(int, int)`
+      # stays
+      #   `void (*Fn)(int, int)`
+      #
       #   `template<typename> class Container = Box`
       # becomes
       #   `template<typename> class Container`
@@ -852,8 +856,13 @@ module RubyBindgen
         when :cursor_template_type_parameter
           "typename #{template_parameter.spelling}"
         when :cursor_non_type_template_parameter
-          type_spelling = template_parameter.type&.spelling || "int"
-          "#{type_spelling} #{template_parameter.spelling}"
+          declaration = template_parameter.extent.text
+          return "int #{template_parameter.spelling}" if declaration.nil? || declaration.empty?
+
+          separator_offset = top_level_default_separator_offset(declaration)
+          return declaration.rstrip unless separator_offset
+
+          declaration.byteslice(0, separator_offset).rstrip
         when :cursor_template_template_parameter
           declaration = template_parameter.extent.text
           return "template<typename> class #{template_parameter.spelling}" if declaration.nil? || declaration.empty?

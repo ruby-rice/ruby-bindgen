@@ -296,4 +296,20 @@ namespace Tests
     };
 
     typedef EnumSized<4> EnumSized4;
+
+    // Non-type template parameters with declarator syntax must keep the name
+    // in the right place in the instantiate helper:
+    //   template<void (*Fn)(int, int)>
+    // not:
+    //   template<void (*)(int, int) Fn>
+    void callback_ints(int left, int right);
+
+    template<void (*Fn)(int, int)>
+    class FunctionTemplate
+    {
+    public:
+        static void invoke();
+    };
+
+    typedef FunctionTemplate<callback_ints> FunctionTemplateCallback;
 }

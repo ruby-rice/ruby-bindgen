@@ -76,4 +76,9 @@ void Init_Templates()
   Rice::Data_Type<Tests::StaticSized<4>> rb_cStaticSized4 = StaticSized_instantiate<4>(rb_mTests, "StaticSized4");
 
   Rice::Data_Type<Tests::EnumSized<4>> rb_cEnumSized4 = EnumSized_instantiate<4>(rb_mTests, "EnumSized4");
+
+  rb_mTests.define_module_function<void(*)(int, int)>("callback_ints", &Tests::callback_ints,
+    Arg("left"), Arg("right"));
+
+  Rice::Data_Type<Tests::FunctionTemplate<callback_ints>> rb_cFunctionTemplateCallback = FunctionTemplate_instantiate<&Tests::callback_ints>(rb_mTests, "FunctionTemplateCallback");
 }
