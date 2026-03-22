@@ -289,6 +289,17 @@ namespace Outer
   // SKIP via "Outer::takeAlias(Outer::MyParamAlias)"
   MY_EXPORT void takeAlias(MyParamAlias value);
 
+  // --- Non-type function template specialization skip tests ---
+  // Clang reports explicit function template specializations with display names
+  // like takeValue<>(), so build_candidates needs cursor template args to recover:
+  //   Outer::takeValue<7>()
+
+  template<int N>
+  int takeValue() { return N; }
+
+  template<>
+  MY_EXPORT int takeValue<7>() { return 7; }
+
   // --- Skipped Enum Tests ---
 
   // This enum should be SKIPPED via symbols

@@ -83,6 +83,7 @@ class RiceTest < AbstractTest
                                      "Outer::GuardedClass::GuardedClass(const int*)",
                                      "Outer::ConstructorWithNsParam::ConstructorWithNsParam(const Outer::MyParam*)",
                                      "Outer::takeAlias(Outer::MyParamAlias)",
+                                     "Outer::takeValue<7>()",
                                      "Outer::DataType<Outer::Vec<float, 3>>",
                                      "Outer::DataType<double>::DataType(const double*)",
                                      "operator float",

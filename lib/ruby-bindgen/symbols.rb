@@ -77,20 +77,15 @@ module RubyBindgen
         end
 
         # Function template specializations: clang reports display_name with empty
-        # template args (e.g., "saturate_cast<>(int)"). Reconstruct qualified args
-        # from the type_ref children which reference the substituted types.
+        # template args (e.g., "saturate_cast<>(int)" or "takeValue<>()").
+        # Rebuild the template argument list from cursor template args so both
+        # type and non-type specializations participate in symbol matching.
         if cursor.kind == :cursor_function && display.include?('<>')
-          type_refs = []
-          cursor.each(false) do |child, _|
-            type_refs << child.type.spelling if child.kind == :cursor_type_ref
-            next :continue
-          end
-          unless type_refs.empty?
-            qualified_args_str = "<#{type_refs.join(', ')}>"
-            fq_display = display.sub('<>', qualified_args_str)
+          specialized_display = specialized_function_display_name(cursor, display)
+          if specialized_display && specialized_display != display
             qualified_names.each do |qn|
-              fq_qualified_display = sub_last(qn, cursor.spelling, fq_display)
-              candidates << fq_display unless candidates.include?(fq_display)
+              fq_qualified_display = sub_last(qn, cursor.spelling, specialized_display)
+              candidates << specialized_display unless candidates.include?(specialized_display)
               candidates << fq_qualified_display unless candidates.include?(fq_qualified_display)
             end
           end
@@ -209,6 +204,27 @@ module RubyBindgen
         qualified_names.each do |qn|
           candidate = "#{qn}(#{param_types})"
           candidates << candidate unless candidates.include?(candidate)
+        end
+      end
+    end
+
+    def specialized_function_display_name(cursor, display)
+      args = function_template_arguments(cursor)
+      return nil if args.nil? || args.empty? || args.any?(&:nil?)
+
+      display.sub('<>', "<#{args.join(', ')}>")
+    end
+
+    def function_template_arguments(cursor)
+      n = cursor.num_template_arguments
+      return nil unless n > 0
+
+      (0...n).map do |index|
+        case cursor.template_argument_kind(index)
+        when :template_argument_type
+          cursor.template_argument_type(index).fully_qualified_name(cursor.printing_policy)
+        when :template_argument_integral
+          cursor.template_argument_value(index).to_s
         end
       end
     end

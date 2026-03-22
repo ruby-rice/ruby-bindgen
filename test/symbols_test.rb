@@ -47,4 +47,26 @@ class SymbolsTest < RiceAbstractTest
     assert_includes candidates, "takeAlias(Outer::HolderTag)"
     assert_includes candidates, "Outer::takeAlias(Outer::HolderTag)"
   end
+
+  def test_build_candidates_includes_non_type_function_template_specialization_candidates
+    parsed, = parse_cpp(<<~CPP)
+      namespace Outer {
+        template<int N>
+        int takeValue() { return N; }
+
+        template<>
+        int takeValue<7>() { return 7; }
+      }
+    CPP
+
+    cursor = parsed.translation_unit.cursor.find_by_kind(true, :cursor_function).find do |child|
+      child.display_name == "takeValue<>()"
+    end
+    refute_nil cursor, "Expected to find takeValue<7> specialization"
+
+    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
+
+    assert_includes candidates, "takeValue<7>()"
+    assert_includes candidates, "Outer::takeValue<7>()"
+  end
 end
