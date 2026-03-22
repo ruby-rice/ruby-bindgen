@@ -32,9 +32,10 @@ module RubyBindgen
         params = template_parameters(template_cursor)
         return actual_args if actual_args.length >= params.length
 
+        argument_cursor = specialization_argument_cursor(underlying_type)
         missing_params = params.drop(actual_args.length)
-        default_values = missing_params.map do |param|
-          template_param_default(param)
+        default_values = missing_params.each_with_index.map do |param, offset|
+          template_param_default(param, argument_cursor: argument_cursor, argument_index: actual_args.length + offset)
         end.compact
 
         return actual_args if default_values.length != missing_params.length
@@ -347,15 +348,25 @@ module RubyBindgen
         end
       end
 
-      def template_param_default(param)
+      def template_param_default(param, argument_cursor: nil, argument_index: nil)
         case param.kind
         when :cursor_non_type_template_parameter
           qualify_template_non_type_default(param)
         when :cursor_template_type_parameter
-          qualify_template_type_default(param)
+          specialization_type_default(argument_cursor, argument_index) || qualify_template_type_default(param)
         when :cursor_template_template_parameter
           qualify_template_template_default(param)
         end
+      end
+
+      def specialization_type_default(argument_cursor, argument_index)
+        return nil unless argument_cursor && argument_index
+        return nil unless argument_cursor.template_argument_kind(argument_index) == :template_argument_type
+
+        arg_type = argument_cursor.template_argument_type(argument_index)
+        return nil if arg_type.kind == :type_invalid
+
+        @type_speller.type_spelling(arg_type)
       end
 
       def qualify_template_type_default(param)

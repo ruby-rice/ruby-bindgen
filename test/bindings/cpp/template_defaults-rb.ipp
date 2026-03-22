@@ -55,6 +55,21 @@ inline Rice::Data_Type<QualifiedDefaults::QualifiedValueDefault<T, N>> Qualified
 }
 
 template<typename T>
+inline Rice::Data_Type<DependentDefaults::Base<T>> Base_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<DependentDefaults::Base<T>>(parent, name)
+    .define_attr("value", &DependentDefaults::Base<T>::value);
+}
+
+template<typename T, typename U>
+inline Rice::Data_Type<DependentDefaults::DependentTypeDefault<T, U>> DependentTypeDefault_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<DependentDefaults::DependentTypeDefault<T, U>>(parent, name)
+    .define_attr("first", &DependentDefaults::DependentTypeDefault<T, U>::first)
+    .define_attr("second", &DependentDefaults::DependentTypeDefault<T, U>::second);
+}
+
+template<typename T>
 inline Rice::Data_Type<TemplateTemplateDefaults::Box<T>> Box_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<TemplateTemplateDefaults::Box<T>>(parent, name)

@@ -46,6 +46,10 @@ void Init_TemplateDefaults()
 
   Rice::Data_Type<QualifiedDefaults::QualifiedValueDefault<int>> rb_cQualifiedValueDefaultInt = QualifiedValueDefault_instantiate<int, QualifiedDefaults::DefaultCount>(Rice::Module(rb_cObject), "QualifiedValueDefaultInt");
 
+  Module rb_mDependentDefaults = define_module("DependentDefaults");
+
+  Rice::Data_Type<DependentDefaults::DependentTypeDefault<int>> rb_cDependentTypeDefaultInt = DependentTypeDefault_instantiate<int, DependentDefaults::Base<int>>(Rice::Module(rb_cObject), "DependentTypeDefaultInt");
+
   Module rb_mTemplateTemplateDefaults = define_module("TemplateTemplateDefaults");
 
   Rice::Data_Type<TemplateTemplateDefaults::Holder<int>> rb_cHolderInt = Holder_instantiate<int, TemplateTemplateDefaults::Box>(Rice::Module(rb_cObject), "HolderInt");

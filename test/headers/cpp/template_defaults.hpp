@@ -105,6 +105,31 @@ typedef QualifiedDefaults::QualifiedTypeDefault<int> QualifiedTypeDefaultInt;
 typedef QualifiedDefaults::QualifiedNestedDefault<int> QualifiedNestedDefaultInt;
 typedef QualifiedDefaults::QualifiedValueDefault<int> QualifiedValueDefaultInt;
 
+namespace DependentDefaults
+{
+    template<typename T>
+    class Base
+    {
+    public:
+        T value;
+    };
+
+    // Dependent type defaults should come from the specialized declaration cursor
+    // so omitted U becomes:
+    //   DependentTypeDefault<int, DependentDefaults::Base<int>>
+    // not:
+    //   DependentTypeDefault<int, DependentDefaults::Base<T>>
+    template<typename T, typename U = Base<T>>
+    class DependentTypeDefault
+    {
+    public:
+        T first;
+        U second;
+    };
+}
+
+typedef DependentDefaults::DependentTypeDefault<int> DependentTypeDefaultInt;
+
 namespace TemplateTemplateDefaults
 {
     template<typename T>

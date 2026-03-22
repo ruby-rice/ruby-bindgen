@@ -59,4 +59,27 @@ class TemplateResolverTest < RiceAbstractTest
     assert_equal ["int", "1 + 2", "Support::Wrap"],
                  resolver.full_template_arguments(expr_typedef, expr_typedef.underlying_type, box_template)
   end
+
+  def test_fills_dependent_type_defaults_from_specialized_cursor_arguments
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace Support {
+        template<typename T>
+        struct Base {};
+      }
+
+      namespace Tests {
+        template<typename T, typename U = Support::Base<T>>
+        struct Holder {};
+
+        typedef Holder<int> HolderInt;
+      }
+    CPP
+
+    resolver = collaborators[:template_resolver]
+    holder_typedef = find_cursor(parsed.translation_unit.cursor, :cursor_typedef_decl, "HolderInt")
+    holder_template = holder_typedef.underlying_type.declaration.specialized_template
+
+    assert_equal ["int", "Support::Base<int>"],
+                 resolver.full_template_arguments(holder_typedef, holder_typedef.underlying_type, holder_template)
+  end
 end
