@@ -779,15 +779,90 @@ module RubyBindgen
           end
           return default_child.extent.text if default_child
         elsif param.kind == :cursor_template_type_parameter
-          # For type params, parse extent text (e.g., "typename U = int")
-          extent_text = param.extent.text rescue nil
-          if extent_text && extent_text.include?('=')
-            # Extract type after '=' and clean up
-            default_type = extent_text.split('=', 2).last.strip
-            return default_type unless default_type.empty?
-          end
+          return qualify_template_type_default(param)
         end
         nil
+      end
+
+      # Qualify a template type default using source spans for location and cursor
+      # semantics for the replacement text.
+      #
+      # Examples:
+      #   'typename U = Tag'
+      # becomes
+      #   'QualifiedDefaults::Tag'
+      #
+      #   'typename U = Box<Tag>'
+      # becomes
+      #   'QualifiedDefaults::Box<QualifiedDefaults::Tag>'
+      #
+      # The source range only tells us where `Tag` or `Box` was written. The
+      # replacement text still comes from the referenced cursor because the
+      # written text is intentionally unqualified inside the namespace.
+      def qualify_template_type_default(param)
+        extracted = extract_default_text(param)
+        return nil unless extracted
+
+        default_text, default_text_offset = extracted
+        range_replacements = []
+        fallbacks = []
+
+        param.find_by_kind(true, :cursor_type_ref, :cursor_template_ref) do |type_ref|
+          ref = type_ref.referenced
+          next unless ref && ref.kind != :cursor_invalid_file
+          next if ref.kind == :cursor_template_type_parameter
+
+          begin
+            is_dependent_typedef = ref.kind == :cursor_typedef_decl && ref.semantic_parent.kind == :cursor_class_template
+            qualified_name = if is_dependent_typedef
+                               "#{ref.semantic_parent.qualified_display_name}::#{ref.spelling}"
+                             else
+                               ref.qualified_name
+                             end
+            simple_name = ref.spelling
+            next if simple_name.nil? || simple_name.empty?
+            next if simple_name == qualified_name
+
+            range = type_ref.reference_name_range([:want_qualifier, :want_template_args, :want_single_piece])
+            replacement = source_range_replacement(default_text, default_text_offset, range)
+            if replacement
+              start_index = replacement[:start_offset] - default_text_offset
+              end_index = replacement[:end_offset] - default_text_offset
+              start_index = expand_name_start_to_qualifier(default_text, start_index)
+              replacement = replacement.merge(start_offset: default_text_offset + start_index)
+              span_text = default_text.byteslice(start_index, end_index - start_index)
+              trailing_scope = default_text.byteslice(end_index, 2).to_s == '::'
+
+              replacement_name = if ref.kind == :cursor_class_template && trailing_scope && !span_text.include?('<')
+                                   ref.qualified_display_name
+                                 else
+                                   qualified_name
+                                 end
+              replacement_text = replacement_from_name_span(span_text, simple_name, replacement_name)
+              if is_dependent_typedef && replacement_text && !trailing_scope &&
+                 !preceded_by_typename?(default_text, start_index)
+                replacement_text = "typename #{replacement_text}"
+              end
+
+              if replacement_text && replacement_text != span_text
+                range_replacements << replacement.merge(replacement: replacement_text)
+                next
+              end
+            end
+
+            fallbacks << [ref, simple_name, qualified_name, is_dependent_typedef]
+          rescue ArgumentError
+            # Skip if we can't get qualified name (e.g., invalid cursor)
+          end
+        end
+
+        default_text = apply_source_replacements(default_text, default_text_offset, range_replacements) unless range_replacements.empty?
+
+        fallbacks.each do |ref, simple_name, qualified_name, is_dependent_typedef|
+          default_text = fallback_qualify_type_reference(default_text, ref, simple_name, qualified_name, is_dependent_typedef)
+        end
+
+        default_text
       end
 
       # Qualify template arguments in a type spelling
@@ -1294,8 +1369,8 @@ module RubyBindgen
         end
       end
 
-      # Split a parameter declaration at its default-value '=' and return both
-      # the written default expression and its byte offset in the source file.
+      # Split a declaration at its default-value '=' and return both the written
+      # default text and its byte offset in the source file.
       #
       # Examples:
       #   'FILE* stream = stdout'
@@ -1304,8 +1379,12 @@ module RubyBindgen
       #   "PerfLevel level\n      = PerfLevel::SLOW"
       #   => ['PerfLevel::SLOW', <offset of the P in PerfLevel::SLOW>]
       #
+      #   'typename U = Box<Tag>'
+      #   => ['Box<Tag>', <offset of the B in Box<Tag>>]
+      #
       # This is text extraction only. Qualification happens later using cursor
-      # information so we do not lose semantic information.
+      # information so we do not lose semantic information for either function
+      # defaults or template parameter defaults.
       def extract_default_text(param)
         param_extent = param.extent.text
         return nil unless param_extent

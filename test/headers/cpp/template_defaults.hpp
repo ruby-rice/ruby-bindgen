@@ -44,3 +44,45 @@ public:
 
 typedef TypeDefault<double> TypeDefaultDouble;      // TypeDefault<double, int>
 typedef TypeDefault<double, float> TypeDefaultDF;   // TypeDefault<double, float>
+
+namespace QualifiedDefaults
+{
+    struct Tag
+    {
+        int value;
+    };
+
+    template<typename T>
+    class Box
+    {
+    public:
+        T value;
+    };
+
+    // The typedef omits U, so the builder must instantiate with:
+    //   QualifiedTypeDefault<int, QualifiedDefaults::Tag>
+    // not:
+    //   QualifiedTypeDefault<int, Tag>
+    template<typename T, typename U = Tag>
+    class QualifiedTypeDefault
+    {
+    public:
+        T first;
+        U second;
+    };
+
+    // Nested template defaults must qualify both the template and its type arg:
+    //   QualifiedNestedDefault<int, QualifiedDefaults::Box<QualifiedDefaults::Tag>>
+    // not:
+    //   QualifiedNestedDefault<int, Box<Tag>>
+    template<typename T, typename U = Box<Tag>>
+    class QualifiedNestedDefault
+    {
+    public:
+        T first;
+        U second;
+    };
+}
+
+typedef QualifiedDefaults::QualifiedTypeDefault<int> QualifiedTypeDefaultInt;
+typedef QualifiedDefaults::QualifiedNestedDefault<int> QualifiedNestedDefaultInt;

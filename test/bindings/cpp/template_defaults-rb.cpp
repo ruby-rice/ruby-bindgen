@@ -30,4 +30,14 @@ void Init_TemplateDefaults()
   Rice::Data_Type<TypeDefault<double>> rb_cTypeDefaultDouble = TypeDefault_instantiate<double, int>(Rice::Module(rb_cObject), "TypeDefaultDouble");
 
   Rice::Data_Type<TypeDefault<double, float>> rb_cTypeDefaultDF = TypeDefault_instantiate<double, float>(Rice::Module(rb_cObject), "TypeDefaultDF");
+
+  Module rb_mQualifiedDefaults = define_module("QualifiedDefaults");
+
+  Rice::Data_Type<QualifiedDefaults::Tag> rb_cQualifiedDefaultsTag = define_class_under<QualifiedDefaults::Tag>(rb_mQualifiedDefaults, "Tag")
+    .define_constructor(Constructor<QualifiedDefaults::Tag>())
+    .define_attr("value", &QualifiedDefaults::Tag::value);
+
+  Rice::Data_Type<QualifiedDefaults::QualifiedTypeDefault<int>> rb_cQualifiedTypeDefaultInt = QualifiedTypeDefault_instantiate<int, QualifiedDefaults::Tag>(Rice::Module(rb_cObject), "QualifiedTypeDefaultInt");
+
+  Rice::Data_Type<QualifiedDefaults::QualifiedNestedDefault<int>> rb_cQualifiedNestedDefaultInt = QualifiedNestedDefault_instantiate<int, QualifiedDefaults::Box<QualifiedDefaults::Tag>>(Rice::Module(rb_cObject), "QualifiedNestedDefaultInt");
 }

@@ -23,3 +23,26 @@ inline Rice::Data_Type<TypeDefault<T, U>> TypeDefault_instantiate(Rice::Module p
     .define_attr("first", &TypeDefault<T, U>::first)
     .define_attr("second", &TypeDefault<T, U>::second);
 }
+
+template<typename T>
+inline Rice::Data_Type<QualifiedDefaults::Box<T>> Box_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<QualifiedDefaults::Box<T>>(parent, name)
+    .define_attr("value", &QualifiedDefaults::Box<T>::value);
+}
+
+template<typename T, typename U>
+inline Rice::Data_Type<QualifiedDefaults::QualifiedTypeDefault<T, U>> QualifiedTypeDefault_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<QualifiedDefaults::QualifiedTypeDefault<T, U>>(parent, name)
+    .define_attr("first", &QualifiedDefaults::QualifiedTypeDefault<T, U>::first)
+    .define_attr("second", &QualifiedDefaults::QualifiedTypeDefault<T, U>::second);
+}
+
+template<typename T, typename U>
+inline Rice::Data_Type<QualifiedDefaults::QualifiedNestedDefault<T, U>> QualifiedNestedDefault_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<QualifiedDefaults::QualifiedNestedDefault<T, U>>(parent, name)
+    .define_attr("first", &QualifiedDefaults::QualifiedNestedDefault<T, U>::first)
+    .define_attr("second", &QualifiedDefaults::QualifiedNestedDefault<T, U>::second);
+}
