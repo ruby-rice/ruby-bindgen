@@ -138,10 +138,13 @@ module RubyBindgen
         :type_nullptr
       ].freeze
 
+      # Directory containing the ERB templates used by the Rice generator.
       def self.template_dir
         __dir__
       end
 
+      # Create the main generator plus the extracted helpers that own naming,
+      # qualification, template resolution, and signature construction.
       def initialize(inputter, outputter, config)
         super(inputter, outputter, config)
         @include_header = config[:include]
@@ -179,6 +182,8 @@ module RubyBindgen
         @class_iterator_names = Hash.new { |h, k| h[k] = Set.new }
       end
 
+      # Parse the configured inputs with libclang and stream the resulting
+      # translation units back through this visitor.
       def generate
         clang_args = @config[:clang_args] || []
         parser = RubyBindgen::Parser.new(@inputter, clang_args, libclang: @config[:libclang])
@@ -241,11 +246,14 @@ module RubyBindgen
         type_references_skipped_symbol?(cursor.type)
       end
 
+      # Reset any per-run caches before parsing begins.
       def visit_start
         # Clear caches from previous runs
         @type_speller.clear
       end
 
+      # Emit the shared include header and optional project wrapper once all
+      # translation units have been processed.
       def visit_end
         create_rice_include_header
         create_project_files
@@ -280,6 +288,8 @@ module RubyBindgen
         self.outputter.write(header_path, content)
       end
 
+      # Render one translation unit into its generated `-rb.hpp`, `-rb.cpp`, and
+      # optional `-rb.ipp` outputs.
       def visit_translation_unit(translation_unit, path, relative_path)
         @namespaces.clear
         @classes.clear
@@ -352,6 +362,7 @@ module RubyBindgen
         self.outputter.write(rice_header, content)
       end
 
+      # Render a public, callable constructor into the Rice chain for its class.
       def visit_constructor(cursor)
         # Do not process class constructors defined outside of the class definition
         return if cursor.lexical_parent != cursor.semantic_parent
@@ -383,6 +394,9 @@ module RubyBindgen
                            :signature => signature, :args => args)
       end
 
+      # Render a class or struct, including child members, anonymous enum
+      # constants, embedded types, and any auto-generated template bases needed
+      # before the class itself can be registered.
       def visit_class_decl(cursor)
         # Skip explicitly listed symbols
         return if skip_symbol?(cursor)
@@ -530,6 +544,9 @@ module RubyBindgen
         merge_children({ nil => result })
       end
 
+      # Resolve the actual class template being instantiated for a parameter type.
+      # This prefers semantic specialization data so aliases such as
+      # `using AliasContainer = Container<Item>` still resolve to `Container`.
       def parameter_template_instantiation(type, param)
         declaration = type.declaration
         specialized_template = declaration.specialized_template
@@ -580,6 +597,8 @@ module RubyBindgen
         @template_resolver.resolve_base_specifier_spelling(base_specifier)
       end
 
+      # Render the reusable `_instantiate` helper for a class template so typedefs
+      # and alias specializations can bind that template later.
       def visit_class_template_builder(cursor)
         children_content = render_children(cursor,
                                           only_kinds: [:cursor_cxx_method, :cursor_constructor, :cursor_field_decl, :cursor_variable,
@@ -701,6 +720,8 @@ module RubyBindgen
           cursor.type.variadic?
       end
 
+      # Render a class method, including special handling for iterator adapters
+      # and mutable `operator[]` setter support.
       def visit_cxx_method(cursor)
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
@@ -877,6 +898,8 @@ module RubyBindgen
                            :qualified_parent => qualified_parent)
       end
 
+      # Render a conversion operator such as `operator bool()` or `operator T*()`.
+      # Template-parameter conversions that cannot produce stable Ruby names are skipped.
       def visit_conversion_function(cursor)
         # For now only deal with member functions
         return unless CURSOR_CLASSES.include?(cursor.lexical_parent.kind)
@@ -926,6 +949,8 @@ module RubyBindgen
                            :qualified_parent => qualified_parent)
       end
 
+      # Render a named enum as a Rice enum, or flatten anonymous enum constants
+      # into the surrounding class/namespace output.
       def visit_enum_decl(cursor)
         return if CURSOR_CLASSES.include?(cursor.semantic_parent.kind) && !cursor.public?
         return if !cursor.anonymous? && skip_symbol?(cursor)
@@ -944,6 +969,8 @@ module RubyBindgen
         self.render_cursor(cursor, "enum_decl", :under => under, :children => children)
       end
 
+      # Render one enum constant, preserving whether it came from an anonymous
+      # enum and whether that enum lives inside a class scope.
       def visit_enum_constant_decl(cursor)
         return if skip_symbol?(cursor)
         enum_parent = cursor.semantic_parent
@@ -961,6 +988,8 @@ module RubyBindgen
                            :value_name => cursor.qualified_display_name)
       end
 
+      # Render a free function or non-member operator that survives the symbol,
+      # export-macro, and parameter/return-type filters.
       def visit_function(cursor)
         # Can't return arrays in C++
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
@@ -991,6 +1020,8 @@ module RubyBindgen
                            :return_buffer => return_buffer)
       end
 
+      # Render simple object-like macros as Ruby constants when the macro body is
+      # exactly one literal token.
       def visit_macro_definition(cursor)
         tokens = cursor.translation_unit.tokenize(cursor.extent)
         return unless tokens.size == 2
@@ -1003,6 +1034,8 @@ module RubyBindgen
                            :qualified_name => tokens.tokens[0].spelling)
       end
 
+      # Render a namespace as a Ruby module, except for inline namespaces which
+      # are flattened into their enclosing namespace.
       def visit_namespace(cursor)
         # Skip anonymous namespaces - they're internal implementation details
         return if cursor.anonymous?
@@ -1032,6 +1065,7 @@ module RubyBindgen
         result.map { |s| s.chomp }.reject(&:empty?).join("\n\n")
       end
 
+      # Render a public field as a Rice attribute on its containing class.
       def visit_field_decl(cursor)
         return unless cursor.public?
         return if skip_symbol?(cursor)
@@ -1041,6 +1075,9 @@ module RubyBindgen
                            :qualified_parent => qualified_parent)
       end
 
+      # Record a free operator for later rendering onto the target class.
+      # These are grouped and emitted after normal members so cross-file
+      # `Data_Type<T>()` references can be handled in one pass.
       def visit_operator_non_member(cursor)
         # This is a stand-alone operator, such as:
         #
@@ -1075,6 +1112,8 @@ module RubyBindgen
         nil
       end
 
+      # Render the queued non-member operators grouped by their target class.
+      # This includes ostream-based `inspect`, unary operators, and binary operators.
       def render_non_member_operators
         # Group operators by target class
         # Each entry stores { lines: [], cpp_type: string } for cross-file Data_Type<T>() usage
@@ -1161,6 +1200,8 @@ module RubyBindgen
         result.join("\n  \n  ")
       end
 
+      # Resolve a top-level typedef or alias to the class template specialization
+      # it names, then render the specialization binding.
       def visit_typedef_decl(cursor)
         return if cursor.semantic_parent.kind == :cursor_class_decl || cursor.semantic_parent.kind == :cursor_struct
         return if skip_symbol?(cursor)
@@ -1207,6 +1248,8 @@ module RubyBindgen
         end
       end
 
+      # Render one typedef/alias specialization of a class template and ensure
+      # any inherited template bases are available first.
       def visit_template_specialization(cursor, cursor_template, underlying_type)
         under = find_under(cursor)
         # Get template arguments including any default values that were omitted in the typedef
@@ -1368,6 +1411,7 @@ module RubyBindgen
         auto_generate_base_class(base_specifier, base_spelling, under, recursive: false)
       end
 
+      # Render a union plus any embedded unions/structs that need to appear first.
       def visit_union(cursor)
         return if cursor.forward_declaration?
         return if cursor.anonymous?
@@ -1397,6 +1441,8 @@ module RubyBindgen
         result.map { |s| s.chomp }.join("\n\n")
       end
 
+      # Render a variable either as a Ruby constant or, for static class members,
+      # as a singleton attribute on the owning Rice class.
       def visit_variable(cursor)
         if CURSOR_CLASSES.include?(cursor.semantic_parent.kind) &&
           !cursor.public?
@@ -1425,12 +1471,15 @@ module RubyBindgen
         end
       end
 
+      # Render one constant definition for an enum value, macro, or variable.
       def visit_variable_constant(cursor)
         self.render_cursor(cursor, "constant",
                            :name => cursor.spelling.upcase_first,
                            :qualified_name => @type_speller.qualified_display_name(cursor))
       end
 
+      # Render the optional project-level wrapper files that call every generated
+      # per-header init function.
       def create_project_files
         return unless @project
 
@@ -1450,11 +1499,14 @@ module RubyBindgen
       end
 
 
+      # Map a cursor kind such as `:cursor_class_decl` to the corresponding
+      # visitor method symbol, for example `:visit_class_decl`.
       def figure_method(cursor)
         name = cursor.kind.to_s.delete_prefix("cursor_")
         "visit_#{name.underscore}".to_sym
       end
 
+      # Add left padding to non-blank lines while preserving existing blank lines.
       def add_indentation(content, indentation)
         content.lines.map do |line|
           # Don't add indentation to blank lines
@@ -1462,6 +1514,7 @@ module RubyBindgen
         end.join
       end
 
+      # Render an ERB template with the current cursor injected into the locals.
       def render_cursor(cursor, template, local_variables = {})
         render_template(template, local_variables.merge(:cursor => cursor))
       end
@@ -1500,6 +1553,8 @@ module RubyBindgen
         [content, has_builders]
       end
 
+      # Visit eligible child cursors and bucket their rendered output by version
+      # guard so later merging can emit `#if VERSION >= ...` blocks cleanly.
       def visit_children(cursor, exclude_kinds: Set.new, only_kinds: nil)
         versions = Hash.new { |h, k| h[k] = [] }
         cursor.each(false) do |child_cursor, parent_cursor|
@@ -1558,6 +1613,8 @@ module RubyBindgen
         versions
       end
 
+      # Merge previously rendered child content into final output text, with
+      # optional method chaining, termination, indentation, and version guards.
       def merge_children(versions, indentation: 0, chain: false, terminate: false, strip: false)
         lines = versions.keys.sort_by { |key| key.to_s }.each_with_object([]) do |version, result|
           next unless versions[version]&.any?
@@ -1588,6 +1645,7 @@ module RubyBindgen
         result
       end
 
+      # Convenience wrapper around `visit_children` and `merge_children`.
       def render_children(cursor, indentation: 0, chain: false, terminate: false, strip: false,
                           exclude_kinds: Set.new, only_kinds: nil)
         versions = visit_children(cursor, exclude_kinds: exclude_kinds, only_kinds: only_kinds)
