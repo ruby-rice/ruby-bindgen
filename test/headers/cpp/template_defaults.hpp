@@ -147,3 +147,18 @@ namespace TemplateTemplateDefaults
 
 typedef TemplateTemplateDefaults::Holder<int> HolderInt;
 typedef TemplateTemplateDefaults::HolderWithInnerDefault<float> HolderWithInnerDefaultFloat;
+
+// Top-level template arg counting must ignore commas inside nested function
+// parameter lists. The typedef still omits U, so the builder must instantiate:
+//   FunctionTypeDefault<void (*)(int, int), int>
+// not:
+//   FunctionTypeDefault<void (*)(int, int)>
+template<typename T, typename U = int>
+class FunctionTypeDefault
+{
+public:
+    T first;
+    U second;
+};
+
+typedef FunctionTypeDefault<void (*)(int, int)> FunctionTypeDefaultFn;

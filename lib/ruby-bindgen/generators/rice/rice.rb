@@ -746,18 +746,71 @@ module RubyBindgen
         extracted_args + ", " + default_values.join(", ")
       end
 
-      # Count template arguments at the top level (not inside nested <>)
+      # Count template arguments at the top level.
+      #
+      # Examples:
+      #   'int, float'
+      #   => 2
+      #
+      #   'void (*)(int, int)'
+      #   => 1
+      #
+      #   'Box<int>, Holder<float, double>'
+      #   => 2
+      #
+      # Nested commas inside template args, function types, arrays, and braced
+      # expressions must not be mistaken for separators between top-level
+      # template arguments.
       def count_template_args(args_string)
         return 0 if args_string.nil? || args_string.empty?
 
         count = 1
-        depth = 0
-        args_string.each_char do |c|
-          case c
-          when '<' then depth += 1
-          when '>' then depth -= 1
-          when ','
-            count += 1 if depth == 0
+        angle_depth = 0
+        paren_depth = 0
+        bracket_depth = 0
+        brace_depth = 0
+        in_single_quote = false
+        in_double_quote = false
+        escaped = false
+
+        args_string.each_char do |char|
+          if in_single_quote || in_double_quote
+            if escaped
+              escaped = false
+            elsif char == '\\'
+              escaped = true
+            elsif in_single_quote && char == "'"
+              in_single_quote = false
+            elsif in_double_quote && char == '"'
+              in_double_quote = false
+            end
+          else
+            case char
+            when "'"
+              in_single_quote = true
+            when '"'
+              in_double_quote = true
+            when '<'
+              angle_depth += 1
+            when '>'
+              angle_depth -= 1 if angle_depth > 0
+            when '('
+              paren_depth += 1
+            when ')'
+              paren_depth -= 1 if paren_depth > 0
+            when '['
+              bracket_depth += 1
+            when ']'
+              bracket_depth -= 1 if bracket_depth > 0
+            when '{'
+              brace_depth += 1
+            when '}'
+              brace_depth -= 1 if brace_depth > 0
+            when ','
+              if angle_depth.zero? && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
+                count += 1
+              end
+            end
           end
         end
         count

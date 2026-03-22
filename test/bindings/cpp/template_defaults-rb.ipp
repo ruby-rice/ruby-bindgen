@@ -81,3 +81,11 @@ inline Rice::Data_Type<TemplateTemplateDefaults::HolderWithInnerDefault<T, Conta
   return Rice::define_class_under<TemplateTemplateDefaults::HolderWithInnerDefault<T, Container>>(parent, name)
     .define_attr("value", &TemplateTemplateDefaults::HolderWithInnerDefault<T, Container>::value);
 }
+
+template<typename T, typename U>
+inline Rice::Data_Type<FunctionTypeDefault<T, U>> FunctionTypeDefault_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<FunctionTypeDefault<T, U>>(parent, name)
+    .define_attr("first", &FunctionTypeDefault<T, U>::first)
+    .define_attr("second", &FunctionTypeDefault<T, U>::second);
+}
