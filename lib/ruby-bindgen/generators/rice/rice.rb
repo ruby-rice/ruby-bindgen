@@ -1,5 +1,6 @@
 require 'set'
 require_relative 'reference_qualifier'
+require_relative 'signature_builder'
 require_relative 'template_resolver'
 require_relative 'type_index'
 require_relative 'type_speller'
@@ -165,6 +166,11 @@ module RubyBindgen
         @template_resolver = TemplateResolver.new(reference_qualifier: @reference_qualifier,
                                                   type_speller: @type_speller,
                                                   namer: @namer)
+        @signature_builder = SignatureBuilder.new(type_speller: @type_speller,
+                                                  reference_qualifier: @reference_qualifier,
+                                                  copyable_type: method(:copyable_type?),
+                                                  cursor_literals: CURSOR_LITERALS,
+                                                  fundamental_types: FUNDAMENTAL_TYPES)
         # Non-member operators grouped by target class cruby_name
         @non_member_operators = Hash.new { |h, k| h[k] = [] }
         # Iterators that need std::iterator_traits specialization
@@ -368,8 +374,8 @@ module RubyBindgen
         # Skip constructors that take skipped types as parameters
         return if has_skipped_param_type?(cursor)
 
-        signature = constructor_signature(cursor)
-        args = arguments(cursor)
+        signature = @signature_builder.constructor_signature(cursor)
+        args = @signature_builder.arguments(cursor)
 
         return unless signature
 
@@ -414,7 +420,7 @@ module RubyBindgen
         if !cursor.abstract? && !cursor.opaque_declaration? && constructors.none?
           versions[nil].unshift(self.render_template("constructor",
                                                      :cursor => cursor,
-                                                     :signature => self.constructor_signature(cursor),
+                                                     :signature => @signature_builder.constructor_signature(cursor),
                                                      :args => []))
         end
 
@@ -689,211 +695,6 @@ module RubyBindgen
         true
       end
 
-      # Check if a type should use ArgBuffer (for parameters) or ReturnBuffer (for return types).
-      # Returns true if the type is:
-      #   - A pointer to a fundamental type (int*, double*, char*, etc.)
-      #   - A double pointer (T**) - pointer to any pointer type
-      # Types that look like pointers to fundamentals but are actually strings
-      # char* and wchar_t* are C strings, not buffers
-      STRING_POINTER_TYPES = [
-        :type_char_u,   # char (unsigned on some platforms)
-        :type_char_s,   # char (signed on some platforms)
-        :type_wchar     # wchar_t (wide strings)
-      ].freeze
-
-      def buffer_type?(type)
-        return false unless type.kind == :type_pointer
-
-        pointee = type.pointee
-        # Use canonical type to resolve template type parameters (e.g., _Tp* -> float*)
-        pointee_kind = pointee.canonical.kind
-
-        # Exclude string types - char* and wchar_t* are C strings, not buffers
-        return false if STRING_POINTER_TYPES.include?(pointee_kind)
-
-        # Case 1: Pointer to fundamental type (int*, double*, etc.)
-        # This includes unsigned char* (uchar*) for byte buffers
-        return true if FUNDAMENTAL_TYPES.include?(pointee_kind)
-
-        # Case 2: Double pointer (T**) - pointer to any pointer
-        return true if pointee_kind == :type_pointer
-
-        false
-      end
-
-      def constructor_signature(cursor)
-        signature = Array.new
-
-        case cursor.kind
-          when :cursor_constructor
-            # Use the parent class's qualified_display_name which includes template
-            # arguments for template classes (e.g., "cv::Affine3<T>").
-            # For non-namespaced templates, qualified_display_name falls back to
-            # spelling which loses template args, so use display_name instead.
-            parent = cursor.semantic_parent
-            class_name = @type_speller.qualified_display_name(parent)
-            signature << class_name
-            params = @type_speller.type_spellings(cursor)
-            if cursor.semantic_parent&.kind == :cursor_class_template
-              params = params.map { |pt| @type_speller.qualify_class_template_typedefs(pt, cursor.semantic_parent) }
-            end
-            if parent
-              params = params.map { |pt| @type_speller.qualify_class_static_members(pt, parent) }
-            end
-            signature += params
-
-          when :cursor_class_decl, :cursor_struct
-            signature << @type_speller.qualified_display_name(cursor)
-          else
-            raise("Unsupported cursor kind: #{cursor.kind}")
-        end
-
-        result = signature.compact.join(", ")
-
-        if result.match(/std::initializer_list/)
-          nil
-        else
-          result
-        end
-      end
-
-      def arguments(cursor)
-        (0...cursor.num_arguments).map do |index|
-          param = cursor.argument(index)
-          # Use parameter name if available, otherwise generate a default name (matches Rice convention)
-          param_name = param.spelling.empty? ? "arg_#{index}" : param.spelling.underscore
-
-          # Determine argument class: Arg, ArgBuffer, or constexpr for template type parameters
-          type = param.type
-          if type.kind == :type_pointer && type.pointee.kind == :type_unexposed
-            # Template type parameter pointer (e.g., _Tp*) - use constexpr to decide at compile time
-            # Note: check pointee.kind (not canonical.kind) to distinguish _Tp* from Mat_<_Tp>*
-            type_param = type.pointee.spelling
-            arg_class = "std::conditional_t<std::is_fundamental_v<#{type_param}>, ArgBuffer, Arg>"
-          else
-            # Concrete type - use ArgBuffer for fundamental pointers and double pointers
-            arg_class = buffer_type?(type) ? "ArgBuffer" : "Arg"
-          end
-          result = "#{arg_class}(\"#{param_name}\")"
-
-          # Check if there is a default value by looking for expression children.
-          # The default value is an expression child (cursor_unexposed_expr) of the parameter.
-          default_value = find_default_value(param)
-          if default_value
-            # Skip default value if the type is not copyable (Rice needs to copy default values internally).
-            # This handles types with private (C++03) or deleted (C++11) copy constructors.
-            if copyable_type?(param.type)
-              # Use type_spelling to get fully qualified type name
-              qualified_type = @type_speller.type_spelling(param.type)
-              if param.semantic_parent&.semantic_parent&.kind == :cursor_class_template
-                qualified_type = @type_speller.qualify_class_template_typedefs(qualified_type, param.semantic_parent.semantic_parent)
-              end
-              # Can't static_cast to array types (e.g., using StepArray = int[3])
-              decl = param.type.declaration
-              is_array_alias = (decl.kind == :cursor_type_alias_decl || decl.kind == :cursor_typedef_decl) &&
-                               [:type_constant_array, :type_incomplete_array].include?(decl.underlying_type.canonical.kind)
-              if is_array_alias
-                result << " = #{default_value}"
-              elsif default_value == '{}'
-                # Braced-init-list {} can't be used with static_cast (especially to
-                # reference types). Use the canonical type for direct construction.
-                base_type = qualified_type.sub(/\bconst\s+/, '').sub(/\s*&\s*$/, '')
-                result << " = static_cast<#{qualified_type}>(#{base_type}{})"
-              else
-                result << " = static_cast<#{qualified_type}>(#{default_value})"
-              end
-            end
-          end
-          result
-        end
-      end
-
-      # Finds the default value expression for a parameter and returns it with qualified type/function names.
-      # For example, transforms "Range::all()" to "cv::Range::all()" and "noArray()" to "cv::noArray()".
-      # Returns nil if no default value.
-      # Finds the default value expression for a parameter and returns it with qualified names.
-      #
-      # Architecture: Separates text extraction from semantic analysis to avoid macro expansion issues.
-      # - Text extraction: Uses param.extent.text (original source) to get the default value
-      # - Semantic analysis: Uses cursor traversal only to identify what needs namespace qualification
-      #
-      # This approach is necessary because cursor extent text can reflect macro expansion on some platforms.
-      # For example, on Windows UCRT, 'stdout' expands to '__acrt_iob_func', but we want to preserve 'stdout'.
-      #
-      # @param param [Cursor] A parameter cursor that may have a default value
-      # @return [String, nil] The default value with qualified names, or nil if no default value
-      def find_default_value(param)
-        # Extract default value text from param_extent (everything after '=').
-        # This gives us the original source text, unaffected by macro expansion.
-        # The '=' may be on a different line than the parameter type
-        # (e.g., "PERF_LEVEL perfPreset\n        = NV_OF_PERF_LEVEL_SLOW").
-        extracted = @reference_qualifier.extract_default_text(param)
-        return nil unless extracted
-        default_text, default_text_offset = extracted
-
-        # Find the default value expression cursor for semantic analysis.
-        # We need this to traverse child cursors and find what needs qualification.
-        # Note: cursor_paren_expr is included for Windows where macros like 'stdout' wrap in parens.
-        default_value_kinds = [:cursor_unexposed_expr, :cursor_call_expr, :cursor_decl_ref_expr,
-                               :cursor_c_style_cast_expr, :cursor_cxx_static_cast_expr,
-                               :cursor_cxx_functional_cast_expr, :cursor_cxx_typeid_expr,
-                               :cursor_paren_expr] + CURSOR_LITERALS
-        default_expr = param.find_by_kind(false, *default_value_kinds).find do |expr|
-          # Filter out decl_ref_expr that reference template parameters (part of type, not default value)
-          if expr.kind == :cursor_decl_ref_expr
-            ref = expr.referenced
-            ref && ref.kind != :cursor_non_type_template_parameter && ref.kind != :cursor_template_type_parameter
-          else
-            true
-          end
-        end
-        return nil unless default_expr
-
-        @reference_qualifier.qualify_source_references(default_expr, default_text, default_text_offset)
-      end
-
-      def method_signature(cursor)
-        param_types = @type_speller.type_spellings(cursor)
-        result_type = @type_speller.type_spelling(cursor.type.result_type)
-
-        # Qualify nested typedefs from class template in result type and param types
-        if cursor.semantic_parent&.kind == :cursor_class_template
-          result_type = @type_speller.qualify_class_template_typedefs(result_type, cursor.semantic_parent)
-          param_types = param_types.map { |pt| @type_speller.qualify_class_template_typedefs(pt, cursor.semantic_parent) }
-        end
-
-        # Qualify bare static const/constexpr members used as non-type template args
-        # (e.g., nFeatures -> GPCPatchDescriptor::nFeatures)
-        parent = cursor.semantic_parent
-        if parent
-          result_type = @type_speller.qualify_class_static_members(result_type, parent)
-          param_types = param_types.map { |pt| @type_speller.qualify_class_static_members(pt, parent) }
-        end
-
-        signature = Array.new
-        if cursor.kind == :cursor_function || cursor.static?
-          signature << "#{result_type}(*)(#{param_types.join(', ')})"
-        else
-          signature << "#{result_type}(#{@type_speller.qualified_display_name(cursor.semantic_parent)}::*)(#{param_types.join(', ')})"
-        end
-
-        if cursor.const?
-          signature << "const"
-        end
-
-        if cursor.type.exception_specification == :basic_noexcept
-          signature << "noexcept"
-        end
-
-        result = "<#{signature.join(' ')}>"
-
-        if result.match(/std::initializer_list/)
-          nil
-        else
-          result
-        end
-      end
-
       ITERATOR_METHODS = ["begin", "end", "cbegin", "cend", "rbegin", "rend", "crbegin", "crend"].freeze
 
       # Common skip checks for functions and methods
@@ -915,15 +716,15 @@ module RubyBindgen
           return visit_cxx_iterator_method(cursor)
         end
 
-        signature = method_signature(cursor)
+        signature = @signature_builder.method_signature(cursor)
 
         result = Array.new
 
         name = cursor.ruby_name
-        args = arguments(cursor)
+        args = @signature_builder.arguments(cursor)
 
         # Check if return type should use ReturnBuffer
-        return_buffer = buffer_type?(cursor.result_type)
+        return_buffer = @signature_builder.buffer_type?(cursor.result_type)
 
         is_template = cursor.semantic_parent.kind == :cursor_class_template
         qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
@@ -1058,7 +859,7 @@ module RubyBindgen
 
         begin_method = cursor.spelling
         end_method = begin_method.sub("begin", "end")
-        signature = method_signature(cursor)
+        signature = @signature_builder.method_signature(cursor)
         is_template = cursor.semantic_parent.kind == :cursor_class_template
 
         return unless signature
@@ -1176,12 +977,12 @@ module RubyBindgen
         end
 
         name = cursor.ruby_name
-        args = arguments(cursor)
+        args = @signature_builder.arguments(cursor)
 
-        signature = method_signature(cursor)
+        signature = @signature_builder.method_signature(cursor)
 
         # Check if return type should use ReturnBuffer
-        return_buffer = buffer_type?(cursor.type.result_type)
+        return_buffer = @signature_builder.buffer_type?(cursor.type.result_type)
 
         under = cursor.ancestors_by_kind(:cursor_namespace)
                      .find { |a| !a.inline_namespace? }
