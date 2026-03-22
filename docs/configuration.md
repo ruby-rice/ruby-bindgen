@@ -153,6 +153,29 @@ Symbol names support:
 - Signatures: `cv::Mat_::zeros(int, const int *)` - skips only the overload with matching parameter types
 - Regex patterns: `/pattern/` - skips symbols matching the regex
 
+#### How Matching Works
+
+For exact symbol matching, `ruby-bindgen` does not rely on just one spelling. It tries a small set of candidate names so that configuration can match what users usually write in headers.
+
+For a member function such as `cv::dnn::Layer::init`, the candidate set typically includes:
+
+- The simple spelling: `init`
+- The semantic qualified name from libclang: `cv::dnn::dnn4_v20241223::Layer::init`
+- A parent-type form that collapses inline namespaces: `cv::dnn::Layer::init`
+
+For overloads, the same shapes are also tried with parameter lists appended:
+
+- `init(const cv::Mat &)`
+- `cv::dnn::dnn4_v20241223::Layer::init(const cv::Mat &)`
+- `cv::dnn::Layer::init(const cv::Mat &)`
+
+This matters for libraries such as OpenCV, where public APIs are often declared inside versioned inline namespaces but users usually write the enclosing API name in configuration.
+
+Two additional normalizations are worth knowing:
+
+- Anonymous scopes are stripped from user-facing matches. For example, an enum constant reported by clang as `Outer::(unnamed enum at ... )::Value` can be matched as `Outer::Value`.
+- Macros only match by their simple name, because libclang does not provide a usable qualified name for macro definitions.
+
 ```yaml
 symbols:
   skip:
@@ -247,7 +270,7 @@ The parameter types must match the canonical clang type spelling exactly (e.g., 
 
 ### Regex Patterns
 
-Regex patterns are enclosed in forward slashes (`/pattern/`) and are matched against both the simple symbol name and the fully qualified name. This is particularly useful for:
+Regex patterns are enclosed in forward slashes (`/pattern/`) and are matched against the same candidate set as exact names: simple names, semantic qualified names, and inline-namespace-collapsed member names when available. This is particularly useful for:
 
 - Matching across versioned inline namespaces (e.g., `cv::dnn::dnn4_v20241223::Layer`)
 - Skipping families of related methods
