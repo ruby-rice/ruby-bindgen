@@ -26,4 +26,25 @@ class SymbolsTest < RiceAbstractTest
     assert_includes candidates, "Holder<Outer::Tag>"
     assert_includes candidates, "Outer::Holder<Outer::Tag>"
   end
+
+  def test_build_candidates_includes_fully_qualified_typedef_alias_parameter_candidates
+    parsed, = parse_cpp(<<~CPP)
+      namespace Outer {
+        struct Tag {};
+
+        template<typename T>
+        struct Holder {};
+
+        using HolderTag = Holder<Tag>;
+
+        void takeAlias(HolderTag value);
+      }
+    CPP
+
+    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_function, "takeAlias")
+    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
+
+    assert_includes candidates, "takeAlias(Outer::HolderTag)"
+    assert_includes candidates, "Outer::takeAlias(Outer::HolderTag)"
+  end
 end

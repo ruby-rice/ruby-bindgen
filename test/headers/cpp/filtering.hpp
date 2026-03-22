@@ -278,6 +278,17 @@ namespace Outer
     void doWork();
   };
 
+  // --- Namespace-qualified typedef alias parameter tests ---
+  // fully_qualified_name preserves typedef aliases where canonical spelling
+  // expands them. The skip entry uses the alias form:
+  //   Outer::takeAlias(Outer::MyParamAlias)
+  // so build_candidates needs to include that exact candidate.
+
+  using MyParamAlias = MyParam;
+
+  // SKIP via "Outer::takeAlias(Outer::MyParamAlias)"
+  MY_EXPORT void takeAlias(MyParamAlias value);
+
   // --- Skipped Enum Tests ---
 
   // This enum should be SKIPPED via symbols
