@@ -46,4 +46,10 @@ void Init_TemplateInheritance()
   Rice::Data_Type<Tests::Mat_<unsigned char>> rb_cMat1b = Mat__instantiate<unsigned char>(rb_mTests, "Mat1b");
 
   Rice::Data_Type<Tests::Mat_<float>> rb_cMat1f = Mat__instantiate<float>(rb_mTests, "Mat1f");
+
+  Module rb_mSupport = define_module("Support");
+
+  Rice::Data_Type<Support::ForeignBase<int>> rb_cForeignBasei = ForeignBase_instantiate<int>(rb_mSupport, "ForeignBasei");
+
+  Rice::Data_Type<Tests::ForeignDerived<int>> rb_cForeignDerivedi = ForeignDerived_instantiate<int>(rb_mTests, "ForeignDerivedi");
 }

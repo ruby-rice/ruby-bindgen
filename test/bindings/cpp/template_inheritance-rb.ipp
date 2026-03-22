@@ -61,3 +61,22 @@ inline Rice::Data_Type<Tests::Mat_<_Tp>> Mat__instantiate(Rice::Module parent, c
     .template define_method<_Tp &(Tests::Mat_<_Tp>::*)(int, int)>("at", &Tests::Mat_<_Tp>::at,
       Arg("row"), Arg("col"));
 }
+
+template<typename T>
+inline Rice::Data_Type<Support::ForeignBase<T>> ForeignBase_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Support::ForeignBase<T>>(parent, name)
+    .define_attr("value", &Support::ForeignBase<T>::value)
+    .define_constructor(Constructor<Support::ForeignBase<T>>())
+    .define_constructor(Constructor<Support::ForeignBase<T>, T>(),
+      Arg("value_"));
+}
+
+template<typename T>
+inline Rice::Data_Type<Tests::ForeignDerived<T>> ForeignDerived_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::ForeignDerived<T>, Support::ForeignBase<T>>(parent, name)
+    .define_constructor(Constructor<Tests::ForeignDerived<T>>())
+    .define_constructor(Constructor<Tests::ForeignDerived<T>, T>(),
+      Arg("value_"));
+}

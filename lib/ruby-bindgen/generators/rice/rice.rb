@@ -1943,8 +1943,7 @@ module RubyBindgen
           if base_base_ref
             base_base_template_ref = base_base_ref.find_first_by_kind(false, :cursor_template_ref)
             if base_base_template_ref
-              namespace = base_spelling.split("<").first.split("::")[0..-2].join("::")
-              base_base_name = base_base_template_ref.referenced.spelling
+              base_base_qualified_name = base_base_template_ref.referenced.qualified_name
 
               # Build substitution map from template params to actual values
               template_params = base_template.find_by_kind(false, :cursor_template_type_parameter,
@@ -1956,7 +1955,7 @@ module RubyBindgen
               base_base_type_spelling = base_base_ref.type.spelling
               if base_base_type_spelling =~ /<(.+)>\z/
                 base_base_args = split_template_args($1).map { |arg| subs[arg] || arg }.join(', ')
-                base_base_spelling = namespace.empty? ? "#{base_base_name}<#{base_base_args}>" : "#{namespace}::#{base_base_name}<#{base_base_args}>"
+                base_base_spelling = "#{base_base_qualified_name}<#{base_base_args}>"
 
                 if !@typedef_map[base_base_spelling] && !@auto_generated_bases.include?(base_base_spelling)
                   result = auto_generate_base_class(base_base_ref, base_base_spelling, base_base_args, under)
@@ -2280,9 +2279,6 @@ module RubyBindgen
 
         template_args_str = $1
 
-        # Get namespace from canonical (everything before the last ::Name<args>)
-        namespace = canonical.split('<').first.split('::')[0..-2].join('::')
-
         # Get template parameter names from the derived template
         template_params = []
         derived_template.each do |c|
@@ -2312,13 +2308,9 @@ module RubyBindgen
         end
 
         # Construct the fully qualified base class instantiation
-        base_name = base_template_ref.referenced.spelling
+        base_name = base_template_ref.referenced.qualified_name
         resolved_args = base_args.join(', ')
-        if namespace.empty?
-          "#{base_name}<#{resolved_args}>"
-        else
-          "#{namespace}::#{base_name}<#{resolved_args}>"
-        end
+        "#{base_name}<#{resolved_args}>"
       end
 
       # Split template arguments string, respecting nested angle brackets

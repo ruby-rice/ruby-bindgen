@@ -109,3 +109,31 @@ namespace Tests
   typedef Mat_<unsigned char> Mat1b;
   typedef Mat_<float> Mat1f;
 }
+
+namespace Support
+{
+  template<typename T>
+  class ForeignBase
+  {
+  public:
+    T value;
+
+    ForeignBase() : value() {}
+    explicit ForeignBase(T value_) : value(value_) {}
+  };
+
+  typedef ForeignBase<int> ForeignBasei;
+}
+
+namespace Tests
+{
+  template<typename T>
+  class ForeignDerived : public Support::ForeignBase<T>
+  {
+  public:
+    ForeignDerived() : Support::ForeignBase<T>() {}
+    explicit ForeignDerived(T value_) : Support::ForeignBase<T>(value_) {}
+  };
+
+  typedef ForeignDerived<int> ForeignDerivedi;
+}
