@@ -277,6 +277,7 @@ module RubyBindgen
         @incomplete_iterators.clear
         @class_iterator_names.clear
         cursor = translation_unit.cursor
+        @printing_policy = cursor.printing_policy
 
         # Build maps for typedef lookups and type name qualification
         build_typedef_map(cursor)
@@ -853,46 +854,6 @@ module RubyBindgen
         end
       end
 
-      # Use canonical spelling for better qualification but restore any typedef names
-      # that canonical resolved to underlying types. For example, canonical resolves
-      # size_t to "unsigned long" (Linux) or "unsigned long long" (MSVC). We want the
-      # better namespace qualification from canonical but need to keep "size_t".
-      def restore_typedefs(canonical, type)
-        restorations = {}
-        collect_typedef_restorations(type, restorations)
-
-        result = canonical
-        # Apply longest canonical names first so "unsigned long long" is replaced
-        # before "unsigned long" (which would otherwise match inside it)
-        restorations.sort_by { |canonical_name, _| -canonical_name.length }.each do |canonical_name, typedef_name|
-          result = result.gsub(/\b#{Regexp.escape(canonical_name)}\b/, typedef_name)
-        end
-        result
-      end
-
-      # Scan template arguments for typedefs whose canonical form differs from their
-      # typedef name. Collects canonical_name => typedef_name pairs.
-      def collect_typedef_restorations(type, restorations)
-        return if type.nil? || type.kind == :type_invalid
-        return unless type.num_template_arguments > 0
-
-        type.num_template_arguments.times do |i|
-          arg_type = type.template_argument_type(i)
-          next if arg_type.kind == :type_invalid
-
-          # Check if this arg is a typedef whose canonical differs
-          decl = arg_type.declaration
-          if decl.kind == :cursor_typedef_decl || decl.kind == :cursor_type_alias_decl
-            typedef_name = arg_type.spelling
-            canonical_name = arg_type.canonical.spelling
-            restorations[canonical_name] = typedef_name if typedef_name != canonical_name
-          end
-
-          # Recurse into nested template arguments
-          collect_typedef_restorations(arg_type, restorations)
-        end
-      end
-
       # Get qualified C++ class name for use in templates
       # Qualifies any template arguments that need namespace prefixes
       def qualified_class_name_cpp(cursor)
@@ -940,94 +901,46 @@ module RubyBindgen
         end
       end
 
-      # Patterns indicating internal STL implementation types that shouldn't be used directly.
-      # - __gnu_cxx: libstdc++ extension namespace
-      # - __normal_iterator: libstdc++ internal iterator wrapper
-      # - \b_[A-Z]: MSVC internal types (e.g., _Ty, _Alloc)
-      IMPL_CRUFT = /__gnu_cxx|__normal_iterator|\b_[A-Z]/
-
       # Returns a fully-qualified C++ type spelling suitable for use in generated Rice bindings.
-      #
-      # WHY THIS IS COMPLEX:
-      # libclang's canonical type spelling fails for several C++ features:
-      #
-      # | Feature        | Why canonical fails                        | Correct libclang approach                    |
-      # |----------------|--------------------------------------------|--------------------------------------------- |
-      # | Typedefs       | Flattens to underlying primitive           | Handle cursor_typedef_decl explicitly        |
-      # | Templates      | Loses specialized arguments/context        | Traverse cursor_template_ref and arguments   |
-      # | Dependent types| Cannot resolve without instantiation       | Use type.spelling + typename logic           |
-      # | Namespaces     | Often strips prefix to global root         | Recursive parent traversal via semantic_parent|
-      #
-      # libclang also provides:
-      # - type.spelling: What programmer wrote (often unqualified)
-      # - declaration.qualified_name: Has namespace but loses template args
-      #
-      # None of these work universally, so we handle each declaration kind separately,
-      # combining information from spelling, qualified_name, and canonical as appropriate.
+      # Most type kinds are handled by Type#fully_qualified_name. This method only
+      # intercepts elaborated types that need generator-level context:
+      # - Class template types: fqn resolves template params, but template builders need them generic
+      # - Typedefs inside class templates: need 'typename' keyword for dependent types
+      # - Template instantiations: need qualify_template_args post-processing with @type_name_map
       def type_spelling(type)
         case type.kind
         when :type_lvalue_ref
-          "#{type_spelling(type.non_reference_type)}&"
+          "#{type_spelling(type.non_reference_type)} &"
         when :type_rvalue_ref
-          "#{type_spelling(type.non_reference_type)}&&"
-        when :type_pointer
-          ptr_const = type.const_qualified? ? " const" : ""
-          pointee = type.pointee
-          if pointee.kind == :type_function_proto || pointee.kind == :type_function_no_proto
-            # Function pointer: format as "return_type (*)(arg_types...)"
-            result_type = type_spelling(pointee.result_type)
-            arg_types = pointee.arg_types.map { |t| type_spelling(t) }.join(", ")
-            "#{result_type} (*#{ptr_const})(#{arg_types})"
-          else
-            "#{type_spelling(pointee)}*#{ptr_const}"
-          end
+          "#{type_spelling(type.non_reference_type)} &&"
         when :type_constant_array
-          element_spelling = type_spelling(type.element_type)
-          const_prefix = type.const_qualified? ? "const " : ""
-          "#{const_prefix}#{element_spelling}[#{type.size}]"
+          "#{type_spelling(type.element_type)}[#{type.size}]"
         when :type_incomplete_array
-          element_spelling = type_spelling(type.element_type)
-          const_prefix = type.const_qualified? ? "const " : ""
-          "#{const_prefix}#{element_spelling}[]"
+          "#{type_spelling(type.element_type)}[]"
         when :type_elaborated
           type_spelling_elaborated(type)
-        when :type_record
-          # Record types (class/struct) may come through without elaborated type wrapper
-          # on some platforms (e.g., clang-cl). Use fully_qualified_spelling to ensure
-          # namespace qualification (e.g., "dnn::Net" → "cv::dnn::Net").
-          type.fully_qualified_spelling
         else
-          type.spelling
+          type.fully_qualified_name(@printing_policy)
         end
       end
 
-      # Handles :type_elaborated - the most complex case because libclang returns different
-      # declaration kinds depending on what the type refers to, and each needs different handling.
       def type_spelling_elaborated(type)
         decl = type.declaration
-        const_prefix = type.const_qualified? ? "const " : ""
 
         case decl.kind
         when :cursor_class_template
-          # Class template definition (e.g., template<typename T> class Vec).
-          # Do NOT call qualify_template_args here — template parameters like _Tp
-          # could collide with class names in @type_name_map, and typedef members
-          # like "iterator" need to stay unqualified for qualify_class_template_typedefs
-          # to add the required "typename" keyword later.
+          # fqn resolves template params to concrete types (e.g., _Tp -> float),
+          # but template builder code needs the generic parameter names preserved.
           spelling = type.spelling
-          # Check if the outer type name (before '<') is already namespace-qualified.
-          # Must not check the full spelling — template args may contain '::' (e.g.,
-          # Matrix<typename Distance::ElementType>) which doesn't mean Matrix is qualified.
           outer_name = spelling.sub(/\s*<.*/, '')
           qualified = outer_name.match?(/\w+::/) ? spelling : spelling.sub(decl.spelling, decl.qualified_name)
-
-          # Handle dependent types (typename patterns)
           qualify_dependent_types_in_template_args(qualified)
 
-        when :cursor_typedef_decl
+        when :cursor_typedef_decl, :cursor_type_alias_decl
           if decl.semantic_parent.kind == :cursor_class_template
-            # Typedef inside a class template (e.g., DataType<_Tp>::value_type).
+            # Typedef/alias inside a class template (e.g., DataType<_Tp>::value_type).
             # C++ requires 'typename' keyword for dependent types.
+            const_prefix = type.const_qualified? ? "const " : ""
             parent = decl.semantic_parent
             display = parent.qualified_display_name
             qualified = parent.qualified_name
@@ -1038,55 +951,11 @@ module RubyBindgen
                           end
             "#{const_prefix}typename #{full_parent}::#{type.spelling.sub("const ", "")}"
           else
-            # Regular typedef (e.g., typedef Point_<int> Point2i).
-            # Must preserve typedef name - canonical would resolve to underlying type.
-            type_spelling_typedef_or_alias(type, const_prefix)
+            type.fully_qualified_name(@printing_policy)
           end
 
-        when :cursor_type_alias_decl
-          # C++11 using declaration (e.g., using iterator = __normal_iterator<...>).
-          # MSVC uses 'using' where gcc uses 'typedef', so handle identically.
-          type_spelling_typedef_or_alias(type, const_prefix)
-
-        when :cursor_enum_decl
-          # Enum declaration - use fully qualified name (e.g., cv::dnn::Backend not dnn::Backend)
-          "#{const_prefix}#{decl.qualified_name}"
-
         else
-          # Class declarations, template instantiations, etc.
-          # Here we CAN use canonical.spelling if it has better-qualified template args,
-          # but only if it doesn't contain implementation cruft.
-          base = type.fully_qualified_spelling
-
-          canonical = type.canonical.spelling
-          if base.include?('<') && canonical.include?('<') && !canonical.match?(IMPL_CRUFT)
-            base_args = base[/<.*/] || ""
-            canonical_args = canonical[/<.*/] || ""
-            if canonical_args.count(':') > base_args.count(':')
-              # Canonical has better-qualified template args (e.g., cv::LMSolver::Callback
-              # instead of LMSolver::Callback). But canonical also resolves typedefs like
-              # size_t to platform-specific types (unsigned long on Linux, unsigned long long
-              # on MSVC). Restore any typedef names that canonical resolved.
-              base = restore_typedefs(canonical, type)
-            end
-          end
-
-          qualify_template_args(base, type)
-        end
-      end
-
-      # Handles typedef and type_alias declarations (they use identical logic).
-      # Preserves the typedef/alias name and qualifies any template arguments.
-      def type_spelling_typedef_or_alias(type, const_prefix)
-        spelling = type.spelling
-        qualified = type.declaration.qualified_name
-
-        if spelling.include?('<')
-          "#{const_prefix}#{qualify_template_args(spelling, type)}"
-        elsif qualified&.end_with?(spelling.sub(/^const\s+/, ''))
-          "#{const_prefix}#{qualified}"
-        else
-          spelling
+          qualify_template_args(type.fully_qualified_name(@printing_policy), type)
         end
       end
 

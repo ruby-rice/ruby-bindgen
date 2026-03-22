@@ -21,12 +21,12 @@ void Init_Functions()
   define_global_function<void(*)(int, int, int)>("overload", &overload,
     Arg("a"), Arg("b"), Arg("c") = static_cast<int>(10));
 
-  define_global_function<const char* const(*)()>("get_const_string", &getConstString);
+  define_global_function<const char *const(*)()>("get_const_string", &getConstString);
 
-  define_global_function<void(*)(const char*)>("process_string", &processString,
+  define_global_function<void(*)(const char *)>("process_string", &processString,
     Arg("str"));
 
-  define_global_function<void(*)(const char* const, int)>("process_string", &processString,
+  define_global_function<void(*)(const char *const, int)>("process_string", &processString,
     Arg("str"), Arg("len"));
 
   define_global_function<void(*)(int, float, double)>("unnamed_params", &unnamedParams,
@@ -86,15 +86,15 @@ void Init_Functions()
   Rice::Data_Type<nontype_args::Config> rb_cNontypeArgsConfig = define_class_under<nontype_args::Config>(rb_mNontypeArgs, "Config")
     .define_constructor(Constructor<nontype_args::Config>())
     .define_constant("Size", nontype_args::Config::Size)
-    .define_method<void(nontype_args::Config::*)(const nontype_args::Container<double, nontype_args::Config::Size>&)>("process", &nontype_args::Config::process,
+    .define_method<void(nontype_args::Config::*)(const nontype_args::Container<double, nontype_args::Config::Size> &)>("process", &nontype_args::Config::process,
       Arg("data"));
 
   Rice::Data_Type<nontype_args::User> rb_cNontypeArgsUser = define_class_under<nontype_args::User>(rb_mNontypeArgs, "User")
     .define_constructor(Constructor<nontype_args::User>())
-    .define_method<void(nontype_args::User::*)(const nontype_args::Container<double, nontype_args::Config::Size>&)>("use", &nontype_args::User::use,
+    .define_method<void(nontype_args::User::*)(const nontype_args::Container<double, nontype_args::Config::Size> &)>("use", &nontype_args::User::use,
       Arg("data"));
 
-  define_global_function<const char*(*)(int)>("get_operator_name", &get_operator_name,
+  define_global_function<const char *(*)(int)>("get_operator_name", &get_operator_name,
     Arg("op_code"));
 
   Rice::Data_Type<Logger> rb_cLogger = define_class<Logger>("Logger")

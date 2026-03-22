@@ -31,7 +31,7 @@ void Init_Iterators()
 
   Rice::Data_Type<iter::Dict> rb_cIterDict = define_class_under<iter::Dict>(rb_mIter, "Dict")
     .define_constructor(Constructor<iter::Dict>())
-    .define_iterator<std::map<iter::String, iter::DictValue>::const_iterator(iter::Dict::*)() const>(&iter::Dict::begin, &iter::Dict::end, "each_const");
+    .define_iterator<std::map<std::basic_string<char, std::char_traits<char>, std::allocator<char>>, iter::DictValue, std::less<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>, std::allocator<std::pair<const std::basic_string<char, std::char_traits<char>, std::allocator<char>>, iter::DictValue>>>::const_iterator(iter::Dict::*)() const>(&iter::Dict::begin, &iter::Dict::end, "each_const");
 
   Rice::detail::protect(rb_alias, rb_cIterDict, rb_intern("each"), rb_intern("each_const"));
 
@@ -48,8 +48,8 @@ void Init_Iterators()
     .define_constructor(Constructor<iter::PixelIterator, iter::PixelIterator::pointer>(),
       Arg("p"))
     .define_method<iter::PixelIterator::reference(iter::PixelIterator::*)() const>("dereference", &iter::PixelIterator::operator*)
-    .define_method<iter::PixelIterator&(iter::PixelIterator::*)()>("increment", &iter::PixelIterator::operator++)
-    .define_method<bool(iter::PixelIterator::*)(const iter::PixelIterator&) const>("!=", &iter::PixelIterator::operator!=,
+    .define_method<iter::PixelIterator &(iter::PixelIterator::*)()>("increment", &iter::PixelIterator::operator++)
+    .define_method<bool(iter::PixelIterator::*)(const iter::PixelIterator &) const>("!=", &iter::PixelIterator::operator!=,
       Arg("other"));
 
   Rice::Data_Type<iter::ConstPixelIterator> rb_cIterConstPixelIterator = define_class_under<iter::ConstPixelIterator>(rb_mIter, "ConstPixelIterator")
@@ -57,8 +57,8 @@ void Init_Iterators()
     .define_constructor(Constructor<iter::ConstPixelIterator, iter::ConstPixelIterator::pointer>(),
       Arg("p"))
     .define_method<iter::ConstPixelIterator::reference(iter::ConstPixelIterator::*)() const>("dereference", &iter::ConstPixelIterator::operator*)
-    .define_method<iter::ConstPixelIterator&(iter::ConstPixelIterator::*)()>("increment", &iter::ConstPixelIterator::operator++)
-    .define_method<bool(iter::ConstPixelIterator::*)(const iter::ConstPixelIterator&) const>("!=", &iter::ConstPixelIterator::operator!=,
+    .define_method<iter::ConstPixelIterator &(iter::ConstPixelIterator::*)()>("increment", &iter::ConstPixelIterator::operator++)
+    .define_method<bool(iter::ConstPixelIterator::*)(const iter::ConstPixelIterator &) const>("!=", &iter::ConstPixelIterator::operator!=,
       Arg("other"));
 
   Rice::Data_Type<iter::ReversePixelIterator> rb_cIterReversePixelIterator = define_class_under<iter::ReversePixelIterator>(rb_mIter, "ReversePixelIterator")
@@ -66,8 +66,8 @@ void Init_Iterators()
     .define_constructor(Constructor<iter::ReversePixelIterator, iter::ReversePixelIterator::pointer>(),
       Arg("p"))
     .define_method<iter::ReversePixelIterator::reference(iter::ReversePixelIterator::*)() const>("dereference", &iter::ReversePixelIterator::operator*)
-    .define_method<iter::ReversePixelIterator&(iter::ReversePixelIterator::*)()>("increment", &iter::ReversePixelIterator::operator++)
-    .define_method<bool(iter::ReversePixelIterator::*)(const iter::ReversePixelIterator&) const>("!=", &iter::ReversePixelIterator::operator!=,
+    .define_method<iter::ReversePixelIterator &(iter::ReversePixelIterator::*)()>("increment", &iter::ReversePixelIterator::operator++)
+    .define_method<bool(iter::ReversePixelIterator::*)(const iter::ReversePixelIterator &) const>("!=", &iter::ReversePixelIterator::operator!=,
       Arg("other"));
 
   Rice::Data_Type<iter::ConstReversePixelIterator> rb_cIterConstReversePixelIterator = define_class_under<iter::ConstReversePixelIterator>(rb_mIter, "ConstReversePixelIterator")
@@ -75,8 +75,8 @@ void Init_Iterators()
     .define_constructor(Constructor<iter::ConstReversePixelIterator, iter::ConstReversePixelIterator::pointer>(),
       Arg("p"))
     .define_method<iter::ConstReversePixelIterator::reference(iter::ConstReversePixelIterator::*)() const>("dereference", &iter::ConstReversePixelIterator::operator*)
-    .define_method<iter::ConstReversePixelIterator&(iter::ConstReversePixelIterator::*)()>("increment", &iter::ConstReversePixelIterator::operator++)
-    .define_method<bool(iter::ConstReversePixelIterator::*)(const iter::ConstReversePixelIterator&) const>("!=", &iter::ConstReversePixelIterator::operator!=,
+    .define_method<iter::ConstReversePixelIterator &(iter::ConstReversePixelIterator::*)()>("increment", &iter::ConstReversePixelIterator::operator++)
+    .define_method<bool(iter::ConstReversePixelIterator::*)(const iter::ConstReversePixelIterator &) const>("!=", &iter::ConstReversePixelIterator::operator!=,
       Arg("other"));
 
   Rice::Data_Type<iter::Bitmap> rb_cIterBitmap = define_class_under<iter::Bitmap>(rb_mIter, "Bitmap")
@@ -88,11 +88,11 @@ void Init_Iterators()
 
   Rice::Data_Type<iter::IncompleteIterator> rb_cIterIncompleteIterator = define_class_under<iter::IncompleteIterator>(rb_mIter, "IncompleteIterator")
     .define_constructor(Constructor<iter::IncompleteIterator>())
-    .define_constructor(Constructor<iter::IncompleteIterator, iter::Pixel*>(),
+    .define_constructor(Constructor<iter::IncompleteIterator, iter::Pixel *>(),
       Arg("p"))
-    .define_method<iter::Pixel&(iter::IncompleteIterator::*)() const>("dereference", &iter::IncompleteIterator::operator*)
-    .define_method<iter::Pixel*(iter::IncompleteIterator::*)() const>("arrow", &iter::IncompleteIterator::operator->)
-    .define_method<iter::IncompleteIterator&(iter::IncompleteIterator::*)()>("increment", &iter::IncompleteIterator::operator++)
+    .define_method<iter::Pixel &(iter::IncompleteIterator::*)() const>("dereference", &iter::IncompleteIterator::operator*)
+    .define_method<iter::Pixel *(iter::IncompleteIterator::*)() const>("arrow", &iter::IncompleteIterator::operator->)
+    .define_method<iter::IncompleteIterator &(iter::IncompleteIterator::*)()>("increment", &iter::IncompleteIterator::operator++)
     .define_method<iter::IncompleteIterator(iter::IncompleteIterator::*)(int)>("increment_post", &iter::IncompleteIterator::operator++,
       Arg("arg_0"));
 
@@ -104,8 +104,8 @@ void Init_Iterators()
 
   Rice::Data_Type<iter::VectorBitmap> rb_cIterVectorBitmap = define_class_under<iter::VectorBitmap>(rb_mIter, "VectorBitmap")
     .define_constructor(Constructor<iter::VectorBitmap>())
-    .define_iterator<std::vector<iter::Pixel>::iterator(iter::VectorBitmap::*)() noexcept>(&iter::VectorBitmap::begin, &iter::VectorBitmap::end, "each")
-    .define_iterator<std::vector<iter::Pixel>::const_iterator(iter::VectorBitmap::*)() const noexcept>(&iter::VectorBitmap::begin, &iter::VectorBitmap::end, "each_const")
-    .define_iterator<std::vector<iter::Pixel>::reverse_iterator(iter::VectorBitmap::*)() noexcept>(&iter::VectorBitmap::rbegin, &iter::VectorBitmap::rend, "each_reverse")
-    .define_iterator<std::vector<iter::Pixel>::const_reverse_iterator(iter::VectorBitmap::*)() const noexcept>(&iter::VectorBitmap::rbegin, &iter::VectorBitmap::rend, "each_reverse_const");
+    .define_iterator<std::vector<iter::Pixel, std::allocator<iter::Pixel>>::iterator(iter::VectorBitmap::*)() noexcept>(&iter::VectorBitmap::begin, &iter::VectorBitmap::end, "each")
+    .define_iterator<std::vector<iter::Pixel, std::allocator<iter::Pixel>>::const_iterator(iter::VectorBitmap::*)() const noexcept>(&iter::VectorBitmap::begin, &iter::VectorBitmap::end, "each_const")
+    .define_iterator<std::vector<iter::Pixel, std::allocator<iter::Pixel>>::reverse_iterator(iter::VectorBitmap::*)() noexcept>(&iter::VectorBitmap::rbegin, &iter::VectorBitmap::rend, "each_reverse")
+    .define_iterator<std::vector<iter::Pixel, std::allocator<iter::Pixel>>::const_reverse_iterator(iter::VectorBitmap::*)() const noexcept>(&iter::VectorBitmap::rbegin, &iter::VectorBitmap::rend, "each_reverse_const");
 }

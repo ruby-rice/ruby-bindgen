@@ -15,7 +15,7 @@ void Init_Filtering()
 
   rb_mOuter.define_module_function<void(*)()>("normal_function", &Outer::normalFunction);
 
-  rb_mOuter.define_module_function<void(*)(const char*)>("print_formatted", &Outer::printFormatted,
+  rb_mOuter.define_module_function<void(*)(const char *)>("print_formatted", &Outer::printFormatted,
     Arg("msg"));
 
   Rice::Data_Type<Outer::MyClass> rb_cOuterMyClass = define_class_under<Outer::MyClass>(rb_mOuter, "MyClass")
@@ -36,7 +36,7 @@ void Init_Filtering()
 
   Rice::Data_Type<Outer::Wrapper<int>> rb_cOuterWrapperInt = define_class_under<Outer::Wrapper<int>>(rb_mOuter, "WrapperInt")
     .define_constructor(Constructor<Outer::Wrapper<int>>())
-    .define_method<void(Outer::Wrapper<int>::*)(int*)>("wrap", &Outer::Wrapper<int>::wrap,
+    .define_method<void(Outer::Wrapper<int>::*)(int *)>("wrap", &Outer::Wrapper<int>::wrap,
       ArgBuffer("obj"));
 
   Rice::Data_Type<Outer::DeprecatedTemplate<int>> rb_cDeprecatedTemplateInt = DeprecatedTemplate_instantiate<int>(rb_mOuter, "DeprecatedTemplateInt");
@@ -63,9 +63,9 @@ void Init_Filtering()
 
   Rice::Data_Type<Outer::UsesNonSkippedType> rb_cOuterUsesNonSkippedType = define_class_under<Outer::UsesNonSkippedType>(rb_mOuter, "UsesNonSkippedType")
     .define_constructor(Constructor<Outer::UsesNonSkippedType>())
-    .define_constructor(Constructor<Outer::UsesNonSkippedType, const Outer::SkippedClassExtended&>(),
+    .define_constructor(Constructor<Outer::UsesNonSkippedType, const Outer::SkippedClassExtended &>(),
       Arg("ext"))
-    .define_method<void(Outer::UsesNonSkippedType::*)(Outer::SkippedClassExtended*)>("process", &Outer::UsesNonSkippedType::process,
+    .define_method<void(Outer::UsesNonSkippedType::*)(Outer::SkippedClassExtended *)>("process", &Outer::UsesNonSkippedType::process,
       Arg("ext"));
 
   Rice::Data_Type<Outer::HasSkippedReturnType> rb_cOuterHasSkippedReturnType = define_class_under<Outer::HasSkippedReturnType>(rb_mOuter, "HasSkippedReturnType")

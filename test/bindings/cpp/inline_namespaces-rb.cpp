@@ -23,6 +23,6 @@ void Init_InlineNamespaces()
 
   Rice::Data_Type<cv::mcc::CCheckerDetector> rb_cCvMccCCheckerDetector = define_class_under<cv::mcc::CCheckerDetector>(rb_mCvMcc, "CCheckerDetector")
     .define_constructor(Constructor<cv::mcc::CCheckerDetector>())
-    .define_method<bool(cv::mcc::CCheckerDetector::*)(cv::dnn::Net)>("set_net", &cv::mcc::CCheckerDetector::setNet,
+    .define_method<bool(cv::mcc::CCheckerDetector::*)(cv::dnn::dnn4_v20241223::Net)>("set_net", &cv::mcc::CCheckerDetector::setNet,
       Arg("net"));
 }

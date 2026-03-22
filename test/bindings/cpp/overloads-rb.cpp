@@ -20,18 +20,18 @@ void Init_Overloads()
 
   Rice::Data_Type<Outer::Inner::ExecutionContext> rb_cOuterInnerExecutionContext = define_class_under<Outer::Inner::ExecutionContext>(rb_mOuterInner, "ExecutionContext")
     .define_constructor(Constructor<Outer::Inner::ExecutionContext>())
-    .define_method<Outer::Inner::ExecutionContext(Outer::Inner::ExecutionContext::*)(const Outer::Inner::Queue&) const>("clone_with_new_queue", &Outer::Inner::ExecutionContext::cloneWithNewQueue,
+    .define_method<Outer::Inner::ExecutionContext(Outer::Inner::ExecutionContext::*)(const Outer::Inner::Queue &) const>("clone_with_new_queue", &Outer::Inner::ExecutionContext::cloneWithNewQueue,
       Arg("q"))
     .define_method<Outer::Inner::ExecutionContext(Outer::Inner::ExecutionContext::*)() const>("clone_with_new_queue", &Outer::Inner::ExecutionContext::cloneWithNewQueue)
-    .define_singleton_function<Outer::Inner::ExecutionContext(*)(const Outer::Inner::Device&)>("create", &Outer::Inner::ExecutionContext::create,
+    .define_singleton_function<Outer::Inner::ExecutionContext(*)(const Outer::Inner::Device &)>("create", &Outer::Inner::ExecutionContext::create,
       Arg("device"))
-    .define_singleton_function<Outer::Inner::ExecutionContext(*)(const Outer::Inner::Device&, const Outer::Inner::Queue&)>("create", &Outer::Inner::ExecutionContext::create,
+    .define_singleton_function<Outer::Inner::ExecutionContext(*)(const Outer::Inner::Device &, const Outer::Inner::Queue &)>("create", &Outer::Inner::ExecutionContext::create,
       Arg("device"), Arg("queue"));
 
   Rice::Data_Type<Outer::Inner::KernelArg> rb_cOuterInnerKernelArg = define_class_under<Outer::Inner::KernelArg>(rb_mOuterInner, "KernelArg")
     .define_constructor(Constructor<Outer::Inner::KernelArg>())
     .define_attr("flags", &Outer::Inner::KernelArg::flags)
-    .define_singleton_function<Outer::Inner::KernelArg(*)(const char*)>("constant", &Outer::Inner::KernelArg::Constant,
+    .define_singleton_function<Outer::Inner::KernelArg(*)(const char *)>("constant", &Outer::Inner::KernelArg::Constant,
       Arg("data"))
     .define_singleton_function<Outer::Inner::KernelArg(*)(int)>("read_only", &Outer::Inner::KernelArg::ReadOnly,
       Arg("m"))

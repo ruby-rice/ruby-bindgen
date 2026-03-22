@@ -17,8 +17,8 @@ inline Rice::Data_Type<cv::Affine3<T>> Affine3_instantiate(Rice::Module parent, 
 {
   return Rice::define_class_under<cv::Affine3<T>>(parent, name)
     .define_constructor(Constructor<cv::Affine3<T>>())
-    .define_constructor(Constructor<cv::Affine3<T>, const typename cv::Affine3<T>::Vec3Type&, const typename cv::Affine3<T>::Vec3Type&>(),
-      Arg("translation"), Arg("scale") = static_cast<const typename cv::Affine3<T>::Vec3Type&>(cv::Affine3<T>::Vec3Type::all(1)));
+    .define_constructor(Constructor<cv::Affine3<T>, const typename cv::Affine3<T>::Vec3Type &, const typename cv::Affine3<T>::Vec3Type &>(),
+      Arg("translation"), Arg("scale") = static_cast<const typename cv::Affine3<T>::Vec3Type &>(cv::Affine3<T>::Vec3Type::all(1)));
 }
 
 template<typename T>

@@ -14,87 +14,87 @@ void Init_Operators()
     .define_constructor(Constructor<Operators>())
     .define_constructor(Constructor<Operators, int>(),
       Arg("v"))
-    .define_method<Operators(Operators::*)(const Operators&) const>("+", &Operators::operator+,
+    .define_method<Operators(Operators::*)(const Operators &) const>("+", &Operators::operator+,
       Arg("other"))
-    .define_method<Operators(Operators::*)(const Operators&) const>("-", &Operators::operator-,
+    .define_method<Operators(Operators::*)(const Operators &) const>("-", &Operators::operator-,
       Arg("other"))
-    .define_method<Operators(Operators::*)(const Operators&) const>("*", &Operators::operator*,
+    .define_method<Operators(Operators::*)(const Operators &) const>("*", &Operators::operator*,
       Arg("other"))
-    .define_method<Operators(Operators::*)(const Operators&) const>("/", &Operators::operator/,
+    .define_method<Operators(Operators::*)(const Operators &) const>("/", &Operators::operator/,
       Arg("other"))
-    .define_method<Operators(Operators::*)(const Operators&) const>("%", &Operators::operator%,
+    .define_method<Operators(Operators::*)(const Operators &) const>("%", &Operators::operator%,
       Arg("other"))
     .define_method<Operators(Operators::*)() const>("+@", &Operators::operator+)
     .define_method<Operators(Operators::*)() const>("-@", &Operators::operator-)
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign", &Operators::operator=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign", &Operators::operator=,
       Arg("other"))
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign_plus", &Operators::operator+=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign_plus", &Operators::operator+=,
       Arg("other"))
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign_minus", &Operators::operator-=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign_minus", &Operators::operator-=,
       Arg("other"))
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign_multiply", &Operators::operator*=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign_multiply", &Operators::operator*=,
       Arg("other"))
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign_divide", &Operators::operator/=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign_divide", &Operators::operator/=,
       Arg("other"))
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign_modulus", &Operators::operator%=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign_modulus", &Operators::operator%=,
       Arg("other"))
-    .define_method<Operators(Operators::*)(const Operators&) const>("&", &Operators::operator&,
+    .define_method<Operators(Operators::*)(const Operators &) const>("&", &Operators::operator&,
       Arg("other"))
-    .define_method<Operators(Operators::*)(const Operators&) const>("|", &Operators::operator|,
+    .define_method<Operators(Operators::*)(const Operators &) const>("|", &Operators::operator|,
       Arg("other"))
-    .define_method<Operators(Operators::*)(const Operators&) const>("^", &Operators::operator^,
+    .define_method<Operators(Operators::*)(const Operators &) const>("^", &Operators::operator^,
       Arg("other"))
     .define_method<Operators(Operators::*)() const>("~", &Operators::operator~)
     .define_method<Operators(Operators::*)(int) const>("<<", &Operators::operator<<,
       Arg("shift"))
     .define_method<Operators(Operators::*)(int) const>(">>", &Operators::operator>>,
       Arg("shift"))
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign_and", &Operators::operator&=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign_and", &Operators::operator&=,
       Arg("other"))
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign_or", &Operators::operator|=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign_or", &Operators::operator|=,
       Arg("other"))
-    .define_method<Operators&(Operators::*)(const Operators&)>("assign_xor", &Operators::operator^=,
+    .define_method<Operators &(Operators::*)(const Operators &)>("assign_xor", &Operators::operator^=,
       Arg("other"))
-    .define_method<Operators&(Operators::*)(int)>("assign_left_shift", &Operators::operator<<=,
+    .define_method<Operators &(Operators::*)(int)>("assign_left_shift", &Operators::operator<<=,
       Arg("shift"))
-    .define_method<Operators&(Operators::*)(int)>("assign_right_shift", &Operators::operator>>=,
+    .define_method<Operators &(Operators::*)(int)>("assign_right_shift", &Operators::operator>>=,
       Arg("shift"))
-    .define_method<bool(Operators::*)(const Operators&) const>("==", &Operators::operator==,
+    .define_method<bool(Operators::*)(const Operators &) const>("==", &Operators::operator==,
       Arg("other"))
-    .define_method<bool(Operators::*)(const Operators&) const>("!=", &Operators::operator!=,
+    .define_method<bool(Operators::*)(const Operators &) const>("!=", &Operators::operator!=,
       Arg("other"))
-    .define_method<bool(Operators::*)(const Operators&) const>("<", &Operators::operator<,
+    .define_method<bool(Operators::*)(const Operators &) const>("<", &Operators::operator<,
       Arg("other"))
-    .define_method<bool(Operators::*)(const Operators&) const>(">", &Operators::operator>,
+    .define_method<bool(Operators::*)(const Operators &) const>(">", &Operators::operator>,
       Arg("other"))
-    .define_method<bool(Operators::*)(const Operators&) const>("<=", &Operators::operator<=,
+    .define_method<bool(Operators::*)(const Operators &) const>("<=", &Operators::operator<=,
       Arg("other"))
-    .define_method<bool(Operators::*)(const Operators&) const>(">=", &Operators::operator>=,
+    .define_method<bool(Operators::*)(const Operators &) const>(">=", &Operators::operator>=,
       Arg("other"))
     .define_method<bool(Operators::*)() const>("!", &Operators::operator!)
-    .define_method<bool(Operators::*)(const Operators&) const>("logical_and", &Operators::operator&&,
+    .define_method<bool(Operators::*)(const Operators &) const>("logical_and", &Operators::operator&&,
       Arg("other"))
-    .define_method<bool(Operators::*)(const Operators&) const>("logical_or", &Operators::operator||,
+    .define_method<bool(Operators::*)(const Operators &) const>("logical_or", &Operators::operator||,
       Arg("other"))
-    .define_method<Operators&(Operators::*)()>("increment", &Operators::operator++)
+    .define_method<Operators &(Operators::*)()>("increment", &Operators::operator++)
     .define_method<Operators(Operators::*)(int)>("increment_post", &Operators::operator++,
       Arg("arg_0"))
-    .define_method<Operators&(Operators::*)()>("decrement", &Operators::operator--)
+    .define_method<Operators &(Operators::*)()>("decrement", &Operators::operator--)
     .define_method<Operators(Operators::*)(int)>("decrement_post", &Operators::operator--,
       Arg("arg_0"))
-    .define_method<int&(Operators::*)(int)>("[]", &Operators::operator[],
+    .define_method<int &(Operators::*)(int)>("[]", &Operators::operator[],
       Arg("index"))
-    .define_method("[]=", [](Operators&self, int index, int& value)
+    .define_method("[]=", [](Operators&self, int index, int & value)
     {
         self[index] = value;
     })
-    .define_method<const int&(Operators::*)(int) const>("[]", &Operators::operator[],
+    .define_method<const int &(Operators::*)(int) const>("[]", &Operators::operator[],
       Arg("index"))
     .define_method<int(Operators::*)(int, int)>("call", &Operators::operator(),
       Arg("a"), Arg("b"))
     .define_method<int(Operators::*)() const>("dereference", &Operators::operator*)
-    .define_method<Operators*(Operators::*)()>("arrow", &Operators::operator->)
-    .define_method<const Operators*(Operators::*)() const>("arrow", &Operators::operator->)
+    .define_method<Operators *(Operators::*)()>("arrow", &Operators::operator->)
+    .define_method<const Operators *(Operators::*)() const>("arrow", &Operators::operator->)
     .define_method("to_i", [](const Operators& self) -> int
     {
       return self;
@@ -118,13 +118,13 @@ void Init_Operators()
 
   Rice::Data_Type<subscript::Container> rb_cSubscriptContainer = define_class_under<subscript::Container>(rb_mSubscript, "Container")
     .define_constructor(Constructor<subscript::Container>())
-    .define_method<subscript::Element&(subscript::Container::*)(int)>("[]", &subscript::Container::operator[],
+    .define_method<subscript::Element &(subscript::Container::*)(int)>("[]", &subscript::Container::operator[],
       Arg("index"))
-    .define_method("[]=", [](subscript::Container&self, int index, subscript::Element& value)
+    .define_method("[]=", [](subscript::Container&self, int index, subscript::Element & value)
     {
         self[index] = value;
     })
-    .define_method<const subscript::Element&(subscript::Container::*)(int) const>("[]", &subscript::Container::operator[],
+    .define_method<const subscript::Element &(subscript::Container::*)(int) const>("[]", &subscript::Container::operator[],
       Arg("index"));
 
   Module rb_mConv = define_module("Conv");
@@ -144,7 +144,7 @@ void Init_Operators()
     {
       return self;
     })
-    .define_method("to_target", [](NamespacedConversion& self) -> conv::Target&
+    .define_method("to_target", [](NamespacedConversion& self) -> conv::Target &
     {
       return self;
     });
@@ -164,7 +164,7 @@ void Init_Operators()
     .define_attr("name", &Printable::name)
     .define_attr("value", &Printable::value)
     .define_constructor(Constructor<Printable>())
-    .define_constructor(Constructor<Printable, const std::string&, int>(),
+    .define_constructor(Constructor<Printable, const std::string &, int>(),
       Arg("n"), Arg("v"));
 
   Rice::Data_Type<FileWriter> rb_cFileWriter = define_class<FileWriter>("FileWriter")
@@ -250,13 +250,13 @@ void Init_Operators()
 
   Rice::Data_Type<unnamed_index::Lookup> rb_cUnnamedIndexLookup = define_class_under<unnamed_index::Lookup>(rb_mUnnamedIndex, "Lookup")
     .define_constructor(Constructor<unnamed_index::Lookup>())
-    .define_method<int&(unnamed_index::Lookup::*)(int)>("[]", &unnamed_index::Lookup::operator[],
+    .define_method<int &(unnamed_index::Lookup::*)(int)>("[]", &unnamed_index::Lookup::operator[],
       Arg("arg_0"))
-    .define_method("[]=", [](unnamed_index::Lookup&self, int index, int& value)
+    .define_method("[]=", [](unnamed_index::Lookup&self, int index, int & value)
     {
         self[index] = value;
     })
-    .define_method<const int&(unnamed_index::Lookup::*)(int) const>("[]", &unnamed_index::Lookup::operator[],
+    .define_method<const int &(unnamed_index::Lookup::*)(int) const>("[]", &unnamed_index::Lookup::operator[],
       Arg("arg_0"));
 
   Rice::Data_Type<Iterator> rb_cIterator = define_class<Iterator>("Iterator")
@@ -269,46 +269,46 @@ void Init_Operators()
 
   Rice::Data_Type<string_index::StringMap> rb_cStringIndexStringMap = define_class_under<string_index::StringMap>(rb_mStringIndex, "StringMap")
     .define_constructor(Constructor<string_index::StringMap>())
-    .define_method<std::string&(string_index::StringMap::*)(const std::string&)>("[]", &string_index::StringMap::operator[],
+    .define_method<std::string &(string_index::StringMap::*)(const std::string &)>("[]", &string_index::StringMap::operator[],
       Arg("key"))
-    .define_method("[]=", [](string_index::StringMap&self, const std::string& key, std::string& value)
+    .define_method("[]=", [](string_index::StringMap&self, const std::string & key, std::string & value)
     {
         self[key] = value;
     })
-    .define_method<const std::string&(string_index::StringMap::*)(const std::string&) const>("[]", &string_index::StringMap::operator[],
+    .define_method<const std::string &(string_index::StringMap::*)(const std::string &) const>("[]", &string_index::StringMap::operator[],
       Arg("key"));
 
   rb_cMatrix
-    .define_method("assign_plus", [](Matrix& self, const Matrix& other) -> Matrix&
+    .define_method("assign_plus", [](Matrix & self, const Matrix & other) -> Matrix &
     {
       self += other;
       return self;
     })
-    .define_method("assign_minus", [](Matrix& self, const Matrix& other) -> Matrix&
+    .define_method("assign_minus", [](Matrix & self, const Matrix & other) -> Matrix &
     {
       self -= other;
       return self;
     })
-    .define_method("assign_multiply", [](Matrix& self, double other) -> Matrix&
+    .define_method("assign_multiply", [](Matrix & self, double other) -> Matrix &
     {
       self *= other;
       return self;
     })
-    .define_method("~", [](const Matrix& self) -> Matrix
+    .define_method("~", [](const Matrix & self) -> Matrix
     {
       return ~self;
     })
-    .define_method("-@", [](const Matrix& self) -> Matrix
+    .define_method("-@", [](const Matrix & self) -> Matrix
     {
       return -self;
     })
-    .define_method("+@", [](const Matrix& self) -> Matrix
+    .define_method("+@", [](const Matrix & self) -> Matrix
     {
       return +self;
     });
   
   rb_cPrintable
-    .define_method("inspect", [](const Printable& self) -> std::string
+    .define_method("inspect", [](const Printable & self) -> std::string
     {
       std::ostringstream stream;
       stream << self;
@@ -316,24 +316,24 @@ void Init_Operators()
     });
   
   rb_cFileWriter
-    .define_method("<<", [](FileWriter& self, const std::string& other) -> FileWriter&
+    .define_method("<<", [](FileWriter & self, const std::string & other) -> FileWriter &
     {
       self << other;
       return self;
     })
-    .define_method("<<", [](FileWriter& self, int other) -> FileWriter&
+    .define_method("<<", [](FileWriter & self, int other) -> FileWriter &
     {
       self << other;
       return self;
     })
-    .define_method("<<", [](FileWriter& self, const Printable& other) -> FileWriter&
+    .define_method("<<", [](FileWriter & self, const Printable & other) -> FileWriter &
     {
       self << other;
       return self;
     });
   
   rb_cVec
-    .define_method("+", [](Vec& self, const VecExpr& other) -> VecExpr&
+    .define_method("+", [](Vec & self, const VecExpr & other) -> VecExpr &
     {
       return self + other;
     });

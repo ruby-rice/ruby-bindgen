@@ -56,6 +56,6 @@ void Init_Enums()
     .define_value("FLAG_READ", MyNamespace::Flags::FLAG_READ)
     .define_value("FLAG_WRITE", MyNamespace::Flags::FLAG_WRITE);
 
-  rb_mMyNamespace.define_module_function<const char*(*)(MyNamespace::Season)>("season_name", &MyNamespace::seasonName,
+  rb_mMyNamespace.define_module_function<const char *(*)(MyNamespace::Season)>("season_name", &MyNamespace::seasonName,
     Arg("season"));
 }

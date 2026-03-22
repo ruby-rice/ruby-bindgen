@@ -1,87 +1,132 @@
-# Extensions to ffi-clang's Type classes for ruby-bindgen.
+# Compat shim for Type#fully_qualified_name on LLVM < 21.
+# On LLVM 21+, ffi-clang provides this natively via clang_getFullyQualifiedName.
+# This implementation replicates the native behavior using declaration traversal.
 #
-# These methods help with namespace qualification of type spellings.
-# Note: This is a partial solution - see rice.rb's type_spelling method
-# for the full complexity of getting correct C++ type spellings.
+# Known limitation: STL container typedefs (e.g., std::vector<T>::iterator)
+# don't expand default template args. The output is valid C++ but shorter
+# than native fqn (e.g., std::vector<Pixel>::iterator vs
+# std::vector<Pixel, std::allocator<Pixel>>::iterator).
 
 module FFI
   module Clang
     module Types
       class Type
-        # Returns the type spelling with full namespace qualification.
-        #
-        # Combines the declaration's qualified_name (which has the namespace) with
-        # the spelling's template arguments (which qualified_name loses).
-        #
-        # Example: spelling="Vec<int>" + qualified_name="cv::Vec" -> "cv::Vec<int>"
-        #
-        # LIMITATIONS:
-        # - Does not handle typedefs correctly (use type_spelling_typedef_or_alias)
-        # - Does not handle class templates (use qualify_dependent_types_in_template_args)
-        # - Does not handle dependent types (need 'typename' keyword)
-        # - May return wrong result if canonical contains implementation cruft
-        #
-        # This is a building block used by rice.rb's type_spelling, not a complete solution.
-        def fully_qualified_spelling
+        unless method_defined?(:fully_qualified_name)
+          def fully_qualified_name(policy, with_global_ns_prefix: false)
+            result = fqn_impl(policy)
+            with_global_ns_prefix ? "::#{result}" : result
+          end
+        end
+
+        def fqn_impl(policy)
+          case self.kind
+          when :type_lvalue_ref
+            "#{self.non_reference_type.fqn_impl(policy)} &"
+          when :type_rvalue_ref
+            "#{self.non_reference_type.fqn_impl(policy)} &&"
+          when :type_pointer
+            fqn_pointer(policy)
+          when :type_constant_array
+            "#{self.element_type.fqn_impl(policy)}[#{self.size}]"
+          when :type_incomplete_array
+            "#{self.element_type.fqn_impl(policy)}[]"
+          when :type_elaborated
+            fqn_elaborated(policy)
+          when :type_record
+            fqn_record
+          else
+            self.spelling
+          end
+        end
+
+        # Handle pointer types. Walks the full pointer chain collecting
+        # qualifiers, then qualifies the base type once and appends all stars.
+        # Output matches native fqn: "int **", "const char *const", etc.
+        def fqn_pointer(policy)
+          pointee = self.pointee
+
+          # Function pointers — decompose and qualify each part
+          if pointee.kind == :type_function_proto || pointee.kind == :type_function_no_proto
+            ptr_const = self.const_qualified? ? " const" : ""
+            result_type = pointee.result_type.fqn_impl(policy)
+            arg_types = pointee.arg_types.map { |t| t.fqn_impl(policy) }.join(", ")
+            return "#{result_type} (*#{ptr_const})(#{arg_types})"
+          end
+
+          # Walk the pointer chain from outermost to innermost, collecting
+          # pointer/const tokens. Outermost pointer is self.
+          parts = []
+          type = self
+          while type.kind == :type_pointer
+            inner = type.pointee
+            break if inner.kind == :type_function_proto || inner.kind == :type_function_no_proto
+            parts << (type.const_qualified? ? "*const" : "*")
+            type = inner
+          end
+
+          # parts is outermost-first: for "const int *const*" → ["*", "*const"]
+          # Reverse to get innermost-first for output: "*const*"
+          "#{type.fqn_impl(policy)} #{parts.reverse.join}"
+        end
+
+        def fqn_elaborated(policy)
+          decl = self.declaration
+          const_prefix = self.const_qualified? ? "const " : ""
+
+          case decl.kind
+          when :cursor_typedef_decl, :cursor_type_alias_decl
+            # Preserve the typedef/alias name and qualify with namespace.
+            spelling = self.spelling.sub(/^const\s+/, '')
+            qualified = decl.qualified_name
+
+            if spelling.include?('::')
+              # Has some qualification. For nested typedefs in template classes
+              # (e.g., std::vector<Pixel>::iterator), qualify template args
+              # using the parent type's fully qualified spelling.
+              parent = decl.semantic_parent
+              if parent.kind == :cursor_class_decl || parent.kind == :cursor_struct
+                parent_type = parent.type
+                parent_fqn = parent_type.fqn_impl(policy)
+                member_name = decl.spelling
+                "#{const_prefix}#{parent_fqn}::#{member_name}"
+              else
+                "#{const_prefix}#{spelling}"
+              end
+            elsif qualified
+              "#{const_prefix}#{qualified}"
+            else
+              "#{const_prefix}#{spelling}"
+            end
+
+          when :cursor_enum_decl
+            "#{const_prefix}#{decl.qualified_name}"
+
+          else
+            # Class declarations, template instantiations, etc.
+            base = fqn_record
+            if self.const_qualified? && !base.start_with?("const ")
+              "const #{base}"
+            else
+              base
+            end
+          end
+        end
+
+        # Qualify a record type (class/struct) using its declaration's qualified_name.
+        # qualified_name includes inline namespace components (e.g.,
+        # cv::dnn::dnn4_v20241223::Net) matching native fqn behavior.
+        def fqn_record
           decl = self.declaration
           return self.spelling if decl.kind == :cursor_no_decl_found
 
-          spelling = self.spelling
           qualified = decl.qualified_name
-
-          # Already fully qualified
-          return spelling if spelling.include?('::') && spelling.start_with?(qualified.split('::').first)
-
           const_prefix = self.const_qualified? ? "const " : ""
-          bare_spelling = spelling.sub(/^const\s+/, '')
+          bare_spelling = self.spelling.sub(/^const\s+/, '')
 
-          # Separate base name from template arguments
-          if bare_spelling.include?('<')
-            template_args = bare_spelling[/<.*/]
-            base_spelling = bare_spelling.sub(/<.*/, '')
-          else
-            template_args = ''
-            base_spelling = bare_spelling
-          end
+          # qualified_name drops template args — recover them from spelling
+          template_args = bare_spelling.include?('<') ? bare_spelling[/<.*/] : ''
 
-          # Find the namespace prefix from qualified_name that the spelling is missing.
-          #
-          # We split both the spelling and qualified_name into :: components, then
-          # find where the spelling's first component appears in qualified_name.
-          # Everything before that match point is the missing prefix.
-          #
-          # This handles C++ versioned inline namespaces. OpenCV uses macros like:
-          #
-          #   namespace cv { namespace dnn {
-          #     namespace dnn4_v20241223 { class Net { ... }; }
-          #     using namespace dnn4_v20241223;
-          #   }}
-          #
-          # The programmer writes "dnn::Net" and libclang's qualified_name returns
-          # "cv::dnn::dnn4_v20241223::Net". A naive end_with?("dnn::Net") fails
-          # because the versioned component sits between "dnn" and "Net".
-          #
-          # By finding "dnn" at index 1 of ["cv", "dnn", "dnn4_v20241223", "Net"],
-          # we know the missing prefix is "cv" and produce "cv::dnn::Net".
-          base_parts = base_spelling.split('::')
-          qualified_parts = qualified.split('::')
-          match_idx = qualified_parts.index(base_parts.first)
-
-          if match_idx && match_idx > 0
-            prefix = qualified_parts[0...match_idx].join('::')
-            "#{const_prefix}#{prefix}::#{bare_spelling}"
-          elsif qualified.end_with?(base_spelling)
-            "#{const_prefix}#{qualified}#{template_args}"
-          else
-            "#{const_prefix}#{bare_spelling}"
-          end
-        end
-      end
-
-      class Pointer
-        def fully_qualified_spelling
-          ptr_const = self.const_qualified? ? " const" : ""
-          "#{self.pointee.fully_qualified_spelling}*#{ptr_const}"
+          "#{const_prefix}#{qualified}#{template_args}"
         end
       end
     end

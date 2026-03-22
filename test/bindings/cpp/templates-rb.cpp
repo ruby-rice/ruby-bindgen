@@ -42,7 +42,7 @@ void Init_Templates()
   Rice::Data_Type<Tests::Container<Tests::Item>> rb_cTestsContainerTestsItem = Container_instantiate<Tests::Item>(rb_mTests, "ContainerTestsItem");
 
   Rice::Data_Type<Tests::Consumer> rb_cTestsConsumer = define_class_under<Tests::Consumer>(rb_mTests, "Consumer")
-    .define_constructor(Constructor<Tests::Consumer, const Tests::Container<Tests::Item>&>(),
+    .define_constructor(Constructor<Tests::Consumer, const Tests::Container<Tests::Item> &>(),
       Arg("items"));
 
   Rice::Data_Type<Tests::lowercase_type> rb_cTestsLowercaseType = define_class_under<Tests::lowercase_type>(rb_mTests, "LowercaseType")

@@ -5,7 +5,7 @@ inline Rice::Data_Type<Internal::Data<Rows, Columns>> Data_instantiate(Rice::Mod
 {
   return Rice::define_class_under<Internal::Data<Rows, Columns>>(parent, name)
     .define_constructor(Constructor<Internal::Data<Rows, Columns>>())
-    .define_constructor(Constructor<Internal::Data<Rows, Columns>, char*>(),
+    .define_constructor(Constructor<Internal::Data<Rows, Columns>, char *>(),
       Arg("type"))
     .define_attr("rows", &Internal::Data<Rows, Columns>::rows)
     .define_attr("columns", &Internal::Data<Rows, Columns>::columns)
@@ -18,7 +18,7 @@ inline Rice::Data_Type<Tests::Matrix<T, Rows, Columns>> Matrix_instantiate(Rice:
 {
   return Rice::define_class_under<Tests::Matrix<T, Rows, Columns>>(parent, name)
     .define_constructor(Constructor<Tests::Matrix<T, Rows, Columns>>())
-    .define_constructor(Constructor<Tests::Matrix<T, Rows, Columns>, const Tests::Matrix<T, Rows, Columns>&>(),
+    .define_constructor(Constructor<Tests::Matrix<T, Rows, Columns>, const Tests::Matrix<T, Rows, Columns> &>(),
       Arg("other"))
     .template define_method<Tests::Matrix<T, Rows, 1>(Tests::Matrix<T, Rows, Columns>::*)(int) const>("column", &Tests::Matrix<T, Rows, Columns>::column,
       Arg("column"))
@@ -27,13 +27,13 @@ inline Rice::Data_Type<Tests::Matrix<T, Rows, Columns>> Matrix_instantiate(Rice:
     .define_attr("data", &Tests::Matrix<T, Rows, Columns>::data)
     .template define_method<void(Tests::Matrix<T, Rows, Columns>::*)(int, int)>("create", &Tests::Matrix<T, Rows, Columns>::create,
       Arg("rows"), Arg("cols"))
-    .template define_method<void(Tests::Matrix<T, Rows, Columns>::*)(int, const int*)>("create", &Tests::Matrix<T, Rows, Columns>::create,
+    .template define_method<void(Tests::Matrix<T, Rows, Columns>::*)(int, const int *)>("create", &Tests::Matrix<T, Rows, Columns>::create,
       Arg("ndims"), ArgBuffer("sizes"))
     .template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, int)>("zeros", &Tests::Matrix<T, Rows, Columns>::zeros,
       Arg("rows"), Arg("cols"))
-    .template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, const int*)>("zeros", &Tests::Matrix<T, Rows, Columns>::zeros,
+    .template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, const int *)>("zeros", &Tests::Matrix<T, Rows, Columns>::zeros,
       Arg("ndims"), ArgBuffer("sizes"))
-    .template define_singleton_function<Tests::Matrix<T, Rows, Columns>*(*)()>("create", &Tests::Matrix<T, Rows, Columns>::create);
+    .template define_singleton_function<Tests::Matrix<T, Rows, Columns> *(*)()>("create", &Tests::Matrix<T, Rows, Columns>::create);
 }
 
 template<typename T>
@@ -48,9 +48,9 @@ inline Rice::Data_Type<Tests::Transform<T>> Transform_instantiate(Rice::Module p
 {
   return Rice::define_class_under<Tests::Transform<T>>(parent, name)
     .define_constructor(Constructor<Tests::Transform<T>>())
-    .define_constructor(Constructor<Tests::Transform<T>, const typename Tests::Transform<T>::Vec3&>(),
+    .define_constructor(Constructor<Tests::Transform<T>, const typename Tests::Transform<T>::Vec3 &>(),
       Arg("translation"))
-    .template define_method<void(Tests::Transform<T>::*)(const typename Tests::Transform<T>::Mat3&)>("set_rotation", &Tests::Transform<T>::setRotation,
+    .template define_method<void(Tests::Transform<T>::*)(const typename Tests::Transform<T>::Mat3 &)>("set_rotation", &Tests::Transform<T>::setRotation,
       Arg("rotation"))
     .template define_method<typename Tests::Transform<T>::Vec3(Tests::Transform<T>::*)() const>("get_translation", &Tests::Transform<T>::getTranslation);
 }
@@ -94,9 +94,9 @@ inline Rice::Data_Type<Tests::Mat_<_Tp>> Mat__instantiate(Rice::Module parent, c
 {
   return Rice::define_class_under<Tests::Mat_<_Tp>>(parent, name)
     .define_constructor(Constructor<Tests::Mat_<_Tp>>())
-    .define_constructor(Constructor<Tests::Mat_<_Tp>, const Tests::Point_<typename Tests::DataType<_Tp>::channel_type>&>(),
+    .define_constructor(Constructor<Tests::Mat_<_Tp>, const Tests::Point_<typename Tests::DataType<_Tp>::channel_type> &>(),
       Arg("pt"))
-    .define_constructor(Constructor<Tests::Mat_<_Tp>, int, int, _Tp*>(),
+    .define_constructor(Constructor<Tests::Mat_<_Tp>, int, int, _Tp *>(),
       Arg("rows"), Arg("cols"), std::conditional_t<std::is_fundamental_v<_Tp>, ArgBuffer, Arg>("data"));
 }
 
@@ -105,7 +105,7 @@ inline Rice::Data_Type<Tests::SmartPtr<T>> SmartPtr_instantiate(Rice::Module par
 {
   return Rice::define_class_under<Tests::SmartPtr<T>>(parent, name)
     .define_constructor(Constructor<Tests::SmartPtr<T>>())
-    .define_constructor(Constructor<Tests::SmartPtr<T>, T*>(),
+    .define_constructor(Constructor<Tests::SmartPtr<T>, T *>(),
       std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("p"));
 }
 
@@ -113,9 +113,9 @@ template<typename Distance>
 inline Rice::Data_Type<Tests::SearchIndex<Distance>> SearchIndex_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::SearchIndex<Distance>>(parent, name)
-    .define_constructor(Constructor<Tests::SearchIndex<Distance>, const typename Tests::SearchIndex<Distance>::ElementType&>(),
+    .define_constructor(Constructor<Tests::SearchIndex<Distance>, const typename Tests::SearchIndex<Distance>::ElementType &>(),
       Arg("element"))
-    .define_constructor(Constructor<Tests::SearchIndex<Distance>, const Tests::SearchIndex<Distance>&, int>(),
+    .define_constructor(Constructor<Tests::SearchIndex<Distance>, const Tests::SearchIndex<Distance> &, int>(),
       Arg("other"), Arg("flags") = static_cast<int>(0))
     .template define_method<void(Tests::SearchIndex<Distance>::*)(int, typename Tests::SearchIndex<Distance>::ElementType)>("search", &Tests::SearchIndex<Distance>::search,
       Arg("count"), Arg("max_dist") = static_cast<typename Tests::SearchIndex<Distance>::ElementType>(typename Tests::SearchIndex<Distance>::ElementType()));

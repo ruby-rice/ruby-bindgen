@@ -26,7 +26,7 @@ void Init_IncompleteTypes()
   Rice::Data_Type<Outer::Inner::PimplClass::Impl> rb_cOuterInnerPimplClassImpl = define_class_under<Outer::Inner::PimplClass::Impl>(rb_cOuterInnerPimplClass, "Impl");
   rb_cOuterInnerPimplClass
     .define_constructor(Constructor<Outer::Inner::PimplClass>())
-    .define_method<Outer::Inner::PimplClass::Impl*(Outer::Inner::PimplClass::*)() const>("get_impl", &Outer::Inner::PimplClass::getImpl)
+    .define_method<Outer::Inner::PimplClass::Impl *(Outer::Inner::PimplClass::*)() const>("get_impl", &Outer::Inner::PimplClass::getImpl)
     .define_method<bool(Outer::Inner::PimplClass::*)() const>("empty?", &Outer::Inner::PimplClass::empty);
 
   Rice::Data_Type<Outer::Inner::PimplClassWithPublicField> rb_cOuterInnerPimplClassWithPublicField = define_class_under<Outer::Inner::PimplClassWithPublicField>(rb_mOuterInner, "PimplClassWithPublicField");
@@ -41,7 +41,7 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::PimplClassWithConstructor::Impl> rb_cOuterInnerPimplClassWithConstructorImpl = define_class_under<Outer::Inner::PimplClassWithConstructor::Impl>(rb_cOuterInnerPimplClassWithConstructor, "Impl");
   rb_cOuterInnerPimplClassWithConstructor
-    .define_constructor(Constructor<Outer::Inner::PimplClassWithConstructor, Outer::Inner::PimplClassWithConstructor::Impl*, int>(),
+    .define_constructor(Constructor<Outer::Inner::PimplClassWithConstructor, Outer::Inner::PimplClassWithConstructor::Impl *, int>(),
       Arg("impl"), Arg("offset"))
     .define_constructor(Constructor<Outer::Inner::PimplClassWithConstructor, int>(),
       Arg("value"))
@@ -81,8 +81,8 @@ void Init_IncompleteTypes()
   Rice::Data_Type<Outer::Inner::PimplClassWithStaticMethods::Impl> rb_cOuterInnerPimplClassWithStaticMethodsImpl = define_class_under<Outer::Inner::PimplClassWithStaticMethods::Impl>(rb_cOuterInnerPimplClassWithStaticMethods, "Impl");
   rb_cOuterInnerPimplClassWithStaticMethods
     .define_constructor(Constructor<Outer::Inner::PimplClassWithStaticMethods>())
-    .define_singleton_function<Outer::Inner::PimplClassWithStaticMethods::Impl*(*)()>("create_impl", &Outer::Inner::PimplClassWithStaticMethods::createImpl)
-    .define_singleton_function<void(*)(Outer::Inner::PimplClassWithStaticMethods::Impl*)>("init_from_impl", &Outer::Inner::PimplClassWithStaticMethods::initFromImpl,
+    .define_singleton_function<Outer::Inner::PimplClassWithStaticMethods::Impl *(*)()>("create_impl", &Outer::Inner::PimplClassWithStaticMethods::createImpl)
+    .define_singleton_function<void(*)(Outer::Inner::PimplClassWithStaticMethods::Impl *)>("init_from_impl", &Outer::Inner::PimplClassWithStaticMethods::initFromImpl,
       Arg("impl"))
     .define_singleton_function<Outer::Inner::Ptr<Outer::Inner::PimplClassWithStaticMethods::Impl>(*)()>("get_smart_impl", &Outer::Inner::PimplClassWithStaticMethods::getSmartImpl)
     .define_singleton_function<int(*)()>("get_value", &Outer::Inner::PimplClassWithStaticMethods::getValue)
@@ -123,11 +123,11 @@ void Init_IncompleteTypes()
   Rice::Data_Type<Outer::Inner::PimplClassWithRefReturn::Impl> rb_cOuterInnerPimplClassWithRefReturnImpl = define_class_under<Outer::Inner::PimplClassWithRefReturn::Impl>(rb_cOuterInnerPimplClassWithRefReturn, "Impl");
   rb_cOuterInnerPimplClassWithRefReturn
     .define_constructor(Constructor<Outer::Inner::PimplClassWithRefReturn>())
-    .define_method<Outer::Inner::PimplClassWithRefReturn::Impl&(Outer::Inner::PimplClassWithRefReturn::*)()>("get_impl_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRef)
-    .define_method<const Outer::Inner::PimplClassWithRefReturn::Impl&(Outer::Inner::PimplClassWithRefReturn::*)() const>("get_impl_const_ref", &Outer::Inner::PimplClassWithRefReturn::getImplConstRef)
-    .define_method<Outer::Inner::PimplClassWithRefReturn::Impl&&(Outer::Inner::PimplClassWithRefReturn::*)()>("get_impl_rvalue_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRvalueRef)
-    .define_method<int&(Outer::Inner::PimplClassWithRefReturn::*)()>("get_value_ref", &Outer::Inner::PimplClassWithRefReturn::getValueRef)
-    .define_method<const int&(Outer::Inner::PimplClassWithRefReturn::*)() const>("get_value_const_ref", &Outer::Inner::PimplClassWithRefReturn::getValueConstRef)
+    .define_method<Outer::Inner::PimplClassWithRefReturn::Impl &(Outer::Inner::PimplClassWithRefReturn::*)()>("get_impl_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRef)
+    .define_method<const Outer::Inner::PimplClassWithRefReturn::Impl &(Outer::Inner::PimplClassWithRefReturn::*)() const>("get_impl_const_ref", &Outer::Inner::PimplClassWithRefReturn::getImplConstRef)
+    .define_method<Outer::Inner::PimplClassWithRefReturn::Impl &&(Outer::Inner::PimplClassWithRefReturn::*)()>("get_impl_rvalue_ref", &Outer::Inner::PimplClassWithRefReturn::getImplRvalueRef)
+    .define_method<int &(Outer::Inner::PimplClassWithRefReturn::*)()>("get_value_ref", &Outer::Inner::PimplClassWithRefReturn::getValueRef)
+    .define_method<const int &(Outer::Inner::PimplClassWithRefReturn::*)() const>("get_value_const_ref", &Outer::Inner::PimplClassWithRefReturn::getValueConstRef)
     .define_method<int(Outer::Inner::PimplClassWithRefReturn::*)() const>("get_value", &Outer::Inner::PimplClassWithRefReturn::getValue);
 
   Rice::Data_Type<Outer::Inner::ExternalOpaqueWrapper> rb_cOuterInnerExternalOpaqueWrapper = define_class_under<Outer::Inner::ExternalOpaqueWrapper>(rb_mOuterInner, "ExternalOpaqueWrapper")
@@ -138,8 +138,8 @@ void Init_IncompleteTypes()
       Arg("handle"))
     .define_singleton_function<void(*)(OpaqueHandleB)>("use_handle_b", &Outer::Inner::ExternalOpaqueWrapper::useHandleB,
       Arg("handle"))
-    .define_singleton_function<ExternalOpaqueA*(*)()>("get_raw_a", &Outer::Inner::ExternalOpaqueWrapper::getRawA)
-    .define_singleton_function<ExternalOpaqueB*(*)()>("get_raw_b", &Outer::Inner::ExternalOpaqueWrapper::getRawB);
+    .define_singleton_function<ExternalOpaqueA *(*)()>("get_raw_a", &Outer::Inner::ExternalOpaqueWrapper::getRawA)
+    .define_singleton_function<ExternalOpaqueB *(*)()>("get_raw_b", &Outer::Inner::ExternalOpaqueWrapper::getRawB);
 
   Rice::Data_Type<Outer::Inner::DeleterUser> rb_cOuterInnerDeleterUser = define_class_under<Outer::Inner::DeleterUser>(rb_mOuterInner, "DeleterUser")
     .define_constructor(Constructor<Outer::Inner::DeleterUser>())
@@ -160,11 +160,11 @@ void Init_IncompleteTypes()
 
   Rice::Data_Type<Outer::Inner::Solver> rb_cOuterInnerSolver = define_class_under<Outer::Inner::Solver>(rb_mOuterInner, "Solver")
     .define_constructor(Constructor<Outer::Inner::Solver>())
-    .define_singleton_function<Outer::Inner::Holder<Outer::Inner::Solver::Callback>(*)(const Outer::Inner::Holder<Outer::Inner::Solver::Callback>&, int)>("create", &Outer::Inner::Solver::create,
+    .define_singleton_function<Outer::Inner::Holder<Outer::Inner::Solver::Callback>(*)(const Outer::Inner::Holder<Outer::Inner::Solver::Callback> &, int)>("create", &Outer::Inner::Solver::create,
       Arg("cb"), Arg("max_iters"));
 
   Rice::Data_Type<Outer::Inner::Solver::Callback> rb_cOuterInnerSolverCallback = define_class_under<Outer::Inner::Solver::Callback>(rb_cOuterInnerSolver, "Callback")
     .define_constructor(Constructor<Outer::Inner::Solver::Callback>())
-    .define_method<bool(Outer::Inner::Solver::Callback::*)(double*) const>("compute", &Outer::Inner::Solver::Callback::compute,
+    .define_method<bool(Outer::Inner::Solver::Callback::*)(double *) const>("compute", &Outer::Inner::Solver::Callback::compute,
       ArgBuffer("param"));
 }

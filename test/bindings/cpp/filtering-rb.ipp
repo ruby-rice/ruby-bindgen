@@ -15,7 +15,7 @@ inline Rice::Data_Type<Outer::Wrapper<T>> Wrapper_instantiate(Rice::Module paren
 {
   return Rice::define_class_under<Outer::Wrapper<T>>(parent, name)
     .define_constructor(Constructor<Outer::Wrapper<T>>())
-    .template define_method<void(Outer::Wrapper<T>::*)(T*)>("wrap", &Outer::Wrapper<T>::wrap,
+    .template define_method<void(Outer::Wrapper<T>::*)(T *)>("wrap", &Outer::Wrapper<T>::wrap,
       std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("obj"));
 }
 

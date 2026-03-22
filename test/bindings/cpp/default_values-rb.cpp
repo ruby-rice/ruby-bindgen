@@ -21,9 +21,9 @@ void Init_DefaultValues()
 
   Rice::Data_Type<cv::Mat> rb_cCvMat = define_class_under<cv::Mat>(rb_mCv, "Mat")
     .define_constructor(Constructor<cv::Mat>())
-    .define_constructor(Constructor<cv::Mat, const cv::Mat&, const cv::Range&, const cv::Range&>(),
-      Arg("m"), Arg("row_range"), Arg("col_range") = static_cast<const cv::Range&>(cv::Range::all()))
-    .define_constructor(Constructor<cv::Mat, int, int, void*, int>(),
+    .define_constructor(Constructor<cv::Mat, const cv::Mat &, const cv::Range &, const cv::Range &>(),
+      Arg("m"), Arg("row_range"), Arg("col_range") = static_cast<const cv::Range &>(cv::Range::all()))
+    .define_constructor(Constructor<cv::Mat, int, int, void *, int>(),
       Arg("rows"), Arg("cols"), ArgBuffer("data"), Arg("step") = static_cast<int>(cv::Mat::AUTO_STEP))
     .define_constant("AUTO_STEP", (int)cv::Mat::AUTO_STEP);
 
@@ -35,8 +35,8 @@ void Init_DefaultValues()
 
   Rice::Data_Type<cv::Rect_<double>> rb_cRect2d = Rect__instantiate<double>(rb_mCv, "Rect2d");
 
-  rb_mCv.define_module_function<void(*)(const cv::Rect_<double>&)>("render", &cv::render,
-    Arg("wnd_rect") = static_cast<const cv::Rect_<double>&>(cv::Rect_<double>(0.0, 0.0, 1.0, 1.0)));
+  rb_mCv.define_module_function<void(*)(const cv::Rect_<double> &)>("render", &cv::render,
+    Arg("wnd_rect") = static_cast<const cv::Rect_<double> &>(cv::Rect_<double>(0.0, 0.0, 1.0, 1.0)));
 
   Module rb_mMultiline = define_module("Multiline");
 
@@ -48,13 +48,13 @@ void Init_DefaultValues()
   rb_mMultiline.define_module_function<void(*)(multiline::PerfLevel)>("configure", &multiline::configure,
     Arg("level") = static_cast<multiline::PerfLevel>(multiline::PerfLevel::SLOW));
 
-  rb_mCv.define_module_function<void(*)(const std::vector<int>&)>("process_items", &cv::processItems,
-    Arg("items") = static_cast<const std::vector<int>&>(std::vector<int>{}));
+  rb_mCv.define_module_function<void(*)(const std::vector<int> &)>("process_items", &cv::processItems,
+    Arg("items") = static_cast<const std::vector<int> &>(std::vector<int>{}));
 
   Module rb_mIo = define_module("Io");
 
-  rb_mIo.define_module_function<void(*)(FILE*)>("print_to", &io::print_to,
-    Arg("stream") = static_cast<FILE*>(stdout));
+  rb_mIo.define_module_function<void(*)(FILE *)>("print_to", &io::print_to,
+    Arg("stream") = static_cast<FILE *>(stdout));
 
   Module rb_mMl = define_module("Ml");
 
@@ -91,10 +91,10 @@ void Init_DefaultValues()
       Arg("value"))
     .define_method<int(noncopyable::NonCopyableCpp11::*)() const>("get_value", &noncopyable::NonCopyableCpp11::get_value);
 
-  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::NonCopyableCpp03&)>("use_cpp03", &noncopyable::use_cpp03,
+  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::NonCopyableCpp03 &)>("use_cpp03", &noncopyable::use_cpp03,
     Arg("obj"));
 
-  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::NonCopyableCpp11&)>("use_cpp11", &noncopyable::use_cpp11,
+  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::NonCopyableCpp11 &)>("use_cpp11", &noncopyable::use_cpp11,
     Arg("obj"));
 
   Rice::Data_Type<noncopyable::Copyable> rb_cNoncopyableCopyable = define_class_under<noncopyable::Copyable>(rb_mNoncopyable, "Copyable")
@@ -103,8 +103,8 @@ void Init_DefaultValues()
       Arg("value"))
     .define_attr("value", &noncopyable::Copyable::value);
 
-  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::Copyable&)>("use_copyable", &noncopyable::use_copyable,
-    Arg("obj") = static_cast<const noncopyable::Copyable&>(noncopyable::Copyable()));
+  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::Copyable &)>("use_copyable", &noncopyable::use_copyable,
+    Arg("obj") = static_cast<const noncopyable::Copyable &>(noncopyable::Copyable()));
 
   Rice::Data_Type<noncopyable::DerivedFromCpp03> rb_cNoncopyableDerivedFromCpp03 = define_class_under<noncopyable::DerivedFromCpp03, noncopyable::NonCopyableCpp03>(rb_mNoncopyable, "DerivedFromCpp03")
     .define_constructor(Constructor<noncopyable::DerivedFromCpp03>())
@@ -116,10 +116,10 @@ void Init_DefaultValues()
     .define_constructor(Constructor<noncopyable::DerivedFromCpp11, int, int>(),
       Arg("value"), Arg("extra"));
 
-  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::DerivedFromCpp03&)>("use_derived_cpp03", &noncopyable::use_derived_cpp03,
+  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::DerivedFromCpp03 &)>("use_derived_cpp03", &noncopyable::use_derived_cpp03,
     Arg("obj"));
 
-  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::DerivedFromCpp11&)>("use_derived_cpp11", &noncopyable::use_derived_cpp11,
+  rb_mNoncopyable.define_module_function<void(*)(const noncopyable::DerivedFromCpp11 &)>("use_derived_cpp11", &noncopyable::use_derived_cpp11,
     Arg("obj"));
 
   Module rb_mCvFisheye = define_module_under(rb_mCv, "Fisheye");
@@ -139,6 +139,6 @@ void Init_DefaultValues()
     .define_constructor(Constructor<outer::inner::IndexParams>());
 
   Rice::Data_Type<outer::Matcher> rb_cOuterMatcher = define_class_under<outer::Matcher>(rb_mOuter, "Matcher")
-    .define_constructor(Constructor<outer::Matcher, outer::inner::IndexParams*>(),
-      Arg("params") = static_cast<outer::inner::IndexParams*>(outer::makePtr<outer::inner::IndexParams>()));
+    .define_constructor(Constructor<outer::Matcher, outer::inner::IndexParams *>(),
+      Arg("params") = static_cast<outer::inner::IndexParams *>(outer::makePtr<outer::inner::IndexParams>()));
 }

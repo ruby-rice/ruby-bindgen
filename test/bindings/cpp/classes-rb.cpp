@@ -60,20 +60,20 @@ void Init_Classes()
     .define_value("ASYMMETRIC_GRID", Outer::Inner::ContainerClass::GridType::ASYMMETRIC_GRID);
 
   Rice::Data_Type<Outer::Inner::GpuMat> rb_cOuterInnerGpuMat = define_class_under<Outer::Inner::GpuMat>(rb_mOuterInner, "GpuMat")
-    .define_singleton_function<Outer::Inner::GpuMat::Allocator*(*)()>("default_allocator", &Outer::Inner::GpuMat::defaultAllocator)
+    .define_singleton_function<Outer::Inner::GpuMat::Allocator *(*)()>("default_allocator", &Outer::Inner::GpuMat::defaultAllocator)
     .define_constructor(Constructor<Outer::Inner::GpuMat>())
-    .define_constructor(Constructor<Outer::Inner::GpuMat, int, int, Outer::Inner::GpuMat::Allocator*>(),
-      Arg("rows"), Arg("cols"), Arg("allocator") = static_cast<Outer::Inner::GpuMat::Allocator*>(Outer::Inner::GpuMat::defaultAllocator()));
+    .define_constructor(Constructor<Outer::Inner::GpuMat, int, int, Outer::Inner::GpuMat::Allocator *>(),
+      Arg("rows"), Arg("cols"), Arg("allocator") = static_cast<Outer::Inner::GpuMat::Allocator *>(Outer::Inner::GpuMat::defaultAllocator()));
 
   Rice::Data_Type<Outer::Inner::GpuMat::Allocator> rb_cOuterInnerGpuMatAllocator = define_class_under<Outer::Inner::GpuMat::Allocator>(rb_cOuterInnerGpuMat, "Allocator")
     .define_constructor(Constructor<Outer::Inner::GpuMat::Allocator>());
 
   Rice::Data_Type<Outer::Inner::GpuMatND> rb_cOuterInnerGpuMatND = define_class_under<Outer::Inner::GpuMatND>(rb_mOuterInner, "GpuMatND")
-    .define_singleton_function<Outer::Inner::GpuMatND::StepArray&(*)()>("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray)
+    .define_singleton_function<Outer::Inner::GpuMatND::StepArray &(*)()>("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray)
     .define_constructor(Constructor<Outer::Inner::GpuMatND>())
     .define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int>(),
       Arg("size"), Arg("type"))
-    .define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int, void*, Outer::Inner::GpuMatND::StepArray>(),
+    .define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int, void *, Outer::Inner::GpuMatND::StepArray>(),
       Arg("size"), Arg("type"), ArgBuffer("data"), Arg("step") = Outer::Inner::GpuMatND::defaultStepArray());
 
   Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream")
@@ -86,7 +86,7 @@ void Init_Classes()
 
   Rice::Data_Type<Outer::NonAssignable> rb_cOuterNonAssignable = define_class_under<Outer::NonAssignable>(rb_mOuter, "NonAssignable")
     .define_constructor(Constructor<Outer::NonAssignable>())
-    .define_constructor(Constructor<Outer::NonAssignable, const Outer::NonAssignable&>(),
+    .define_constructor(Constructor<Outer::NonAssignable, const Outer::NonAssignable &>(),
       Arg("arg_0"));
 
   Rice::Data_Type<Outer::ProtectedAssign> rb_cOuterProtectedAssign = define_class_under<Outer::ProtectedAssign>(rb_mOuter, "ProtectedAssign")
@@ -117,28 +117,28 @@ void Init_Classes()
 
   Rice::Data_Type<Outer::FeatureDetector> rb_cOuterFeatureDetector = define_class_under<Outer::FeatureDetector>(rb_mOuter, "FeatureDetector")
     .define_constructor(Constructor<Outer::FeatureDetector>())
-    .define_method<void(Outer::FeatureDetector::*)(int, int&) const>("detect", &Outer::FeatureDetector::detect,
+    .define_method<void(Outer::FeatureDetector::*)(int, int &) const>("detect", &Outer::FeatureDetector::detect,
       Arg("image"), Arg("keypoints"))
-    .define_method<void(Outer::FeatureDetector::*)(int, int&, int) const>("detect", &Outer::FeatureDetector::detect,
+    .define_method<void(Outer::FeatureDetector::*)(int, int &, int) const>("detect", &Outer::FeatureDetector::detect,
       Arg("image"), Arg("keypoints"), Arg("mask"))
-    .define_method<void(Outer::FeatureDetector::*)(int, int&, int&) const>("compute", &Outer::FeatureDetector::compute,
+    .define_method<void(Outer::FeatureDetector::*)(int, int &, int &) const>("compute", &Outer::FeatureDetector::compute,
       Arg("image"), Arg("keypoints"), Arg("descriptors"))
-    .define_method<void(Outer::FeatureDetector::*)(int, int&, int&, bool) const>("compute", &Outer::FeatureDetector::compute,
+    .define_method<void(Outer::FeatureDetector::*)(int, int &, int &, bool) const>("compute", &Outer::FeatureDetector::compute,
       Arg("images"), Arg("keypoints"), Arg("descriptors"), Arg("use_provided_keypoints"));
 
   Rice::Data_Type<Outer::DescriptorExtractor> rb_cOuterDescriptorExtractor = define_class_under<Outer::DescriptorExtractor, Outer::FeatureDetector>(rb_mOuter, "DescriptorExtractor")
     .define_constructor(Constructor<Outer::DescriptorExtractor>())
-    .define_method<void(Outer::DescriptorExtractor::*)(int, int&) const>("extract", &Outer::DescriptorExtractor::extract,
+    .define_method<void(Outer::DescriptorExtractor::*)(int, int &) const>("extract", &Outer::DescriptorExtractor::extract,
       Arg("image"), Arg("descriptors"));
 
   Rice::Data_Type<Outer::Feature2D> rb_cOuterFeature2D = define_class_under<Outer::Feature2D, Outer::DescriptorExtractor>(rb_mOuter, "Feature2D")
     .define_constructor(Constructor<Outer::Feature2D>())
-    .define_method<void(Outer::Feature2D::*)(int, int, int&, int&) const>("detect_and_compute", &Outer::Feature2D::detectAndCompute,
+    .define_method<void(Outer::Feature2D::*)(int, int, int &, int &) const>("detect_and_compute", &Outer::Feature2D::detectAndCompute,
       Arg("image"), Arg("mask"), Arg("keypoints"), Arg("descriptors"));
 
   Rice::Data_Type<Outer::AffineFeature2D> rb_cOuterAffineFeature2D = define_class_under<Outer::AffineFeature2D, Outer::Feature2D>(rb_mOuter, "AffineFeature2D")
     .define_constructor(Constructor<Outer::AffineFeature2D>())
-    .define_method<void(Outer::AffineFeature2D::*)(int, int&, int) const>("detect", &Outer::AffineFeature2D::detect,
+    .define_method<void(Outer::AffineFeature2D::*)(int, int &, int) const>("detect", &Outer::AffineFeature2D::detect,
       Arg("image"), Arg("keypoints"), Arg("mask"));
 
   Module rb_mOuterSibling = define_module_under(rb_mOuter, "Sibling");
