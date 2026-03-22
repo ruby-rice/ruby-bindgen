@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 require_relative './abstract_test'
+require_relative './rice_components_test'
 
 class RiceTest < AbstractTest
   def test_classes
