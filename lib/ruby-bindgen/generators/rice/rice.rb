@@ -861,10 +861,19 @@ module RubyBindgen
         end
       end
 
-      # Get qualified C++ class name for use in templates
-      # Qualifies any template arguments that need namespace prefixes
+      # Get the fully qualified class/struct type used in generated bindings.
+      #
+      # Examples:
+      #   outer::Locale::Facet<Locale>
+      # becomes
+      #   outer::Locale::Facet<outer::Locale>
+      #
+      # This goes through type_spelling(cursor.type) instead of cursor-specific
+      # string surgery. A class cursor's first child can be an unrelated type_ref,
+      # which makes first-match substitution double-qualify nested specializations
+      # like outer::outer::Locale::Facet<outer::Locale>.
       def qualified_class_name_cpp(cursor)
-        qualify_template_args(cursor.class_name_cpp, cursor.type)
+        type_spelling(cursor.type)
       end
 
       # Get qualified display name for a cursor

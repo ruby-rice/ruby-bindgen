@@ -253,4 +253,27 @@ namespace Outer
       Sibling::Target return_target();
     };
   }
+
+  // Test nested class template specialization whose template arg is the parent class.
+  // The generated class type must be:
+  //   Outer::Locale::Facet<Outer::Locale>
+  // NOT:
+  //   Outer::outer::Locale::Facet<Outer::Locale>
+  class Locale
+  {
+  public:
+    template<typename T>
+    class Facet
+    {
+    public:
+      int value;
+    };
+  };
+
+  template<>
+  class Locale::Facet<Locale>
+  {
+  public:
+    int value;
+  };
 }

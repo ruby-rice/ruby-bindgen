@@ -154,4 +154,11 @@ void Init_Classes()
     .define_method<void(Outer::Other::User::*)(Outer::Sibling::Target)>("take_target", &Outer::Other::User::take_target,
       Arg("t"))
     .define_method<Outer::Sibling::Target(Outer::Other::User::*)()>("return_target", &Outer::Other::User::return_target);
+
+  Rice::Data_Type<Outer::Locale> rb_cOuterLocale = define_class_under<Outer::Locale>(rb_mOuter, "Locale")
+    .define_constructor(Constructor<Outer::Locale>());
+
+  Rice::Data_Type<Outer::Locale::Facet<Outer::Locale>> rb_cOuterLocaleFacetLocale = define_class_under<Outer::Locale::Facet<Outer::Locale>>(rb_cOuterLocale, "FacetLocale")
+    .define_constructor(Constructor<Outer::Locale::Facet<Outer::Locale>>())
+    .define_attr("value", &Outer::Locale::Facet<Outer::Locale>::value);
 }

@@ -177,7 +177,7 @@ The `Namer` class converts C++ names to Ruby conventions:
 
 `ruby-bindgen` extends ffi-clang's classes using Ruby refinements in `lib/ruby-bindgen/refinements/`:
 
-- **Cursor** - adds `ruby_name`, `cruby_name`, `qualified_name`, `class_name_cpp`, and methods for finding children by kind
+- **Cursor** - adds `ruby_name`, `cruby_name`, `qualified_name`, and methods for finding children by kind
 - **Type** - adds `fully_qualified_spelling` for reconstructing C++ type names with proper namespace qualification and template arguments
 - **String** - adds `camelize` and `underscore` for name conversion
 - **SourceRange** - adds `text` for extracting source text from a range

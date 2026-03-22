@@ -17,21 +17,6 @@ module FFI
         self.class.namer.cruby(self)
       end
 
-      def class_name_cpp
-        first_child = self.first&.first
-        case
-          when first_child.nil?
-            self.type.spelling
-          when first_child.kind == :cursor_type_ref
-            referee = first_child.referenced
-            # Use word boundary to only replace complete type names, not partial matches
-            # e.g., replace "any" but not "any" within "anyimpl"
-            self.type.spelling.sub(/\b#{Regexp.escape(referee.spelling)}\b/, referee.qualified_name)
-          else
-            self.type.spelling
-        end
-      end
-
       def anonymous_definer
         return nil unless self.anonymous?
 

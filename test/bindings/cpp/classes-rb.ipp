@@ -6,3 +6,10 @@ inline Rice::Data_Type<Outer::foobar::wrapper<T>> wrapper_instantiate(Rice::Modu
   return Rice::define_class_under<Outer::foobar::wrapper<T>>(parent, name)
     .define_attr("item", &Outer::foobar::wrapper<T>::item);
 }
+
+template<typename T>
+inline Rice::Data_Type<Outer::Locale::Facet<T>> Facet_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Outer::Locale::Facet<T>>(parent, name)
+    .define_attr("value", &Outer::Locale::Facet<T>::value);
+}
