@@ -1,6 +1,7 @@
 require 'set'
 require_relative 'reference_qualifier'
 require_relative 'type_index'
+require_relative 'type_speller'
 
 module RubyBindgen
   module Generators
@@ -147,6 +148,7 @@ module RubyBindgen
         @classes = Hash.new  # Maps cruby_name -> C++ type for Data_Type<T> declarations
         @reference_qualifier = ReferenceQualifier.new
         @type_index = TypeIndex.new
+        @type_speller = TypeSpeller.new(type_index: @type_index)
         @auto_generated_bases = Set.new
         @symbols = RubyBindgen::Symbols.new(config[:symbols] || {})
         @export_macros = config[:export_macros] || []
@@ -231,8 +233,7 @@ module RubyBindgen
 
       def visit_start
         # Clear caches from previous runs
-        @class_template_typedefs = {}
-        @class_static_members = {}
+        @type_speller.clear
       end
 
       def visit_end
@@ -277,7 +278,7 @@ module RubyBindgen
         @incomplete_iterators.clear
         @class_iterator_names.clear
         cursor = translation_unit.cursor
-        @printing_policy = cursor.printing_policy
+        @type_speller.printing_policy = cursor.printing_policy
 
         # Build lookups for typedef resolution and simple-name qualification.
         @type_index.build!(cursor)
@@ -440,7 +441,7 @@ module RubyBindgen
         result[nil] << auto_instantiated unless auto_instantiated.empty?
 
         # Render class
-        cpp_type = qualified_class_name_cpp(cursor)
+        cpp_type = @type_speller.qualified_class_name(cursor)
         raw_class_name = cursor.type.spelling.split("::").last
         ruby_class_name = @namer.apply_rename_types(raw_class_name, raw_class_name.camelize)
         has_incomplete_classes = !incomplete_classes_content.to_s.empty?
@@ -508,8 +509,8 @@ module RubyBindgen
             next unless (decl.location.file == cursor.location.file rescue false)
 
             # Auto-instantiate if no typedef exists
-            instantiated_type = type_spelling(type.unqualified_type)
-            instantiated_type = qualify_class_static_members(instantiated_type, cursor)
+            instantiated_type = @type_speller.type_spelling(type.unqualified_type)
+            instantiated_type = @type_speller.qualify_class_static_members(instantiated_type, cursor)
             next if @type_index.typedef_for(instantiated_type)
 
             code = auto_instantiate_template(decl, instantiated_type, type, under)
@@ -779,7 +780,7 @@ module RubyBindgen
 
         count.times.filter_map do |index|
           arg_type = specialized_type.template_argument_type(index)
-          arg_type.kind == :type_invalid ? source_fallbacks.shift : type_spelling(arg_type)
+          arg_type.kind == :type_invalid ? source_fallbacks.shift : @type_speller.type_spelling(arg_type)
         end
       end
 
@@ -968,337 +969,6 @@ module RubyBindgen
         @reference_qualifier.qualify_source_references(param, default_text, default_text_offset, qualify_decl_refs: false)
       end
 
-      # Qualify template arguments in a type spelling
-      # e.g., DataType<hfloat> -> DataType<cv::hfloat>
-      # Collects qualified names from both original and canonical types
-      def qualify_template_args(spelling, type)
-        return spelling if spelling.nil? || !spelling.include?('<')
-
-        # Build a map of simple_name -> qualified_name from both the original type
-        # (for typedefs like cv::String) and the canonical type (for concrete types)
-        qualifications = {}
-        if type
-          collect_type_qualifications(type, qualifications)
-          collect_type_qualifications(type.canonical, qualifications)
-        end
-
-        # Also look up unqualified names in the shared type index (typedefs and class templates).
-        # This handles cases like std::map<String, Value> where libclang's template_argument_type
-        # returns the canonical type (std::string) instead of the typedef name (String).
-        # Extract potential unqualified type names (not preceded by ::) and look them up.
-        spelling.scan(/(?<![:\w])([A-Z_a-z]\w*)(?!\w)/) do |match|
-          simple_name = match[0]
-          next if qualifications.key?(simple_name)  # Already have qualification from type
-          qualified_name = @type_index.qualified_name_for(simple_name)
-          qualifications[simple_name] = qualified_name if qualified_name && simple_name != qualified_name
-        end
-
-        # Apply qualifications to the spelling
-        result = spelling.dup
-        qualifications.each do |simple_name, qualified_name|
-          next if simple_name == qualified_name
-          # Replace unqualified occurrences (not preceded by :: or word char)
-          result = result.gsub(/(?<![:\w])#{Regexp.escape(simple_name)}(?!\w)/, qualified_name)
-        end
-
-        result
-      end
-
-      # Recursively collect simple_name -> qualified_name mappings from a type's template arguments
-      def collect_type_qualifications(type, qualifications)
-        return if type.nil? || type.kind == :type_invalid
-        return unless type.num_template_arguments > 0
-
-        type.num_template_arguments.times do |i|
-          arg_type = type.template_argument_type(i)
-          next if arg_type.kind == :type_invalid
-
-          # Handle pointer types - get the pointee
-          check_type = arg_type
-          check_type = check_type.pointee while check_type.kind == :type_pointer
-
-          # Get declaration info
-          decl = check_type.declaration
-          if decl.kind != :cursor_no_decl_found
-            simple_name = decl.spelling
-            # For typedefs inside class templates (like cv::Mat_<_Tp>::iterator),
-            # qualified_name returns cv::Mat_::iterator (missing template params).
-            # Use qualified_display_name of the parent to preserve template params.
-            qualified_name = if decl.kind == :cursor_typedef_decl && decl.semantic_parent.kind == :cursor_class_template
-                               "#{decl.semantic_parent.qualified_display_name}::#{simple_name}"
-                             else
-                               decl.qualified_name
-                             end
-            if !simple_name.empty? && simple_name != qualified_name
-              qualifications[simple_name] = qualified_name
-            end
-          end
-
-          # Recurse into nested template arguments
-          collect_type_qualifications(arg_type, qualifications)
-        end
-      end
-
-      # Get the fully qualified class/struct type used in generated bindings.
-      #
-      # Examples:
-      #   outer::Locale::Facet<Locale>
-      # becomes
-      #   outer::Locale::Facet<outer::Locale>
-      #
-      # This goes through type_spelling(cursor.type) instead of cursor-specific
-      # string surgery. A class cursor's first child can be an unrelated type_ref,
-      # which makes first-match substitution double-qualify nested specializations
-      # like outer::outer::Locale::Facet<outer::Locale>.
-      def qualified_class_name_cpp(cursor)
-        type_spelling(cursor.type)
-      end
-
-      # Get qualified display name for a cursor
-      # Qualifies any template arguments that need namespace prefixes
-      # Used for generating fully qualified names in enum constants, etc.
-      def qualified_display_name_cpp(cursor)
-        # For members of template specializations, use the parent's type for qualification
-        # e.g., TypeTraits<lowercase_type>::type needs lowercase_type qualified,
-        # but cursor.type is just 'const int' which has no template args
-        type = cursor.type
-        parent = cursor.semantic_parent
-        if parent && parent.type.num_template_arguments > 0
-          type = parent.type
-        end
-        qualify_template_args(cursor.qualified_display_name, type)
-      end
-
-      # Qualify dependent types within template arguments
-      # e.g., "cv::Point_<typename DataType<_Tp>::channel_type>"
-      #    -> "cv::Point_<typename cv::DataType<_Tp>::channel_type>"
-      # Also handles nested template args such as:
-      #   "typename Outer_<Outer_<T>>::type"
-      # -> "typename Tests::Outer_<Tests::Outer_<T>>::type"
-      #
-      # The source range APIs are not available here because libclang only gives us
-      # a type spelling string at this point, so we do a small balanced parse of the
-      # dependent base name and then qualify the nested template args recursively.
-      def balanced_template_suffix(text, start_index)
-        return ["", start_index] unless text[start_index] == '<'
-
-        depth = 0
-        index = start_index
-        while index < text.length
-          case text[index]
-          when '<'
-            depth += 1
-          when '>'
-            depth -= 1
-            return [text[start_index..index], index + 1] if depth == 0
-          end
-          index += 1
-        end
-
-        ["", start_index]
-      end
-
-      # Split a comma-separated template argument list while keeping nested
-      # templates, function pointer signatures, and string literals intact.
-      #
-      # Examples:
-      #   'unsigned char, 2, 1'
-      #   => ['unsigned char', '2', '1']
-      #
-      #   'void (*)(int, int)'
-      #   => ['void (*)(int, int)']
-      #
-      #   'Support::Box<Support::Tag>, callback_t'
-      #   => ['Support::Box<Support::Tag>', 'callback_t']
-      def template_argument_texts(args_text)
-        return [] if args_text.nil? || args_text.empty?
-
-        result = []
-        current = String.new
-        angle_depth = 0
-        paren_depth = 0
-        bracket_depth = 0
-        brace_depth = 0
-        quote = nil
-        escaped = false
-
-        args_text.each_char do |char|
-          current << char
-
-          if quote
-            if escaped
-              escaped = false
-            elsif char == '\\'
-              escaped = true
-            elsif char == quote
-              quote = nil
-            end
-            next
-          end
-
-          case char
-          when '"', "'"
-            quote = char
-          when '<'
-            angle_depth += 1
-          when '>'
-            angle_depth -= 1 if angle_depth > 0
-          when '('
-            paren_depth += 1
-          when ')'
-            paren_depth -= 1 if paren_depth > 0
-          when '['
-            bracket_depth += 1
-          when ']'
-            bracket_depth -= 1 if bracket_depth > 0
-          when '{'
-            brace_depth += 1
-          when '}'
-            brace_depth -= 1 if brace_depth > 0
-          when ','
-            if angle_depth.zero? && paren_depth.zero? && bracket_depth.zero? && brace_depth.zero?
-              current.chop!
-              piece = current.strip
-              result << piece unless piece.empty?
-              current = String.new
-            end
-          end
-        end
-
-        piece = current.strip
-        result << piece unless piece.empty?
-        result
-      end
-
-      # Extract only the outer template argument list from a fully resolved
-      # instantiation spelling.
-      #
-      # Examples:
-      #   'Tests::Matx<unsigned char, 2, 1>'
-      #   => 'unsigned char, 2, 1'
-      #
-      #   'Tests::CallbackBase<void (*)(int, int)>'
-      #   => 'void (*)(int, int)'
-      def template_argument_list_text(spelling)
-        start_index = spelling.index('<')
-        return nil unless start_index
-
-        suffix, = balanced_template_suffix(spelling, start_index)
-        return nil if suffix.empty?
-
-        suffix[1..-2]
-      end
-
-      def qualify_dependent_types_in_template_args(spelling)
-        return spelling unless spelling.include?('typename')
-
-        result = String.new
-        index = 0
-
-        while (match = /\btypename\b/.match(spelling, index))
-          result << spelling[index...match.end(0)]
-          index = match.end(0)
-
-          while index < spelling.length && spelling[index].match?(/\s/)
-            result << spelling[index]
-            index += 1
-          end
-
-          identifier_match = /\A([A-Za-z_][A-Za-z0-9_]*)/.match(spelling[index..])
-          unless identifier_match
-            result << spelling[index]
-            index += 1
-            next
-          end
-
-          class_name = identifier_match[1]
-          name_end = index + class_name.length
-          template_part, after_template = balanced_template_suffix(spelling, name_end)
-          unless spelling[after_template, 2] == '::'
-            result << spelling[index...after_template]
-            index = after_template
-            next
-          end
-
-          qualified_name = @type_index.qualified_name_for(class_name) || class_name
-          qualified_template_part = if template_part.empty?
-                                      ""
-                                    else
-                                      qualify_template_args(qualify_dependent_types_in_template_args(template_part), nil)
-                                    end
-
-          result << "#{qualified_name}#{qualified_template_part}::"
-          index = after_template + 2
-        end
-
-        result << spelling[index..] if index < spelling.length
-        result
-      end
-
-      def type_spellings(cursor)
-        cursor.type.arg_types.map do |arg_type|
-          type_spelling(arg_type)
-        end
-      end
-
-      # Returns a fully-qualified C++ type spelling suitable for use in generated Rice bindings.
-      # Most type kinds are handled by Type#fully_qualified_name. This method only
-      # intercepts elaborated types that need generator-level context:
-      # - Class template types: fqn resolves template params, but template builders need them generic
-      # - Typedefs inside class templates: need 'typename' keyword for dependent types
-      # - Template instantiations: need qualify_template_args post-processing with TypeIndex
-      def type_spelling(type)
-        case type.kind
-        when :type_lvalue_ref
-          "#{type_spelling(type.non_reference_type)} &"
-        when :type_rvalue_ref
-          "#{type_spelling(type.non_reference_type)} &&"
-        when :type_constant_array
-          "#{type_spelling(type.element_type)}[#{type.size}]"
-        when :type_incomplete_array
-          "#{type_spelling(type.element_type)}[]"
-        when :type_elaborated
-          type_spelling_elaborated(type)
-        else
-          type.fully_qualified_name(@printing_policy)
-        end
-      end
-
-      def type_spelling_elaborated(type)
-        decl = type.declaration
-
-        case decl.kind
-        when :cursor_class_template
-          # fqn resolves template params to concrete types (e.g., _Tp -> float),
-          # but template builder code needs the generic parameter names preserved.
-          spelling = type.spelling
-          outer_name = spelling.sub(/\s*<.*/, '')
-          qualified = outer_name.match?(/\w+::/) ? spelling : spelling.sub(decl.spelling, decl.qualified_name)
-          qualify_dependent_types_in_template_args(qualified)
-
-        when :cursor_typedef_decl, :cursor_type_alias_decl
-          if decl.semantic_parent.kind == :cursor_class_template
-            # Typedef/alias inside a class template (e.g., DataType<_Tp>::value_type).
-            # C++ requires 'typename' keyword for dependent types.
-            const_prefix = type.const_qualified? ? "const " : ""
-            parent = decl.semantic_parent
-            display = parent.qualified_display_name
-            qualified = parent.qualified_name
-            full_parent = if display.include?('<') && !display.start_with?(qualified)
-                            "#{qualified}#{display[display.index('<')..]}"
-                          else
-                            display
-                          end
-            "#{const_prefix}typename #{full_parent}::#{decl.spelling}"
-          else
-            type.fully_qualified_name(@printing_policy)
-          end
-
-        else
-          qualify_template_args(type.fully_qualified_name(@printing_policy), type)
-        end
-      end
-
       def constructor_signature(cursor)
         signature = Array.new
 
@@ -1309,19 +979,19 @@ module RubyBindgen
             # For non-namespaced templates, qualified_display_name falls back to
             # spelling which loses template args, so use display_name instead.
             parent = cursor.semantic_parent
-            class_name = qualified_display_name_cpp(parent)
+            class_name = @type_speller.qualified_display_name(parent)
             signature << class_name
-            params = type_spellings(cursor)
+            params = @type_speller.type_spellings(cursor)
             if cursor.semantic_parent&.kind == :cursor_class_template
-              params = params.map { |pt| qualify_class_template_typedefs(pt, cursor.semantic_parent) }
+              params = params.map { |pt| @type_speller.qualify_class_template_typedefs(pt, cursor.semantic_parent) }
             end
             if parent
-              params = params.map { |pt| qualify_class_static_members(pt, parent) }
+              params = params.map { |pt| @type_speller.qualify_class_static_members(pt, parent) }
             end
             signature += params
 
           when :cursor_class_decl, :cursor_struct
-            signature << qualified_display_name_cpp(cursor)
+            signature << @type_speller.qualified_display_name(cursor)
           else
             raise("Unsupported cursor kind: #{cursor.kind}")
         end
@@ -1362,9 +1032,9 @@ module RubyBindgen
             # This handles types with private (C++03) or deleted (C++11) copy constructors.
             if copyable_type?(param.type)
               # Use type_spelling to get fully qualified type name
-              qualified_type = type_spelling(param.type)
+              qualified_type = @type_speller.type_spelling(param.type)
               if param.semantic_parent&.semantic_parent&.kind == :cursor_class_template
-                qualified_type = qualify_class_template_typedefs(qualified_type, param.semantic_parent.semantic_parent)
+                qualified_type = @type_speller.qualify_class_template_typedefs(qualified_type, param.semantic_parent.semantic_parent)
               end
               # Can't static_cast to array types (e.g., using StepArray = int[3])
               decl = param.type.declaration
@@ -1430,128 +1100,29 @@ module RubyBindgen
         @reference_qualifier.qualify_source_references(default_expr, default_text, default_text_offset)
       end
 
-      # Qualify nested typedefs from a class template in a type spelling
-      # e.g., "std::reverse_iterator<iterator>" -> "std::reverse_iterator<cv::Mat_<_Tp>::iterator>"
-      def qualify_class_template_typedefs(spelling, class_template)
-        return spelling unless class_template&.kind == :cursor_class_template
-
-        # Cache typedef names per class template to avoid repeated traversals
-        @class_template_typedefs ||= {}
-        cache_key = class_template.usr
-        typedef_info = @class_template_typedefs[cache_key] ||= begin
-          names = []
-          class_template.each(false) do |child|
-            child_kind = child.kind
-            if child_kind == :cursor_typedef_decl || child_kind == :cursor_type_alias_decl
-              names << child.spelling
-            end
-          end
-          { names: names, qualified_parent: class_template.qualified_display_name }
-        end
-
-        return spelling if typedef_info[:names].empty?
-
-        result = spelling.dup
-        qualified_parent = typedef_info[:qualified_parent]
-        display_name = class_template.display_name
-        typedef_info[:names].each do |name|
-          if display_name && !display_name.empty? && display_name != qualified_parent
-            partially_qualified = /(?<![:\w])#{Regexp.escape(display_name)}::#{Regexp.escape(name)}(?![:\w])/
-            result = result.gsub(partially_qualified, "typename #{qualified_parent}::#{name}")
-          end
-
-          unqualified = /(?<![:\w])#{Regexp.escape(name)}(?![:\w])/
-          result = result.gsub(unqualified, "typename #{qualified_parent}::#{name}")
-        end
-
-        result
-      end
-
-      # Qualify bare class members used as non-type template args.
-      # Within a class like GPCPatchDescriptor, a member can write
-      # Vec<double, nFeatures> but the generated binding code is outside the
-      # class, so it needs Vec<double, GPCPatchDescriptor::nFeatures>.
-      # qualify_template_args then handles qualifying GPCPatchDescriptor to
-      # cv::optflow::GPCPatchDescriptor.
-      #
-      # Unscoped enum constants need the same treatment:
-      #   FixedBuffer<int, Size>
-      # becomes
-      #   FixedBuffer<int, Tests::EnumSized<N>::Size>
-      #
-      # Class templates need their template parameters preserved:
-      #   FixedBuffer<int, Size>
-      # becomes
-      #   FixedBuffer<int, Tests::StaticSized<N>::Size>
-      def qualify_class_static_members(spelling, class_cursor)
-        return spelling unless class_cursor
-
-        parent_kind = class_cursor.kind
-        return spelling unless parent_kind == :cursor_class_decl ||
-                              parent_kind == :cursor_struct ||
-                              parent_kind == :cursor_class_template
-
-        cache_key = class_cursor.usr
-        member_info = @class_static_members[cache_key] ||= begin
-          names = []
-          class_cursor.each(false) do |child|
-            if child.kind == :cursor_variable
-              names << child.spelling
-            elsif child.kind == :cursor_enum_decl && !child.enum_scoped?
-              child.each(false) do |enum_child|
-                names << enum_child.spelling if enum_child.kind == :cursor_enum_constant_decl
-              end
-            end
-          end
-          qualified_parent = if parent_kind == :cursor_class_template
-                               qualified_display_name_cpp(class_cursor)
-                             else
-                               class_cursor.qualified_name
-                             end
-          { names: names, qualified_parent: qualified_parent }
-        end
-
-        return spelling if member_info[:names].empty?
-
-        result = spelling.dup
-        qualified_parent = member_info[:qualified_parent]
-        display_name = class_cursor.display_name
-        member_info[:names].each do |name|
-          if display_name && !display_name.empty? && display_name != qualified_parent
-            partially_qualified = /(?<![:\w])#{Regexp.escape(display_name)}::#{Regexp.escape(name)}(?![:\w])/
-            result = result.gsub(partially_qualified, "#{qualified_parent}::#{name}")
-          end
-
-          unqualified = /(?<![:\w])#{Regexp.escape(name)}(?![:\w])/
-          result = result.gsub(unqualified, "#{qualified_parent}::#{name}")
-        end
-
-        result
-      end
-
       def method_signature(cursor)
-        param_types = type_spellings(cursor)
-        result_type = type_spelling(cursor.type.result_type)
+        param_types = @type_speller.type_spellings(cursor)
+        result_type = @type_speller.type_spelling(cursor.type.result_type)
 
         # Qualify nested typedefs from class template in result type and param types
         if cursor.semantic_parent&.kind == :cursor_class_template
-          result_type = qualify_class_template_typedefs(result_type, cursor.semantic_parent)
-          param_types = param_types.map { |pt| qualify_class_template_typedefs(pt, cursor.semantic_parent) }
+          result_type = @type_speller.qualify_class_template_typedefs(result_type, cursor.semantic_parent)
+          param_types = param_types.map { |pt| @type_speller.qualify_class_template_typedefs(pt, cursor.semantic_parent) }
         end
 
         # Qualify bare static const/constexpr members used as non-type template args
         # (e.g., nFeatures -> GPCPatchDescriptor::nFeatures)
         parent = cursor.semantic_parent
         if parent
-          result_type = qualify_class_static_members(result_type, parent)
-          param_types = param_types.map { |pt| qualify_class_static_members(pt, parent) }
+          result_type = @type_speller.qualify_class_static_members(result_type, parent)
+          param_types = param_types.map { |pt| @type_speller.qualify_class_static_members(pt, parent) }
         end
 
         signature = Array.new
         if cursor.kind == :cursor_function || cursor.static?
           signature << "#{result_type}(*)(#{param_types.join(', ')})"
         else
-          signature << "#{result_type}(#{qualified_display_name_cpp(cursor.semantic_parent)}::*)(#{param_types.join(', ')})"
+          signature << "#{result_type}(#{@type_speller.qualified_display_name(cursor.semantic_parent)}::*)(#{param_types.join(', ')})"
         end
 
         if cursor.const?
@@ -1603,7 +1174,7 @@ module RubyBindgen
         return_buffer = buffer_type?(cursor.result_type)
 
         is_template = cursor.semantic_parent.kind == :cursor_class_template
-        qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
+        qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
         result << self.render_cursor(cursor, "cxx_method",
                                      :name => name,
                                      :is_template => is_template,
@@ -1616,9 +1187,9 @@ module RubyBindgen
         if cursor.spelling == "operator[]" && cursor.result_type.kind == :type_lvalue_ref &&
            !cursor.result_type.non_reference_type.const_qualified? && !cursor.const?
           index_param = cursor.find_by_kind(false, :cursor_parm_decl).first
-          index_type = type_spelling(cursor.type.arg_type(0))
+          index_type = @type_speller.type_spelling(cursor.type.arg_type(0))
           index_name = index_param&.spelling.to_s.empty? ? "index" : index_param.spelling
-          value_type = type_spelling(cursor.result_type)
+          value_type = @type_speller.type_spelling(cursor.result_type)
           result << self.render_cursor(cursor, "operator[]",
                                        :name => name,
                                        :index_type => index_type,
@@ -1748,7 +1319,7 @@ module RubyBindgen
           @incomplete_iterators[traits[:iterator_type]] = traits
         end
 
-        qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
+        qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
         self.render_cursor(cursor, "cxx_iterator_method", :name => iterator_name,
                            :begin_method => begin_method, :end_method => end_method,
                            :signature => signature,
@@ -1780,7 +1351,7 @@ module RubyBindgen
           end
         end
 
-        result_type_spelling = type_spelling(result_type)
+        result_type_spelling = @type_speller.type_spelling(result_type)
         is_const = cursor.const?
 
         # For class templates, the result type may contain "type-parameter-X_Y" which
@@ -1798,7 +1369,7 @@ module RubyBindgen
           ruby_name = cursor.ruby_name
         end
 
-        qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
+        qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
         self.render_cursor(cursor, "conversion_function",
                            :ruby_name => ruby_name, :result_type => result_type_spelling,
                            :is_const => is_const,
@@ -1830,7 +1401,7 @@ module RubyBindgen
         anonymous_parent = enum_parent.anonymous?
         anonymous_class_scope = anonymous_parent &&
           [:cursor_class_decl, :cursor_struct, :cursor_class_template].include?(enum_scope.kind)
-        qualified_name = "#{qualified_display_name_cpp(enum_scope)}::#{cursor.spelling}"
+        qualified_name = "#{@type_speller.qualified_display_name(enum_scope)}::#{cursor.spelling}"
 
         self.render_cursor(cursor, "enum_constant_decl",
                            :anonymous_parent => anonymous_parent,
@@ -1915,7 +1486,7 @@ module RubyBindgen
         return unless cursor.public?
         return if skip_symbol?(cursor)
 
-        qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
+        qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
         self.render_cursor(cursor, "field_decl",
                            :qualified_parent => qualified_parent)
       end
@@ -1972,14 +1543,14 @@ module RubyBindgen
               # Use Type#declaration to get the typedef/class cursor directly
               target_cursor = arg1_non_ref.declaration
               target_class = target_cursor.cruby_name
-              arg_type = type_spelling(cursor.type.arg_type(1))
-              grouped[target_class][:cpp_type] ||= qualified_class_name_cpp(target_cursor)
+              arg_type = @type_speller.type_spelling(cursor.type.arg_type(1))
+              grouped[target_class][:cpp_type] ||= @type_speller.qualified_class_name(target_cursor)
               grouped[target_class][:lines] << render_template("non_member_operator_inspect",
                                                                :arg_type => arg_type).strip
             elsif cursor.type.args_size == 1
               # Unary non-member operator (e.g., operator~(const Mat& m), operator-(const Mat& m))
-              arg0_type = type_spelling(cursor.type.arg_type(0))
-              result_type = type_spelling(cursor.result_type)
+              arg0_type = @type_speller.type_spelling(cursor.type.arg_type(0))
+              result_type = @type_speller.type_spelling(cursor.result_type)
               op_symbol = cursor.spelling.sub(/^operator\s*/, '')
               # Ruby uses +@ and -@ for unary plus/minus, but ~ and ! stay as-is
               ruby_name = case op_symbol
@@ -1988,7 +1559,7 @@ module RubyBindgen
                           else op_symbol
                           end
 
-              grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
+              grouped[cruby_name][:cpp_type] ||= @type_speller.qualified_class_name(class_cursor)
               grouped[cruby_name][:lines] << render_template("non_member_operator_unary",
                                                              :ruby_name => ruby_name,
                                                              :arg0_type => arg0_type,
@@ -1996,9 +1567,9 @@ module RubyBindgen
                                                              :op_symbol => op_symbol).strip
             else
               # Binary non-member operator (e.g., operator+(const Mat& a, const Mat& b))
-              arg0_type = type_spelling(cursor.type.arg_type(0))
-              arg1_type = type_spelling(cursor.type.arg_type(1))
-              result_type = type_spelling(cursor.result_type)
+              arg0_type = @type_speller.type_spelling(cursor.type.arg_type(0))
+              arg1_type = @type_speller.type_spelling(cursor.type.arg_type(1))
+              result_type = @type_speller.type_spelling(cursor.result_type)
               op_symbol = cursor.spelling.sub(/^operator\s*/, '')
               ruby_name = cursor.ruby_name
 
@@ -2014,7 +1585,7 @@ module RubyBindgen
                 return_stmt = "return self #{op_symbol} other;"
               end
 
-              grouped[cruby_name][:cpp_type] ||= qualified_class_name_cpp(class_cursor)
+              grouped[cruby_name][:cpp_type] ||= @type_speller.qualified_class_name(class_cursor)
               grouped[cruby_name][:lines] << render_template("non_member_operator_binary",
                                                              :ruby_name => ruby_name,
                                                              :arg0_type => arg0_type,
@@ -2136,7 +1707,7 @@ module RubyBindgen
           end
         end
 
-        template_specialization = type_spelling(underlying_type)
+        template_specialization = @type_speller.type_spelling(underlying_type)
 
         # If template is defined in a different file, include its .ipp for the _instantiate builder
         unless cursor_template.file_location.file == cursor_template.translation_unit.file.name
@@ -2185,7 +1756,7 @@ module RubyBindgen
       # e.g., "Tests::Matx<unsigned char, 2, 1>" -> "MatxUnsignedChar21"
       def ruby_name_from_template(base_spelling, template_arguments)
         base_name = base_spelling.sub(/<.*>\z/, "").split("::").last.camelize
-        argument_values = template_arguments.is_a?(Array) ? template_arguments : template_argument_texts(template_arguments)
+        argument_values = template_arguments.is_a?(Array) ? template_arguments : @type_speller.template_argument_texts(template_arguments)
         args_name = argument_values.map { |argument| ruby_name_from_template_argument(argument) }.join
         @namer.apply_rename_types(base_name + args_name)
       end
@@ -2235,10 +1806,10 @@ module RubyBindgen
         return "" if base_template.location.in_system_header?
         # Skip base templates from included files — their own output handles registration
         return "" unless base_template.file_location.file == base_template.translation_unit.file.name
-        base_template_arguments_text = template_argument_list_text(base_spelling)
+        base_template_arguments_text = @type_speller.template_argument_list_text(base_spelling)
         return "" unless base_template_arguments_text
 
-        base_template_arguments = template_argument_texts(base_template_arguments_text)
+        base_template_arguments = @type_speller.template_argument_texts(base_template_arguments_text)
         return "" if base_template_arguments.empty?
 
         result = ""
@@ -2307,7 +1878,7 @@ module RubyBindgen
         children = render_children(cursor, indentation: 2, chain: true, terminate: true, strip: true,
                                            exclude_kinds: Set[:cursor_struct, :cursor_union])
         result << self.render_cursor(cursor, "union", :under => under, :children => children,
-                                     :cpp_type => qualified_class_name_cpp(cursor),
+                                     :cpp_type => @type_speller.qualified_class_name(cursor),
                                      :ruby_name => cursor.ruby_name)
         result.map { |s| s.chomp }.join("\n\n")
       end
@@ -2333,7 +1904,7 @@ module RubyBindgen
             visit_variable_constant(cursor)
           else
             # Static class fields use define_singleton_attr on Data_Type<T>
-            qualified_parent = qualified_display_name_cpp(cursor.semantic_parent)
+            qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
             self.render_cursor(cursor, "variable",
                                :qualified_parent => qualified_parent)
           end
@@ -2343,7 +1914,7 @@ module RubyBindgen
       def visit_variable_constant(cursor)
         self.render_cursor(cursor, "constant",
                            :name => cursor.spelling.upcase_first,
-                           :qualified_name => qualified_display_name_cpp(cursor))
+                           :qualified_name => @type_speller.qualified_display_name(cursor))
       end
 
       def create_project_files
