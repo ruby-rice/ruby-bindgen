@@ -69,17 +69,6 @@ module RubyBindgen
       @rename_types.lookup(*names) || names.last
     end
 
-    # Build fully qualified C++ name from a cursor by walking semantic parents.
-    def build_qualified_name(cursor)
-      qualified_name = cursor.spelling
-      parent = cursor.semantic_parent
-      while parent && !parent.kind.nil? && parent.kind != :cursor_translation_unit
-        qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty?
-        parent = parent.semantic_parent
-      end
-      qualified_name
-    end
-
     private
 
     # Handle conversion functions like operator int(), operator float()
@@ -113,8 +102,7 @@ module RubyBindgen
     # Handle operators and regular methods
     def ruby_operator_or_method(cursor)
       # Check rename_methods first (includes operator mappings merged by generator)
-      qualified_name = build_qualified_name(cursor)
-      result = @rename_methods.lookup(qualified_name, cursor.spelling)
+      result = @rename_methods.lookup(*qualified_name_candidates(cursor), cursor.spelling)
 
       case result
       when String then return result
@@ -140,6 +128,23 @@ module RubyBindgen
 
       # Unknown operator with no mapping
       raise "Unknown operator: #{spelling}"
+    end
+
+    def qualified_name_candidates(cursor)
+      candidates = []
+
+      qualified_name = cursor.qualified_name
+      candidates << qualified_name if qualified_name && !qualified_name.empty?
+
+      parent = cursor.semantic_parent
+      if parent && [:cursor_class_decl, :cursor_struct, :cursor_class_template].include?(parent.kind)
+        # parent.type.spelling collapses inline namespaces, so rename_methods can
+        # match either `cv::dnn::dnn4_v20241223::Layer::init` or `cv::dnn::Layer::init`.
+        type_qualified = "#{parent.type.spelling}::#{cursor.spelling}"
+        candidates << type_qualified unless candidates.include?(type_qualified)
+      end
+
+      candidates
     end
   end
 end

@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 require_relative './abstract_test'
+require_relative './namer_test'
 require_relative './type_index_test'
 require_relative './reference_qualifier_test'
 require_relative './rice_generator_test'

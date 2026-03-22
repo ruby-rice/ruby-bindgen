@@ -93,4 +93,50 @@ class SymbolsTest < RiceAbstractTest
     assert_includes candidates, "takeValue<7>()"
     assert_includes candidates, "Outer::takeValue<7>()"
   end
+
+  def test_build_candidates_preserves_inline_namespace_and_collapsed_parent_forms
+    parsed, = parse_cpp(<<~CPP)
+      namespace cv {
+        namespace dnn {
+          inline namespace dnn4_v20241223 {
+            class Layer {
+            public:
+              void init();
+            };
+          }
+        }
+      }
+    CPP
+
+    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_cxx_method, "init")
+    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
+
+    assert_includes candidates, "cv::dnn::dnn4_v20241223::Layer::init()"
+    assert_includes candidates, "cv::dnn::Layer::init()"
+  end
+
+  def test_build_candidates_strip_anonymous_scopes_from_qualified_names
+    parsed, = parse_cpp(<<~CPP)
+      namespace Outer {
+        enum { Value = 1 };
+      }
+    CPP
+
+    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_enum_constant_decl, "Value")
+    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
+
+    assert_includes candidates, "Outer::Value"
+    refute candidates.any? { |candidate| candidate.include?("(unnamed enum") }
+  end
+
+  def test_build_candidates_fall_back_to_macro_spelling_when_qualified_name_is_invalid
+    parsed, = parse_cpp(<<~CPP)
+      #define INCLUDED_MACRO 100
+    CPP
+
+    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_macro_definition, "INCLUDED_MACRO")
+    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
+
+    assert_equal ["INCLUDED_MACRO"], candidates
+  end
 end

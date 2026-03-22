@@ -23,17 +23,7 @@ module RubyBindgen
     # Returns candidates in priority order: exact names first, then with params.
     # Includes display_name-based candidates for template specializations.
     def build_candidates(cursor)
-      qualified_name = cursor.spelling
-      parent = cursor.semantic_parent
-      while parent && !parent.kind.nil? &&
-            parent.kind != :cursor_translation_unit &&
-            !parent.kind.to_s.start_with?("cursor_invalid")
-        # Skip anonymous parents (clang spells them as "(unnamed enum at ...)" etc.)
-        qualified_name = "#{parent.spelling}::#{qualified_name}" if parent.spelling && !parent.spelling.empty? && !parent.spelling.start_with?('(')
-        parent = parent.semantic_parent
-      end
-
-      qualified_names = [qualified_name]
+      qualified_names = [normalized_qualified_name(cursor)].compact.uniq
 
       # For class members, also build a qualified name from the parent's type spelling.
       # The type system resolves through inline namespaces (e.g., cv::debug_build_guard::_OutputArray
@@ -44,7 +34,10 @@ module RubyBindgen
         qualified_names << type_qualified unless qualified_names.include?(type_qualified)
       end
 
-      candidates = [cursor.spelling] + qualified_names
+      candidates = [cursor.spelling]
+      qualified_names.each do |qualified_name|
+        candidates << qualified_name unless candidates.include?(qualified_name)
+      end
 
       # Add display_name-based candidates for template specializations
       # (display_name includes template args, e.g., "DataType<hfloat>" or "saturate_cast<hfloat>(uchar)")
@@ -164,6 +157,21 @@ module RubyBindgen
         .gsub(/\s*\*/, '*')
         .gsub(/\s*&/, '&')
         .strip
+    end
+
+    # Use libclang's semantic qualified name directly, but drop anonymous scope
+    # segments so enum constants still match entries like `Outer::Value` instead of
+    # `Outer::(unnamed enum at ... )::Value`.
+    def normalized_qualified_name(cursor)
+      qualified_name = cursor.qualified_name
+      return cursor.spelling if qualified_name.nil? || qualified_name.empty?
+
+      qualified_name
+        .split('::')
+        .reject { |segment| segment.start_with?('(') }
+        .join('::')
+    rescue ArgumentError
+      cursor.spelling
     end
 
     def add_parameter_candidates(candidates, cursor, qualified_names)
