@@ -37,4 +37,33 @@ class ReferenceQualifierTest < RiceAbstractTest
     assert_equal 'quoted::Widget("Widget")',
                  qualifier.qualify_source_references(ctor_expr, ctor_default_text, ctor_offset)
   end
+
+  def test_qualifies_nested_type_constructor_defaults_without_overlapping_replacements
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace outer {
+        namespace nested {
+          class OriginalClassName {
+          public:
+            struct Params {
+              explicit Params(int value = 123);
+            };
+
+            explicit OriginalClassName(const OriginalClassName::Params& params = OriginalClassName::Params());
+          };
+
+          typedef OriginalClassName::Params OriginalClassName_Params;
+        }
+      }
+    CPP
+
+    qualifier = collaborators[:reference_qualifier]
+    ctor = find_cursor(parsed.translation_unit.cursor, :cursor_constructor, "OriginalClassName")
+    param = ctor.find_by_kind(false, :cursor_parm_decl).first
+    default_text, default_offset = qualifier.extract_default_text(param)
+    default_expr = find_default_expression(param)
+
+    assert_equal 'OriginalClassName::Params()', default_text
+    assert_equal 'outer::nested::OriginalClassName::Params()',
+                 qualifier.qualify_source_references(default_expr, default_text, default_offset)
+  end
 end

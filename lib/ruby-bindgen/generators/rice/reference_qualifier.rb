@@ -166,6 +166,8 @@ module RubyBindgen
           end
         end
 
+        range_replacements = collapse_same_start_replacements(range_replacements)
+
         source_text = apply_source_replacements(source_text, source_text_offset, range_replacements) unless range_replacements.empty?
 
         type_fallbacks.each do |type_fallback|
@@ -363,6 +365,26 @@ module RubyBindgen
             result.byteslice(0, start_index) +
               replacement[:replacement] +
               result.byteslice(end_index..-1).to_s
+          end
+      end
+
+      # A nested type reference can expand its start backward over the owning
+      # qualifier chain, producing a second replacement that starts at the same
+      # byte offset as the outer type reference but covers more text:
+      #   OriginalClassName
+      #   OriginalClassName::Params
+      # Keeping both corrupts the final source text, so prefer the broader span
+      # at a shared start offset.
+      def collapse_same_start_replacements(replacements)
+        replacements
+          .group_by { |replacement| replacement[:start_offset] }
+          .values
+          .map do |group|
+            group.max_by do |replacement|
+              kind_weight = replacement[:kind] == :decl ? 1 : 0
+              span_width = replacement[:end_offset] - replacement[:start_offset]
+              [kind_weight, span_width]
+            end
           end
       end
 

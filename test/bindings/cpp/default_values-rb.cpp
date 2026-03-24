@@ -164,4 +164,17 @@ void Init_DefaultValues()
 
   rb_mQuotedType.define_module_function<void(*)(quoted_type::Widget)>("call_ctor", &quoted_type::call_ctor,
     Arg("value") = static_cast<quoted_type::Widget>(quoted_type::Widget("Widget")));
+
+  Module rb_mNestedDefaults = define_module("NestedDefaults");
+
+  Rice::Data_Type<nested_defaults::OriginalClassName> rb_cNestedDefaultsOriginalClassName = define_class_under<nested_defaults::OriginalClassName>(rb_mNestedDefaults, "OriginalClassName")
+    .define_constructor(Constructor<nested_defaults::OriginalClassName, const nested_defaults::OriginalClassName::Params &>(),
+      Arg("params") = static_cast<const nested_defaults::OriginalClassName::Params &>(nested_defaults::OriginalClassName::Params()))
+    .define_singleton_function<nested_defaults::OriginalClassName(*)(const nested_defaults::OriginalClassName::Params &)>("create", &nested_defaults::OriginalClassName::create,
+      Arg("params") = static_cast<const nested_defaults::OriginalClassName::Params &>(nested_defaults::OriginalClassName::Params()));
+
+  Rice::Data_Type<nested_defaults::OriginalClassName::Params> rb_cNestedDefaultsOriginalClassNameParams = define_class_under<nested_defaults::OriginalClassName::Params>(rb_cNestedDefaultsOriginalClassName, "Params")
+    .define_constructor(Constructor<nested_defaults::OriginalClassName::Params, int>(),
+      Arg("value") = static_cast<int>(123))
+    .define_attr("value", &nested_defaults::OriginalClassName::Params::value);
 }

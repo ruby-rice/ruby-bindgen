@@ -260,3 +260,24 @@ namespace quoted_type
   void call(Widget value = Widget::named("Widget"));
   void call_ctor(Widget value = Widget("Widget"));
 }
+
+// Test nested-type constructor defaults where qualifier expansion sees both the
+// outer class and nested type. The final output must not splice overlapping
+// replacements together.
+namespace nested_defaults
+{
+  class OriginalClassName
+  {
+  public:
+    struct Params
+    {
+      explicit Params(int value = 123);
+      int value;
+    };
+
+    explicit OriginalClassName(const OriginalClassName::Params& params = OriginalClassName::Params());
+    static OriginalClassName create(const OriginalClassName::Params& params = OriginalClassName::Params());
+  };
+
+  typedef OriginalClassName::Params OriginalClassName_Params;
+}
