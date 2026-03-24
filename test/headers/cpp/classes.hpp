@@ -1,3 +1,5 @@
+#include <exception>
+
 const int GLOBAL_CONSTANT = 1;
 int globalVariable = 2;
 
@@ -136,6 +138,15 @@ namespace Outer
     NonAssignable non_assignable_field;       // read-only (deleted operator=)
     ProtectedAssign protected_assign_field;   // read-only (protected operator=)
     int array_field[3];                       // array field (currently skipped)
+  };
+
+  // Test that standard-library aliases keep their public spelling in generated
+  // signatures instead of leaking implementation details like
+  // std::__exception_ptr::exception_ptr.
+  class ExceptionPtrHolder
+  {
+  public:
+    void setException(std::exception_ptr exception);
   };
 
   // Test anonymous struct member with no field name (GCC/MSVC extension).

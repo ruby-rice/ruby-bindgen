@@ -315,6 +315,16 @@ module RubyBindgen
             type.fully_qualified_name(@printing_policy)
           end
 
+        when :cursor_no_decl_found
+          spelling = type.spelling
+          if spelling.include?('::')
+            # Preserve already-qualified public aliases such as std::exception_ptr
+            # instead of emitting canonical implementation-detail spellings.
+            qualify_template_args(spelling, type)
+          else
+            qualify_template_args(type.fully_qualified_name(@printing_policy), type)
+          end
+
         else
           qualify_template_args(type.fully_qualified_name(@printing_policy), type)
         end

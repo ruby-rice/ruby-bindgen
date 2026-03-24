@@ -100,6 +100,11 @@ void Init_Classes()
     .define_attr("protected_assign_field", &Outer::AttributeTest::protected_assign_field, Rice::AttrAccess::Read)
     .define_attr("array_field", &Outer::AttributeTest::array_field, Rice::AttrAccess::Read);
 
+  Rice::Data_Type<Outer::ExceptionPtrHolder> rb_cOuterExceptionPtrHolder = define_class_under<Outer::ExceptionPtrHolder>(rb_mOuter, "ExceptionPtrHolder")
+    .define_constructor(Constructor<Outer::ExceptionPtrHolder>())
+    .define_method<void(Outer::ExceptionPtrHolder::*)(std::exception_ptr)>("set_exception", &Outer::ExceptionPtrHolder::setException,
+      Arg("exception"));
+
   Rice::Data_Type<Outer::AnonymousMemberTest> rb_cOuterAnonymousMemberTest = define_class_under<Outer::AnonymousMemberTest>(rb_mOuter, "AnonymousMemberTest")
     .define_constructor(Constructor<Outer::AnonymousMemberTest>())
     .define_attr("z", &Outer::AnonymousMemberTest::z);
