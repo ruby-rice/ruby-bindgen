@@ -37,4 +37,25 @@ class TypeSpellerTest < RiceAbstractTest
 
     assert_equal "std::exception_ptr", collaborators[:type_speller].type_spelling(param.type)
   end
+
+  def test_preserves_dependent_typedef_inside_pointer_types
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace Tests {
+        template<typename T>
+        struct Holder {
+          typedef T value_type;
+          explicit Holder(const value_type* values);
+        };
+      }
+    CPP
+
+    class_template = find_cursor(parsed.translation_unit.cursor, :cursor_class_template, "Holder")
+    constructor = class_template.find_by_kind(false, :cursor_constructor).first
+    param = constructor.find_by_kind(false, :cursor_parm_decl).first
+
+    spelled = collaborators[:type_speller].type_spelling(param.type)
+    qualified = collaborators[:type_speller].qualify_class_template_typedefs(spelled, class_template)
+
+    assert_equal "const typename Tests::Holder<T>::value_type *", qualified
+  end
 end

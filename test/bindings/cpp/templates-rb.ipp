@@ -56,6 +56,15 @@ inline Rice::Data_Type<Tests::Transform<T>> Transform_instantiate(Rice::Module p
 }
 
 template<typename T>
+inline Rice::Data_Type<Tests::PointerAliasHolder<T>> PointerAliasHolder_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::PointerAliasHolder<T>>(parent, name)
+    .define_constructor(Constructor<Tests::PointerAliasHolder<T>>())
+    .define_constructor(Constructor<Tests::PointerAliasHolder<T>, const typename Tests::PointerAliasHolder<T>::value_type *>(),
+      Arg("values"));
+}
+
+template<typename T>
 inline Rice::Data_Type<Tests::Container<T>> Container_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::Container<T>>(parent, name)

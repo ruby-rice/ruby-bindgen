@@ -60,6 +60,8 @@ module RubyBindgen
       # - Template instantiations: need qualify_template_args post-processing with TypeIndex
       def type_spelling(type)
         case type.kind
+        when :type_pointer
+          type_spelling_pointer(type)
         when :type_lvalue_ref
           "#{type_spelling(type.non_reference_type)} &"
         when :type_rvalue_ref
@@ -173,6 +175,29 @@ module RubyBindgen
       end
 
       private
+
+      def type_spelling_pointer(type)
+        pointee = type.pointee
+
+        if pointee.kind == :type_function_proto || pointee.kind == :type_function_no_proto
+          ptr_const = type.const_qualified? ? " const" : ""
+          result_type = type_spelling(pointee.result_type)
+          arg_types = pointee.arg_types.map { |arg_type| type_spelling(arg_type) }.join(", ")
+          return "#{result_type} (*#{ptr_const})(#{arg_types})"
+        end
+
+        parts = []
+        current = type
+        while current.kind == :type_pointer
+          inner = current.pointee
+          break if inner.kind == :type_function_proto || inner.kind == :type_function_no_proto
+
+          parts << (current.const_qualified? ? "*const" : "*")
+          current = inner
+        end
+
+        "#{type_spelling(current)} #{parts.reverse.join}"
+      end
 
       # Qualify template arguments in a type spelling
       # e.g., DataType<hfloat> -> DataType<cv::hfloat>

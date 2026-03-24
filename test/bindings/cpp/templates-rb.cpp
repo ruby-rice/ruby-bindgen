@@ -35,6 +35,10 @@ void Init_Templates()
 
   Rice::Data_Type<Tests::Transform<double>> rb_cTransformd = Transform_instantiate<double>(rb_mTests, "Transformd");
 
+  Rice::Data_Type<Tests::PointerAliasHolder<float>> rb_cPointerAliasHolderf = PointerAliasHolder_instantiate<float>(rb_mTests, "PointerAliasHolderf");
+
+  Rice::Data_Type<Tests::PointerAliasHolder<double>> rb_cPointerAliasHolderd = PointerAliasHolder_instantiate<double>(rb_mTests, "PointerAliasHolderd");
+
   Rice::Data_Type<Tests::Item> rb_cTestsItem = define_class_under<Tests::Item>(rb_mTests, "Item")
     .define_constructor(Constructor<Tests::Item>())
     .define_attr("value", &Tests::Item::value);

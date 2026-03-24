@@ -95,6 +95,21 @@ namespace Tests
     typedef Transform<float> Transformf;
     typedef Transform<double> Transformd;
 
+    // Test pointer to a dependent typedef in constructor signatures.
+    // Similar to cv::Affine3<T>::Affine3(const float_type* vals).
+    template<typename T>
+    class PointerAliasHolder
+    {
+    public:
+        typedef T value_type;
+
+        PointerAliasHolder();
+        explicit PointerAliasHolder(const value_type* values);
+    };
+
+    typedef PointerAliasHolder<float> PointerAliasHolderf;
+    typedef PointerAliasHolder<double> PointerAliasHolderd;
+
     // Test auto-instantiation of class templates used as parameter types without typedefs
     template<typename T>
     class Container
