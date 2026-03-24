@@ -60,5 +60,16 @@ namespace Outer
       static KernelArg ReadOnly(int m);
       static KernelArg ReadOnly(int m, int wscale);
     };
+
+    class ParallelBackend
+    {
+    public:
+      ParallelBackend();
+    };
+
+    // Namespaced free-function overloads should also use explicit casts so
+    // MSVC can resolve the overload set.
+    void setParallelForBackend(const ParallelBackend& backend);
+    bool setParallelForBackend(const char* backend_name, bool propagate_num_threads = true);
   }
 }

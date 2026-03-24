@@ -12,21 +12,21 @@ void Init_Functions()
   define_global_function<void(*)(float)>("some_function", &someFunction,
     Arg("a"));
 
-  define_global_function<void(*)(int)>("overload", &overload,
+  define_global_function<void(*)(int)>("overload", static_cast<void(*)(int)>(&overload),
     Arg("a"));
 
-  define_global_function<void(*)(int, int)>("overload", &overload,
+  define_global_function<void(*)(int, int)>("overload", static_cast<void(*)(int, int)>(&overload),
     Arg("a"), Arg("b"));
 
-  define_global_function<void(*)(int, int, int)>("overload", &overload,
+  define_global_function<void(*)(int, int, int)>("overload", static_cast<void(*)(int, int, int)>(&overload),
     Arg("a"), Arg("b"), Arg("c") = static_cast<int>(10));
 
   define_global_function<const char *const(*)()>("get_const_string", &getConstString);
 
-  define_global_function<void(*)(const char *)>("process_string", &processString,
+  define_global_function<void(*)(const char *)>("process_string", static_cast<void(*)(const char *)>(&processString),
     Arg("str"));
 
-  define_global_function<void(*)(const char *const, int)>("process_string", &processString,
+  define_global_function<void(*)(const char *const, int)>("process_string", static_cast<void(*)(const char *const, int)>(&processString),
     Arg("str"), Arg("len"));
 
   define_global_function<void(*)(int, float, double)>("unnamed_params", &unnamedParams,

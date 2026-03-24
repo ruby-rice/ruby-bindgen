@@ -29,11 +29,11 @@ inline Rice::Data_Type<Tests::Matrix<T, Rows, Columns>> Matrix_instantiate(Rice:
       Arg("rows"), Arg("cols"))
     .template define_method<void(Tests::Matrix<T, Rows, Columns>::*)(int, const int *)>("create", &Tests::Matrix<T, Rows, Columns>::create,
       Arg("ndims"), ArgBuffer("sizes"))
-    .template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, int)>("zeros", &Tests::Matrix<T, Rows, Columns>::zeros,
+    .template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, int)>("zeros", static_cast<Tests::Matrix<T, Rows, Columns>(*)(int, int)>(&Tests::Matrix<T, Rows, Columns>::zeros),
       Arg("rows"), Arg("cols"))
-    .template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, const int *)>("zeros", &Tests::Matrix<T, Rows, Columns>::zeros,
+    .template define_singleton_function<Tests::Matrix<T, Rows, Columns>(*)(int, const int *)>("zeros", static_cast<Tests::Matrix<T, Rows, Columns>(*)(int, const int *)>(&Tests::Matrix<T, Rows, Columns>::zeros),
       Arg("ndims"), ArgBuffer("sizes"))
-    .template define_singleton_function<Tests::Matrix<T, Rows, Columns> *(*)()>("create", &Tests::Matrix<T, Rows, Columns>::create);
+    .template define_singleton_function<Tests::Matrix<T, Rows, Columns> *(*)()>("create", static_cast<Tests::Matrix<T, Rows, Columns> *(*)()>(&Tests::Matrix<T, Rows, Columns>::create));
 }
 
 template<typename T>
