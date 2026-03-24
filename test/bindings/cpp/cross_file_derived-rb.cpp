@@ -14,6 +14,8 @@ void Init_CrossFileDerived()
 
   Rice::Data_Type<CrossFile::DerivedVector<double, 4>> rb_cDerivedVector4d = DerivedVector_instantiate<double, 4>(rb_mCrossFile, "DerivedVector4d");
 
+  Rice::Data_Type<CrossFile::ScalarLike<double>> rb_cScalarLiked = ScalarLike_instantiate<double>(rb_mCrossFile, "ScalarLiked");
+
   Rice::Data_Type<CrossFile::SimpleRange> rb_cCrossFileSimpleRange = define_class_under<CrossFile::SimpleRange>(rb_mCrossFile, "SimpleRange")
     .define_attr("start", &CrossFile::SimpleRange::start)
     .define_attr("end", &CrossFile::SimpleRange::end)

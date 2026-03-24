@@ -22,6 +22,18 @@ namespace CrossFile
   // Typedef for derived - its base class BaseMatrix<double, 4> has typedef BaseMatrix4d
   typedef DerivedVector<double, 4> DerivedVector4d;
 
+  template<typename T>
+  class ScalarLike : public ForwardVec<T, 4>
+  {
+  public:
+    ScalarLike() : ForwardVec<T, 4>() {}
+  };
+
+  // Typedef for a specialization whose base template is forward-declared in a
+  // separate header. Generated code should include cross_file_base-rb.ipp,
+  // not a non-existent cross_file_forward_decl-rb.ipp.
+  typedef ScalarLike<double> ScalarLiked;
+
   // Non-member operator on BASE class type - should use BaseMatrix4d typedef (from included header)
   // Tests that non-member operators look up typedefs from @typedef_map
   inline BaseMatrix4d operator*(const BaseMatrix4d& m, double scalar)

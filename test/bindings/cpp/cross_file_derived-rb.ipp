@@ -10,6 +10,13 @@ inline Rice::Data_Type<CrossFile::DerivedVector<T, N>> DerivedVector_instantiate
 }
 
 template<typename T>
+inline Rice::Data_Type<CrossFile::ScalarLike<T>> ScalarLike_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<CrossFile::ScalarLike<T>, CrossFile::ForwardVec<T, 4>>(parent, name)
+    .define_constructor(Constructor<CrossFile::ScalarLike<T>>());
+}
+
+template<typename T>
 inline Rice::Data_Type<CrossFile::DataType<T>> DataType_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<CrossFile::DataType<T>>(parent, name);

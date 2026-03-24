@@ -1268,11 +1268,11 @@ module RubyBindgen
           # std::shared_ptr<T> → std::__shared_ptr<T> → std::__shared_ptr_access<T>).
           # Also check the base template's own namespace since resolve_base_instantiation
           # may incorrectly use the derived class's namespace (e.g., "cv::shared_ptr").
-          base_template_decl = base_ref.find_first_by_kind(false, :cursor_type_ref, :cursor_template_ref)&.referenced
+          base_template_decl = template_cursor_definition(base_ref.find_first_by_kind(false, :cursor_type_ref, :cursor_template_ref)&.referenced)
           base_in_std = base_template_decl&.location&.in_system_header?
           # Use cursor_template_ref specifically to get the base class template declaration
           # (cursor_type_ref may resolve to a template parameter like T instead)
-          base_class_template = base_ref.find_first_by_kind(false, :cursor_template_ref)&.referenced
+          base_class_template = template_cursor_definition(base_ref.find_first_by_kind(false, :cursor_template_ref)&.referenced)
           base_in_current_file = base_class_template &&
             translation_unit_file?(base_class_template)
           if base_spelling && !base_in_std
@@ -1304,8 +1304,9 @@ module RubyBindgen
         template_specialization = @template_resolver.specialization_spelling(cursor, underlying_type, cursor_template)
 
         # If template is defined in a different file, include its .ipp for the _instantiate builder
-        unless translation_unit_file?(cursor_template)
-          builder_ipp = ipp_path_for_cursor(cursor_template)
+        template_owner = template_cursor_definition(cursor_template)
+        unless translation_unit_file?(template_owner)
+          builder_ipp = ipp_path_for_cursor(template_owner)
           current_ipp = File.join(@relative_dir, "#{@basename}.ipp")
           if builder_ipp != current_ipp
             ipp_relative = Pathname.new(builder_ipp).relative_path_from(Pathname.new(@relative_dir)).to_s
@@ -1553,6 +1554,15 @@ module RubyBindgen
       # Render an ERB template with the current cursor injected into the locals.
       def render_cursor(cursor, template, local_variables = {})
         render_template(template, local_variables.merge(:cursor => cursor))
+      end
+
+      def template_cursor_definition(cursor)
+        return nil unless cursor
+
+        definition = cursor.definition
+        return cursor if definition.kind == :cursor_invalid_file || definition.kind == :cursor_no_decl_found
+
+        definition
       end
 
       # Returns [content, has_builders] where has_builders indicates if any builder templates were generated
