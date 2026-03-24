@@ -98,7 +98,6 @@ lib/ruby-bindgen/
 ├── version.rb
 ├── refinements/               # Extensions to ffi-clang classes
 │   ├── cursor.rb
-│   ├── source_range.rb
 │   ├── type.rb
 │   ├── string.rb
 └── generators/
@@ -119,15 +118,15 @@ Most generator methods delegate to ERB templates for code generation. Each templ
 For example, the Rice generator's `cxx_method.erb` template generates a `define_method` call:
 
 ```cpp
-define_method<<%= method_signature(cursor) %>("<%= cursor.ruby_name %>", &<%= cursor.qualified_name %>,
-  <%= arguments(cursor) %>).
+define_method<%= signature %>("<%= name %>", &<%= qualified_parent %>::<%= cursor.spelling %>,
+  <%= all_args.join(", ") %>)
 ```
 
 ## Key Classes
 
 ### Config
 
-The `Config` class loads the YAML configuration file and resolves platform-specific settings. It detects whether to use `clang:` or `clang-cl:` based on `RUBY_PLATFORM` (`mswin` and `mingw` use `clang-cl:`), resolves relative paths against the config file's directory, and provides hash-like access to all configuration values.
+The `Config` class loads the YAML configuration file and resolves platform-specific settings. It detects whether to use `clang:` or `clang-cl:` based on `RUBY_PLATFORM` (`mswin` uses `clang-cl:`; Linux, macOS, and MinGW use `clang:`), resolves relative paths against the config file's directory, and provides hash-like access to all configuration values.
 
 ### Inputter
 
@@ -177,10 +176,9 @@ The `Namer` class converts C++ names to Ruby conventions:
 
 `ruby-bindgen` extends ffi-clang's classes using Ruby refinements in `lib/ruby-bindgen/refinements/`:
 
-- **Cursor** - adds `ruby_name`, `cruby_name`, `qualified_name`, and methods for finding children by kind
-- **Type** - adds `fully_qualified_spelling` for reconstructing C++ type names with proper namespace qualification and template arguments
+- **Cursor** - adds `ruby_name`, `cruby_name`, and `anonymous_definer`
+- **Type** - adds `fully_qualified_name` compatibility and helpers for reconstructing C++ type names with proper namespace qualification and template arguments
 - **String** - adds `camelize` and `underscore` for name conversion
-- **SourceRange** - adds `text` for extracting source text from a range
 
 ## Rice Generator Details
 

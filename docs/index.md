@@ -2,9 +2,9 @@
 
 Wrapping C and C++ libraries by hand is a long, arduous task. For large, complex libraries it can take months. As a result, many C/C++ libraries are either never exposed to Ruby or their bindings quickly become outdated, especially in scientific and technical domains.
 
-`ruby-bindgen` and its ecosystem solve this problem by automating binding generation. For simpler libraries, it can generate ready to use bindings. For more complex libraries, it can also generate bindings but some [customizations](#customization) may be needed.
+`ruby-bindgen` and its ecosystem solve this problem by automating binding generation. For simpler libraries, it can generate ready-to-use bindings. For more complex libraries, it can also generate bindings but some [customizations](#customization) may be needed.
 
-As an example, there are older, hand-crafted Ruby [bindings](https://github.com/ruby-opencv/ruby-opencv) for [OpenCV](https://opencv.org/). However, they are based on the C API which was subsequently remove by the OpenCV project. `ruby-bindgen` was used to create new OpenCv [bindings](https://github.com/cfis/opencv-ruby) based on the new C++ API. The bindings wrap over [1,000](https://cfis.github.io/opencv-ruby/) C++ classes and almost [10,000](https://cfis.github.io/opencv-ruby/) method calls. Imagine having to do that by hand!
+As an example, there are older, hand-crafted Ruby [bindings](https://github.com/ruby-opencv/ruby-opencv) for [OpenCV](https://opencv.org/). However, they are based on the C API which was subsequently removed by the OpenCV project. `ruby-bindgen` was used to create new OpenCV [bindings](https://github.com/cfis/opencv-ruby) based on the new C++ API. The bindings wrap over [1,000](https://cfis.github.io/opencv-ruby/) C++ classes and almost [10,000](https://cfis.github.io/opencv-ruby/) method calls. Imagine having to do that by hand!
 
 ## Ecosystem
 `ruby-bindgen` is part of the C/C++ to Ruby toolchain.

@@ -124,7 +124,7 @@ C++11 `using` declarations.
 
 Concrete types and template instantiations.
 
-- Start from `fully_qualified_spelling`
+- Start from `fully_qualified_name`
 - Optionally consult `canonical.spelling`
     - Only when it does not introduce implementation types
 - Qualify template arguments using `qualify_template_args`
@@ -189,7 +189,7 @@ The current design reflects these constraints deliberately.
 
 - Qualified name helpers:
   `lib/ruby-bindgen/refinements/type.rb`
-  (`fully_qualified_spelling`)
+  (`fully_qualified_name`)
 
 - Template argument qualification:
   `lib/ruby-bindgen/generators/rice/rice.rb`

@@ -17,6 +17,7 @@ Guidelines for changing `ruby-bindgen` and its generated-output tests.
 Run all tests before updating expected files:
 
 ```bash
+bundle exec ruby -Ilib -Itest test/ffi_test.rb
 bundle exec ruby -Ilib -Itest test/rice_test.rb
 bundle exec ruby -Ilib -Itest test/cmake_test.rb
 ```
