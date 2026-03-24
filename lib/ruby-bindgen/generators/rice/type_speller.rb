@@ -1,3 +1,5 @@
+require_relative '../../type_pointer_formatter'
+
 module RubyBindgen
   module Generators
     # Builds fully qualified C++ type spellings for generated Rice code and
@@ -177,26 +179,9 @@ module RubyBindgen
       private
 
       def type_spelling_pointer(type)
-        pointee = type.pointee
-
-        if pointee.kind == :type_function_proto || pointee.kind == :type_function_no_proto
-          ptr_const = type.const_qualified? ? " const" : ""
-          result_type = type_spelling(pointee.result_type)
-          arg_types = pointee.arg_types.map { |arg_type| type_spelling(arg_type) }.join(", ")
-          return "#{result_type} (*#{ptr_const})(#{arg_types})"
+        RubyBindgen::TypePointerFormatter.pointer_spelling(type) do |child_type|
+          type_spelling(child_type)
         end
-
-        parts = []
-        current = type
-        while current.kind == :type_pointer
-          inner = current.pointee
-          break if inner.kind == :type_function_proto || inner.kind == :type_function_no_proto
-
-          parts << (current.const_qualified? ? "*const" : "*")
-          current = inner
-        end
-
-        "#{type_spelling(current)} #{parts.reverse.join}"
       end
 
       # Qualify template arguments in a type spelling

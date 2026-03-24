@@ -7,6 +7,8 @@
 # than native fqn (e.g., std::vector<Pixel>::iterator vs
 # std::vector<Pixel, std::allocator<Pixel>>::iterator).
 
+require_relative '../type_pointer_formatter'
+
 module FFI
   module Clang
     module Types
@@ -43,30 +45,9 @@ module FFI
         # qualifiers, then qualifies the base type once and appends all stars.
         # Output matches native fqn: "int **", "const char *const", etc.
         def fqn_pointer(policy)
-          pointee = self.pointee
-
-          # Function pointers — decompose and qualify each part
-          if pointee.kind == :type_function_proto || pointee.kind == :type_function_no_proto
-            ptr_const = self.const_qualified? ? " const" : ""
-            result_type = pointee.result_type.fqn_impl(policy)
-            arg_types = pointee.arg_types.map { |t| t.fqn_impl(policy) }.join(", ")
-            return "#{result_type} (*#{ptr_const})(#{arg_types})"
+          RubyBindgen::TypePointerFormatter.pointer_spelling(self) do |child_type|
+            child_type.fqn_impl(policy)
           end
-
-          # Walk the pointer chain from outermost to innermost, collecting
-          # pointer/const tokens. Outermost pointer is self.
-          parts = []
-          type = self
-          while type.kind == :type_pointer
-            inner = type.pointee
-            break if inner.kind == :type_function_proto || inner.kind == :type_function_no_proto
-            parts << (type.const_qualified? ? "*const" : "*")
-            type = inner
-          end
-
-          # parts is outermost-first: for "const int *const*" → ["*", "*const"]
-          # Reverse to get innermost-first for output: "*const*"
-          "#{type.fqn_impl(policy)} #{parts.reverse.join}"
         end
 
         def fqn_elaborated(policy)
