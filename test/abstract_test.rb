@@ -1,4 +1,5 @@
 require 'bundler/setup'
+require 'fileutils'
 
 if ENV['COVERAGE']
   require 'simplecov'
@@ -57,6 +58,7 @@ class AbstractTest < Minitest::Test
     outputter.output_paths.each do |path, content|
       generated_paths << path
       if ENV["UPDATE_EXPECTED"]
+        FileUtils.mkdir_p(File.dirname(path))
         File.open(path, 'wb') do |file|
           file << content
         end

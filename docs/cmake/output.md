@@ -77,3 +77,34 @@ target_sources(${CMAKE_PROJECT_NAME} PUBLIC
   "image-rb.cpp"
 )
 ```
+
+When `guards` are configured, the generator groups matching directories and files under raw CMake `if(...)` blocks in the generated `CMakeLists.txt`:
+
+```yaml
+guards:
+  TARGET OpenCV::dnn:
+    - opencv2/dnn
+  OpenCV_HAS_CUDA:
+    - opencv2/cuda*-rb.cpp
+```
+
+```cmake
+# Subdirectories
+add_subdirectory("core")
+
+# Sources
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+  "core-rb.cpp"
+)
+
+if(TARGET OpenCV::dnn)
+  add_subdirectory("dnn")
+endif()
+
+if(OpenCV_HAS_CUDA)
+  target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+    "cudaarithm-rb.cpp"
+    "cudaimgproc-rb.cpp"
+  )
+endif()
+```

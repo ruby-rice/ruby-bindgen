@@ -59,6 +59,7 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
 )
 
 # Subdirectories
+add_subdirectory("guards")
 
 # Sources
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE

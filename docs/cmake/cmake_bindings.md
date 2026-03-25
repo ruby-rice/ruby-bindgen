@@ -16,4 +16,4 @@ See [Output](output.md) for details on the generated files.
 
 ## Filtering
 
-See [Filtering](filtering.md) for how to exclude files from the generated CMake build.
+See [Filtering](filtering.md) for how to exclude files from the generated CMake build and how to conditionally include generated sources and directories with `guards`.

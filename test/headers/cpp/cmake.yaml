@@ -1,5 +1,11 @@
 format: CMake
 project: test_project
 
+guards:
+  TEST_HAS_CUDA:
+    - guards/cuda*-rb.cpp
+  TARGET Test::dnn:
+    - guards/dnn
+
 include_dirs:
   - "${CMAKE_CURRENT_SOURCE_DIR}/../../headers/cpp"

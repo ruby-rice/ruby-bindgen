@@ -73,3 +73,17 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 <% end -%>
 )
 <% end -%>
+<% guarded_entries.each do |entry| -%>
+if(<%= entry.condition %>)
+<% entry.directories.each do |directory| -%>
+  add_subdirectory("<%= directory.relative_path_from(directory.parent) %>")
+<% end -%>
+<% if !entry.files.empty? -%>
+  target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+<% entry.files.each do |file| -%>
+    "<%= file.relative_path_from(file.parent) %>"
+<% end -%>
+  )
+<% end -%>
+endif()
+<% end -%>

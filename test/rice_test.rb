@@ -109,6 +109,13 @@ class RiceTest < AbstractTest
     run_rice_test("nested_class_templates.hpp")
   end
 
+  def test_cmake_guards
+    run_rice_test(["guards/base.hpp",
+                   "guards/cudaarithm.hpp",
+                   "guards/cudaimgproc.hpp",
+                   "guards/dnn/layer.hpp"])
+  end
+
   def test_mappings
     run_rice_test("mappings.hpp",
                   symbols: {

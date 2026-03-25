@@ -53,6 +53,7 @@ These options apply to all formats.
 |----------------|---------|-------------|
 | `project`      | none    | Project name used in the CMake `project()` command and build target name. When provided, generates the root `CMakeLists.txt` (with project setup, Rice fetch, Ruby detection) and `CMakePresets.json`. When omitted, only subdirectory `CMakeLists.txt` files are generated — useful when you manage the root project files yourself. |
 | `include_dirs` | `[]`    | List of include directory expressions added via `target_include_directories`. These are CMake expressions written directly into `CMakeLists.txt` (e.g., `${CMAKE_CURRENT_SOURCE_DIR}/../headers`). |
+| `guards`       | `{}`    | Map of raw CMake condition expressions to arrays of generated path patterns. Matching directories are emitted inside guarded `add_subdirectory(...)` blocks; matching `*-rb.cpp` files are emitted inside guarded `target_sources(...)` blocks. Exact paths and globs are both supported. |
 
 ## Compiler Toolchain
 
