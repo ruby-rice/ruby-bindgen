@@ -77,6 +77,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "iterators-rb.cpp"
   "iterators_stl-rb.cpp"
   "mappings-rb.cpp"
+  "nested_class_templates-rb.cpp"
   "operators-rb.cpp"
   "overloads-rb.cpp"
   "template_defaults-rb.cpp"

@@ -105,6 +105,10 @@ class RiceTest < AbstractTest
     run_rice_test("inline_namespaces.hpp")
   end
 
+  def test_nested_class_templates
+    run_rice_test("nested_class_templates.hpp")
+  end
+
   def test_mappings
     run_rice_test("mappings.hpp",
                   symbols: {

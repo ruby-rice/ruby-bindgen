@@ -1573,6 +1573,15 @@ module RubyBindgen
             next :continue
           end
 
+          # Nested class templates inside class templates need the outer
+          # template parameters and dependent parent qualification to form a
+          # valid builder signature. Until that context is threaded through the
+          # builder templates, skip emitting them rather than generating
+          # invalid C++ such as Allocator::rebind<U>.
+          if class_template_cursor.semantic_parent.kind == :cursor_class_template
+            next :continue
+          end
+
           # Skip forward declarations
           if class_template_cursor.declaration? && !class_template_cursor.definition?
             next :continue
