@@ -102,6 +102,9 @@ module RubyBindgen
         qualified_parent = typedef_info[:qualified_parent]
         display_name = class_template.display_name
         typedef_info[:names].each do |name|
+          fully_qualified = /(?<![:\w])(?:typename\s+)?#{Regexp.escape(qualified_parent)}::#{Regexp.escape(name)}(?![:\w])/
+          result = result.gsub(fully_qualified, "typename #{qualified_parent}::#{name}")
+
           if display_name && !display_name.empty? && display_name != qualified_parent
             partially_qualified = /(?<![:\w])#{Regexp.escape(display_name)}::#{Regexp.escape(name)}(?![:\w])/
             result = result.gsub(partially_qualified, "typename #{qualified_parent}::#{name}")
@@ -307,7 +310,7 @@ module RubyBindgen
           spelling = type.spelling
           outer_name = spelling.sub(/\s*<.*/, '')
           qualified = outer_name.match?(/\w+::/) ? spelling : spelling.sub(decl.spelling, decl.qualified_name)
-          qualify_dependent_types_in_template_args(qualified)
+          qualify_template_args(qualify_dependent_types_in_template_args(qualified), type)
 
         when :cursor_typedef_decl, :cursor_type_alias_decl
           if decl.semantic_parent.kind == :cursor_class_template

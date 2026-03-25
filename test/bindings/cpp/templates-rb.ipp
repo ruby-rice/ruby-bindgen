@@ -118,6 +118,13 @@ inline Rice::Data_Type<Tests::SmartPtr<T>> SmartPtr_instantiate(Rice::Module par
       std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("p"));
 }
 
+template<typename T>
+inline Rice::Data_Type<Tests::SelfFactory<T>> SelfFactory_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::SelfFactory<T>>(parent, name)
+    .template define_singleton_function<Tests::SmartPtr<Tests::SelfFactory<T>>(*)()>("create", &Tests::SelfFactory<T>::create);
+}
+
 template<typename Distance>
 inline Rice::Data_Type<Tests::SearchIndex<Distance>> SearchIndex_instantiate(Rice::Module parent, const char* name)
 {

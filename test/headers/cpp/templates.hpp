@@ -235,6 +235,21 @@ namespace Tests
 
     typedef SmartPtr<Target> TargetPtr;
 
+    // Static method signatures inside class-template builders must still
+    // qualify the current specialization when it appears inside another
+    // template argument:
+    //   Tests::SmartPtr<Tests::SelfFactory<T>>
+    // not:
+    //   Tests::SmartPtr<SelfFactory<T>>
+    template<typename T>
+    class SelfFactory
+    {
+    public:
+        static SmartPtr<SelfFactory<T>> create();
+    };
+
+    typedef SelfFactory<int> SelfFactoryInt;
+
     // Test template with dependent typedef in constructor params and default values
     // that reference the class template itself (GCC 15 -Wtemplate-body)
     template<typename Distance>

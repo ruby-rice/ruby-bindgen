@@ -80,6 +80,8 @@ void Init_Templates()
 
   Rice::Data_Type<Tests::SmartPtr<Tests::Target>> rb_cTargetPtr = SmartPtr_instantiate<Tests::Target>(rb_mTests, "TargetPtr");
 
+  Rice::Data_Type<Tests::SelfFactory<int>> rb_cSelfFactoryInt = SelfFactory_instantiate<int>(rb_mTests, "SelfFactoryInt");
+
   Rice::Data_Type<Tests::L2Distance> rb_cTestsL2Distance = define_class_under<Tests::L2Distance>(rb_mTests, "L2Distance")
     .define_constructor(Constructor<Tests::L2Distance>());
 
