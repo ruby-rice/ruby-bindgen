@@ -395,6 +395,17 @@ module RubyBindgen
       # constants, embedded types, and any auto-generated template bases needed
       # before the class itself can be registered.
       def visit_class_decl(cursor)
+        # Namespace-scope forward-declared C++ classes are often completed in a
+        # different header. Emitting a Rice class here creates a Ruby constant
+        # with no superclass, and a later complete definition then conflicts.
+        # Keep nested incomplete classes on the existing special path, and keep
+        # opaque structs available for handle-style APIs.
+        if cursor.kind == :cursor_class_decl &&
+           cursor.opaque_declaration? &&
+           ![:cursor_class_decl, :cursor_struct].include?(cursor.semantic_parent.kind)
+          return
+        end
+
         # Skip explicitly listed symbols
         return if skip_symbol?(cursor)
 

@@ -175,4 +175,25 @@ class RiceGeneratorTest < RiceAbstractTest
     assert_includes rendered, "Rice::Data_Type<Tests::FunctionTemplate<&Tests::callback_ints>>"
     assert_includes rendered, "FunctionTemplate_instantiate<&Tests::callback_ints>"
   end
+
+  def test_namespace_scope_forward_declared_classes_do_not_generate_bindings
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    inputter = RubyBindgen::Inputter.new(config_dir, ["forward_declared_classes.hpp",
+                                                      "forward_declared_all_layers.hpp"])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io do
+      generator.generate
+    end
+
+    classes_cpp = outputter.output_paths.fetch(outputter.output_path("forward_declared_classes-rb.cpp"))
+    all_layers_cpp = outputter.output_paths.fetch(outputter.output_path("forward_declared_all_layers-rb.cpp"))
+
+    refute_includes classes_cpp,
+                    'define_class_under<ForwardDeclaredClasses::ActivationLayer>(rb_mForwardDeclaredClasses, "ActivationLayer")'
+    assert_includes all_layers_cpp,
+                    'define_class_under<ForwardDeclaredClasses::ActivationLayer, ForwardDeclaredClasses::Layer>(rb_mForwardDeclaredClasses, "ActivationLayer")'
+  end
 end
