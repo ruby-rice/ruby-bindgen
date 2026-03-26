@@ -328,4 +328,30 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_dependent_nested_types
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["dependent_nested_types.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_ipp = outputter.output_paths.fetch(outputter.output_path("dependent_nested_types-rb.ipp"))
+
+    assert_includes generated_ipp, "const typename Tests::PortCfg<Net>::In &"
+    assert_includes generated_ipp, "const typename Tests::PortCfg<Net>::Out &"
+    assert_includes generated_ipp, "const std::vector<typename Tests::Array<T>::HT> &"
+    refute_includes generated_ipp, "const typename PortCfg<Net>::In &"
+    refute_includes generated_ipp, "const typename PortCfg<Net>::Out &"
+    refute_includes generated_ipp, "const std::vector<Tests::Array::HT> &"
+
+    expected_cpp = outputter.output_path("dependent_nested_types-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end

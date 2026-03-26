@@ -82,6 +82,8 @@ module RubyBindgen
           "#{type_spelling(type.element_type)}[]"
         when :type_elaborated
           type_spelling_elaborated(type)
+        when :type_unexposed
+          type_spelling_unexposed(type)
         else
           type.fully_qualified_name(@printing_policy)
         end
@@ -393,13 +395,24 @@ module RubyBindgen
           if spelling.include?('::')
             # Preserve already-qualified public aliases such as std::exception_ptr
             # instead of emitting canonical implementation-detail spellings.
-            qualify_template_args(spelling, type)
+            qualify_template_args(qualify_dependent_types_in_template_args(spelling), type)
           else
             qualify_template_args(type.fully_qualified_name(@printing_policy), type)
           end
 
         else
           qualify_template_args(type.fully_qualified_name(@printing_policy), type)
+        end
+      end
+
+      def type_spelling_unexposed(type)
+        decl = type.declaration
+        spelling = type.spelling
+
+        if decl.kind == :cursor_no_decl_found && spelling.include?('::')
+          qualify_template_args(qualify_dependent_types_in_template_args(spelling), type)
+        else
+          type.fully_qualified_name(@printing_policy)
         end
       end
 
