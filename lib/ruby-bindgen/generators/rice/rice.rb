@@ -229,6 +229,15 @@ module RubyBindgen
         end
       end
 
+      # Rice bindings cannot sensibly expose callable parameters that require
+      # move-only / rvalue-reference semantics.
+      def has_unsupported_rice_param_type?(cursor)
+        (0...cursor.type.args_size).any? do |i|
+          type = cursor.type.arg_type(i)
+          type.kind == :type_rvalue_ref || unsupported_rice_callback_type?(type)
+        end
+      end
+
       # Check if the return type of a callable references a skipped symbol.
       def has_skipped_return_type?(cursor)
         type_references_skipped_symbol?(cursor.type.result_type)
@@ -241,6 +250,34 @@ module RubyBindgen
 
         # Check if any template argument type references a skipped symbol
         type_references_skipped_symbol?(cursor.type)
+      end
+
+      # Rice's std::function adapter is not reliable once callback signatures
+      # involve references or nested callbacks which themselves do. Skip those
+      # attrs instead of emitting uncompilable wrappers.
+      def unsupported_rice_attribute_type?(type)
+        unsupported_rice_callback_type?(type)
+      end
+
+      def unsupported_rice_callback_type?(type)
+        type = type.non_reference_type if reference_type?(type)
+        canonical = type.canonical
+        decl = canonical.declaration
+        return false if decl.kind == :cursor_no_decl_found
+        return false unless decl.qualified_name == "std::function"
+
+        callback_signature_unsupported?(canonical.template_argument_type(0))
+      end
+
+      def callback_signature_unsupported?(type)
+        return false if type.nil? || type.kind == :type_invalid
+        return false unless [:type_function_proto, :type_function_no_proto].include?(type.kind)
+
+        return true if reference_type?(type.result_type)
+
+        type.arg_types.any? do |arg_type|
+          reference_type?(arg_type) || unsupported_rice_callback_type?(arg_type)
+        end
       end
 
       # Reset any per-run caches before parsing begins.
@@ -386,6 +423,7 @@ module RubyBindgen
 
         # Skip constructors that take skipped types as parameters
         return if has_skipped_param_type?(cursor)
+        return if has_unsupported_rice_param_type?(cursor)
 
         signature = @signature_builder.constructor_signature(cursor)
         args = @signature_builder.arguments(cursor)
@@ -736,6 +774,7 @@ module RubyBindgen
         return if cursor.lexical_parent != cursor.semantic_parent
         return if skip_callable?(cursor)
         return if has_skipped_param_type?(cursor)
+        return if has_unsupported_rice_param_type?(cursor)
         return if has_skipped_return_type?(cursor)
 
         # Is this an iterator?
@@ -1004,6 +1043,7 @@ module RubyBindgen
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
         return if skip_callable?(cursor)
         return if has_skipped_param_type?(cursor)
+        return if has_unsupported_rice_param_type?(cursor)
         return if has_skipped_return_type?(cursor)
         return unless has_export_macro?(cursor)
 
@@ -1078,6 +1118,7 @@ module RubyBindgen
       def visit_field_decl(cursor)
         return unless cursor.public?
         return if skip_symbol?(cursor)
+        return if unsupported_rice_attribute_type?(cursor.type)
 
         qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
         self.render_cursor(cursor, "field_decl",

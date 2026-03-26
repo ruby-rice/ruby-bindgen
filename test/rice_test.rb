@@ -244,4 +244,34 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_rice_skips_unsupported_types
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["rice_unsupported_types.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("rice_unsupported_types-rb.cpp"))
+
+    assert_includes generated_cpp, 'define_class_under<Tests::UnsupportedRiceTypes>(rb_mTests, "UnsupportedRiceTypes")'
+    assert_includes generated_cpp, '.define_attr("value", &Tests::UnsupportedRiceTypes::value)'
+    refute_includes generated_cpp, "Constructor<Tests::UnsupportedRiceTypes, const std::function<void(Tests::UnsupportedRiceTypes &)> &>"
+    refute_includes generated_cpp, "Constructor<Tests::UnsupportedRiceTypes, std::unique_ptr<Tests::UnsupportedRiceTypes::Priv> &&>"
+    refute_includes generated_cpp, '"set_callback", &Tests::UnsupportedRiceTypes::setCallback'
+    refute_includes generated_cpp, '"set_priv", &Tests::UnsupportedRiceTypes::setPriv'
+    refute_includes generated_cpp, '"install", &Tests::UnsupportedRiceTypes::install'
+    refute_includes generated_cpp, '"notify", &Tests::UnsupportedRiceTypes::notify'
+    refute_includes generated_cpp, '.define_attr("callback", &Tests::UnsupportedRiceTypes::callback)'
+    refute_includes generated_cpp, '.define_attr("nested_callback", &Tests::UnsupportedRiceTypes::nestedCallback)'
+
+    expected_cpp = outputter.output_path("rice_unsupported_types-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end
