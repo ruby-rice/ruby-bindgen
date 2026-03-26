@@ -178,17 +178,44 @@ class RiceTest < AbstractTest
   def test_parse_errors_raise
     require 'tmpdir'
     Dir.mktmpdir do |dir|
-      File.write(File.join(dir, "broken.hpp"), "class Broken { int x }")
+      File.write(File.join(dir, "broken.hpp"), "#include <missing_cuda_dependency.hpp>\n")
 
       config = load_config(File.join(__dir__, "headers", "cpp"))
-      config[:match] = ["broken.hpp"]
-
       inputter = RubyBindgen::Inputter.new(dir, config[:match])
-      outputter = create_outputter("cpp")
-      generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+      visitor = Object.new
+      visitor.define_singleton_method(:visit_start) {}
+      visitor.define_singleton_method(:visit_translation_unit) { |_translation_unit, _path, _relative_path| }
+      visitor.define_singleton_method(:visit_end) {}
+      parser = RubyBindgen::Parser.new(inputter, config[:clang_args], libclang: config[:libclang])
 
-      error = assert_raises(RuntimeError) { generator.generate }
+      error = assert_raises(RubyBindgen::Parser::ParseError) do
+        capture_io { parser.generate(visitor) }
+      end
       assert_match(/Parse errors in/, error.message)
     end
+  end
+
+  def test_parse_errors_warn_and_continue
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["classes.hpp", "parse_error_continue_broken.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    _stdout, stderr = capture_io { generator.generate }
+
+    assert_match(/Warning: skipping parse_error_continue_broken\.hpp because it could not be parsed/, stderr)
+    assert_match(/Parse errors in .*parse_error_continue_broken\.hpp/, stderr)
+
+    assert outputter.output_paths.key?(outputter.output_path("classes-rb.cpp"))
+    assert outputter.output_paths.key?(outputter.output_path("classes-rb.hpp"))
+    refute outputter.output_paths.key?(outputter.output_path("parse_error_continue_broken-rb.cpp"))
+    refute outputter.output_paths.key?(outputter.output_path("parse_error_continue_broken-rb.hpp"))
+    refute File.exist?(outputter.output_path("parse_error_continue_broken-rb.cpp"))
+    refute File.exist?(outputter.output_path("parse_error_continue_broken-rb.hpp"))
+
+    validate_result(outputter)
   end
 end

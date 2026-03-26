@@ -249,6 +249,11 @@ module RubyBindgen
         @type_speller.clear
       end
 
+      def visit_parse_error(_path, relative_path, error)
+        warn "Warning: skipping #{relative_path} because it could not be parsed"
+        warn error.message
+      end
+
       # Emit the shared include header and optional project wrapper once all
       # translation units have been processed.
       def visit_end
