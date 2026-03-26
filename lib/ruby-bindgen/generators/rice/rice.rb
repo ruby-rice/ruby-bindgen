@@ -1369,8 +1369,15 @@ module RubyBindgen
         base_template_ref = base_ref.find_first_by_kind(false, :cursor_template_ref)
         return "" unless base_template_ref
 
+        base_declaration = base_ref.type.declaration
+        unless base_declaration.kind == :cursor_no_decl_found
+          specialized_template = base_declaration.specialized_template
+          return "" if specialized_template.kind == :cursor_class_template_partial_specialization
+        end
+
         base_template = base_template_ref.referenced
         return "" if base_template.location.in_system_header?
+        return "" if base_template.kind == :cursor_class_template_partial_specialization
         # Skip base templates from included files — their own output handles registration
         return "" unless translation_unit_file?(base_template)
         base_template_arguments_text = @template_resolver.template_argument_list_text(base_spelling)
@@ -1581,6 +1588,19 @@ module RubyBindgen
         definition
       end
 
+      def nested_template_builder_requires_outer_context?(cursor)
+        parent = cursor.semantic_parent
+        while parent
+          break if [:cursor_invalid_file, :cursor_no_decl_found, :cursor_translation_unit].include?(parent.kind)
+          return true if [:cursor_class_template,
+                           :cursor_class_template_partial_specialization,
+                           :cursor_function_template].include?(parent.kind)
+          parent = parent.semantic_parent
+        end
+
+        false
+      end
+
       # Returns [content, has_builders] where has_builders indicates if any builder templates were generated
       def render_class_templates(cursor, indentation: 0, strip: false)
         results = Array.new
@@ -1594,7 +1614,7 @@ module RubyBindgen
           # valid builder signature. Until that context is threaded through the
           # builder templates, skip emitting them rather than generating
           # invalid C++ such as Allocator::rebind<U>.
-          if class_template_cursor.semantic_parent.kind == :cursor_class_template
+          if nested_template_builder_requires_outer_context?(class_template_cursor)
             next :continue
           end
 

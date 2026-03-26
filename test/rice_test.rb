@@ -218,4 +218,30 @@ class RiceTest < AbstractTest
 
     validate_result(outputter)
   end
+
+  def test_template_partial_specializations
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["template_partial_specializations.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("template_partial_specializations-rb.cpp"))
+    generated_ipp = outputter.output_paths.fetch(outputter.output_path("template_partial_specializations-rb.ipp"))
+
+    refute_includes generated_ipp, "call_and_postprocess_instantiate"
+    refute_includes generated_cpp, "get_in_instantiate<Tests::Array<Tests::Mat>>"
+    refute_includes generated_cpp, "get_out_instantiate<Tests::Array<Tests::Mat>>"
+    assert_includes generated_ipp, "&Tests::KernelImpl<Impl, K>::backend"
+    refute_includes generated_ipp, "&Tests::KernelImpl<Tests::FileStorage::Impl, K>::backend"
+
+    expected_cpp = outputter.output_path("template_partial_specializations-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end

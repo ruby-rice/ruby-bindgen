@@ -45,7 +45,8 @@ module RubyBindgen
         if parent && parent.type.num_template_arguments > 0
           type = parent.type
         end
-        qualify_template_args(cursor.qualified_display_name, type)
+        qualify_template_args(cursor.qualified_display_name, type,
+                              ignored_names: template_parameter_names(cursor))
       end
 
       def type_spellings(cursor)
@@ -181,6 +182,10 @@ module RubyBindgen
 
       private
 
+      TEMPLATE_PARAMETER_KINDS = [:cursor_template_type_parameter,
+                                  :cursor_non_type_template_parameter,
+                                  :cursor_template_template_parameter].freeze
+
       def type_spelling_pointer(type)
         RubyBindgen::TypePointerFormatter.pointer_spelling(type) do |child_type|
           type_spelling(child_type)
@@ -190,7 +195,7 @@ module RubyBindgen
       # Qualify template arguments in a type spelling
       # e.g., DataType<hfloat> -> DataType<cv::hfloat>
       # Collects qualified names from both original and canonical types
-      def qualify_template_args(spelling, type)
+      def qualify_template_args(spelling, type, ignored_names: [])
         return spelling if spelling.nil? || !spelling.include?('<')
 
         qualifications = {}
@@ -201,6 +206,7 @@ module RubyBindgen
 
         spelling.scan(/(?<![:\w])([A-Z_a-z]\w*)(?!\w)/) do |match|
           simple_name = match[0]
+          next if ignored_names.include?(simple_name)
           next if qualifications.key?(simple_name)
 
           qualified_name = @type_index.qualified_name_for(simple_name)
@@ -215,6 +221,14 @@ module RubyBindgen
         end
 
         result
+      end
+
+      def template_parameter_names(cursor)
+        return [] unless cursor
+
+        cursor.find_by_kind(false, *TEMPLATE_PARAMETER_KINDS)
+              .map(&:spelling)
+              .reject(&:empty?)
       end
 
       # Recursively collect simple_name -> qualified_name mappings from a type's template arguments
