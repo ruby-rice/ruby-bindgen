@@ -302,4 +302,30 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_template_parameter_pack_constants
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["template_parameter_pack_constants.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_ipp = outputter.output_paths.fetch(outputter.output_path("template_parameter_pack_constants-rb.ipp"))
+
+    assert_includes generated_ipp, "TypeListIndexHelper<I, Target, First, Remaining...>::is_same"
+    assert_includes generated_ipp, "TypeListIndexHelper<I, Target, First, Remaining...>::value"
+    assert_includes generated_ipp, "TypeListIndex<Target, Types...>::value"
+    refute_includes generated_ipp, "TypeListIndexHelper<I, Target, First, Remaining>::is_same"
+    refute_includes generated_ipp, "TypeListIndexHelper<I, Target, First, Remaining>::value"
+    refute_includes generated_ipp, "TypeListIndex<Target, Types>::value"
+
+    expected_cpp = outputter.output_path("template_parameter_pack_constants-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end

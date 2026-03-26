@@ -42,6 +42,8 @@ module RubyBindgen
           return "#{cursor.qualified_name}<#{template_arguments.join(', ')}>" unless template_arguments.empty?
         end
 
+        display_name = qualify_template_parameter_packs(cursor.qualified_display_name, cursor)
+
         # For members of template specializations, use the parent's type for qualification
         # e.g., TypeTraits<lowercase_type>::type needs lowercase_type qualified,
         # but cursor.type is just 'const int' which has no template args
@@ -50,7 +52,7 @@ module RubyBindgen
         if parent && parent.type.num_template_arguments > 0
           type = parent.type
         end
-        qualify_template_args(cursor.qualified_display_name, type,
+        qualify_template_args(display_name, type,
                               ignored_names: template_parameter_names(cursor))
       end
 
@@ -247,6 +249,28 @@ module RubyBindgen
           declaration = template_parameter.extent.text
           declaration&.match?(/\.\.\.\s*#{Regexp.escape(name)}\b/) ? "#{name}..." : name
         end
+      end
+
+      def qualify_template_parameter_packs(spelling, cursor)
+        return spelling unless cursor
+
+        template_cursor = if cursor.kind == :cursor_class_template
+                            cursor
+                          elsif cursor.semantic_parent&.kind == :cursor_class_template
+                            cursor.semantic_parent
+                          end
+        return spelling unless template_cursor
+
+        pack_names = template_parameter_arguments(template_cursor)
+                     .select { |argument| argument.end_with?('...') }
+                     .map { |argument| argument.delete_suffix('...') }
+        return spelling if pack_names.empty?
+
+        result = spelling.dup
+        pack_names.each do |name|
+          result = result.gsub(/(?<![:\w])#{Regexp.escape(name)}(?!\.\.\.|[:\w])/, "#{name}...")
+        end
+        result
       end
 
       # Recursively collect simple_name -> qualified_name mappings from a type's template arguments

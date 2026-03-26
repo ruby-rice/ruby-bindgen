@@ -85,6 +85,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "template_defaults-rb.cpp"
   "template_inheritance-rb.cpp"
   "template_parameter_fidelity-rb.cpp"
+  "template_parameter_pack_constants-rb.cpp"
   "template_partial_specializations-rb.cpp"
   "templates-rb.cpp"
   "unions-rb.cpp"
