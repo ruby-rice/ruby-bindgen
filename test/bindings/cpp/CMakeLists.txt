@@ -84,6 +84,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "rice_unsupported_types-rb.cpp"
   "template_defaults-rb.cpp"
   "template_inheritance-rb.cpp"
+  "template_parameter_fidelity-rb.cpp"
   "template_partial_specializations-rb.cpp"
   "templates-rb.cpp"
   "unions-rb.cpp"

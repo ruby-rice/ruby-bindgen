@@ -107,7 +107,13 @@ module RubyBindgen
       def template_parameter_signature(template_parameter)
         case template_parameter.kind
         when :cursor_template_type_parameter
-          "typename #{template_parameter.spelling}"
+          declaration = template_parameter.extent.text
+          return "typename #{template_parameter_argument(template_parameter)}" if declaration.nil? || declaration.empty?
+
+          separator_offset = @reference_qualifier.top_level_default_separator_offset(declaration)
+          signature = separator_offset ? declaration.byteslice(0, separator_offset).rstrip : declaration.rstrip
+
+          signature.sub(/\A(\s*)class\b/, '\1typename')
         when :cursor_non_type_template_parameter
           declaration = template_parameter.extent.text
           return "int #{template_parameter.spelling}" if declaration.nil? || declaration.empty?
@@ -127,6 +133,16 @@ module RubyBindgen
         else
           raise("Unsupported template parameter kind: #{template_parameter.kind}")
         end
+      end
+
+      def template_parameter_argument(template_parameter)
+        name = template_parameter.spelling
+        return name if name.empty?
+
+        declaration = template_parameter.extent.text
+        return name unless declaration&.match?(/\.\.\.\s*#{Regexp.escape(name)}\b/)
+
+        "#{name}..."
       end
 
       # Split a comma-separated template argument list while keeping nested

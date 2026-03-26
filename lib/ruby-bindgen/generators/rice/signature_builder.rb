@@ -113,6 +113,9 @@ module RubyBindgen
         if parent
           result_type = @type_speller.qualify_class_static_members(result_type, parent)
           param_types = param_types.map { |pt| @type_speller.qualify_class_static_members(pt, parent) }
+          if same_self_type?(cursor.type.result_type, parent)
+            result_type = self_type_spelling(cursor.type.result_type, @type_speller.qualified_display_name(parent))
+          end
         end
 
         signature = Array.new
@@ -130,6 +133,31 @@ module RubyBindgen
       end
 
       private
+
+      def same_self_type?(type, parent)
+        check_type = type
+        check_type = check_type.non_reference_type if [:type_lvalue_ref, :type_rvalue_ref].include?(check_type.kind)
+        normalize_spelling(check_type.spelling) == normalize_spelling(parent.display_name)
+      end
+
+      def self_type_spelling(type, qualified_parent)
+        check_type = type
+        suffix = ""
+        if check_type.kind == :type_lvalue_ref
+          suffix = " &"
+          check_type = check_type.non_reference_type
+        elsif check_type.kind == :type_rvalue_ref
+          suffix = " &&"
+          check_type = check_type.non_reference_type
+        end
+
+        prefix = check_type.const_qualified? ? "const " : ""
+        "#{prefix}#{qualified_parent}#{suffix}"
+      end
+
+      def normalize_spelling(spelling)
+        spelling.to_s.gsub(/\s+/, ' ').strip
+      end
 
       # Finds the default value expression for a parameter and returns it with qualified names.
       #

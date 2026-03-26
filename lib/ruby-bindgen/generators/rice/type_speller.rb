@@ -37,6 +37,11 @@ module RubyBindgen
       # Qualifies any template arguments that need namespace prefixes.
       # Used for generating fully qualified names in enum constants, etc.
       def qualified_display_name(cursor)
+        if cursor&.kind == :cursor_class_template
+          template_arguments = template_parameter_arguments(cursor)
+          return "#{cursor.qualified_name}<#{template_arguments.join(', ')}>" unless template_arguments.empty?
+        end
+
         # For members of template specializations, use the parent's type for qualification
         # e.g., TypeTraits<lowercase_type>::type needs lowercase_type qualified,
         # but cursor.type is just 'const int' which has no template args
@@ -231,6 +236,19 @@ module RubyBindgen
               .reject(&:empty?)
       end
 
+      def template_parameter_arguments(cursor)
+        return [] unless cursor
+
+        cursor.find_by_kind(false, *TEMPLATE_PARAMETER_KINDS)
+              .filter_map do |template_parameter|
+          name = template_parameter.spelling
+          next if name.empty?
+
+          declaration = template_parameter.extent.text
+          declaration&.match?(/\.\.\.\s*#{Regexp.escape(name)}\b/) ? "#{name}..." : name
+        end
+      end
+
       # Recursively collect simple_name -> qualified_name mappings from a type's template arguments
       def collect_type_qualifications(type, qualifications)
         return if type.nil? || type.kind == :type_invalid
@@ -246,13 +264,17 @@ module RubyBindgen
           decl = check_type.declaration
           if decl.kind != :cursor_no_decl_found
             simple_name = decl.spelling
-            qualified_name = if decl.kind == :cursor_typedef_decl && decl.semantic_parent.kind == :cursor_class_template
-                               "#{decl.semantic_parent.qualified_display_name}::#{simple_name}"
-                             else
-                               decl.qualified_name
-                             end
-            if !simple_name.empty? && simple_name != qualified_name
-              qualifications[simple_name] = qualified_name
+            if TEMPLATE_PARAMETER_KINDS.include?(decl.kind)
+              qualifications[simple_name] = simple_name unless simple_name.empty?
+            else
+              qualified_name = if decl.kind == :cursor_typedef_decl && decl.semantic_parent.kind == :cursor_class_template
+                                 "#{decl.semantic_parent.qualified_display_name}::#{simple_name}"
+                               else
+                                 decl.qualified_name
+                               end
+              if !simple_name.empty? && simple_name != qualified_name
+                qualifications[simple_name] = qualified_name
+              end
             end
           end
 

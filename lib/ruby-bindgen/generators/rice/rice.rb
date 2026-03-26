@@ -668,7 +668,8 @@ module RubyBindgen
                                                .join(", ")
 
         # Build fully qualified type using template params (e.g., Tests::Matrix<T, Rows, Columns>)
-        param_names = template_parameters.map(&:spelling).join(", ")
+        param_names = template_parameters.map { |template_parameter| @template_resolver.template_parameter_argument(template_parameter) }
+                                        .join(", ")
         fully_qualified_type = "#{cursor.qualified_name}<#{param_names}>"
 
         # Determine containing module

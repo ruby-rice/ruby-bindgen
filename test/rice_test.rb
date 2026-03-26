@@ -274,4 +274,32 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_template_parameter_fidelity
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["template_parameter_fidelity.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_ipp = outputter.output_paths.fetch(outputter.output_path("template_parameter_fidelity-rb.ipp"))
+
+    assert_includes generated_ipp, "template<typename Net>"
+    refute_includes generated_ipp, "TemplateParamShadow<Support::Net>"
+    refute_includes generated_ipp, "(const Support::Net &)"
+
+    assert_includes generated_ipp, "template<typename... Ts>"
+    assert_includes generated_ipp, "define_class_under<Tests::ParameterPackHolder<Ts...>>(parent, name)"
+    assert_includes generated_ipp, "Constructor<Tests::ParameterPackHolder<Ts...>, const Tests::ParameterPackHolder<Ts...> &>()"
+    assert_includes generated_ipp, 'define_method<void(Tests::ParameterPackHolder<Ts...>::*)(Tests::ParameterPackHolder<Ts...> &)>("swap"'
+
+    expected_cpp = outputter.output_path("template_parameter_fidelity-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end
