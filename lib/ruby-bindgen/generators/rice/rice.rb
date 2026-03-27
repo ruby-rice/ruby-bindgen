@@ -770,10 +770,12 @@ module RubyBindgen
                                     :cursor_non_type_template_parameter,
                                     :cursor_template_template_parameter]
 
+        raw_template_parameters = cursor.find_by_kind(false, *template_parameter_kinds)
+
         # Filter out unnamed template parameters (e.g., `typename = void` default params)
         # — they have empty spelling and produce invalid C++ like `<T, >`
-        template_parameters = cursor.find_by_kind(false, *template_parameter_kinds)
-                                    .reject { |p| p.spelling.empty? }
+        template_parameters = raw_template_parameters.reject { |p| p.spelling.empty? }
+        return if template_parameters.empty? && raw_template_parameters.any?
         template_signature = template_parameters.map { |template_parameter| @template_resolver.template_parameter_signature(template_parameter) }
                                                .join(", ")
 
@@ -1848,7 +1850,8 @@ module RubyBindgen
             next :continue
           end
 
-          results << visit_class_template_builder(class_template_cursor)
+          builder = visit_class_template_builder(class_template_cursor)
+          results << builder if builder
         end
         content = merge_children({ nil => results }, indentation: indentation, strip: strip)
         has_builders = !results.empty? && !content.strip.empty?

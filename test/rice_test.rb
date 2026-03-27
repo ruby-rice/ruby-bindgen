@@ -402,9 +402,13 @@ class RiceTest < AbstractTest
     assert_includes generated_ipp, "TypeListIndexHelper<I, Target, First, Remaining...>::is_same"
     assert_includes generated_ipp, "TypeListIndexHelper<I, Target, First, Remaining...>::value"
     assert_includes generated_ipp, "TypeListIndex<Target, Types...>::value"
+    assert_includes generated_ipp, "IntegerSequence<I...>::size"
     refute_includes generated_ipp, "TypeListIndexHelper<I, Target, First, Remaining>::is_same"
     refute_includes generated_ipp, "TypeListIndexHelper<I, Target, First, Remaining>::value"
     refute_includes generated_ipp, "TypeListIndex<Target, Types>::value"
+    refute_includes generated_ipp, "IntegerSequence<I>::size"
+    refute_includes generated_ipp, "UnnamedTypePackPrimary_instantiate"
+    refute_includes generated_ipp, "template<>"
 
     expected_cpp = outputter.output_path("template_parameter_pack_constants-rb.cpp")
     if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)

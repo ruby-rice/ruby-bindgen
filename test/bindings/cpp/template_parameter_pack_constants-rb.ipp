@@ -14,3 +14,10 @@ inline Rice::Data_Type<Tests::TypeListIndex<Target, Types...>> TypeListIndex_ins
   return Rice::define_class_under<Tests::TypeListIndex<Target, Types...>>(parent, name)
     .define_constant("Value", Tests::TypeListIndex<Target, Types...>::value);
 }
+
+template<int... I>
+inline Rice::Data_Type<Tests::IntegerSequence<I...>> IntegerSequence_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::IntegerSequence<I...>>(parent, name)
+    .define_constant("Size", Tests::IntegerSequence<I...>::size);
+}

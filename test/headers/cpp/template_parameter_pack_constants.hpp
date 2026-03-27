@@ -17,4 +17,16 @@ class TypeListIndex
 public:
   static constexpr std::size_t value = TypeListIndexHelper<0, Target, Types...>::value;
 };
+
+template<typename...>
+class UnnamedTypePackPrimary
+{
+};
+
+template<int... I>
+class IntegerSequence
+{
+public:
+  static constexpr std::size_t size = sizeof...(I);
+};
 }
