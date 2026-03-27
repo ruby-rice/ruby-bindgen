@@ -256,7 +256,7 @@ module RubyBindgen
       # involve references or nested callbacks which themselves do. Skip those
       # attrs instead of emitting uncompilable wrappers.
       def unsupported_rice_attribute_type?(type)
-        unsupported_rice_callback_type?(type)
+        reference_type?(type) || unsupported_rice_callback_type?(type)
       end
 
       def unsupported_rice_callback_type?(type)

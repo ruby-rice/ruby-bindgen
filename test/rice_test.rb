@@ -448,4 +448,26 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_reference_fields_are_skipped
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["reference_fields.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("reference_fields-rb.cpp"))
+
+    refute_includes generated_cpp, ".define_attr(\"ref\", &Tests::ReferenceField::ref)"
+    assert_includes generated_cpp, ".define_attr(\"value\", &Tests::ReferenceField::value)"
+
+    expected_cpp = outputter.output_path("reference_fields-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end
