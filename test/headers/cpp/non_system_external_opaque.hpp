@@ -1,0 +1,4 @@
+namespace External
+{
+  class LocalOpaque;
+}

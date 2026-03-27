@@ -236,12 +236,12 @@ module RubyBindgen
           type = cursor.type.arg_type(i)
           type.kind == :type_rvalue_ref ||
             unsupported_rice_callback_type?(type) ||
-            unsupported_rice_incomplete_system_type?(type)
+            unsupported_rice_opaque_namespace_type?(type)
         end
       end
 
       def has_unsupported_rice_return_type?(cursor)
-        unsupported_rice_incomplete_system_type?(cursor.type.result_type)
+        unsupported_rice_opaque_namespace_type?(cursor.type.result_type)
       end
 
       # Check if the return type of a callable references a skipped symbol.
@@ -267,15 +267,20 @@ module RubyBindgen
           unsupported_rice_vector_element_type?(type)
       end
 
-      def unsupported_rice_incomplete_system_type?(type)
+      # Namespace-scope forward declarations can be compile-time traps for Rice
+      # when methods expose them by value/reference but no complete definition is
+      # available (for example optional backend types like plaidml::edsl::Tensor).
+      # Keep nested pimpl-style forward declarations on the existing path.
+      def unsupported_rice_opaque_namespace_type?(type)
         return false if [:type_pointer, :type_member_pointer].include?(type.kind)
         return false if type.spelling.start_with?("std::")
 
         type = type.non_reference_type if reference_type?(type)
+        return false if type.spelling.include?("<") || type.canonical.spelling.include?("<")
+
         decl = type.canonical.declaration
         return false if decl.kind == :cursor_no_decl_found
         return false unless decl.opaque_declaration?
-        return false unless decl.location.in_system_header?
         return false if decl.qualified_name&.start_with?("std::", "__gnu_cxx::")
         return false if [:cursor_class_decl, :cursor_struct].include?(decl.semantic_parent.kind)
 

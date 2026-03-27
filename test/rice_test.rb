@@ -305,6 +305,35 @@ class RiceTest < AbstractTest
     end
   end
 
+  def test_non_system_incomplete_references_are_skipped
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["non_system_incomplete_refs.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("non_system_incomplete_refs-rb.cpp"))
+
+    assert_includes generated_cpp, 'define_class_under<Tests::NonSystemIncompleteRefs>(rb_mTests, "NonSystemIncompleteRefs")'
+    assert_includes generated_cpp, '.define_constructor(Constructor<Tests::NonSystemIncompleteRefs>())'
+    assert_includes generated_cpp, '"value_ref", &Tests::NonSystemIncompleteRefs::valueRef'
+    assert_includes generated_cpp, '"value_const_ref", &Tests::NonSystemIncompleteRefs::valueConstRef'
+    assert_includes generated_cpp, '.define_attr("value", &Tests::NonSystemIncompleteRefs::value)'
+    refute_includes generated_cpp, "Constructor<Tests::NonSystemIncompleteRefs, const External::LocalOpaque &>"
+    refute_includes generated_cpp, '"in_opaque", &Tests::NonSystemIncompleteRefs::inOpaque'
+    refute_includes generated_cpp, '"out_opaque", &Tests::NonSystemIncompleteRefs::outOpaque'
+    refute_includes generated_cpp, '"set_opaque", &Tests::NonSystemIncompleteRefs::setOpaque'
+
+    expected_cpp = outputter.output_path("non_system_incomplete_refs-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
+
   def test_template_parameter_fidelity
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
