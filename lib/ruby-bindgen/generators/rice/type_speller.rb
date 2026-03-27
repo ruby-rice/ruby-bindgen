@@ -189,6 +189,19 @@ module RubyBindgen
         result
       end
 
+      def preserve_template_parameter_names(spelling, template_cursor)
+        return spelling unless template_cursor&.kind == :cursor_class_template
+
+        result = spelling.dup
+        template_parameter_names(template_cursor).each do |name|
+          qualified_name = @type_index.qualified_name_for(name)
+          next if qualified_name.nil? || qualified_name == name
+
+          result = result.gsub(/(?<![:\w])#{Regexp.escape(qualified_name)}(?![:\w])/, name)
+        end
+        result
+      end
+
       private
 
       TEMPLATE_PARAMETER_KINDS = [:cursor_template_type_parameter,

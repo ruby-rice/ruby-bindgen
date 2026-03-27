@@ -70,6 +70,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "cross_file_derived-rb.cpp"
   "default_values-rb.cpp"
   "dependent_nested_types-rb.cpp"
+  "dependent_template_parameter_fidelity-rb.cpp"
   "enums-rb.cpp"
   "filtering-rb.cpp"
   "functions-rb.cpp"

@@ -51,6 +51,9 @@ module RubyBindgen
           if parent
             params = params.map { |pt| @type_speller.qualify_class_static_members(pt, parent) }
           end
+          if parent&.kind == :cursor_class_template
+            params = params.map { |pt| @type_speller.preserve_template_parameter_names(pt, parent) }
+          end
           signature += params
 
         when :cursor_class_decl, :cursor_struct
@@ -116,6 +119,10 @@ module RubyBindgen
           if same_self_type?(cursor.type.result_type, parent)
             result_type = self_type_spelling(cursor.type.result_type, @type_speller.qualified_display_name(parent))
           end
+        end
+        if parent&.kind == :cursor_class_template
+          result_type = @type_speller.preserve_template_parameter_names(result_type, parent)
+          param_types = param_types.map { |pt| @type_speller.preserve_template_parameter_names(pt, parent) }
         end
 
         signature = Array.new
