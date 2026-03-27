@@ -234,8 +234,14 @@ module RubyBindgen
       def has_unsupported_rice_param_type?(cursor)
         (0...cursor.type.args_size).any? do |i|
           type = cursor.type.arg_type(i)
-          type.kind == :type_rvalue_ref || unsupported_rice_callback_type?(type)
+          type.kind == :type_rvalue_ref ||
+            unsupported_rice_callback_type?(type) ||
+            unsupported_rice_incomplete_system_type?(type)
         end
+      end
+
+      def has_unsupported_rice_return_type?(cursor)
+        unsupported_rice_incomplete_system_type?(cursor.type.result_type)
       end
 
       # Check if the return type of a callable references a skipped symbol.
@@ -259,6 +265,21 @@ module RubyBindgen
         reference_type?(type) ||
           unsupported_rice_callback_type?(type) ||
           unsupported_rice_vector_element_type?(type)
+      end
+
+      def unsupported_rice_incomplete_system_type?(type)
+        return false if [:type_pointer, :type_member_pointer].include?(type.kind)
+        return false if type.spelling.start_with?("std::")
+
+        type = type.non_reference_type if reference_type?(type)
+        decl = type.canonical.declaration
+        return false if decl.kind == :cursor_no_decl_found
+        return false unless decl.opaque_declaration?
+        return false unless decl.location.in_system_header?
+        return false if decl.qualified_name&.start_with?("std::", "__gnu_cxx::")
+        return false if [:cursor_class_decl, :cursor_struct].include?(decl.semantic_parent.kind)
+
+        true
       end
 
       def unsupported_rice_vector_element_type?(type)
@@ -875,6 +896,7 @@ module RubyBindgen
         return if has_skipped_param_type?(cursor)
         return if has_unsupported_rice_param_type?(cursor)
         return if has_skipped_return_type?(cursor)
+        return if has_unsupported_rice_return_type?(cursor)
 
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
@@ -1183,6 +1205,7 @@ module RubyBindgen
         return if has_skipped_param_type?(cursor)
         return if has_unsupported_rice_param_type?(cursor)
         return if has_skipped_return_type?(cursor)
+        return if has_unsupported_rice_return_type?(cursor)
         return unless has_export_macro?(cursor)
 
         if cursor.spelling.start_with?('operator') && !cursor.spelling.match?(/^operator\w/)

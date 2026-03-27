@@ -88,6 +88,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "partial_namespace_template_args-rb.cpp"
   "reference_fields-rb.cpp"
   "rice_unsupported_types-rb.cpp"
+  "system_incomplete_refs-rb.cpp"
   "template_defaults-rb.cpp"
   "template_inheritance-rb.cpp"
   "template_parameter_fidelity-rb.cpp"
