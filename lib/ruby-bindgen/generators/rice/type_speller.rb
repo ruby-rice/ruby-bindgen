@@ -110,14 +110,26 @@ module RubyBindgen
 
         result = spelling.dup
         qualified_parent = typedef_info[:qualified_parent]
+        qualified_name = class_template.qualified_name
         display_name = class_template.display_name
+        simple_name = class_template.spelling
         typedef_info[:names].each do |name|
           fully_qualified = /(?<![:\w])(?:typename\s+)?#{Regexp.escape(qualified_parent)}::#{Regexp.escape(name)}(?![:\w])/
           result = result.gsub(fully_qualified, "typename #{qualified_parent}::#{name}")
 
+          if qualified_name && !qualified_name.empty? && qualified_name != qualified_parent
+            qualified_without_args = /(?<![:\w])#{Regexp.escape(qualified_name)}::#{Regexp.escape(name)}(?![:\w])/
+            result = result.gsub(qualified_without_args, "typename #{qualified_parent}::#{name}")
+          end
+
           if display_name && !display_name.empty? && display_name != qualified_parent
             partially_qualified = /(?<![:\w])#{Regexp.escape(display_name)}::#{Regexp.escape(name)}(?![:\w])/
             result = result.gsub(partially_qualified, "typename #{qualified_parent}::#{name}")
+          end
+
+          if simple_name && !simple_name.empty?
+            uninstantiated_class = /(?<![:\w])#{Regexp.escape(simple_name)}::#{Regexp.escape(name)}(?![:\w])/
+            result = result.gsub(uninstantiated_class, "typename #{qualified_parent}::#{name}")
           end
 
           unqualified = /(?<![:\w])#{Regexp.escape(name)}(?![:\w])/

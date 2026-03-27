@@ -64,6 +64,7 @@ add_subdirectory("guards")
 # Sources
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "buffers-rb.cpp"
+  "class_template_typedef_qualification-rb.cpp"
   "classes-rb.cpp"
   "constructors-rb.cpp"
   "cross_file_base-rb.cpp"
