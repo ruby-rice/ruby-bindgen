@@ -239,6 +239,14 @@ module RubyBindgen
         qualifications.each do |simple_name, qualified_name|
           next if simple_name == qualified_name
 
+          qualified_segments = qualified_name.split('::')
+          if qualified_segments.length > 2
+            (1...(qualified_segments.length - 1)).each do |index|
+              partial_name = qualified_segments[index..].join('::')
+              result = result.gsub(/(?<![:\w])#{Regexp.escape(partial_name)}(?![:\w])/, qualified_name)
+            end
+          end
+
           result = result.gsub(/(?<![:\w])#{Regexp.escape(simple_name)}(?!\w)/, qualified_name)
         end
 

@@ -83,6 +83,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "nested_class_templates-rb.cpp"
   "operators-rb.cpp"
   "overloads-rb.cpp"
+  "partial_namespace_template_args-rb.cpp"
   "rice_unsupported_types-rb.cpp"
   "template_defaults-rb.cpp"
   "template_inheritance-rb.cpp"

@@ -378,4 +378,30 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_partial_namespace_template_args
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["partial_namespace_template_args.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("partial_namespace_template_args-rb.cpp"))
+
+    assert_includes generated_cpp, "Constructor<cv::detail::CompileArgTag<cv::gapi::oak::ColorCameraParams>>()"
+    assert_includes generated_cpp, "Constructor<cv::detail::CompileArgTag<cv::gapi::oak::EncoderConfig>>()"
+    assert_includes generated_cpp, "&cv::detail::CompileArgTag<cv::gapi::oak::ColorCameraParams>::tag"
+    assert_includes generated_cpp, "&cv::detail::CompileArgTag<cv::gapi::oak::EncoderConfig>::tag"
+    refute_includes generated_cpp, "CompileArgTag<gapi::oak::ColorCameraParams>"
+    refute_includes generated_cpp, "CompileArgTag<gapi::oak::EncoderConfig>"
+
+    expected_cpp = outputter.output_path("partial_namespace_template_args-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end
