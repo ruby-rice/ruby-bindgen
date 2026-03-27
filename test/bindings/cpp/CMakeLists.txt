@@ -95,5 +95,6 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "templates-rb.cpp"
   "unions-rb.cpp"
   "unresolved_inline_calls-rb.cpp"
+  "vector_variant_attrs-rb.cpp"
   "version_guards-rb.cpp"
 )

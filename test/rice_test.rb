@@ -470,4 +470,26 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_vector_variant_attrs_are_skipped
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["vector_variant_attrs.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("vector_variant_attrs-rb.cpp"))
+
+    refute_includes generated_cpp, ".define_attr(\"values\", &Tests::VariantVectorHolder::values)"
+    assert_includes generated_cpp, ".define_attr(\"numbers\", &Tests::VariantVectorHolder::numbers)"
+
+    expected_cpp = outputter.output_path("vector_variant_attrs-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end

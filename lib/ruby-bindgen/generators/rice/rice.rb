@@ -256,7 +256,78 @@ module RubyBindgen
       # involve references or nested callbacks which themselves do. Skip those
       # attrs instead of emitting uncompilable wrappers.
       def unsupported_rice_attribute_type?(type)
-        reference_type?(type) || unsupported_rice_callback_type?(type)
+        reference_type?(type) ||
+          unsupported_rice_callback_type?(type) ||
+          unsupported_rice_vector_element_type?(type)
+      end
+
+      def unsupported_rice_vector_element_type?(type)
+        type = type.non_reference_type if reference_type?(type)
+        canonical = type.canonical
+        decl = canonical.declaration
+        return false if decl.kind == :cursor_no_decl_found
+        return false unless vector_like_type?(decl)
+
+        element_type = canonical.template_argument_type(0)
+        return false if element_type.nil? || element_type.kind == :type_invalid
+
+        !rice_equality_supported?(element_type)
+      end
+
+      def vector_like_type?(decl)
+        decl.spelling == "vector" || decl.qualified_name == "std::vector"
+      end
+
+      def variant_like_type?(decl)
+        decl.spelling == "variant" || decl.qualified_name&.end_with?("::variant")
+      end
+
+      def rice_equality_supported?(type)
+        type = type.non_reference_type if reference_type?(type)
+        type = type.canonical
+
+        return true if FUNDAMENTAL_TYPES.include?(type.kind) || type.kind == :type_enum
+        return true if [:type_pointer, :type_member_pointer].include?(type.kind)
+
+        decl = type.declaration
+        return true if decl.kind == :cursor_no_decl_found
+        return true if comparable_std_type?(decl)
+
+        if variant_like_type?(decl)
+          return (0...type.num_template_arguments).all? do |i|
+            arg_type = type.template_argument_type(i)
+            next true if arg_type.kind == :type_invalid
+
+            rice_equality_supported?(arg_type)
+          end
+        end
+
+        has_equality_operator?(decl)
+      end
+
+      def comparable_std_type?(decl)
+        ["basic_string", "string", "monostate"].include?(decl.spelling) ||
+          ["std::string", "std::monostate"].include?(decl.qualified_name)
+      end
+
+      def has_equality_operator?(decl)
+        return true if decl.find_by_kind(false, :cursor_cxx_method).any? do |method|
+          method.spelling == "operator==" && method.type.args_size == 1
+        end
+
+        @translation_unit_cursor.find_by_kind(true, :cursor_function, :cursor_function_template).any? do |function|
+          next false unless function.spelling == "operator=="
+          next false unless function.type.args_size == 2
+
+          arg_declarations = 2.times.map do |index|
+            unwrapped_indirection_type(function.type.arg_type(index)).canonical.declaration
+          end
+
+          arg_declarations.all? do |arg_decl|
+            arg_decl.kind != :cursor_no_decl_found &&
+              (arg_decl == decl || arg_decl.qualified_name == decl.qualified_name)
+          end
+        end
       end
 
       def unsupported_rice_callback_type?(type)
