@@ -334,6 +334,30 @@ class RiceTest < AbstractTest
     end
   end
 
+  def test_rice_skips_unsupported_vector_returns
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["unsupported_vector_returns.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("unsupported_vector_returns-rb.cpp"))
+
+    assert_includes generated_cpp, 'define_class_under<Tests::UnsupportedVectorReturns>(rb_mTests, "UnsupportedVectorReturns")'
+    assert_includes generated_cpp, '.define_constructor(Constructor<Tests::UnsupportedVectorReturns>())'
+    refute_includes generated_cpp, '"items", &Tests::UnsupportedVectorReturns::items'
+    refute_includes generated_cpp, 'define_method("to_items", []('
+
+    expected_cpp = outputter.output_path("unsupported_vector_returns-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
+
   def test_template_parameter_fidelity
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
