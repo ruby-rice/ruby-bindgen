@@ -75,6 +75,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "enums-rb.cpp"
   "filtering-rb.cpp"
   "functions-rb.cpp"
+  "implicit_default_constructor-rb.cpp"
   "incomplete_types-rb.cpp"
   "inheritance-rb.cpp"
   "inline_namespaces-rb.cpp"

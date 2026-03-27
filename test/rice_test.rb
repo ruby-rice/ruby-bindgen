@@ -492,4 +492,25 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_implicit_default_constructor_is_skipped_for_reference_members
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["implicit_default_constructor.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("implicit_default_constructor-rb.cpp"))
+
+    refute_includes generated_cpp, ".define_constructor(Constructor<Tests::NonDefaultConstructible>())"
+
+    expected_cpp = outputter.output_path("implicit_default_constructor-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end

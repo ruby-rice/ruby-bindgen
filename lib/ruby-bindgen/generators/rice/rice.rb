@@ -351,6 +351,12 @@ module RubyBindgen
         end
       end
 
+      def implicit_default_constructor_available?(cursor)
+        cursor.find_by_kind(false, :cursor_field_decl).none? do |field|
+          reference_type?(field.type)
+        end
+      end
+
       # Reset any per-run caches before parsing begins.
       def visit_start
         # Clear caches from previous runs
@@ -555,7 +561,10 @@ module RubyBindgen
         # Are there any constructors? If not, C++ will define one implicitly
         # (but not for incomplete/opaque types which can't be instantiated)
         constructors = cursor.find_by_kind(false, :cursor_constructor)
-        if !cursor.abstract? && !cursor.opaque_declaration? && constructors.none?
+        if !cursor.abstract? &&
+           !cursor.opaque_declaration? &&
+           constructors.none? &&
+           implicit_default_constructor_available?(cursor)
           versions[nil].unshift(self.render_template("constructor",
                                                      :cursor => cursor,
                                                      :signature => @signature_builder.constructor_signature(cursor),
