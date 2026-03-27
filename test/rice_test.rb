@@ -426,4 +426,26 @@ class RiceTest < AbstractTest
       validate_result(outputter)
     end
   end
+
+  def test_unresolved_inline_calls_are_skipped
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["unresolved_inline_calls.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_ipp = outputter.output_paths.fetch(outputter.output_path("unresolved_inline_calls-rb.ipp"))
+
+    refute_includes generated_ipp, "\"backend\", &Tests::Params<T>::backend"
+    assert_includes generated_ipp, "\"ok\", &Tests::Params<T>::ok"
+
+    expected_cpp = outputter.output_path("unresolved_inline_calls-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
 end

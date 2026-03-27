@@ -93,5 +93,6 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "template_partial_specializations-rb.cpp"
   "templates-rb.cpp"
   "unions-rb.cpp"
+  "unresolved_inline_calls-rb.cpp"
   "version_guards-rb.cpp"
 )
