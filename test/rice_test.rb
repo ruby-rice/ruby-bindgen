@@ -558,7 +558,7 @@ class RiceTest < AbstractTest
     end
   end
 
-  def test_vector_variant_attrs_are_skipped
+  def test_vector_variant_attrs_are_generated
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     config[:match] = ["vector_variant_attrs.hpp"]
@@ -571,7 +571,7 @@ class RiceTest < AbstractTest
 
     generated_cpp = outputter.output_paths.fetch(outputter.output_path("vector_variant_attrs-rb.cpp"))
 
-    refute_includes generated_cpp, ".define_attr(\"values\", &Tests::VariantVectorHolder::values)"
+    assert_includes generated_cpp, ".define_attr(\"values\", &Tests::VariantVectorHolder::values)"
     assert_includes generated_cpp, ".define_attr(\"numbers\", &Tests::VariantVectorHolder::numbers)"
 
     expected_cpp = outputter.output_path("vector_variant_attrs-rb.cpp")

@@ -265,8 +265,7 @@ module RubyBindgen
       # attrs instead of emitting uncompilable wrappers.
       def unsupported_rice_attribute_type?(type)
         reference_type?(type) ||
-          unsupported_rice_callback_type?(type) ||
-          unsupported_rice_vector_element_type?(type)
+          unsupported_rice_callback_type?(type)
       end
 
       # Namespace-scope forward declarations can be compile-time traps for Rice

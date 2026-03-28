@@ -14,5 +14,6 @@ void Init_VectorVariantAttrs()
 
   Rice::Data_Type<Tests::VariantVectorHolder> rb_cTestsVariantVectorHolder = define_class_under<Tests::VariantVectorHolder>(rb_mTests, "VariantVectorHolder")
     .define_constructor(Constructor<Tests::VariantVectorHolder>())
+    .define_attr("values", &Tests::VariantVectorHolder::values)
     .define_attr("numbers", &Tests::VariantVectorHolder::numbers);
 }
