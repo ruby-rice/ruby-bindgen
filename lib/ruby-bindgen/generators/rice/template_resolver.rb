@@ -108,6 +108,7 @@ module RubyBindgen
         case template_parameter.kind
         when :cursor_template_type_parameter
           declaration = template_parameter.extent.text
+          declaration = nil unless usable_template_parameter_declaration?(template_parameter, declaration)
           return "typename #{template_parameter_argument(template_parameter)}" if declaration.nil? || declaration.empty?
 
           separator_offset = @reference_qualifier.top_level_default_separator_offset(declaration)
@@ -116,6 +117,7 @@ module RubyBindgen
           signature.sub(/\A(\s*)class\b/, '\1typename')
         when :cursor_non_type_template_parameter
           declaration = template_parameter.extent.text
+          declaration = nil unless usable_template_parameter_declaration?(template_parameter, declaration)
           return "int #{template_parameter.spelling}" if declaration.nil? || declaration.empty?
 
           separator_offset = @reference_qualifier.top_level_default_separator_offset(declaration)
@@ -124,6 +126,7 @@ module RubyBindgen
           declaration.byteslice(0, separator_offset).rstrip
         when :cursor_template_template_parameter
           declaration = template_parameter.extent.text
+          declaration = nil unless usable_template_parameter_declaration?(template_parameter, declaration)
           return "template<typename> class #{template_parameter.spelling}" if declaration.nil? || declaration.empty?
 
           separator_offset = @reference_qualifier.top_level_default_separator_offset(declaration)
@@ -143,6 +146,13 @@ module RubyBindgen
         return name unless declaration&.match?(/\.\.\.\s*#{Regexp.escape(name)}\b/)
 
         "#{name}..."
+      end
+
+      def usable_template_parameter_declaration?(template_parameter, declaration)
+        return false if declaration.nil? || declaration.empty?
+
+        parent_declaration = template_parameter.semantic_parent&.extent&.text
+        declaration != parent_declaration
       end
 
       # Split a comma-separated template argument list while keeping nested

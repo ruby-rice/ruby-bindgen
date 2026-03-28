@@ -81,6 +81,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
   "inline_namespaces-rb.cpp"
   "iterators-rb.cpp"
   "iterators_stl-rb.cpp"
+  "macro_template_parameters-rb.cpp"
   "mappings-rb.cpp"
   "nested_class_templates-rb.cpp"
   "non_system_incomplete_refs-rb.cpp"

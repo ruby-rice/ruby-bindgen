@@ -416,6 +416,31 @@ class RiceTest < AbstractTest
     end
   end
 
+  def test_macro_template_parameters
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    config[:match] = ["macro_template_parameters.hpp"]
+
+    inputter = RubyBindgen::Inputter.new(config_dir, config[:match])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_ipp = outputter.output_paths.fetch(outputter.output_path("macro_template_parameters-rb.ipp"))
+
+    assert_includes generated_ipp, "template<typename T>"
+    assert_includes generated_ipp, "CheckMember_fmt_instantiate"
+    assert_includes generated_ipp, "CheckMember_type_instantiate"
+    refute_includes generated_ipp, "template<TEST_CREATE_MEMBER_CHECK(fmt)>"
+    refute_includes generated_ipp, "template<TEST_CREATE_MEMBER_CHECK(type)>"
+
+    expected_cpp = outputter.output_path("macro_template_parameters-rb.cpp")
+    if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
+      validate_result(outputter)
+    end
+  end
+
   def test_dependent_nested_types
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
