@@ -39,6 +39,8 @@ All 16 Rice tests: classes, enums, functions, inheritance, template, constructor
 
 **Every bug fix MUST include test coverage.** Write a failing test FIRST, then implement the fix. Add test cases to the appropriate header file in `test/headers/cpp/` and update the expected output in `test/bindings/cpp/`.
 
+**NEVER workaround Rice bugs in ruby-bindgen.** If the root cause is in Rice, report it so Rice can be fixed instead of teaching ruby-bindgen to skip or special-case around it.
+
 **Mocks are NEVER allowed in tests.** All tests must use real headers and real generator output.
 
 For typedef-related issues, use `cross_file_base.hpp` and `cross_file_derived.hpp`.
