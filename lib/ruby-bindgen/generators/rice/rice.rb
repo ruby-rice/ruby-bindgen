@@ -234,7 +234,7 @@ module RubyBindgen
       def has_unsupported_rice_param_type?(cursor)
         (0...cursor.type.args_size).any? do |i|
           type = cursor.type.arg_type(i)
-          type.kind == :type_rvalue_ref ||
+          unsupported_rice_rvalue_ref_type?(type) ||
             unsupported_rice_opaque_namespace_type?(type)
         end
       end
@@ -269,6 +269,16 @@ module RubyBindgen
       # when methods expose them by value/reference but no complete definition is
       # available (for example optional backend types like plaidml::edsl::Tensor).
       # Keep nested pimpl-style forward declarations on the existing path.
+      def unsupported_rice_rvalue_ref_type?(type)
+        return false unless type.kind == :type_rvalue_ref
+
+        canonical = type.non_reference_type.canonical
+        decl = canonical.declaration
+        return false if decl.kind != :cursor_no_decl_found && decl.qualified_name == "std::function"
+
+        true
+      end
+
       def unsupported_rice_opaque_namespace_type?(type)
         return false if [:type_pointer, :type_member_pointer].include?(type.kind)
         return false if type.spelling.start_with?("std::")

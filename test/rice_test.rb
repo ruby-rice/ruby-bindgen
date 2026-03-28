@@ -265,7 +265,7 @@ class RiceTest < AbstractTest
     assert_includes generated_cpp, '"set_callback", &Tests::UnsupportedRiceTypes::setCallback'
     refute_includes generated_cpp, '"set_priv", &Tests::UnsupportedRiceTypes::setPriv'
     assert_includes generated_cpp, '"install", &Tests::UnsupportedRiceTypes::install'
-    refute_includes generated_cpp, '"notify", &Tests::UnsupportedRiceTypes::notify'
+    assert_includes generated_cpp, '"notify", &Tests::UnsupportedRiceTypes::notify'
     assert_includes generated_cpp, '.define_attr("callback", &Tests::UnsupportedRiceTypes::callback)'
     assert_includes generated_cpp, '.define_attr("nested_callback", &Tests::UnsupportedRiceTypes::nestedCallback)'
 

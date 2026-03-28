@@ -20,6 +20,8 @@ void Init_RiceUnsupportedTypes()
       Arg("callback"))
     .define_singleton_function<void(*)(const Tests::UnsupportedRiceTypes::NestedCallback &)>("install", &Tests::UnsupportedRiceTypes::install,
       Arg("callback"))
+    .define_singleton_function<void(*)(std::function<void ()> &&)>("notify", &Tests::UnsupportedRiceTypes::notify,
+      Arg("callback"))
     .define_method<Tests::UnsupportedRiceTypes::Priv &(Tests::UnsupportedRiceTypes::*)()>("priv", &Tests::UnsupportedRiceTypes::priv)
     .define_method<const Tests::UnsupportedRiceTypes::Priv &(Tests::UnsupportedRiceTypes::*)() const>("priv", &Tests::UnsupportedRiceTypes::priv)
     .define_attr("callback", &Tests::UnsupportedRiceTypes::callback)
