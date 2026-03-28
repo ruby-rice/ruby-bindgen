@@ -14,7 +14,15 @@ void Init_RiceUnsupportedTypes()
   Rice::Data_Type<Tests::UnsupportedRiceTypes::Priv> rb_cTestsUnsupportedRiceTypesPriv = define_class_under<Tests::UnsupportedRiceTypes::Priv>(rb_cTestsUnsupportedRiceTypes, "Priv");
   rb_cTestsUnsupportedRiceTypes
     .define_constructor(Constructor<Tests::UnsupportedRiceTypes>())
+    .define_constructor(Constructor<Tests::UnsupportedRiceTypes, const Tests::UnsupportedRiceTypes::Callback &>(),
+      Arg("callback"))
+    .define_method<void(Tests::UnsupportedRiceTypes::*)(const Tests::UnsupportedRiceTypes::Callback &)>("set_callback", &Tests::UnsupportedRiceTypes::setCallback,
+      Arg("callback"))
+    .define_singleton_function<void(*)(const Tests::UnsupportedRiceTypes::NestedCallback &)>("install", &Tests::UnsupportedRiceTypes::install,
+      Arg("callback"))
     .define_method<Tests::UnsupportedRiceTypes::Priv &(Tests::UnsupportedRiceTypes::*)()>("priv", &Tests::UnsupportedRiceTypes::priv)
     .define_method<const Tests::UnsupportedRiceTypes::Priv &(Tests::UnsupportedRiceTypes::*)() const>("priv", &Tests::UnsupportedRiceTypes::priv)
+    .define_attr("callback", &Tests::UnsupportedRiceTypes::callback)
+    .define_attr("nested_callback", &Tests::UnsupportedRiceTypes::nestedCallback)
     .define_attr("value", &Tests::UnsupportedRiceTypes::value);
 }

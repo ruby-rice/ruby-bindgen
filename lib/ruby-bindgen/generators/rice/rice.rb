@@ -235,7 +235,6 @@ module RubyBindgen
         (0...cursor.type.args_size).any? do |i|
           type = cursor.type.arg_type(i)
           type.kind == :type_rvalue_ref ||
-            unsupported_rice_callback_type?(type) ||
             unsupported_rice_opaque_namespace_type?(type)
         end
       end
@@ -263,8 +262,7 @@ module RubyBindgen
       # involve references or nested callbacks which themselves do. Skip those
       # attrs instead of emitting uncompilable wrappers.
       def unsupported_rice_attribute_type?(type)
-        reference_type?(type) ||
-          unsupported_rice_callback_type?(type)
+        reference_type?(type)
       end
 
       # Namespace-scope forward declarations can be compile-time traps for Rice

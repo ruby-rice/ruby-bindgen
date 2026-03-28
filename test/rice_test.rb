@@ -245,7 +245,7 @@ class RiceTest < AbstractTest
     end
   end
 
-  def test_rice_skips_unsupported_types
+  def test_rice_generates_supported_callback_types
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     config[:match] = ["rice_unsupported_types.hpp"]
@@ -260,14 +260,14 @@ class RiceTest < AbstractTest
 
     assert_includes generated_cpp, 'define_class_under<Tests::UnsupportedRiceTypes>(rb_mTests, "UnsupportedRiceTypes")'
     assert_includes generated_cpp, '.define_attr("value", &Tests::UnsupportedRiceTypes::value)'
-    refute_includes generated_cpp, "Constructor<Tests::UnsupportedRiceTypes, const std::function<void(Tests::UnsupportedRiceTypes &)> &>"
+    assert_includes generated_cpp, "Constructor<Tests::UnsupportedRiceTypes, const Tests::UnsupportedRiceTypes::Callback &>"
     refute_includes generated_cpp, "Constructor<Tests::UnsupportedRiceTypes, std::unique_ptr<Tests::UnsupportedRiceTypes::Priv> &&>"
-    refute_includes generated_cpp, '"set_callback", &Tests::UnsupportedRiceTypes::setCallback'
+    assert_includes generated_cpp, '"set_callback", &Tests::UnsupportedRiceTypes::setCallback'
     refute_includes generated_cpp, '"set_priv", &Tests::UnsupportedRiceTypes::setPriv'
-    refute_includes generated_cpp, '"install", &Tests::UnsupportedRiceTypes::install'
+    assert_includes generated_cpp, '"install", &Tests::UnsupportedRiceTypes::install'
     refute_includes generated_cpp, '"notify", &Tests::UnsupportedRiceTypes::notify'
-    refute_includes generated_cpp, '.define_attr("callback", &Tests::UnsupportedRiceTypes::callback)'
-    refute_includes generated_cpp, '.define_attr("nested_callback", &Tests::UnsupportedRiceTypes::nestedCallback)'
+    assert_includes generated_cpp, '.define_attr("callback", &Tests::UnsupportedRiceTypes::callback)'
+    assert_includes generated_cpp, '.define_attr("nested_callback", &Tests::UnsupportedRiceTypes::nestedCallback)'
 
     expected_cpp = outputter.output_path("rice_unsupported_types-rb.cpp")
     if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
