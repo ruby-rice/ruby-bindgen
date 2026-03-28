@@ -14,5 +14,10 @@ void Init_UnsupportedVectorReturns()
     .define_attr("value", &Tests::UnsupportedVectorValue::value);
 
   Rice::Data_Type<Tests::UnsupportedVectorReturns> rb_cTestsUnsupportedVectorReturns = define_class_under<Tests::UnsupportedVectorReturns>(rb_mTests, "UnsupportedVectorReturns")
-    .define_constructor(Constructor<Tests::UnsupportedVectorReturns>());
+    .define_constructor(Constructor<Tests::UnsupportedVectorReturns>())
+    .define_method<Tests::UnsupportedVectorReturns::Items(Tests::UnsupportedVectorReturns::*)() const>("items", &Tests::UnsupportedVectorReturns::items)
+    .define_method("to_items", [](Tests::UnsupportedVectorReturns& self) -> Tests::UnsupportedVectorReturns::Items
+    {
+      return self;
+    });
 }

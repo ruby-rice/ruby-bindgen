@@ -242,8 +242,7 @@ module RubyBindgen
 
       def has_unsupported_rice_return_type?(cursor)
         result_type = cursor.type.result_type
-        unsupported_rice_opaque_namespace_type?(result_type) ||
-          unsupported_rice_vector_element_type?(result_type)
+        unsupported_rice_opaque_namespace_type?(result_type)
       end
 
       # Check if the return type of a callable references a skipped symbol.

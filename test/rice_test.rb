@@ -334,7 +334,7 @@ class RiceTest < AbstractTest
     end
   end
 
-  def test_rice_skips_unsupported_vector_returns
+  def test_rice_generates_vector_returns
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     config[:match] = ["unsupported_vector_returns.hpp"]
@@ -349,8 +349,8 @@ class RiceTest < AbstractTest
 
     assert_includes generated_cpp, 'define_class_under<Tests::UnsupportedVectorReturns>(rb_mTests, "UnsupportedVectorReturns")'
     assert_includes generated_cpp, '.define_constructor(Constructor<Tests::UnsupportedVectorReturns>())'
-    refute_includes generated_cpp, '"items", &Tests::UnsupportedVectorReturns::items'
-    refute_includes generated_cpp, 'define_method("to_items", []('
+    assert_includes generated_cpp, '"items", &Tests::UnsupportedVectorReturns::items'
+    assert_includes generated_cpp, 'define_method("to_items", []('
 
     expected_cpp = outputter.output_path("unsupported_vector_returns-rb.cpp")
     if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
