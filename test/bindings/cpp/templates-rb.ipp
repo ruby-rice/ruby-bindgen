@@ -119,6 +119,20 @@ inline Rice::Data_Type<Tests::SmartPtr<T>> SmartPtr_instantiate(Rice::Module par
 }
 
 template<typename T>
+inline Rice::Data_Type<Tests::Optional<T>> Optional_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::Optional<T>>(parent, name)
+    .define_attr("value", &Tests::Optional<T>::value);
+}
+
+template<typename... Ts>
+inline Rice::Data_Type<Tests::Variant<Ts...>> Variant_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::Variant<Ts...>>(parent, name)
+    .define_constructor(Constructor<Tests::Variant<Ts...>>());
+}
+
+template<typename T>
 inline Rice::Data_Type<Tests::SelfFactory<T>> SelfFactory_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::SelfFactory<T>>(parent, name)

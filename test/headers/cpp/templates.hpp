@@ -235,6 +235,31 @@ namespace Tests
 
     typedef SmartPtr<Target> TargetPtr;
 
+    // Variadic specializations can report alias template arguments through
+    // libclang's cursor API as a pack plus invalid arguments. The generator
+    // must still use the full spelled types in the builder call:
+    //   Variant<AliasOptional<int> *, AliasOptional<float> *>
+    // not:
+    //   Variant<AliasOptional, AliasOptional<float> *>
+    template<typename T>
+    class Optional
+    {
+    public:
+        T value;
+    };
+
+    template<typename... Ts>
+    class Variant
+    {
+    public:
+        Variant() = default;
+    };
+
+    template<typename T>
+    using AliasOptional = Optional<T>;
+
+    typedef Variant<AliasOptional<int> *, AliasOptional<float> *> AliasVariant;
+
     // Static method signatures inside class-template builders must still
     // qualify the current specialization when it appears inside another
     // template argument:

@@ -134,4 +134,28 @@ class TemplateResolverTest < RiceAbstractTest
     assert_equal "Support::Base<int>",
                  resolver.resolve_base_instantiation(derived_alias, derived_alias.underlying_type)
   end
+
+  def test_prefers_specialized_type_arguments_for_variadic_alias_specializations
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace Tests {
+        template<typename T>
+        struct Optional {};
+
+        template<typename... Ts>
+        struct Variant {};
+
+        template<typename T>
+        using AliasOptional = Optional<T>;
+
+        typedef Variant<AliasOptional<int> *, AliasOptional<float> *> AliasVariant;
+      }
+    CPP
+
+    resolver = collaborators[:template_resolver]
+    alias_variant = find_cursor(parsed.translation_unit.cursor, :cursor_typedef_decl, "AliasVariant")
+    variant_template = alias_variant.underlying_type.declaration.specialized_template
+
+    assert_equal ["Tests::AliasOptional<int> *", "Tests::AliasOptional<float> *"],
+                 resolver.full_template_arguments(alias_variant, alias_variant.underlying_type, variant_template)
+  end
 end

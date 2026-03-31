@@ -357,14 +357,27 @@ module RubyBindgen
       end
 
       def specialization_template_argument_info(argument_cursor, specialized_type, index, source_fallbacks)
+        specialized_arg_type = specialized_type.template_argument_type(index)
+
         if argument_cursor
           kind = argument_cursor.template_argument_kind(index)
           case kind
           when :template_argument_type
             arg_type = argument_cursor.template_argument_type(index)
+            arg_type = specialized_arg_type if arg_type.kind == :type_invalid
             return nil if arg_type.kind == :type_invalid
 
             return TemplateArgumentInfo.new(kind: kind, type: arg_type)
+          when :template_argument_pack, :template_argument_invalid
+            # Variadic type aliases can surface here as a pack plus invalid
+            # cursor-argument kinds even though the specialized semantic type
+            # still exposes each concrete template argument correctly.
+            unless specialized_arg_type.kind == :type_invalid
+              source_fallbacks.shift
+              return TemplateArgumentInfo.new(kind: :template_argument_type, type: specialized_arg_type)
+            end
+
+            return TemplateArgumentInfo.new(kind: kind, source_text: source_fallbacks.shift)
           when :template_argument_integral
             return TemplateArgumentInfo.new(kind: kind,
                                             value: argument_cursor.template_argument_value(index),
@@ -379,10 +392,9 @@ module RubyBindgen
           end
         end
 
-        arg_type = specialized_type.template_argument_type(index)
-        return nil if arg_type.kind == :type_invalid
+        return nil if specialized_arg_type.kind == :type_invalid
 
-        TemplateArgumentInfo.new(kind: :template_argument_type, type: arg_type)
+        TemplateArgumentInfo.new(kind: :template_argument_type, type: specialized_arg_type)
       end
 
       def specialization_template_argument_text(argument_info)
