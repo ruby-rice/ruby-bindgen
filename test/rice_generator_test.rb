@@ -176,7 +176,7 @@ class RiceGeneratorTest < RiceAbstractTest
     assert_includes rendered, "FunctionTemplate_instantiate<&Tests::callback_ints>"
   end
 
-  def test_namespace_scope_forward_declared_classes_do_not_generate_bindings
+  def test_namespace_scope_forward_declared_classes_generate_placeholders_across_headers
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     inputter = RubyBindgen::Inputter.new(config_dir, ["forward_declared_classes.hpp",
@@ -191,10 +191,59 @@ class RiceGeneratorTest < RiceAbstractTest
     classes_cpp = outputter.output_paths.fetch(outputter.output_path("forward_declared_classes-rb.cpp"))
     all_layers_cpp = outputter.output_paths.fetch(outputter.output_path("forward_declared_all_layers-rb.cpp"))
 
-    refute_includes classes_cpp,
+    assert_includes classes_cpp,
                     'define_class_under<ForwardDeclaredClasses::ActivationLayer>(rb_mForwardDeclaredClasses, "ActivationLayer")'
     assert_includes all_layers_cpp,
                     'define_class_under<ForwardDeclaredClasses::ActivationLayer, ForwardDeclaredClasses::Layer>(rb_mForwardDeclaredClasses, "ActivationLayer")'
+  end
+
+  def test_same_file_forward_declarations_only_render_the_complete_class
+    parsed, = parse_cpp(<<~CPP)
+      namespace Tests {
+        class Forward;
+
+        class Base {
+        public:
+          virtual ~Base() = default;
+        };
+
+        class Forward : public Base {
+        public:
+          int value() const { return 1; }
+        };
+      }
+    CPP
+
+    inputter = RubyBindgen::Inputter.new(parsed.dir, ["fixture.hpp"])
+    outputter = create_outputter("cpp")
+    config = load_config(File.join(__dir__, "headers", "cpp"))
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("fixture-rb.cpp"))
+
+    assert_equal 1, generated_cpp.scan('define_class_under<Tests::Forward, Tests::Base>(rb_mTests, "Forward")').size
+    refute_includes generated_cpp, 'define_class_under<Tests::Forward>(rb_mTests, "Forward")'
+  end
+
+  def test_namespace_scope_opaque_types_with_project_definitions_are_generated
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    inputter = RubyBindgen::Inputter.new(config_dir, ["opaque_namespace_api.hpp",
+                                                      "opaque_namespace_full.hpp"])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("opaque_namespace_api-rb.cpp"))
+
+    assert_includes generated_cpp, "Constructor<Tests::OpaqueNamespaceConsumer, const Tests::Render::Handle &>()"
+    assert_includes generated_cpp, '"in_handle", &Tests::OpaqueNamespaceConsumer::inHandle'
+    assert_includes generated_cpp, '"out_handle", &Tests::OpaqueNamespaceConsumer::outHandle'
+    assert_includes generated_cpp, '"out_handle_ref", &Tests::OpaqueNamespaceConsumer::outHandleRef'
+    assert_includes generated_cpp, '"set_handle", &Tests::OpaqueNamespaceConsumer::setHandle'
   end
 
   def test_out_of_class_nested_definitions_are_rendered_only_under_the_parent

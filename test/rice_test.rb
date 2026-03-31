@@ -552,7 +552,7 @@ class RiceTest < AbstractTest
     end
   end
 
-  def test_unresolved_inline_calls_are_skipped
+  def test_inline_methods_with_qualified_calls_are_generated
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     config[:match] = ["unresolved_inline_calls.hpp"]
@@ -565,7 +565,9 @@ class RiceTest < AbstractTest
 
     generated_ipp = outputter.output_paths.fetch(outputter.output_path("unresolved_inline_calls-rb.ipp"))
 
-    refute_includes generated_ipp, "\"backend\", &Tests::Params<T>::backend"
+    assert_includes generated_ipp, "\"backend\", &Tests::Params<T>::backend"
+    assert_includes generated_ipp, "\"logger\", &Tests::Params<T>::logger"
+    assert_includes generated_ipp, "\"utility\", &Tests::Params<T>::utility"
     assert_includes generated_ipp, "\"ok\", &Tests::Params<T>::ok"
 
     expected_cpp = outputter.output_path("unresolved_inline_calls-rb.cpp")

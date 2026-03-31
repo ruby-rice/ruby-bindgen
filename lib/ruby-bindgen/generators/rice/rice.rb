@@ -180,6 +180,7 @@ module RubyBindgen
         @incomplete_iterators = Hash.new
         # Iterator names per class (for aliasing each_const -> each)
         @class_iterator_names = Hash.new { |h, k| h[k] = Set.new }
+        @project_complete_types = Set.new
       end
 
       # Parse the configured inputs with libclang and stream the resulting
@@ -188,6 +189,7 @@ module RubyBindgen
         clang_args = @config[:clang_args] || []
         parser = RubyBindgen::Parser.new(@inputter, clang_args, libclang: @config[:libclang])
         ::FFI::Clang::Cursor.namer = @namer
+        build_project_complete_type_index(parser)
         parser.generate(self)
       end
 
@@ -291,6 +293,7 @@ module RubyBindgen
         decl = type.canonical.declaration
         return false if decl.kind == :cursor_no_decl_found
         return false unless decl.opaque_declaration?
+        return false if project_complete_type?(decl)
         return false if decl.qualified_name&.start_with?("std::", "__gnu_cxx::")
         return false if [:cursor_class_decl, :cursor_struct].include?(decl.semantic_parent.kind)
 
@@ -449,7 +452,6 @@ module RubyBindgen
         @non_member_operators.clear
         @incomplete_iterators.clear
         @class_iterator_names.clear
-        @declared_function_qualified_names = nil
         cursor = translation_unit.cursor
         @translation_unit_cursor = cursor
         @type_speller.printing_policy = cursor.printing_policy
@@ -516,6 +518,40 @@ module RubyBindgen
         self.outputter.write(rice_header, content)
       end
 
+      def build_project_complete_type_index(parser)
+        @project_complete_types.clear
+
+        @inputter.each do |path, _relative_path|
+          begin
+            translation_unit = parser.send(:parse_translation_unit, path)
+          rescue RubyBindgen::Parser::ParseError
+            next
+          end
+
+          record_project_complete_types(translation_unit.cursor)
+        end
+      end
+
+      def record_project_complete_types(cursor)
+        cursor.find_by_kind(true, :cursor_class_decl, :cursor_struct) do |child|
+          next if child.spelling.empty?
+          next if child.opaque_declaration?
+          next unless translation_unit_file?(child)
+
+          qualified_name = child.qualified_name
+          next if qualified_name.nil? || qualified_name.empty?
+
+          @project_complete_types << qualified_name
+        end
+      end
+
+      def project_complete_type?(decl)
+        qualified_name = decl.qualified_name
+        return false if qualified_name.nil? || qualified_name.empty?
+
+        @project_complete_types.include?(qualified_name)
+      end
+
       # Render a public, callable constructor into the Rice chain for its class.
       def visit_constructor(cursor)
         # Do not process class constructors defined outside of the class definition
@@ -553,16 +589,7 @@ module RubyBindgen
       # constants, embedded types, and any auto-generated template bases needed
       # before the class itself can be registered.
       def visit_class_decl(cursor)
-        # Namespace-scope forward-declared C++ classes are often completed in a
-        # different header. Emitting a Rice class here creates a Ruby constant
-        # with no superclass, and a later complete definition then conflicts.
-        # Keep nested incomplete classes on the existing special path, and keep
-        # opaque structs available for handle-style APIs.
-        if cursor.kind == :cursor_class_decl &&
-           cursor.opaque_declaration? &&
-           ![:cursor_class_decl, :cursor_struct].include?(cursor.semantic_parent.kind)
-          return
-        end
+        return if skip_namespace_forward_declaration?(cursor)
 
         # Skip explicitly listed symbols
         return if skip_symbol?(cursor)
@@ -896,28 +923,12 @@ module RubyBindgen
           cursor.type.variadic?
       end
 
-      def unresolved_inline_calls?(cursor)
-        source = inline_definition_source(cursor)
-        return false unless source&.include?('{')
-
-        function_calls = source.scan(/([A-Za-z_]\w*(?:::[A-Za-z_]\w*)+)\s*\(/)
-                               .flatten
-                               .uniq
-                               .select { |name| name.split('::').last.match?(/\A[a-z_]\w*\z/) }
-        return false if function_calls.empty?
-
-        function_calls.any? do |qualified_name|
-          !declared_function_qualified_names.include?(qualified_name)
-        end
-      end
-
       # Render a class method, including special handling for iterator adapters
       # and mutable `operator[]` setter support.
       def visit_cxx_method(cursor)
         # Do not process method definitions outside of classes (because we already processed them)
         return if cursor.lexical_parent != cursor.semantic_parent
         return if skip_callable?(cursor)
-        return if unresolved_inline_calls?(cursor)
         return if has_skipped_param_type?(cursor)
         return if has_unsupported_rice_param_type?(cursor)
         return if has_skipped_return_type?(cursor)
@@ -965,43 +976,16 @@ module RubyBindgen
         result
       end
 
-      def declared_function_qualified_names
-        @declared_function_qualified_names ||= @translation_unit_cursor
-          .find_by_kind(true, :cursor_function, :cursor_function_template)
-          .map(&:qualified_name)
-          .reject(&:empty?)
-          .to_set
-      end
+      def skip_namespace_forward_declaration?(cursor)
+        return false unless cursor.kind == :cursor_class_decl
+        return false unless cursor.opaque_declaration?
+        return false if [:cursor_class_decl, :cursor_struct].include?(cursor.semantic_parent.kind)
 
-      def inline_definition_source(cursor)
-        parent = cursor.semantic_parent
-        source = parent&.extent&.text
-        return nil if source.nil? || source.empty?
+        definition = cursor.definition
+        return false if [:cursor_invalid_file, :cursor_no_decl_found].include?(definition.kind)
+        return false if definition.opaque_declaration?
 
-        line_index = cursor.extent.start.line - parent.extent.start.line
-        lines = source.lines
-        return nil if line_index.negative? || line_index >= lines.length
-
-        result = String.new
-        brace_depth = 0
-        saw_body = false
-
-        lines[line_index..].each do |line|
-          result << line
-          line.each_char do |char|
-            if char == '{'
-              saw_body = true
-              brace_depth += 1
-            elsif char == '}'
-              brace_depth -= 1 if brace_depth.positive?
-            end
-          end
-
-          break if saw_body && brace_depth.zero?
-          break if !saw_body && line.include?(';')
-        end
-
-        result
+        translation_unit_file?(definition)
       end
 
       # Check if an iterator type has proper std::iterator_traits.

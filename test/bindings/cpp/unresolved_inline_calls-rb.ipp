@@ -4,5 +4,8 @@ template<typename T>
 inline Rice::Data_Type<Tests::Params<T>> Params_instantiate(Rice::Module parent, const char* name)
 {
   return Rice::define_class_under<Tests::Params<T>>(parent, name)
+    .template define_method<int(Tests::Params<T>::*)() const>("backend", &Tests::Params<T>::backend)
+    .template define_method<int(Tests::Params<T>::*)() const>("logger", &Tests::Params<T>::logger)
+    .template define_method<int(Tests::Params<T>::*)() const>("utility", &Tests::Params<T>::utility)
     .template define_method<int(Tests::Params<T>::*)() const>("ok", &Tests::Params<T>::ok);
 }
