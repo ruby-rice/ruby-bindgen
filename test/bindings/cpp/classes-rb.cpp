@@ -171,4 +171,18 @@ void Init_Classes()
   Rice::Data_Type<Outer::Locale::Facet<Outer::Locale>> rb_cOuterLocaleFacetLocale = define_class_under<Outer::Locale::Facet<Outer::Locale>>(rb_cOuterLocale, "FacetLocale")
     .define_constructor(Constructor<Outer::Locale::Facet<Outer::Locale>>())
     .define_attr("value", &Outer::Locale::Facet<Outer::Locale>::value);
+
+  Rice::Data_Type<Outer::LateDefinedNested> rb_cOuterLateDefinedNested = define_class_under<Outer::LateDefinedNested>(rb_mOuter, "LateDefinedNested")
+    .define_constructor(Constructor<Outer::LateDefinedNested>())
+    .define_method<Outer::LateDefinedNested::View(Outer::LateDefinedNested::*)() const>("access", &Outer::LateDefinedNested::access)
+    .define_method<Outer::LateDefinedNested::IAdapter *(Outer::LateDefinedNested::*)() const>("adapter", &Outer::LateDefinedNested::adapter);
+
+  Rice::Data_Type<Outer::LateDefinedNested::View> rb_cOuterLateDefinedNestedView = define_class_under<Outer::LateDefinedNested::View>(rb_cOuterLateDefinedNested, "View")
+    .define_constructor(Constructor<Outer::LateDefinedNested::View>())
+    .define_constant("MAX_PLANES", Outer::LateDefinedNested::View::MAX_PLANES)
+    .define_attr("plane", &Outer::LateDefinedNested::View::plane);
+
+  Rice::Data_Type<Outer::LateDefinedNested::IAdapter> rb_cOuterLateDefinedNestedIAdapter = define_class_under<Outer::LateDefinedNested::IAdapter>(rb_cOuterLateDefinedNested, "IAdapter")
+    .define_constructor(Constructor<Outer::LateDefinedNested::IAdapter>())
+    .define_method<void(Outer::LateDefinedNested::IAdapter::*)()>("reset", &Outer::LateDefinedNested::IAdapter::reset);
 }

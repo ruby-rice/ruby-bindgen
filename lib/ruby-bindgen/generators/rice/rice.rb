@@ -623,6 +623,13 @@ module RubyBindgen
         cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
           next unless child_cursor.opaque_declaration?
+          definition = child_cursor.definition
+          if definition &&
+             ![:cursor_invalid_file, :cursor_no_decl_found].include?(definition.kind) &&
+             !definition.opaque_declaration? &&
+             translation_unit_file?(definition)
+            next
+          end
           incomplete_classes << visit_incomplete_class(child_cursor, cursor)
         end
         incomplete_classes_content = merge_children({ nil => incomplete_classes })
@@ -654,6 +661,7 @@ module RubyBindgen
         # Define any complete embedded classes and structs
         cursor.find_by_kind(false, :cursor_class_decl, :cursor_struct) do |child_cursor|
           next if child_cursor.private? || child_cursor.protected?
+          next if child_cursor.forward_declaration?
           next if child_cursor.opaque_declaration?
           content = visit_class_decl(child_cursor)
           next unless content

@@ -196,4 +196,33 @@ class RiceGeneratorTest < RiceAbstractTest
     assert_includes all_layers_cpp,
                     'define_class_under<ForwardDeclaredClasses::ActivationLayer, ForwardDeclaredClasses::Layer>(rb_mForwardDeclaredClasses, "ActivationLayer")'
   end
+
+  def test_out_of_class_nested_definitions_are_rendered_only_under_the_parent
+    parsed, = parse_cpp(<<~CPP)
+      namespace Tests {
+        class Outer {
+        public:
+          class Inner;
+          Inner value() const;
+        };
+
+        class Outer::Inner {
+        public:
+          static const int Flag = 1;
+          int payload;
+        };
+      }
+    CPP
+
+    inputter = RubyBindgen::Inputter.new(parsed.dir, ["fixture.hpp"])
+    outputter = create_outputter("cpp")
+    config = load_config(File.join(__dir__, "headers", "cpp"))
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    capture_io { generator.generate }
+
+    generated_cpp = outputter.output_paths.fetch(outputter.output_path("fixture-rb.cpp"))
+    assert_equal 1, generated_cpp.scan('rb_cTestsOuterInner = define_class_under<Tests::Outer::Inner>').size
+    assert_equal 1, generated_cpp.scan('define_method<Tests::Outer::Inner(Tests::Outer::*)() const>("value"').size
+  end
 end

@@ -297,4 +297,30 @@ namespace Outer
   public:
     int value;
   };
+
+  // Test nested classes declared inside the parent and defined later at
+  // namespace scope. The translation unit walker must not emit those complete
+  // definitions twice.
+  class LateDefinedNested
+  {
+  public:
+    class View;
+    class IAdapter;
+
+    View access() const;
+    IAdapter* adapter() const;
+  };
+
+  class LateDefinedNested::View
+  {
+  public:
+    static const int MAX_PLANES = 4;
+    int plane;
+  };
+
+  class LateDefinedNested::IAdapter
+  {
+  public:
+    void reset();
+  };
 }
