@@ -97,6 +97,16 @@ namespace Outer
         GpuMatND(SizeArray size, int type, void* data, StepArray step = GpuMatND::defaultStepArray());
     };
 
+    // Constructor parameter arrays decay to pointers in function types.
+    // Generated Rice Constructor<...> signatures need to spell the decayed
+    // pointer form rather than the original array syntax.
+    class CommandLineStyle
+    {
+    public:
+        CommandLineStyle();
+        CommandLineStyle(int argc, const char* const argv[], bool enabled);
+    };
+
     // Test "safe bool idiom" from pre-C++11 - should be skipped
     // This pattern was used before explicit operator bool() was available
     class Stream

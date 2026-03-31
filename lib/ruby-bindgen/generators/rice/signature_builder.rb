@@ -44,7 +44,7 @@ module RubyBindgen
           parent = cursor.semantic_parent
           class_name = @type_speller.qualified_display_name(parent)
           signature << class_name
-          params = @type_speller.type_spellings(cursor)
+          params = constructor_type_spellings(cursor)
           if cursor.semantic_parent&.kind == :cursor_class_template
             params = params.map { |pt| @type_speller.qualify_class_template_typedefs(pt, cursor.semantic_parent) }
           end
@@ -140,6 +140,29 @@ module RubyBindgen
       end
 
       private
+
+      def constructor_type_spellings(cursor)
+        cursor.type.arg_types.each_with_index.map do |arg_type, index|
+          argument = cursor.argument(index)
+          constructor_type_spelling(arg_type, argument&.type)
+        end
+      end
+
+      def constructor_type_spelling(type, argument_type = nil)
+        if [:type_constant_array, :type_incomplete_array].include?(type.kind)
+          return "#{@type_speller.type_spelling(type.element_type)} *"
+        end
+
+        decl = argument_type&.declaration || type.declaration
+        is_array_alias = decl &&
+                         [:cursor_type_alias_decl, :cursor_typedef_decl].include?(decl.kind) &&
+                         [:type_constant_array, :type_incomplete_array].include?(decl.underlying_type.canonical.kind)
+        if is_array_alias
+          return "#{@type_speller.type_spelling(decl.underlying_type.element_type)} *"
+        end
+
+        @type_speller.type_spelling(type)
+      end
 
       def same_self_type?(type, parent)
         check_type = type

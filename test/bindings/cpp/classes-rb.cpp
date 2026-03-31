@@ -71,10 +71,15 @@ void Init_Classes()
   Rice::Data_Type<Outer::Inner::GpuMatND> rb_cOuterInnerGpuMatND = define_class_under<Outer::Inner::GpuMatND>(rb_mOuterInner, "GpuMatND")
     .define_singleton_function<Outer::Inner::GpuMatND::StepArray &(*)()>("default_step_array", &Outer::Inner::GpuMatND::defaultStepArray)
     .define_constructor(Constructor<Outer::Inner::GpuMatND>())
-    .define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int>(),
+    .define_constructor(Constructor<Outer::Inner::GpuMatND, int *, int>(),
       Arg("size"), Arg("type"))
-    .define_constructor(Constructor<Outer::Inner::GpuMatND, Outer::Inner::GpuMatND::SizeArray, int, void *, Outer::Inner::GpuMatND::StepArray>(),
+    .define_constructor(Constructor<Outer::Inner::GpuMatND, int *, int, void *, int *>(),
       Arg("size"), Arg("type"), ArgBuffer("data"), Arg("step") = Outer::Inner::GpuMatND::defaultStepArray());
+
+  Rice::Data_Type<Outer::Inner::CommandLineStyle> rb_cOuterInnerCommandLineStyle = define_class_under<Outer::Inner::CommandLineStyle>(rb_mOuterInner, "CommandLineStyle")
+    .define_constructor(Constructor<Outer::Inner::CommandLineStyle>())
+    .define_constructor(Constructor<Outer::Inner::CommandLineStyle, int, const char *const *, bool>(),
+      Arg("argc"), Arg("argv"), Arg("enabled"));
 
   Rice::Data_Type<Outer::Inner::Stream> rb_cOuterInnerStream = define_class_under<Outer::Inner::Stream>(rb_mOuterInner, "Stream")
     .define_constructor(Constructor<Outer::Inner::Stream>())
