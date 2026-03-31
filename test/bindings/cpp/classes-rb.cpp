@@ -81,7 +81,7 @@ void Init_Classes()
     .define_method<void(Outer::Inner::Stream::*)() const>("this_type_does_not_support_comparisons", &Outer::Inner::Stream::this_type_does_not_support_comparisons)
     .define_method("to_i", [](const Outer::Inner::Stream& self) -> int
     {
-      return self;
+      return static_cast<int>(self);
     });
 
   Rice::Data_Type<Outer::NonAssignable> rb_cOuterNonAssignable = define_class_under<Outer::NonAssignable>(rb_mOuter, "NonAssignable")

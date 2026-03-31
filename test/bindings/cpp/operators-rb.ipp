@@ -10,10 +10,10 @@ inline Rice::Data_Type<DataPtr<T>> DataPtr_instantiate(Rice::Module parent, cons
       std::conditional_t<std::is_fundamental_v<T>, ArgBuffer, Arg>("ptr"))
     .define_method("to_ptr", [](DataPtr<T>& self) -> T *
     {
-      return self;
+      return static_cast<T *>(self);
     })
     .define_method("to_const_ptr", [](const DataPtr<T>& self) -> const T *
     {
-      return self;
+      return static_cast<const T *>(self);
     });
 }

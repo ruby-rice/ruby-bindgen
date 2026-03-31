@@ -48,7 +48,7 @@ void Init_Filtering()
     .define_constructor(Constructor<Outer::ClassWithDeprecatedConversion>())
     .define_method("to_i", [](const Outer::ClassWithDeprecatedConversion& self) -> int
     {
-      return self;
+      return static_cast<int>(self);
     });
 
   Rice::Data_Type<Outer::GuardedClass> rb_cOuterGuardedClass = define_class_under<Outer::GuardedClass>(rb_mOuter, "GuardedClass")

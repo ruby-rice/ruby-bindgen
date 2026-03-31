@@ -97,15 +97,15 @@ void Init_Operators()
     .define_method<const Operators *(Operators::*)() const>("arrow", &Operators::operator->)
     .define_method("to_i", [](const Operators& self) -> int
     {
-      return self;
+      return static_cast<int>(self);
     })
     .define_method("to_f32", [](const Operators& self) -> float
     {
-      return self;
+      return static_cast<float>(self);
     })
     .define_method("to_bool", [](const Operators& self) -> bool
     {
-      return self;
+      return static_cast<bool>(self);
     });
 
   Module rb_mSubscript = define_module("Subscript");
@@ -142,11 +142,11 @@ void Init_Operators()
       Arg("v"))
     .define_method("to_target", [](const NamespacedConversion& self) -> conv::Target
     {
-      return self;
+      return static_cast<conv::Target>(self);
     })
     .define_method("to_target", [](NamespacedConversion& self) -> conv::Target &
     {
-      return self;
+      return static_cast<conv::Target &>(self);
     });
 
   Rice::Data_Type<DataPtr<int>> rb_cDataPtrInt = DataPtr_instantiate<int>(Rice::Module(rb_cObject), "DataPtrInt");
@@ -175,55 +175,62 @@ void Init_Operators()
     .define_constructor(Constructor<AllConversions>())
     .define_method("to_i", [](const AllConversions& self) -> int
     {
-      return self;
+      return static_cast<int>(self);
     })
     .define_method("to_l", [](const AllConversions& self) -> long
     {
-      return self;
+      return static_cast<long>(self);
     })
     .define_method("to_i64", [](const AllConversions& self) -> long long
     {
-      return self;
+      return static_cast<long long>(self);
     })
     .define_method("to_i16", [](const AllConversions& self) -> short
     {
-      return self;
+      return static_cast<short>(self);
     })
     .define_method("to_u", [](const AllConversions& self) -> unsigned int
     {
-      return self;
+      return static_cast<unsigned int>(self);
     })
     .define_method("to_ul", [](const AllConversions& self) -> unsigned long
     {
-      return self;
+      return static_cast<unsigned long>(self);
     })
     .define_method("to_u64", [](const AllConversions& self) -> unsigned long long
     {
-      return self;
+      return static_cast<unsigned long long>(self);
     })
     .define_method("to_u16", [](const AllConversions& self) -> unsigned short
     {
-      return self;
+      return static_cast<unsigned short>(self);
     })
     .define_method("to_f32", [](const AllConversions& self) -> float
     {
-      return self;
+      return static_cast<float>(self);
     })
     .define_method("to_f", [](const AllConversions& self) -> double
     {
-      return self;
+      return static_cast<double>(self);
     })
     .define_method("to_ld", [](const AllConversions& self) -> long double
     {
-      return self;
+      return static_cast<long double>(self);
     })
     .define_method("to_bool", [](const AllConversions& self) -> bool
     {
-      return self;
+      return static_cast<bool>(self);
     })
     .define_method("to_s", [](const AllConversions& self) -> std::string
     {
-      return self;
+      return static_cast<std::string>(self);
+    });
+
+  Rice::Data_Type<ExplicitBoolConversion> rb_cExplicitBoolConversion = define_class<ExplicitBoolConversion>("ExplicitBoolConversion")
+    .define_constructor(Constructor<ExplicitBoolConversion>())
+    .define_method("to_bool", [](const ExplicitBoolConversion& self) -> bool
+    {
+      return static_cast<bool>(self);
     });
 
   Rice::Data_Type<SizeTConversion> rb_cSizeTConversion = define_class<SizeTConversion>("SizeTConversion")
@@ -231,7 +238,7 @@ void Init_Operators()
     .define_constructor(Constructor<SizeTConversion>())
     .define_method("to_size", [](const SizeTConversion& self) -> size_t
     {
-      return self;
+      return static_cast<size_t>(self);
     });
 
   Rice::Data_Type<Vec> rb_cVec = define_class<Vec>("Vec")

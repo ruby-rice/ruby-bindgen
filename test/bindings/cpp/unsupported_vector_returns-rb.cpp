@@ -18,6 +18,6 @@ void Init_UnsupportedVectorReturns()
     .define_method<Tests::UnsupportedVectorReturns::Items(Tests::UnsupportedVectorReturns::*)() const>("items", &Tests::UnsupportedVectorReturns::items)
     .define_method("to_items", [](Tests::UnsupportedVectorReturns& self) -> Tests::UnsupportedVectorReturns::Items
     {
-      return self;
+      return static_cast<Tests::UnsupportedVectorReturns::Items>(self);
     });
 }

@@ -247,6 +247,14 @@ public:
     operator std::string() const { return "hello"; }          // to_s
 };
 
+class ExplicitBoolConversion
+{
+public:
+    ExplicitBoolConversion() {}
+
+    explicit operator bool() const { return true; }           // to_bool
+};
+
 // Test size_t conversion separately to see what clang reports
 class SizeTConversion
 {

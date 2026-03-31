@@ -1,4 +1,4 @@
 define_method("<%= ruby_name %>", [](<%= is_const ? "const " : "" %><%= qualified_parent %>& self) -> <%= result_type %>
 {
-  return self;
+  return static_cast<<%= result_type %>>(self);
 })
