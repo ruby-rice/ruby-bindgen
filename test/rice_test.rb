@@ -379,6 +379,12 @@ class RiceTest < AbstractTest
     assert_includes generated_ipp, "define_class_under<Tests::ParameterPackHolder<Ts...>>(parent, name)"
     assert_includes generated_ipp, "Constructor<Tests::ParameterPackHolder<Ts...>, const Tests::ParameterPackHolder<Ts...> &>()"
     assert_includes generated_ipp, 'define_method<void(Tests::ParameterPackHolder<Ts...>::*)(Tests::ParameterPackHolder<Ts...> &)>("swap"'
+    assert_includes generated_ipp, "define_class_under<Tests::ParameterPackAliasHolder<Ts...>>(parent, name)"
+    assert_includes generated_ipp, "typename Tests::ParameterPackAliasHolder<Ts...>::StorageT &(Tests::ParameterPackAliasHolder<Ts...>::*)()"
+    assert_includes generated_ipp, "void(Tests::ParameterPackAliasHolder<Ts...>::*)(typename Tests::ParameterPackAliasHolder<Ts...>::StorageT &)"
+    assert_includes generated_ipp, "const typename Tests::ParameterPackAliasHolder<Ts...>::Map &(Tests::ParameterPackAliasHolder<Ts...>::*)() const"
+    refute_includes generated_ipp, "ParameterPackAliasHolder<Ts>::StorageT"
+    refute_includes generated_ipp, "ParameterPackAliasHolder<Ts>::Map"
 
     expected_cpp = outputter.output_path("template_parameter_fidelity-rb.cpp")
     if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)

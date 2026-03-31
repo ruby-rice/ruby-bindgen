@@ -58,4 +58,30 @@ class TypeSpellerTest < RiceAbstractTest
 
     assert_equal "const typename Tests::Holder<T>::value_type *", qualified
   end
+
+  def test_preserves_parameter_pack_names_in_dependent_typedef_spellings
+    parsed, collaborators = parse_cpp(<<~CPP)
+      namespace Tests {
+        template<typename... Ts>
+        struct Holder {
+          using StorageT = Holder<Ts...>;
+          using Map = StorageT;
+
+          StorageT& storage();
+          const Map& getStorage() const;
+        };
+      }
+    CPP
+
+    class_template = find_cursor(parsed.translation_unit.cursor, :cursor_class_template, "Holder")
+    storage = class_template.find_by_kind(false, :cursor_cxx_method).find { |cursor| cursor.spelling == "storage" }
+    refute_nil storage
+    get_storage = class_template.find_by_kind(false, :cursor_cxx_method).find { |cursor| cursor.spelling == "getStorage" }
+    refute_nil get_storage
+
+    assert_equal "typename Tests::Holder<Ts...>::StorageT &",
+                 collaborators[:type_speller].type_spelling(storage.type.result_type)
+    assert_equal "const typename Tests::Holder<Ts...>::Map &",
+                 collaborators[:type_speller].type_spelling(get_storage.type.result_type)
+  end
 end

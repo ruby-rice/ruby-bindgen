@@ -411,7 +411,7 @@ module RubyBindgen
           if decl.semantic_parent.kind == :cursor_class_template
             const_prefix = type.const_qualified? ? "const " : ""
             parent = decl.semantic_parent
-            display = parent.qualified_display_name
+            display = qualified_display_name(parent)
             qualified = parent.qualified_name
             full_parent = if display.include?('<') && !display.start_with?(qualified)
                             "#{qualified}#{display[display.index('<')..]}"

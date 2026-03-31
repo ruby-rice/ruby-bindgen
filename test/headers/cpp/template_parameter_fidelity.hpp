@@ -22,4 +22,16 @@ public:
   ParameterPackHolder(const ParameterPackHolder<Ts...>& other);
   void swap(ParameterPackHolder<Ts...>& rhs);
 };
+
+template<typename... Ts>
+class ParameterPackAliasHolder
+{
+public:
+  using StorageT = ParameterPackHolder<Ts...>;
+  using Map = StorageT;
+
+  StorageT& storage();
+  void setStorage(StorageT& value);
+  const Map& getStorage() const;
+};
 }

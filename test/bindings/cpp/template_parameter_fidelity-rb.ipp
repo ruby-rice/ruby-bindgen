@@ -18,3 +18,13 @@ inline Rice::Data_Type<Tests::ParameterPackHolder<Ts...>> ParameterPackHolder_in
     .template define_method<void(Tests::ParameterPackHolder<Ts...>::*)(Tests::ParameterPackHolder<Ts...> &)>("swap", &Tests::ParameterPackHolder<Ts...>::swap,
       Arg("rhs"));
 }
+
+template<typename... Ts>
+inline Rice::Data_Type<Tests::ParameterPackAliasHolder<Ts...>> ParameterPackAliasHolder_instantiate(Rice::Module parent, const char* name)
+{
+  return Rice::define_class_under<Tests::ParameterPackAliasHolder<Ts...>>(parent, name)
+    .template define_method<typename Tests::ParameterPackAliasHolder<Ts...>::StorageT &(Tests::ParameterPackAliasHolder<Ts...>::*)()>("storage", &Tests::ParameterPackAliasHolder<Ts...>::storage)
+    .template define_method<void(Tests::ParameterPackAliasHolder<Ts...>::*)(typename Tests::ParameterPackAliasHolder<Ts...>::StorageT &)>("set_storage", &Tests::ParameterPackAliasHolder<Ts...>::setStorage,
+      Arg("value"))
+    .template define_method<const typename Tests::ParameterPackAliasHolder<Ts...>::Map &(Tests::ParameterPackAliasHolder<Ts...>::*)() const>("get_storage", &Tests::ParameterPackAliasHolder<Ts...>::getStorage);
+}
