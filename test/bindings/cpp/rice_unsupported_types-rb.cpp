@@ -27,4 +27,22 @@ void Init_RiceUnsupportedTypes()
     .define_attr("callback", &Tests::UnsupportedRiceTypes::callback)
     .define_attr("nested_callback", &Tests::UnsupportedRiceTypes::nestedCallback)
     .define_attr("value", &Tests::UnsupportedRiceTypes::value);
+
+  Rice::Data_Type<Tests::MoveFriendly> rb_cTestsMoveFriendly = define_class_under<Tests::MoveFriendly>(rb_mTests, "MoveFriendly")
+    .define_constructor(Constructor<Tests::MoveFriendly>())
+    .define_constructor(Constructor<Tests::MoveFriendly, const Tests::MoveFriendly &>(),
+      Arg("arg_0"))
+    .define_method<Tests::MoveFriendly &(Tests::MoveFriendly::*)(const Tests::MoveFriendly &)>("assign", &Tests::MoveFriendly::operator=,
+      Arg("arg_0"))
+    .define_method<Tests::MoveFriendly &(Tests::MoveFriendly::*)(Tests::MoveFriendly &&)>("assign", &Tests::MoveFriendly::operator=,
+      Arg("arg_0"))
+    .define_singleton_function<void(*)(Tests::MoveFriendly &&)>("consume", &Tests::MoveFriendly::consume,
+      Arg("value"));
+
+  Rice::Data_Type<Tests::VectorSink> rb_cTestsVectorSink = define_class_under<Tests::VectorSink>(rb_mTests, "VectorSink")
+    .define_constructor(Constructor<Tests::VectorSink>())
+    .define_constructor(Constructor<Tests::VectorSink, std::vector<int> &&>(),
+      Arg("values"))
+    .define_method<void(Tests::VectorSink::*)(std::vector<int> &&)>("set_values", &Tests::VectorSink::setValues,
+      Arg("values"));
 }

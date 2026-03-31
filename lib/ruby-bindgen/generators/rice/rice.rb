@@ -229,8 +229,9 @@ module RubyBindgen
         end
       end
 
-      # Rice bindings cannot sensibly expose callable parameters that require
-      # move-only / rvalue-reference semantics.
+      # Skip rvalue-reference parameters only when the underlying type is
+      # genuinely move-only. Copyable types such as std::vector<T> or T&&
+      # assignment operators compile and should remain available.
       def has_unsupported_rice_param_type?(cursor)
         (0...cursor.type.args_size).any? do |i|
           type = cursor.type.arg_type(i)
@@ -265,18 +266,19 @@ module RubyBindgen
         reference_type?(type)
       end
 
-      # Namespace-scope forward declarations can be compile-time traps for Rice
-      # when methods expose them by value/reference but no complete definition is
-      # available (for example optional backend types like plaidml::edsl::Tensor).
-      # Keep nested pimpl-style forward declarations on the existing path.
+      # Preserve rvalue-reference bindings for copyable types. The only cases we
+      # still need to suppress here are move-only sinks such as unique_ptr&&
+      # where Rice has no usable from_ruby conversion.
       def unsupported_rice_rvalue_ref_type?(type)
         return false unless type.kind == :type_rvalue_ref
 
-        canonical = type.non_reference_type.canonical
-        decl = canonical.declaration
-        return false if decl.kind != :cursor_no_decl_found && decl.qualified_name == "std::function"
+        pointee = type.non_reference_type
+        move_only_std_type?(pointee) || !copyable_type?(pointee)
+      end
 
-        true
+      def move_only_std_type?(type)
+        canonical_spelling = type.canonical.spelling
+        canonical_spelling.start_with?("std::unique_ptr<")
       end
 
       def unsupported_rice_opaque_namespace_type?(type)

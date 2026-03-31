@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace Tests
 {
@@ -27,5 +28,27 @@ namespace Tests
     Callback callback;
     NestedCallback nestedCallback;
     int value;
+  };
+
+  class MoveFriendly
+  {
+  public:
+    MoveFriendly() = default;
+    MoveFriendly(const MoveFriendly&) = default;
+    MoveFriendly(MoveFriendly&&) = default;
+
+    MoveFriendly& operator=(const MoveFriendly&) = default;
+    MoveFriendly& operator=(MoveFriendly&&) = default;
+
+    static void consume(MoveFriendly&& value);
+  };
+
+  class VectorSink
+  {
+  public:
+    VectorSink();
+    VectorSink(std::vector<int>&& values);
+
+    void setValues(std::vector<int>&& values);
   };
 }

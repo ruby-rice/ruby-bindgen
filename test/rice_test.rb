@@ -245,7 +245,7 @@ class RiceTest < AbstractTest
     end
   end
 
-  def test_rice_generates_supported_callback_types
+  def test_rice_generates_supported_callback_and_copyable_rvalue_types
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     config[:match] = ["rice_unsupported_types.hpp"]
@@ -268,6 +268,13 @@ class RiceTest < AbstractTest
     assert_includes generated_cpp, '"notify", &Tests::UnsupportedRiceTypes::notify'
     assert_includes generated_cpp, '.define_attr("callback", &Tests::UnsupportedRiceTypes::callback)'
     assert_includes generated_cpp, '.define_attr("nested_callback", &Tests::UnsupportedRiceTypes::nestedCallback)'
+
+    assert_includes generated_cpp, 'define_class_under<Tests::MoveFriendly>(rb_mTests, "MoveFriendly")'
+    assert_includes generated_cpp, '.define_method<Tests::MoveFriendly &(Tests::MoveFriendly::*)(Tests::MoveFriendly &&)>("assign", &Tests::MoveFriendly::operator='
+    assert_includes generated_cpp, '.define_singleton_function<void(*)(Tests::MoveFriendly &&)>("consume", &Tests::MoveFriendly::consume'
+    assert_includes generated_cpp, 'define_class_under<Tests::VectorSink>(rb_mTests, "VectorSink")'
+    assert_includes generated_cpp, "Constructor<Tests::VectorSink, std::vector<int> &&>()"
+    assert_includes generated_cpp, '"set_values", &Tests::VectorSink::setValues'
 
     expected_cpp = outputter.output_path("rice_unsupported_types-rb.cpp")
     if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
