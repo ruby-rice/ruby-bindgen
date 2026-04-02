@@ -522,9 +522,11 @@ module RubyBindgen
         @project_complete_types.clear
 
         @inputter.each do |path, _relative_path|
+          STDOUT << path << "\n"
           begin
             translation_unit = parser.send(:parse_translation_unit, path)
-          rescue RubyBindgen::Parser::ParseError
+          rescue RubyBindgen::Parser::ParseError => exception
+            STDOUT << exception.message << "\n"
             next
           end
 
