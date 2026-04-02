@@ -10,7 +10,9 @@ void Init_VectorVariantAttrs()
   Module rb_mTests = define_module("Tests");
 
   Rice::Data_Type<Tests::Token> rb_cTestsToken = define_class_under<Tests::Token>(rb_mTests, "Token")
-    .define_constructor(Constructor<Tests::Token>());
+    .define_constructor(Constructor<Tests::Token>())
+    .define_method<bool(Tests::Token::*)(const Tests::Token &) const>("==", &Tests::Token::operator==,
+      Arg("arg_0"));
 
   Rice::Data_Type<Tests::VariantVectorHolder> rb_cTestsVariantVectorHolder = define_class_under<Tests::VariantVectorHolder>(rb_mTests, "VariantVectorHolder")
     .define_constructor(Constructor<Tests::VariantVectorHolder>())

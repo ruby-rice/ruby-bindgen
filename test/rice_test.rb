@@ -282,7 +282,7 @@ class RiceTest < AbstractTest
     end
   end
 
-  def test_system_incomplete_references_are_skipped
+  def test_system_incomplete_references_are_generated
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     config[:match] = ["system_incomplete_refs.hpp"]
@@ -298,13 +298,13 @@ class RiceTest < AbstractTest
 
     assert_includes generated_cpp, 'define_class_under<Tests::SystemIncompleteRefs>(rb_mTests, "SystemIncompleteRefs")'
     assert_includes generated_cpp, '.define_constructor(Constructor<Tests::SystemIncompleteRefs>())'
+    assert_includes generated_cpp, "Constructor<Tests::SystemIncompleteRefs, const External::Opaque &>"
     assert_includes generated_cpp, '"value_ref", &Tests::SystemIncompleteRefs::valueRef'
     assert_includes generated_cpp, '"value_const_ref", &Tests::SystemIncompleteRefs::valueConstRef'
     assert_includes generated_cpp, '.define_attr("value", &Tests::SystemIncompleteRefs::value)'
-    refute_includes generated_cpp, "Constructor<Tests::SystemIncompleteRefs, const External::Opaque &>"
-    refute_includes generated_cpp, '"in_opaque", &Tests::SystemIncompleteRefs::inOpaque'
-    refute_includes generated_cpp, '"out_opaque", &Tests::SystemIncompleteRefs::outOpaque'
-    refute_includes generated_cpp, '"set_opaque", &Tests::SystemIncompleteRefs::setOpaque'
+    assert_includes generated_cpp, '"in_opaque", &Tests::SystemIncompleteRefs::inOpaque'
+    assert_includes generated_cpp, '"out_opaque", &Tests::SystemIncompleteRefs::outOpaque'
+    assert_includes generated_cpp, '"set_opaque", &Tests::SystemIncompleteRefs::setOpaque'
 
     expected_cpp = outputter.output_path("system_incomplete_refs-rb.cpp")
     if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)
@@ -312,7 +312,7 @@ class RiceTest < AbstractTest
     end
   end
 
-  def test_non_system_incomplete_references_are_skipped
+  def test_non_system_incomplete_references_are_generated
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     config[:match] = ["non_system_incomplete_refs.hpp"]
@@ -327,13 +327,13 @@ class RiceTest < AbstractTest
 
     assert_includes generated_cpp, 'define_class_under<Tests::NonSystemIncompleteRefs>(rb_mTests, "NonSystemIncompleteRefs")'
     assert_includes generated_cpp, '.define_constructor(Constructor<Tests::NonSystemIncompleteRefs>())'
+    assert_includes generated_cpp, "Constructor<Tests::NonSystemIncompleteRefs, const External::LocalOpaque &>"
     assert_includes generated_cpp, '"value_ref", &Tests::NonSystemIncompleteRefs::valueRef'
     assert_includes generated_cpp, '"value_const_ref", &Tests::NonSystemIncompleteRefs::valueConstRef'
     assert_includes generated_cpp, '.define_attr("value", &Tests::NonSystemIncompleteRefs::value)'
-    refute_includes generated_cpp, "Constructor<Tests::NonSystemIncompleteRefs, const External::LocalOpaque &>"
-    refute_includes generated_cpp, '"in_opaque", &Tests::NonSystemIncompleteRefs::inOpaque'
-    refute_includes generated_cpp, '"out_opaque", &Tests::NonSystemIncompleteRefs::outOpaque'
-    refute_includes generated_cpp, '"set_opaque", &Tests::NonSystemIncompleteRefs::setOpaque'
+    assert_includes generated_cpp, '"in_opaque", &Tests::NonSystemIncompleteRefs::inOpaque'
+    assert_includes generated_cpp, '"out_opaque", &Tests::NonSystemIncompleteRefs::outOpaque'
+    assert_includes generated_cpp, '"set_opaque", &Tests::NonSystemIncompleteRefs::setOpaque'
 
     expected_cpp = outputter.output_path("non_system_incomplete_refs-rb.cpp")
     if ENV["UPDATE_EXPECTED"] || File.exist?(expected_cpp)

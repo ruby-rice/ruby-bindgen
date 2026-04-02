@@ -11,6 +11,12 @@ void Init_SystemIncompleteRefs()
 
   Rice::Data_Type<Tests::SystemIncompleteRefs> rb_cTestsSystemIncompleteRefs = define_class_under<Tests::SystemIncompleteRefs>(rb_mTests, "SystemIncompleteRefs")
     .define_constructor(Constructor<Tests::SystemIncompleteRefs>())
+    .define_constructor(Constructor<Tests::SystemIncompleteRefs, const External::Opaque &>(),
+      Arg("opaque"))
+    .define_method<const External::Opaque &(Tests::SystemIncompleteRefs::*)() const>("in_opaque", &Tests::SystemIncompleteRefs::inOpaque)
+    .define_method<External::Opaque &(Tests::SystemIncompleteRefs::*)()>("out_opaque", &Tests::SystemIncompleteRefs::outOpaque)
+    .define_method<void(Tests::SystemIncompleteRefs::*)(const External::Opaque &)>("set_opaque", &Tests::SystemIncompleteRefs::setOpaque,
+      Arg("opaque"))
     .define_method<int &(Tests::SystemIncompleteRefs::*)()>("value_ref", &Tests::SystemIncompleteRefs::valueRef)
     .define_method<const int &(Tests::SystemIncompleteRefs::*)() const>("value_const_ref", &Tests::SystemIncompleteRefs::valueConstRef)
     .define_attr("value", &Tests::SystemIncompleteRefs::value);

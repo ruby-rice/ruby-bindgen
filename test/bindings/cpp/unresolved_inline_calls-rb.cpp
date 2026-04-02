@@ -13,6 +13,8 @@ void Init_UnresolvedInlineCalls()
 
   Module rb_mTestsBroken = define_module_under(rb_mTests, "Broken");
 
+  rb_mTestsBroken.define_module_function<int(*)()>("backend", &Tests::Broken::backend);
+
   Rice::Data_Type<Tests::Logger> rb_cTestsLogger = define_class_under<Tests::Logger>(rb_mTests, "Logger")
     .define_constructor(Constructor<Tests::Logger>())
     .define_singleton_function<int(*)()>("info", &Tests::Logger::info);

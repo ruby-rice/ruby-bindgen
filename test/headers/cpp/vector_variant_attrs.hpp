@@ -6,6 +6,10 @@
 namespace Tests {
 struct Token
 {
+  bool operator==(const Token&) const
+  {
+    return true;
+  }
 };
 
 struct VariantVectorHolder

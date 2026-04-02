@@ -180,7 +180,6 @@ module RubyBindgen
         @incomplete_iterators = Hash.new
         # Iterator names per class (for aliasing each_const -> each)
         @class_iterator_names = Hash.new { |h, k| h[k] = Set.new }
-        @project_complete_types = Set.new
       end
 
       # Parse the configured inputs with libclang and stream the resulting
@@ -189,7 +188,6 @@ module RubyBindgen
         clang_args = @config[:clang_args] || []
         parser = RubyBindgen::Parser.new(@inputter, clang_args, libclang: @config[:libclang])
         ::FFI::Clang::Cursor.namer = @namer
-        build_project_complete_type_index(parser)
         parser.generate(self)
       end
 
@@ -237,14 +235,12 @@ module RubyBindgen
       def has_unsupported_rice_param_type?(cursor)
         (0...cursor.type.args_size).any? do |i|
           type = cursor.type.arg_type(i)
-          unsupported_rice_rvalue_ref_type?(type) ||
-            unsupported_rice_opaque_namespace_type?(type)
+          unsupported_rice_rvalue_ref_type?(type)
         end
       end
 
       def has_unsupported_rice_return_type?(cursor)
-        result_type = cursor.type.result_type
-        unsupported_rice_opaque_namespace_type?(result_type)
+        false
       end
 
       # Check if the return type of a callable references a skipped symbol.
@@ -281,23 +277,6 @@ module RubyBindgen
       def move_only_std_type?(type)
         canonical_spelling = type.canonical.spelling
         canonical_spelling.start_with?("std::unique_ptr<")
-      end
-
-      def unsupported_rice_opaque_namespace_type?(type)
-        return false if [:type_pointer, :type_member_pointer].include?(type.kind)
-        return false if type.spelling.start_with?("std::")
-
-        type = type.non_reference_type if reference_type?(type)
-        return false if type.spelling.include?("<") || type.canonical.spelling.include?("<")
-
-        decl = type.canonical.declaration
-        return false if decl.kind == :cursor_no_decl_found
-        return false unless decl.opaque_declaration?
-        return false if project_complete_type?(decl)
-        return false if decl.qualified_name&.start_with?("std::", "__gnu_cxx::")
-        return false if [:cursor_class_decl, :cursor_struct].include?(decl.semantic_parent.kind)
-
-        true
       end
 
       def unsupported_rice_vector_element_type?(type)
@@ -516,42 +495,6 @@ module RubyBindgen
                                 :init_name => init_name,
                                 :rice_include_header => relative_include)
         self.outputter.write(rice_header, content)
-      end
-
-      def build_project_complete_type_index(parser)
-        @project_complete_types.clear
-
-        @inputter.each do |path, _relative_path|
-          STDOUT << path << "\n"
-          begin
-            translation_unit = parser.send(:parse_translation_unit, path)
-          rescue RubyBindgen::Parser::ParseError => exception
-            STDOUT << exception.message << "\n"
-            next
-          end
-
-          record_project_complete_types(translation_unit.cursor)
-        end
-      end
-
-      def record_project_complete_types(cursor)
-        cursor.find_by_kind(true, :cursor_class_decl, :cursor_struct) do |child|
-          next if child.spelling.empty?
-          next if child.opaque_declaration?
-          next unless translation_unit_file?(child)
-
-          qualified_name = child.qualified_name
-          next if qualified_name.nil? || qualified_name.empty?
-
-          @project_complete_types << qualified_name
-        end
-      end
-
-      def project_complete_type?(decl)
-        qualified_name = decl.qualified_name
-        return false if qualified_name.nil? || qualified_name.empty?
-
-        @project_complete_types.include?(qualified_name)
       end
 
       # Render a public, callable constructor into the Rice chain for its class.

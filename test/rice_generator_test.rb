@@ -246,6 +246,20 @@ class RiceGeneratorTest < RiceAbstractTest
     assert_includes generated_cpp, '"set_handle", &Tests::OpaqueNamespaceConsumer::setHandle'
   end
 
+  def test_namespace_scope_opaque_type_lookup_does_not_log_inputs_twice
+    config_dir = File.join(__dir__, "headers", "cpp")
+    config = load_config(config_dir)
+    inputter = RubyBindgen::Inputter.new(config_dir, ["opaque_namespace_api.hpp",
+                                                      "opaque_namespace_full.hpp"])
+    outputter = create_outputter("cpp")
+    generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
+
+    stdout, = capture_subprocess_io { generator.generate }
+
+    assert_equal 1, stdout.scan(/opaque_namespace_api\.hpp/).size
+    assert_equal 1, stdout.scan(/opaque_namespace_full\.hpp/).size
+  end
+
   def test_out_of_class_nested_definitions_are_rendered_only_under_the_parent
     parsed, = parse_cpp(<<~CPP)
       namespace Tests {

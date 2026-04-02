@@ -12,6 +12,8 @@ class CMakeTest < AbstractTest
     inputter = RubyBindgen::Inputter.new(outputter.base_path, config[:match] || ["**/*-rb.cpp"], config[:skip] || [])
     generator = RubyBindgen::Generators::CMake.new(inputter, outputter, config)
     generator.generate
+    generated_root_cmake = generator.outputter.output_paths.fetch(generator.outputter.output_path("CMakeLists.txt"))
+    assert_includes generated_root_cmake, '"${CMAKE_CURRENT_SOURCE_DIR}/../../headers/cpp/system"'
     validate_result(generator.outputter)
   end
 

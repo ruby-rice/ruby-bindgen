@@ -2,6 +2,7 @@
 
 namespace Tests {
 namespace Broken {
+int backend();
 }
 
 class Logger

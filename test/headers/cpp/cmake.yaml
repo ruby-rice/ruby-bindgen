@@ -9,3 +9,4 @@ guards:
 
 include_dirs:
   - "${CMAKE_CURRENT_SOURCE_DIR}/../../headers/cpp"
+  - "${CMAKE_CURRENT_SOURCE_DIR}/../../headers/cpp/system"
