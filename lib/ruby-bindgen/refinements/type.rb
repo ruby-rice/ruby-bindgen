@@ -13,7 +13,7 @@ module FFI
   module Clang
     module Types
       class Type
-        unless method_defined?(:fully_qualified_name)
+        unless Lib.respond_to?(:get_fully_qualified_name)
           def fully_qualified_name(policy, with_global_ns_prefix: false)
             result = fqn_impl(policy)
             with_global_ns_prefix ? "::#{result}" : result
