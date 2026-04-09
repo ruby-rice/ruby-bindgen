@@ -5,23 +5,21 @@
 #
 # Remove once ffi-clang >= 0.15.1 is released.
 
-if defined?(FFI::Clang::MswinArgs)
-  module FFI
-    module Clang
-      class MswinArgs < Args
-        private
+require 'ffi/clang/args/mswin'
 
-        def extra_args(command_line_args)
-          args = []
+module FFI
+  module Clang
+    class MswinArgs
+      def extra_args(command_line_args)
+        args = []
 
-          system_includes.each do |path|
-            unless command_line_args.include?(path)
-              args.push("-isystem", path)
-            end
+        system_includes.each do |path|
+          unless command_line_args.include?(path)
+            args.push("-isystem", path)
           end
-
-          args
         end
+
+        args
       end
     end
   end
