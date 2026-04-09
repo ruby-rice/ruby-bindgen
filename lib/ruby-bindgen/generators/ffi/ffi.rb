@@ -435,7 +435,7 @@ module RubyBindgen
         decl = type.pointee.canonical.declaration
         return false if [:cursor_invalid_file, :cursor_no_decl_found].include?(decl.kind)
 
-        decl.forward_declaration?
+        decl.opaque_declaration?
       end
 
       def figure_ffi_type(type, context = nil)
