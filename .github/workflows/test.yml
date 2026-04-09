@@ -46,6 +46,10 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install llvm
 
+      - name: Install LLVM and Clang (Windows MinGW)
+        if: runner.os == 'Windows' && matrix.ruby != 'mswin'
+        run: pacman -S --noconfirm mingw-w64-ucrt-x86_64-clang mingw-w64-ucrt-x86_64-llvm
+
       - name: Run tests
         timeout-minutes: 10
         run: bundle exec rake test
