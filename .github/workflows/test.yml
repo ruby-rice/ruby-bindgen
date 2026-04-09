@@ -50,6 +50,29 @@ jobs:
         if: runner.os == 'Windows' && matrix.ruby != 'mswin'
         run: pacman -S --noconfirm mingw-w64-ucrt-x86_64-clang mingw-w64-ucrt-x86_64-llvm
 
+      - name: Debug LLVM paths (Windows MSVC)
+        if: matrix.ruby == 'mswin'
+        shell: pwsh
+        run: |
+          Write-Host "=== vswhere output ==="
+          & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -prerelease -requires Microsoft.VisualStudio.Component.VC.Llvm.Clang -property installationPath
+          Write-Host ""
+          Write-Host "=== VS LLVM directories ==="
+          $vsPath = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -prerelease -requires Microsoft.VisualStudio.Component.VC.Llvm.Clang -property installationPath
+          if ($vsPath) {
+            $llvmDir = Join-Path $vsPath "VC\Tools\Llvm\x64\bin"
+            Write-Host "Looking in: $llvmDir"
+            if (Test-Path $llvmDir) { Get-ChildItem $llvmDir -Filter "libclang*" } else { Write-Host "Directory not found" }
+          }
+          Write-Host ""
+          Write-Host "=== Standalone LLVM ==="
+          where.exe llvm-config 2>$null
+          where.exe clang 2>$null
+          if (Test-Path "C:\Program Files\LLVM\bin") { Get-ChildItem "C:\Program Files\LLVM\bin" -Filter "libclang*" }
+          Write-Host ""
+          Write-Host "=== PATH ==="
+          $env:PATH -split ";" | Where-Object { $_ -match "llvm|clang" -or $_ -match "LLVM" }
+
       - name: Run tests
         timeout-minutes: 10
         run: bundle exec rake test
