@@ -296,7 +296,7 @@ module RubyBindgen
         ffi_type = if cursor.type.is_a?(::FFI::Clang::Types::Pointer)
                       if cursor.type.function?
                         ":#{cursor.semantic_parent.spelling.underscore}_#{cursor.spelling.underscore}_callback"
-                      elsif cursor.type.forward_declaration?
+                      elsif pointer_to_forward_declaration?(cursor.type)
                        ":pointer"
                       end
                     end
@@ -308,22 +308,20 @@ module RubyBindgen
       def visit_typedef_decl(cursor)
         return if @symbols.skip?(cursor)
 
-        case cursor.underlying_type.kind
-          when :type_elaborated
-            if [:type_record, :type_enum].include?(cursor.underlying_type&.canonical&.kind)
-              # Opaque struct/union typedef - emit typedef :pointer
-              if cursor.underlying_type.canonical.declaration.opaque_declaration?
-                return render_cursor(cursor, "typedef_decl")
-              end
-              # Otherwise it's a struct/union/enum we have already rendered - skip
-              return
-            end
-          when :type_pointer
-            if cursor.underlying_type.function?
-              func_type = cursor.underlying_type.pointee
-              parameter_types = (0...func_type.args_size).map { |i| figure_ffi_type(func_type.arg_type(i), :callback) }
-              return render_callback(cursor.ruby_name, parameter_types, func_type.result_type)
-            end
+        underlying_type = cursor.underlying_type
+        canonical_type = underlying_type.canonical
+
+        if [:type_record, :type_enum].include?(canonical_type.kind)
+          # Opaque struct/union typedef - emit typedef :pointer
+          if canonical_type.declaration.opaque_declaration?
+            return render_cursor(cursor, "typedef_decl")
+          end
+          # Otherwise it's a struct/union/enum we have already rendered - skip
+          return
+        elsif underlying_type.kind == :type_pointer && underlying_type.function?
+          func_type = underlying_type.pointee
+          parameter_types = (0...func_type.args_size).map { |i| figure_ffi_type(func_type.arg_type(i), :callback) }
+          return render_callback(cursor.ruby_name, parameter_types, func_type.result_type)
         end
         render_cursor(cursor, "typedef_decl")
       end
@@ -431,6 +429,15 @@ module RubyBindgen
         @symbols.skip?(decl)
       end
 
+      def pointer_to_forward_declaration?(type)
+        return false unless type.kind == :type_pointer
+
+        decl = type.pointee.canonical.declaration
+        return false if [:cursor_invalid_file, :cursor_no_decl_found].include?(decl.kind)
+
+        decl.forward_declaration?
+      end
+
       def figure_ffi_type(type, context = nil)
         case type.kind
           when :type_bool
@@ -474,7 +481,11 @@ module RubyBindgen
           when :type_void
             ":void"
           when :type_elaborated
-            figure_ffi_elaborated_type(type, context)
+            figure_ffi_declared_type(type, context)
+          when :type_record
+            figure_ffi_record_type(type, context)
+          when :type_typedef
+            figure_ffi_declared_type(type, context)
           when :type_pointer
             figure_ffi_pointer_type(type, context)
           when :type_enum
@@ -501,7 +512,7 @@ module RubyBindgen
         end
       end
 
-      def figure_ffi_elaborated_type(type, context = nil)
+      def figure_ffi_declared_type(type, context = nil)
         if type.declaration.spelling == "va_list"
           # va_list cannot be constructed from Ruby — functions with va_list
           # params are skipped in visit_function. Map to :pointer as fallback.
@@ -512,22 +523,9 @@ module RubyBindgen
         elsif type.canonical.kind == :type_function_proto
           ":pointer"
         elsif type.canonical.kind == :type_record
-          if type.canonical.declaration.opaque_declaration?
-            return ":pointer"
-          end
-          if type.anonymous?
-            definer = type.declaration.anonymous_definer
-            return definer ? definer.spelling.camelize : ":pointer"
-          end
-
-          case
-            when context == :function
-              "#{type.declaration.ruby_name}.by_value"
-            when context == :callback
-              "#{type.declaration.ruby_name}.by_value"
-            else
-              type.declaration.ruby_name
-          end
+          figure_ffi_record_type(type, context)
+        elsif type.canonical.kind == :type_enum
+          figure_ffi_type(type.canonical, context)
         else
           spelling = type.declaration.spelling
           if ::FFI::TypeDefs.key?(spelling.to_sym)
@@ -535,6 +533,25 @@ module RubyBindgen
           else
             self.figure_ffi_type(type.canonical, context)
           end
+        end
+      end
+
+      def figure_ffi_record_type(type, context = nil)
+        if type.canonical.declaration.opaque_declaration?
+          return ":pointer"
+        end
+        if type.anonymous?
+          definer = type.declaration.anonymous_definer
+          return definer ? definer.spelling.camelize : ":pointer"
+        end
+
+        case
+          when context == :function
+            "#{type.declaration.ruby_name}.by_value"
+          when context == :callback
+            "#{type.declaration.ruby_name}.by_value"
+          else
+            type.declaration.ruby_name
         end
       end
 
@@ -547,24 +564,22 @@ module RubyBindgen
             else
               type.pointee.const_qualified? ? ":string" : ":pointer"
             end
-          when :type_elaborated
-            if type.pointee.canonical.kind == :type_record
-              if type.pointee.canonical.declaration.opaque_declaration?
-                return ":pointer"
-              end
-              case context
-                when :union, :structure, :typedef
-                  "#{type.pointee.canonical.declaration.ruby_name}.ptr"
-                when :function, :callback, :callback_return
-                  "#{type.pointee.canonical.declaration.ruby_name}.by_ref"
-                else
-                  type.pointee.canonical.declaration.ruby_name
-              end
-            else
-              ":pointer"
-            end
           else
-            ":pointer"
+            figure_ffi_record_pointer_type(type.pointee, context) || ":pointer"
+        end
+      end
+
+      def figure_ffi_record_pointer_type(type, context)
+        return nil unless type.canonical.kind == :type_record
+        return ":pointer" if type.canonical.declaration.opaque_declaration?
+
+        case context
+          when :union, :structure, :typedef
+            "#{type.canonical.declaration.ruby_name}.ptr"
+          when :function, :callback, :callback_return
+            "#{type.canonical.declaration.ruby_name}.by_ref"
+          else
+            type.canonical.declaration.ruby_name
         end
       end
 
