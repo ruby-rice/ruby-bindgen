@@ -1,5 +1,6 @@
 # encoding: UTF-8
 
+require 'ffi/clang'
 require_relative './rice_abstract_test'
 
 class TemplateResolverTest < RiceAbstractTest

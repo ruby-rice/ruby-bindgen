@@ -493,6 +493,9 @@ module RubyBindgen
               else
                 raise("Unsupported incomplete array type: #{type.element_type.kind}")
             end
+          when :type_block_pointer
+            # Objective-C block pointers (macOS) — treat as opaque pointer
+            ":pointer"
           else
             raise("Unsupported type: #{type.kind}")
         end
