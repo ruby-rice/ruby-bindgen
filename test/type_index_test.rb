@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require_relative './rice_abstract_test'
+require_relative './rice_test_base'
 
 class TypeIndexTest < RiceAbstractTest
   def test_builds_typedef_and_qualified_name_lookups

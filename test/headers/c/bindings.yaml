@@ -1,5 +1,9 @@
 format: FFI
 
+clang-cl:
+  args:
+    - "-I."
+
 clang:
   args:
     - "-I."

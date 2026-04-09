@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require_relative './rice_abstract_test'
+require_relative './rice_test_base'
 
 class NamerTest < RiceAbstractTest
   def test_rename_methods_matches_inline_namespace_collapsed_parent_type

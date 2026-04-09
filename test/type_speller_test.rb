@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require_relative './rice_abstract_test'
+require_relative './rice_test_base'
 
 class TypeSpellerTest < RiceAbstractTest
   def test_qualifies_class_static_members

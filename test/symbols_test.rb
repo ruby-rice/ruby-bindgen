@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require_relative './rice_abstract_test'
+require_relative './rice_test_base'
 
 class SymbolsTest < RiceAbstractTest
   def test_build_candidates_includes_fully_qualified_template_argument_candidates

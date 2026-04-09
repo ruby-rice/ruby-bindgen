@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
 require 'ffi/clang'
-require_relative './rice_abstract_test'
+require_relative './rice_test_base'
 
 class TemplateResolverTest < RiceAbstractTest
   def test_fills_defaults_and_resolves_base_instantiations

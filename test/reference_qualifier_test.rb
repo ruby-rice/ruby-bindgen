@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require_relative './rice_abstract_test'
+require_relative './rice_test_base'
 
 class ReferenceQualifierTest < RiceAbstractTest
   def test_qualifies_defaults_without_touching_string_literals

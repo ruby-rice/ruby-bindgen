@@ -2,7 +2,7 @@
 
 require 'tmpdir'
 
-require_relative './rice_abstract_test'
+require_relative './rice_test_base'
 
 class RiceGeneratorTest < RiceAbstractTest
   def test_translation_unit_file_predicate_distinguishes_main_and_included_headers
