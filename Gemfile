@@ -2,5 +2,5 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'ffi-clang', path: '../ffi-clang'
+gem 'ffi-clang', '>= 0.15.0'
 gem 'simplecov', require: false

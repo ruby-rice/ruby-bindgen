@@ -9,24 +9,43 @@ on:
 
 jobs:
   test:
+    name: ${{matrix.ruby}} on ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+
     strategy:
       fail-fast: false
       matrix:
-        ruby: ['3.2', '3.3', '3.4', '4.0']
-    runs-on: ubuntu-latest
+        include:
+          # Ubuntu - full Ruby matrix
+          - { os: ubuntu-latest, ruby: "3.2" }
+          - { os: ubuntu-latest, ruby: "3.3" }
+          - { os: ubuntu-latest, ruby: "3.4" }
+          - { os: ubuntu-latest, ruby: "4.0" }
+          # macOS
+          - { os: macos-latest, ruby: "4.0" }
+          # Windows MinGW
+          - { os: windows-latest, ruby: "4.0" }
+          # Windows MSVC
+          - { os: windows-latest, ruby: "mswin" }
+
     steps:
       - uses: actions/checkout@v6
-
-      - name: Install LLVM and libclang
-        run: |
-          sudo apt-get install -y llvm libclang-dev
-          echo "LIBCLANG=$(llvm-config --libdir)/libclang.so" >> $GITHUB_ENV
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby }}
+          ruby-version: ${{matrix.ruby}}
           bundler-cache: true
+          mingw: clang llvm
+
+      - name: Install LLVM and Clang (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y llvm libclang-dev
+
+      - name: Install LLVM and Clang (macOS)
+        if: runner.os == 'macOS'
+        run: brew install llvm
 
       - name: Run tests
+        timeout-minutes: 10
         run: bundle exec rake test
