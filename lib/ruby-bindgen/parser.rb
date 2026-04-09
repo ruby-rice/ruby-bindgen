@@ -36,6 +36,7 @@ module RubyBindgen
       require 'ffi/clang'
       require 'ruby-bindgen/refinements/cursor'
       require 'ruby-bindgen/refinements/type'
+      require 'ruby-bindgen/refinements/mswin_args'
 
       @index = FFI::Clang::Index.new(exclude_declarations_from_pch: false, display_diagnostics: true)
     end
