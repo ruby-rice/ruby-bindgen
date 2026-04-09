@@ -1,9 +1,4 @@
 require 'bundler/setup'
-require 'fileutils'
-require 'minitest/autorun'
-Minitest.load_plugins
-
-require 'ruby-bindgen/config'
 
 if ENV['COVERAGE']
   require 'simplecov'
@@ -16,6 +11,12 @@ if ENV['COVERAGE']
     track_files 'lib/**/*.rb'
   end
 end
+
+require 'fileutils'
+require 'minitest/autorun'
+Minitest.load_plugins
+
+require 'ruby-bindgen/config'
 
 # Set up libclang path from config
 %w[cpp c c/clang-c].each do |dir|
