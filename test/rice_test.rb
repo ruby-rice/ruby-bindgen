@@ -71,7 +71,11 @@ class RiceTest < AbstractTest
   end
 
   def test_incomplete_types
-    run_rice_test("incomplete_types.hpp")
+    # macOS clang spells size_t without std:: prefix in template args;
+    # normalize to std::size_t to match the expected output.
+    run_rice_test("incomplete_types.hpp") do |content|
+      content.gsub(/(?<!::)\bsize_t\b/, "std::size_t")
+    end
   end
 
   def test_filtering

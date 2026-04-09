@@ -39,7 +39,7 @@ class AbstractTest < Minitest::Test
     RubyBindgen::TestOutputter.new(output_path)
   end
 
-  def run_rice_test(match, **overrides)
+  def run_rice_test(match, **overrides, &block)
     config_dir = File.join(__dir__, "headers", "cpp")
     config = load_config(config_dir)
     config[:match] = Array(match)
@@ -49,7 +49,7 @@ class AbstractTest < Minitest::Test
     outputter = create_outputter("cpp")
     generator = RubyBindgen::Generators::Rice.new(inputter, outputter, config)
     generator.generate
-    validate_result(generator.outputter)
+    validate_result(generator.outputter, &block)
   end
 
   def validate_result(outputter)
@@ -57,6 +57,7 @@ class AbstractTest < Minitest::Test
 
     outputter.output_paths.each do |path, content|
       generated_paths << path
+      content = yield(content) if block_given?
       if ENV["UPDATE_EXPECTED"]
         FileUtils.mkdir_p(File.dirname(path))
         File.open(path, 'wb') do |file|
