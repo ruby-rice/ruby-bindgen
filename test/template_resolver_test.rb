@@ -136,6 +136,11 @@ class TemplateResolverTest < RiceAbstractTest
   end
 
   def test_prefers_specialized_type_arguments_for_variadic_alias_specializations
+    # clang_getFullyQualifiedName (LLVM 21+) preserves alias template names in
+    # template arguments; the shim cannot because clang's C API resolves aliases
+    # away at the template_argument_type level.
+    skip "Alias templates in template args require LLVM 21+" unless FFI::Clang.clang_version >= Gem::Version.new("21")
+
     parsed, collaborators = parse_cpp(<<~CPP)
       namespace Tests {
         template<typename T>

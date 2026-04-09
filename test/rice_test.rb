@@ -28,6 +28,11 @@ class RiceTest < AbstractTest
   end
 
   def test_template
+    # Expected output includes alias template names (e.g., AliasOptional<int>)
+    # that are only preserved by clang_getFullyQualifiedName on LLVM 21+.
+    # The shim cannot recover aliases resolved away by clang's C API.
+    skip "Alias templates in template args require LLVM 21+" unless FFI::Clang.clang_version >= Gem::Version.new("21")
+
     run_rice_test("templates.hpp")
   end
 
