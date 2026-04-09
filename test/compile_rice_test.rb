@@ -15,6 +15,8 @@ class CompileRiceTest < AbstractTest
   CMAKE_SUBPATH = 'Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe'
 
   def test_compile_bindings
+    skip "CMake hangs on MinGW CI" if RbConfig::CONFIG['arch'] =~ /mingw/
+
     bindings_dir = File.join(__dir__, 'bindings', 'cpp')
     preset = determine_preset
 
