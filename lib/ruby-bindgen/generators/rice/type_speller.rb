@@ -64,7 +64,7 @@ module RubyBindgen
 
       # Returns a fully-qualified C++ type spelling suitable for use in generated Rice bindings.
       # Most type kinds are handled by Type#fully_qualified_name. This method only
-      # intercepts elaborated types that need generator-level context:
+      # intercepts declared types that need generator-level context:
       # - Class template types: fqn resolves template params, but template builders need them generic
       # - Typedefs inside class templates: need 'typename' keyword for dependent types
       # - Template instantiations: need qualify_template_args post-processing with TypeIndex
@@ -81,7 +81,9 @@ module RubyBindgen
         when :type_incomplete_array
           "#{type_spelling(type.element_type)}[]"
         when :type_elaborated
-          type_spelling_elaborated(type)
+          type_spelling_declared(type)
+        when :type_typedef
+          type_spelling_declared(type)
         when :type_unexposed
           type_spelling_unexposed(type)
         else
@@ -397,7 +399,7 @@ module RubyBindgen
         result
       end
 
-      def type_spelling_elaborated(type)
+      def type_spelling_declared(type)
         decl = type.declaration
 
         case decl.kind
@@ -442,10 +444,43 @@ module RubyBindgen
         decl = type.declaration
         spelling = type.spelling
 
+        if decl.kind == :cursor_class_template && template_arguments_need_type_spelling?(type)
+          arg_spellings = (0...type.num_template_arguments).map do |index|
+            type_spelling(type.template_argument_type(index))
+          end
+          const_prefix = type.const_qualified? ? "const " : ""
+          return "#{const_prefix}#{decl.qualified_name}<#{arg_spellings.join(', ')}>"
+        end
+
         if decl.kind == :cursor_no_decl_found && spelling.include?('::')
           qualify_template_args(qualify_dependent_types_in_template_args(spelling), type)
         else
-          type.fully_qualified_name(@printing_policy)
+          qualify_template_args(qualify_dependent_types_in_template_args(type.fully_qualified_name(@printing_policy)), type)
+        end
+      end
+
+      def template_arguments_need_type_spelling?(type)
+        return false unless type.num_template_arguments > 0
+
+        type.num_template_arguments.times.any? do |index|
+          template_argument_needs_type_spelling?(type.template_argument_type(index))
+        end
+      end
+
+      def template_argument_needs_type_spelling?(type)
+        return false if type.nil? || type.kind == :type_invalid
+
+        case type.kind
+        when :type_typedef, :type_elaborated
+          # LLVM 21 can still surface dependent alias/tag args as :type_elaborated.
+          # LLVM 22 usually surfaces the same cases as bare :type_typedef.
+          true
+        when :type_pointer
+          template_argument_needs_type_spelling?(type.pointee)
+        when :type_lvalue_ref, :type_rvalue_ref
+          template_argument_needs_type_spelling?(type.non_reference_type)
+        else
+          template_arguments_need_type_spelling?(type)
         end
       end
 
