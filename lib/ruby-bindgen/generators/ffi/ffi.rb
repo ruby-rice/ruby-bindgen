@@ -46,7 +46,7 @@ module RubyBindgen
       end
 
       def visit_translation_unit(translation_unit, path, relative_path)
-        basename = File.basename(relative_path, ".*")
+        basename = File.basename(relative_path, ".*").underscore
         relative_path_2 = File.join(File.dirname(relative_path), "#{basename}.rb")
 
         cursor = translation_unit.cursor
