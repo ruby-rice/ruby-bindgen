@@ -3,8 +3,8 @@
 module Forward
 
   class F < FFI::Struct
-    layout :b, :pointer,
-           :c, :pointer
+    layout :b, B.ptr,
+           :c, C.ptr
   end
 
   class B < FFI::Struct

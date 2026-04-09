@@ -20,7 +20,7 @@ module Sqlite3
   attach_function :sqlite3_exec, :sqlite3_exec, [:pointer, :string, :sqlite3_exec_callback_callback, :pointer, :pointer], :int
 
   class Sqlite3File < FFI::Struct
-    layout :p_methods, :pointer
+    layout :p_methods, Sqlite3IoMethods.ptr
   end
 
   callback :sqlite3_io_methods_x_close_callback, [:pointer], :int
@@ -89,7 +89,7 @@ module Sqlite3
     layout :i_version, :int,
            :sz_os_file, :int,
            :mx_pathname, :int,
-           :p_next, :pointer,
+           :p_next, Sqlite3Vfs.ptr,
            :z_name, :string,
            :p_app_data, :pointer,
            :x_open, :sqlite3_vfs_x_open_callback,
@@ -478,13 +478,13 @@ module Sqlite3
   attach_function :sqlite3_drop_modules, :sqlite3_drop_modules, [:pointer, :pointer], :int
 
   class Sqlite3Vtab < FFI::Struct
-    layout :p_module, :pointer,
+    layout :p_module, Sqlite3Module.ptr,
            :n_ref, :int,
            :z_err_msg, :pointer
   end
 
   class Sqlite3VtabCursor < FFI::Struct
-    layout :p_vtab, :pointer
+    layout :p_vtab, Sqlite3Vtab.ptr
   end
 
   attach_function :sqlite3_declare_vtab, :sqlite3_declare_vtab, [:pointer, :string], :int
