@@ -43,4 +43,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'minitest-reporters'
   spec.add_development_dependency 'mutex_m'
   spec.add_development_dependency 'rake'
+  spec.add_development_dependency 'simplecov'
 end
