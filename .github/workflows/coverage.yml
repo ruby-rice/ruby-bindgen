@@ -1,0 +1,33 @@
+name: Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+
+      - name: Install LLVM and Clang
+        run: sudo apt-get update && sudo apt-get install -y llvm libclang-dev
+
+      - name: Run tests with coverage
+        run: COVERAGE=1 bundle exec rake test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage/coverage.xml
+          fail_ci_if_error: false
