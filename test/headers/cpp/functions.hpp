@@ -83,6 +83,32 @@ namespace nontype_args
 const char* get_operator_name(int op_code);
 
 // =============================================================================
+// Deleted free functions (= delete) - should be SKIPPED (cannot be bound)
+// Reproduces the cv::to_own(Mat&&) = delete pattern from OpenCV's GAPI
+// headers: an lvalue overload is bound while the rvalue overload is deleted
+// to forbid passing temporaries (the result would alias storage about to be
+// destroyed). Slips past the existing class-member deleted check because
+// libclang's clang_CXXMethod_isDeleted only applies to class methods.
+// =============================================================================
+
+namespace deleted_overloads
+{
+  // Plain holder used as both lvalue and rvalue source - represents the
+  // "owns storage" type whose temporaries would dangle through the result.
+  struct Holder
+  {
+    int value;
+  };
+
+  // lvalue overload: BOUND.
+  Holder borrow(const Holder& h);
+
+  // rvalue overload: DELETED. Must be skipped by ruby-bindgen so the binding
+  // does not emit a `define_module_function` call to a deleted function.
+  Holder borrow(Holder&&) = delete;
+}
+
+// =============================================================================
 // Variadic functions - should be SKIPPED (cannot be bound to Ruby)
 // =============================================================================
 

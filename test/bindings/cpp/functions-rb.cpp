@@ -97,6 +97,15 @@ void Init_Functions()
   define_global_function<const char *(*)(int)>("get_operator_name", &get_operator_name,
     Arg("op_code"));
 
+  Module rb_mDeletedOverloads = define_module("DeletedOverloads");
+
+  Rice::Data_Type<deleted_overloads::Holder> rb_cDeletedOverloadsHolder = define_class_under<deleted_overloads::Holder>(rb_mDeletedOverloads, "Holder")
+    .define_constructor(Constructor<deleted_overloads::Holder>())
+    .define_attr("value", &deleted_overloads::Holder::value);
+
+  rb_mDeletedOverloads.define_module_function<deleted_overloads::Holder(*)(const deleted_overloads::Holder &)>("borrow", static_cast<deleted_overloads::Holder(*)(const deleted_overloads::Holder &)>(&deleted_overloads::borrow),
+    Arg("h"));
+
   Rice::Data_Type<Logger> rb_cLogger = define_class<Logger>("Logger")
     .define_constructor(Constructor<Logger>())
     .define_singleton_function<void(*)(int)>("set_level", &Logger::setLevel,

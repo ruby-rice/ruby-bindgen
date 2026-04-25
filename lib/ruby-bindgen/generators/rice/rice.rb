@@ -1155,6 +1155,10 @@ module RubyBindgen
       # Render a free function or non-member operator that survives the symbol,
       # export-macro, and parameter/return-type filters.
       def visit_function(cursor)
+        # Skip `= delete`d free functions. clang_CXXMethod_isDeleted only
+        # applies to class methods, so we use clang_getCursorAvailability,
+        # which reports :not_available for deleted free functions.
+        return if cursor.availability == :not_available
         # Can't return arrays in C++
         return if cursor.type.result_type.is_a?(::FFI::Clang::Types::Array)
         return if skip_callable?(cursor)
