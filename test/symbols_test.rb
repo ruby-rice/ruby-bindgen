@@ -2,141 +2,94 @@
 
 require_relative './rice_test_base'
 
+# Tests for the policy/lookup layer of Symbols. The candidate-name enumeration
+# itself lives in SymbolCandidates and is tested in symbol_candidates_test.rb.
 class SymbolsTest < RiceAbstractTest
-  def test_build_candidates_includes_fully_qualified_template_argument_candidates
+  def test_skip_matches_qualified_name
     parsed, = parse_cpp(<<~CPP)
       namespace Outer {
-        struct Tag {};
-
-        template<typename T>
-        class Holder {};
-
-        template<>
-        class Holder<Tag> {};
+        void hidden();
+        void visible();
       }
     CPP
 
-    cursor = parsed.translation_unit.cursor.find_by_kind(true, :cursor_class_decl).find do |child|
-      child.display_name == "Holder<Tag>"
-    end
-    refute_nil cursor, "Expected to find Holder<Tag> specialization"
+    symbols = RubyBindgen::Symbols.new(skip: ["Outer::hidden"])
 
-    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
+    hidden = find_cursor(parsed.translation_unit.cursor, :cursor_function, "hidden")
+    visible = find_cursor(parsed.translation_unit.cursor, :cursor_function, "visible")
 
-    assert_includes candidates, "Holder<Outer::Tag>"
-    assert_includes candidates, "Outer::Holder<Outer::Tag>"
+    assert symbols.skip?(hidden), "Outer::hidden should be skipped"
+    refute symbols.skip?(visible), "Outer::visible should not be skipped"
   end
 
-  def test_build_candidates_preserves_non_type_args_when_qualifying_class_specializations
+  def test_skip_matches_via_regex
     parsed, = parse_cpp(<<~CPP)
       namespace Outer {
-        struct Tag {};
-
-        template<typename T, int N>
-        struct Holder {};
-
-        template<>
-        struct Holder<Tag, 7> {};
+        void internalFoo();
+        void publicBar();
       }
     CPP
 
-    cursor = parsed.translation_unit.cursor.find_by_kind(true, :cursor_struct).find do |child|
-      child.display_name == "Holder<Tag, 7>"
-    end
-    refute_nil cursor, "Expected to find Holder<Tag, 7> specialization"
+    symbols = RubyBindgen::Symbols.new(skip: ["/^Outer::internal/"])
 
-    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
+    internal = find_cursor(parsed.translation_unit.cursor, :cursor_function, "internalFoo")
+    public_fn = find_cursor(parsed.translation_unit.cursor, :cursor_function, "publicBar")
 
-    assert_includes candidates, "Holder<Outer::Tag, 7>"
-    assert_includes candidates, "Outer::Holder<Outer::Tag, 7>"
+    assert symbols.skip?(internal), "Outer::internalFoo should match /^Outer::internal/"
+    refute symbols.skip?(public_fn), "Outer::publicBar should not match"
   end
 
-  def test_build_candidates_includes_fully_qualified_typedef_alias_parameter_candidates
+  def test_skip_normalizes_pointer_whitespace
+    # User writes `const int*` (no space); clang emits parameter spelling as
+    # `const int *`. Both must canonicalize so the lookup hits.
+    parsed, = parse_cpp(<<~CPP)
+      void take_ptr(const int* p);
+    CPP
+
+    symbols = RubyBindgen::Symbols.new(skip: ["take_ptr(const int*)"])
+    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_function, "take_ptr")
+
+    assert symbols.skip?(cursor), "take_ptr(const int*) should match against `const int *`"
+  end
+
+  def test_version_returns_guard_value
     parsed, = parse_cpp(<<~CPP)
       namespace Outer {
-        struct Tag {};
-
-        template<typename T>
-        struct Holder {};
-
-        using HolderTag = Holder<Tag>;
-
-        void takeAlias(HolderTag value);
+        void newApi();
       }
     CPP
 
-    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_function, "takeAlias")
-    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
+    symbols = RubyBindgen::Symbols.new(versions: { 30000 => ["Outer::newApi"] })
+    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_function, "newApi")
 
-    assert_includes candidates, "takeAlias(Outer::HolderTag)"
-    assert_includes candidates, "Outer::takeAlias(Outer::HolderTag)"
+    assert_equal 30000, symbols.version(cursor)
+    assert symbols.has_versions?
   end
 
-  def test_build_candidates_includes_non_type_function_template_specialization_candidates
+  def test_override_returns_signature_string
     parsed, = parse_cpp(<<~CPP)
-      namespace Outer {
-        template<int N>
-        int takeValue() { return N; }
-
-        template<>
-        int takeValue<7>() { return 7; }
-      }
+      int do_thing(int n);
     CPP
 
-    cursor = parsed.translation_unit.cursor.find_by_kind(true, :cursor_function).find do |child|
-      child.display_name == "takeValue<>()"
-    end
-    refute_nil cursor, "Expected to find takeValue<7> specialization"
+    symbols = RubyBindgen::Symbols.new(overrides: { "do_thing" => "[:int], :bool" })
+    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_function, "do_thing")
 
-    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
-
-    assert_includes candidates, "takeValue<7>()"
-    assert_includes candidates, "Outer::takeValue<7>()"
+    assert_equal "[:int], :bool", symbols.override(cursor)
   end
 
-  def test_build_candidates_preserves_inline_namespace_and_collapsed_parent_forms
-    parsed, = parse_cpp(<<~CPP)
-      namespace cv {
-        namespace dnn {
-          inline namespace dnn4_v20241223 {
-            class Layer {
-            public:
-              void init();
-            };
-          }
-        }
-      }
-    CPP
+  def test_skip_spelling_fallback_for_dependent_types
+    # skip_spelling? is the fallback for types that have no declaration cursor
+    # (dependent / unexposed types), so we test the bare API rather than a real
+    # cursor.
+    symbols = RubyBindgen::Symbols.new(skip: ["Internal::HiddenType", "/^Banned/"])
 
-    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_cxx_method, "init")
-    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
-
-    assert_includes candidates, "cv::dnn::dnn4_v20241223::Layer::init()"
-    assert_includes candidates, "cv::dnn::Layer::init()"
-  end
-
-  def test_build_candidates_strip_anonymous_scopes_from_qualified_names
-    parsed, = parse_cpp(<<~CPP)
-      namespace Outer {
-        enum { Value = 1 };
-      }
-    CPP
-
-    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_enum_constant_decl, "Value")
-    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
-
-    assert_includes candidates, "Outer::Value"
-    refute candidates.any? { |candidate| candidate.include?("(unnamed enum") }
-  end
-
-  def test_build_candidates_fall_back_to_macro_spelling_when_qualified_name_is_invalid
-    parsed, = parse_cpp(<<~CPP)
-      #define INCLUDED_MACRO 100
-    CPP
-
-    cursor = find_cursor(parsed.translation_unit.cursor, :cursor_macro_definition, "INCLUDED_MACRO")
-    candidates = RubyBindgen::Symbols.new.build_candidates(cursor)
-
-    assert_equal ["INCLUDED_MACRO"], candidates
+    assert symbols.skip_spelling?("std::vector<Internal::HiddenType>"),
+           "exact-name skip should match against a substring with word boundaries"
+    assert symbols.skip_spelling?("BannedThing"),
+           "regex skip should match"
+    refute symbols.skip_spelling?("std::vector<UnrelatedType>"),
+           "unrelated spellings should not match"
+    refute symbols.skip_spelling?("HiddenTypeNotInternal"),
+           "word-boundary should prevent a non-namespaced partial match"
   end
 end

@@ -101,8 +101,13 @@ module RubyBindgen
 
     # Handle operators and regular methods
     def ruby_operator_or_method(cursor)
-      # Check rename_methods first (includes operator mappings merged by generator)
-      result = @rename_methods.lookup(*qualified_name_candidates(cursor), cursor.spelling)
+      # Check rename_methods first (includes operator mappings merged by generator).
+      # SymbolCandidates yields the cursor spelling, qualified-name forms (with
+      # the inline-namespace-collapsed parent fallback), template display
+      # variants, and parameter-list forms — the same set Symbols uses, so a
+      # rename rule expressed in any form Symbols would accept also matches here.
+      symbol_candidates = SymbolCandidates.new(cursor)
+      result = @rename_methods.lookup(*symbol_candidates)
 
       case result
       when String then return result
@@ -128,23 +133,6 @@ module RubyBindgen
 
       # Unknown operator with no mapping
       raise "Unknown operator: #{spelling}"
-    end
-
-    def qualified_name_candidates(cursor)
-      candidates = []
-
-      qualified_name = cursor.qualified_name
-      candidates << qualified_name if qualified_name && !qualified_name.empty?
-
-      parent = cursor.semantic_parent
-      if parent && [:cursor_class_decl, :cursor_struct, :cursor_class_template].include?(parent.kind)
-        # parent.type.spelling collapses inline namespaces, so rename_methods can
-        # match either `cv::dnn::dnn4_v20241223::Layer::init` or `cv::dnn::Layer::init`.
-        type_qualified = "#{parent.type.spelling}::#{cursor.spelling}"
-        candidates << type_qualified unless candidates.include?(type_qualified)
-      end
-
-      candidates
     end
   end
 end
