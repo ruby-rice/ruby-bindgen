@@ -70,6 +70,25 @@ namespace Outer
     void overloaded(int a);                  // INCLUDED
     void overloaded(int a, const int* data); // SKIPPED by signature
     void overloaded(double a);               // INCLUDED
+
+    // --- Deprecated field tests ---
+
+    // Standard C++14 attribute - should be SKIPPED
+    [[deprecated]] int oldStandardField;
+
+    // GCC/MSVC vendor attribute - should be SKIPPED.
+    // Reproduces OpenCV's CV_DEPRECATED_EXTERNAL macro, which expands to
+    // __attribute__((deprecated)) on GCC and __declspec(deprecated) on MSVC.
+    __attribute__((deprecated)) int oldVendorField;
+
+    // Multi-declarator with vendor attribute applied via shared specifier -
+    // every declarator should be SKIPPED. Mirrors:
+    //   CV_DEPRECATED_EXTERNAL Size kernel, stride, pad, dilation;
+    // from cv::dnn::BaseConvolutionLayer.
+    __attribute__((deprecated)) int kernel, stride, pad;
+
+    // Normal field - should be INCLUDED
+    int normalField;
   };
 
   // --- Class with deprecated constructor ---

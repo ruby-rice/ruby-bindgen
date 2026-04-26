@@ -25,7 +25,8 @@ void Init_Filtering()
     .define_method<void(Outer::MyClass::*)(int)>("overloaded", &Outer::MyClass::overloaded,
       Arg("a"))
     .define_method<void(Outer::MyClass::*)(double)>("overloaded", &Outer::MyClass::overloaded,
-      Arg("a"));
+      Arg("a"))
+    .define_attr("normal_field", &Outer::MyClass::normalField);
 
   Rice::Data_Type<Outer::ClassWithDeprecatedConstructor> rb_cOuterClassWithDeprecatedConstructor = define_class_under<Outer::ClassWithDeprecatedConstructor>(rb_mOuter, "ClassWithDeprecatedConstructor")
     .define_constructor(Constructor<Outer::ClassWithDeprecatedConstructor, int, int>(),

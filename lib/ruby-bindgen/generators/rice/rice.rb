@@ -1239,6 +1239,7 @@ module RubyBindgen
       def visit_field_decl(cursor)
         return unless cursor.public?
         return if skip_symbol?(cursor)
+        return if cursor.availability == :deprecated
         return if unsupported_rice_attribute_type?(cursor.type)
 
         qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
