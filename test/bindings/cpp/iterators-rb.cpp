@@ -15,6 +15,16 @@ namespace std
     using pointer = iter::Pixel*;
     using reference = iter::Pixel&;
   };
+
+  template<>
+  struct iterator_traits<iter::IncompleteIntIterator>
+  {
+    using iterator_category = forward_iterator_tag;
+    using value_type = int;
+    using difference_type = ptrdiff_t;
+    using pointer = int*;
+    using reference = const int&;
+  };
 }
 
 using namespace Rice;
@@ -89,6 +99,21 @@ void Init_Iterators()
   Rice::Data_Type<iter::IncompleteBitmap> rb_cIterIncompleteBitmap = define_class_under<iter::IncompleteBitmap>(rb_mIter, "IncompleteBitmap")
     .define_constructor(Constructor<iter::IncompleteBitmap>())
     .define_iterator<iter::IncompleteIterator(iter::IncompleteBitmap::*)()>(&iter::IncompleteBitmap::begin, &iter::IncompleteBitmap::end, "each");
+
+  Rice::Data_Type<iter::IncompleteIntIterator> rb_cIterIncompleteIntIterator = define_class_under<iter::IncompleteIntIterator>(rb_mIter, "IncompleteIntIterator")
+    .define_constructor(Constructor<iter::IncompleteIntIterator>())
+    .define_constructor(Constructor<iter::IncompleteIntIterator, const int *>(),
+      ArgBuffer("p"))
+    .define_method<const int &(iter::IncompleteIntIterator::*)() const>("dereference", &iter::IncompleteIntIterator::operator*)
+    .define_method<const int *(iter::IncompleteIntIterator::*)() const>("arrow", &iter::IncompleteIntIterator::operator->,
+      ReturnBuffer())
+    .define_method<iter::IncompleteIntIterator &(iter::IncompleteIntIterator::*)()>("increment", &iter::IncompleteIntIterator::operator++)
+    .define_method<iter::IncompleteIntIterator(iter::IncompleteIntIterator::*)(int)>("increment_post", &iter::IncompleteIntIterator::operator++,
+      Arg("arg_0"));
+
+  Rice::Data_Type<iter::IntBuffer> rb_cIterIntBuffer = define_class_under<iter::IntBuffer>(rb_mIter, "IntBuffer")
+    .define_constructor(Constructor<iter::IntBuffer>())
+    .define_iterator<iter::IncompleteIntIterator(iter::IntBuffer::*)()>(&iter::IntBuffer::begin, &iter::IntBuffer::end, "each");
 
   Rice::Data_Type<iter::TemplateContainer<iter::Pixel>> rb_cPixelContainer = TemplateContainer_instantiate<iter::Pixel>(rb_mIter, "PixelContainer");
 }

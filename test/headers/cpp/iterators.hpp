@@ -140,6 +140,35 @@ namespace iter
     IncompleteIterator end();
   };
 
+  // Iterator over a primitive value type, missing std::iterator_traits.
+  // Forces the iterator-traits inference path where value_type has no
+  // declaration cursor, so the qualified-name fallback can't override
+  // whatever spelling the trait emitter produces. Reproduces the
+  // `const int` (West-const) leak that the trailing-`const` regex misses,
+  // which yields `using reference = const const int&;` — invalid C++.
+  class IncompleteIntIterator
+  {
+  public:
+    IncompleteIntIterator() : ptr_(nullptr) {}
+    explicit IncompleteIntIterator(const int* p) : ptr_(p) {}
+    const int& operator*() const { return *ptr_; }
+    const int* operator->() const { return ptr_; }
+    IncompleteIntIterator& operator++() { ++ptr_; return *this; }
+    IncompleteIntIterator operator++(int) { IncompleteIntIterator tmp = *this; ++ptr_; return tmp; }
+    friend bool operator==(const IncompleteIntIterator& a, const IncompleteIntIterator& b) { return a.ptr_ == b.ptr_; }
+    friend bool operator!=(const IncompleteIntIterator& a, const IncompleteIntIterator& b) { return a.ptr_ != b.ptr_; }
+  private:
+    const int* ptr_;
+  };
+
+  class IntBuffer
+  {
+  public:
+    IntBuffer();
+    IncompleteIntIterator begin();
+    IncompleteIntIterator end();
+  };
+
   // Test class template with nested iterator typedefs
   // Similar to cv::Mat_<_Tp> which has iterator/const_iterator typedefs
   // and returns std::reverse_iterator<iterator> from rbegin/rend

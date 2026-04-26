@@ -979,18 +979,15 @@ module RubyBindgen
         # Note: Iterators without operator* (like OpenCV's SparseMatConstIterator which uses node())
         # cannot have traits auto-generated. Add them to the skip list in the symbols config.
         value_type = nil
-        value_type_decl = nil
+        is_const = false
         decl.each do |child, _|
           if child.kind == :cursor_cxx_method && child.spelling == "operator*"
-            result_type = child.result_type
-            # Remove reference to get the value type
-            if result_type.kind == :type_lvalue_ref
-              value_type = result_type.non_reference_type.spelling
-              value_type_decl = result_type.non_reference_type.declaration
-            else
-              value_type = result_type.spelling
-              value_type_decl = result_type.declaration
-            end
+            # non_reference_type is a no-op on non-references, so this handles
+            # `T`, `T &`, and `const T &` uniformly. unqualified_type strips
+            # cv-qualifiers via libclang regardless of which side they were
+            # spelled on (clang normalizes to West-const anyway).
+            value_type = child.result_type.non_reference_type
+            is_const = value_type.const_qualified?
             break
           end
         end
@@ -1001,17 +998,20 @@ module RubyBindgen
         # This works for non-std types since we skip std:: types above
         qualified_iterator = qualified_name
 
-        # Get qualified value type from declaration if available
-        qualified_value_type = value_type.sub(/\s*const\s*$/, '')  # Remove trailing const
-        if value_type_decl && value_type_decl.kind != :cursor_no_decl_found
-          qualified_value_type = value_type_decl.qualified_name
-        end
+        # Prefer the value type's qualified name from its declaration, falling
+        # back to the unqualified type spelling for primitives (no decl).
+        value_type_decl = value_type.declaration
+        qualified_value_type = if value_type_decl && value_type_decl.kind != :cursor_no_decl_found
+                                 value_type_decl.qualified_name
+                               else
+                                 value_type.unqualified_type.spelling
+                               end
 
         # Return inferred traits
         {
           iterator_type: qualified_iterator,
           value_type: qualified_value_type,
-          is_const: value_type.include?('const')
+          is_const: is_const
         }
       end
 
