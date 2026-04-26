@@ -67,6 +67,27 @@ module RubyBindgen
       if @config[:project] && !@config[:project].match?(/\A[A-Za-z_][A-Za-z0-9_-]*\z/)
         raise "Project name must be a valid C/C++ identifier (hyphens allowed): #{@config[:project]}"
       end
+
+      # User-supplied Rice include header must exist under the output directory
+      # at config time. If it is missing, every generated -rb.hpp file would
+      # emit `#include "..."` for a nonexistent header and the C++ build would
+      # fail with a confusing 'file not found' error far from the cause.
+      if @config[:format] == "Rice" && @config[:include]
+        include_path = File.join(@config[:output], @config[:include])
+        unless File.exist?(include_path)
+          raise "Rice include header not found: #{include_path}"
+        end
+      end
+
+      # Validate libclang shared library if specified.
+      if @config[:libclang] && !File.exist?(@config[:libclang])
+        raise "libclang library not found: #{@config[:libclang]}"
+      end
+
+      # clang/clang-cl args must be an array, not a string.
+      if @config[:clang_args] && !@config[:clang_args].is_a?(Array)
+        raise "clang args must be a YAML list, got: #{@config[:clang_args].class}"
+      end
     end
 
     def run

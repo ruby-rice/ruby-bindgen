@@ -3,6 +3,7 @@
 /.claude
 Gemfile.lock
 /test/bindings/cpp/build
+/test/bindings/lib
 
 /.bundle/
 /.yardoc

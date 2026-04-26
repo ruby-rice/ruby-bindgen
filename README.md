@@ -43,7 +43,7 @@ gem install ruby-bindgen
 ## Requirements
 
 - Ruby 3.2+
-- libclang (provided by LLVM/Clang)
+- libclang from LLVM/Clang 17 or newer
 
 ## Documentation
 
