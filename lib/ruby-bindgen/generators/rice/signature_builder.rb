@@ -93,7 +93,13 @@ module RubyBindgen
             if is_array_alias
               result << " = #{default_value}"
             elsif default_value == '{}'
-              base_type = qualified_type.sub(/\bconst\s+/, '').sub(/\s*&\s*$/, '')
+              # Strip cv-qualifiers and reference via libclang so T{} is
+              # well-formed regardless of whether the parameter is `T &`,
+              # `T &&`, or `const T &`.
+              base_type = @type_speller.type_spelling(param.type.non_reference_type.unqualified_type)
+              if param.semantic_parent&.semantic_parent&.kind == :cursor_class_template
+                base_type = @type_speller.qualify_class_template_typedefs(base_type, param.semantic_parent.semantic_parent)
+              end
               result << " = static_cast<#{qualified_type}>(#{base_type}{})"
             else
               result << " = static_cast<#{qualified_type}>(#{default_value})"

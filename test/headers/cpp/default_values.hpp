@@ -261,6 +261,26 @@ namespace quoted_type
   void call_ctor(Widget value = Widget("Widget"));
 }
 
+// Test rvalue-reference parameter with `{}` default value.
+// Reproduces cv::gapi::wip::draw::render(..., cv::GCompileArgs&& args = {}),
+// where GCompileArgs is `using GCompileArgs = std::vector<GCompileArg>`.
+// The reference qualifier(s) must be stripped before emitting T{} inside the
+// static_cast — `T &{}` and `T &&{}` are both invalid C++.
+#include <vector>
+
+namespace rvalue_default
+{
+  struct CompileArg { int value; };
+  using CompileArgs = std::vector<CompileArg>;
+
+  // rvalue-ref + brace-init default — matches the GAPI pattern.
+  void render(int width, CompileArgs&& args = {});
+
+  // lvalue-ref + brace-init default — exercises the same code path with a
+  // single trailing `&` (regression-coverage for the regex predecessor).
+  void process(const CompileArgs& args = {});
+}
+
 // Test nested-type constructor defaults where qualifier expansion sees both the
 // outer class and nested type. The final output must not splice overlapping
 // replacements together.

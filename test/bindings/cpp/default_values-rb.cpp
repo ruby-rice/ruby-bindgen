@@ -165,6 +165,18 @@ void Init_DefaultValues()
   rb_mQuotedType.define_module_function<void(*)(quoted_type::Widget)>("call_ctor", &quoted_type::call_ctor,
     Arg("value") = static_cast<quoted_type::Widget>(quoted_type::Widget("Widget")));
 
+  Module rb_mRvalueDefault = define_module("RvalueDefault");
+
+  Rice::Data_Type<rvalue_default::CompileArg> rb_cRvalueDefaultCompileArg = define_class_under<rvalue_default::CompileArg>(rb_mRvalueDefault, "CompileArg")
+    .define_constructor(Constructor<rvalue_default::CompileArg>())
+    .define_attr("value", &rvalue_default::CompileArg::value);
+
+  rb_mRvalueDefault.define_module_function<void(*)(int, rvalue_default::CompileArgs &&)>("render", &rvalue_default::render,
+    Arg("width"), Arg("args") = static_cast<rvalue_default::CompileArgs &&>(rvalue_default::CompileArgs{}));
+
+  rb_mRvalueDefault.define_module_function<void(*)(const rvalue_default::CompileArgs &)>("process", &rvalue_default::process,
+    Arg("args") = static_cast<const rvalue_default::CompileArgs &>(rvalue_default::CompileArgs{}));
+
   Module rb_mNestedDefaults = define_module("NestedDefaults");
 
   Rice::Data_Type<nested_defaults::OriginalClassName> rb_cNestedDefaultsOriginalClassName = define_class_under<nested_defaults::OriginalClassName>(rb_mNestedDefaults, "OriginalClassName")
