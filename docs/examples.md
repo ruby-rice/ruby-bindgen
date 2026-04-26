@@ -1,10 +1,25 @@
 # Examples
 
+## Reference projects
+
+Three published gems use `ruby-bindgen` and are good places to read working
+configuration, layout, and CI when starting your own bindings project.
+
+| Project                                                                 | Format     | Size       | When to use as a reference                                                                                                          |
+|-------------------------------------------------------------------------|------------|------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| [BitmapPlusPlus-ruby](https://ruby-rice.github.io/BitmapPlusPlus-ruby/) | Rice (C++) | ~1 file    | Wrapping a small, header-only C++ library. The cleanest end-to-end gem layout (ext/, lib/, sig/, test/, docs/, CMakePresets.json). |
+| [proj4rb](https://cfis.github.io/proj4rb/)                              | FFI (C)    | medium     | Wrapping a C library via FFI rather than a compiled extension. Shows library loading, version pinning, and Ruby-side wrappers.     |
+| [opencv-ruby](https://github.com/cfis/opencv-ruby)                      | Rice (C++) | very large | Wrapping a large, complex C++ library that needs heavy customization, CUDA guards, and post-regeneration manual edits.            |
+
+For learning, start with **BitmapPlusPlus-ruby** for C++ or **proj4rb** for C.
+Read **opencv-ruby** later, as a study of how to scale the same approach to
+1,000+ classes and 10,000+ method bindings.
+
+## Minimal config snippets
+
 Minimal end-to-end examples for each output format.
 
 ## Rice (C++)
-
-Reference project (fully automated Rice bindings): [BitmapPlusPlus-ruby](https://ruby-rice.github.io/BitmapPlusPlus-ruby/)
 
 `rice-bindings.yaml`:
 
