@@ -75,7 +75,6 @@ class RiceAbstractTest < AbstractTest
       signature_builder: RubyBindgen::Generators::SignatureBuilder.new(
         type_speller: type_speller,
         reference_qualifier: reference_qualifier,
-        copyable_type: rice.method(:copyable_type?),
         cursor_literals: RubyBindgen::Generators::Rice::CURSOR_LITERALS,
         fundamental_types: RubyBindgen::Generators::Rice::FUNDAMENTAL_TYPES
       ),

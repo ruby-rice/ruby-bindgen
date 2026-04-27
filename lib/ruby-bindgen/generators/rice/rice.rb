@@ -171,7 +171,6 @@ module RubyBindgen
                                                   namer: @namer)
         @signature_builder = SignatureBuilder.new(type_speller: @type_speller,
                                                   reference_qualifier: @reference_qualifier,
-                                                  copyable_type: method(:copyable_type?),
                                                   cursor_literals: CURSOR_LITERALS,
                                                   fundamental_types: FUNDAMENTAL_TYPES)
         # Non-member operators grouped by target class cruby_name
@@ -194,7 +193,7 @@ module RubyBindgen
       # Check if a type references a skipped symbol by examining its declaration.
       # Unwraps pointers/references and checks template arguments recursively.
       def type_references_skipped_symbol?(type)
-        type = unwrapped_indirection_type(type)
+        type = type.intrinsic_type
 
         # Check the type's own declaration (try both non-canonical and canonical
         # since dependent types like SkippedClass<T> may not resolve canonically)
@@ -261,7 +260,7 @@ module RubyBindgen
       # involve references or nested callbacks which themselves do. Skip those
       # attrs instead of emitting uncompilable wrappers.
       def unsupported_rice_attribute_type?(type)
-        reference_type?(type)
+        type.reference?
       end
 
       # Preserve rvalue-reference bindings for copyable types. The only cases we
@@ -271,7 +270,7 @@ module RubyBindgen
         return false unless type.kind == :type_rvalue_ref
 
         pointee = type.non_reference_type
-        move_only_std_type?(pointee) || !copyable_type?(pointee)
+        move_only_std_type?(pointee) || !pointee.copyable?
       end
 
       def move_only_std_type?(type)
@@ -280,7 +279,7 @@ module RubyBindgen
       end
 
       def unsupported_rice_vector_element_type?(type)
-        type = type.non_reference_type if reference_type?(type)
+        type = type.non_reference_type if type.reference?
         canonical = type.canonical
         decl = canonical.declaration
         return false if decl.kind == :cursor_no_decl_found
@@ -301,7 +300,7 @@ module RubyBindgen
       end
 
       def rice_equality_supported?(type)
-        type = type.non_reference_type if reference_type?(type)
+        type = type.non_reference_type if type.reference?
         type = type.canonical
 
         return true if FUNDAMENTAL_TYPES.include?(type.kind) || type.kind == :type_enum
@@ -338,7 +337,7 @@ module RubyBindgen
           next false unless function.type.args_size == 2
 
           arg_declarations = 2.times.map do |index|
-            unwrapped_indirection_type(function.type.arg_type(index)).canonical.declaration
+            function.type.arg_type(index).intrinsic_type.canonical.declaration
           end
 
           arg_declarations.all? do |arg_decl|
@@ -349,7 +348,7 @@ module RubyBindgen
       end
 
       def unsupported_rice_callback_type?(type)
-        type = type.non_reference_type if reference_type?(type)
+        type = type.non_reference_type if type.reference?
         canonical = type.canonical
         decl = canonical.declaration
         return false if decl.kind == :cursor_no_decl_found
@@ -362,16 +361,16 @@ module RubyBindgen
         return false if type.nil? || type.kind == :type_invalid
         return false unless [:type_function_proto, :type_function_no_proto].include?(type.kind)
 
-        return true if reference_type?(type.result_type)
+        return true if type.result_type.reference?
 
         type.arg_types.any? do |arg_type|
-          reference_type?(arg_type) || unsupported_rice_callback_type?(arg_type)
+          arg_type.reference? || unsupported_rice_callback_type?(arg_type)
         end
       end
 
       def implicit_default_constructor_available?(cursor)
         cursor.find_by_kind(false, :cursor_field_decl).none? do |field|
-          reference_type?(field.type)
+          field.type.reference?
         end
       end
 
@@ -665,7 +664,7 @@ module RubyBindgen
 
           child.num_arguments.times do |i|
             param = child.argument(i)
-            type = unwrapped_indirection_type(param.type)
+            type = param.type.intrinsic_type
 
             # Skip if not a template instantiation or is from a system header (std::, etc.)
             next unless type.num_template_arguments > 0
@@ -801,52 +800,6 @@ module RubyBindgen
         source_text = cursor.extent.text
         return false if source_text.nil?
         @export_macros.any? { |macro| source_text.include?(macro) }
-      end
-
-      # Check if a type is copyable (has an accessible copy constructor).
-      # Returns false if the copy constructor is private (C++03 idiom) or deleted (C++11).
-      # This is used to determine if we can generate default values for parameters -
-      # Rice's Arg mechanism needs to copy the default value internally.
-      def copyable_type?(type)
-        type = type.non_reference_type if reference_type?(type)
-
-        # Get the declaration of the type
-        decl = type.declaration
-        return true if decl.kind == :cursor_no_decl_found
-
-        # For classes/structs, check if copy constructor is accessible
-        # Also check base classes since a derived class inherits the copy constructor restriction
-        if decl.kind == :cursor_struct || decl.kind == :cursor_class_decl
-          return false unless copyable_class?(decl)
-        end
-
-        true
-      end
-
-      # Helper method to check if a class/struct has an accessible copy constructor.
-      # Recursively checks base classes since copy restriction is inherited.
-      def copyable_class?(decl)
-        # Find all constructors in this class
-        constructors = decl.find_by_kind(false, :cursor_constructor)
-        copy_constructors = constructors.select(&:copy_constructor?)
-
-        # If there are explicit copy constructors, check their accessibility
-        copy_constructors.each do |ctor|
-          # C++11: deleted copy constructor
-          return false if ctor.deleted?
-          # C++03: private copy constructor
-          return false if ctor.private?
-        end
-
-        # Check base classes - if any base class is non-copyable, this class is too
-        base_specifiers = decl.find_by_kind(false, :cursor_cxx_base_specifier)
-        base_specifiers.each do |base|
-          base_decl = base.type.declaration
-          next if base_decl.kind == :cursor_no_decl_found
-          return false unless copyable_class?(base_decl)
-        end
-
-        true
       end
 
       # Check if a class/struct has an accessible copy assignment operator.

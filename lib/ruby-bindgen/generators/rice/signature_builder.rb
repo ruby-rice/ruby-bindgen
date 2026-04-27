@@ -9,10 +9,9 @@ module RubyBindgen
         :type_wchar
       ].freeze
 
-      def initialize(type_speller:, reference_qualifier:, copyable_type:, cursor_literals:, fundamental_types:)
+      def initialize(type_speller:, reference_qualifier:, cursor_literals:, fundamental_types:)
         @type_speller = type_speller
         @reference_qualifier = reference_qualifier
-        @copyable_type = copyable_type
         @cursor_literals = cursor_literals
         @fundamental_types = fundamental_types
       end
@@ -81,7 +80,7 @@ module RubyBindgen
           result = "#{arg_class}(\"#{param_name}\")"
 
           default_value = find_default_value(param)
-          if default_value && @copyable_type.call(param.type)
+          if default_value && param.type.copyable?
             qualified_type = @type_speller.type_spelling(param.type)
             if param.semantic_parent&.semantic_parent&.kind == :cursor_class_template
               qualified_type = @type_speller.qualify_class_template_typedefs(qualified_type, param.semantic_parent.semantic_parent)

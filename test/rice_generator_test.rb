@@ -38,7 +38,7 @@ class RiceGeneratorTest < RiceAbstractTest
     end
   end
 
-  def test_unwrapped_indirection_type_strips_reference_and_pointer_layers
+  def test_intrinsic_type_strips_reference_pointer_and_cv_layers
     parsed, = parse_cpp(<<~CPP)
       namespace Tests {
         template<typename T>
@@ -59,7 +59,7 @@ class RiceGeneratorTest < RiceAbstractTest
     rice.instance_variable_get(:@type_speller).printing_policy = parsed.translation_unit.cursor.printing_policy
 
     constructor = find_cursor(parsed.translation_unit.cursor, :cursor_constructor, "Consumer")
-    unwrapped = rice.send(:unwrapped_indirection_type, constructor.argument(0).type)
+    unwrapped = constructor.argument(0).type.intrinsic_type
 
     assert_equal "Tests::Container<Tests::Item>",
                  rice.instance_variable_get(:@type_speller).type_spelling(unwrapped)

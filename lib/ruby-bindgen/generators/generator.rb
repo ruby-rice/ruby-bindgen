@@ -44,30 +44,6 @@ module RubyBindgen
         file && translation_unit_file && file == translation_unit_file
       end
 
-      # Strip reference qualifiers, then follow pointer layers to the underlying
-      # pointee type.
-      #
-      # Examples:
-      #   `Container<Item>* const&`
-      # becomes
-      #   `Container<Item>`
-      #
-      #   `Skipped**`
-      # becomes
-      #   `Skipped`
-      def unwrapped_indirection_type(type)
-        type = type.non_reference_type if reference_type?(type)
-        while type.kind == :type_pointer
-          type = type.pointee
-          type = type.non_reference_type if reference_type?(type)
-        end
-        type
-      end
-
-      def reference_type?(type)
-        type.kind == :type_lvalue_ref || type.kind == :type_rvalue_ref
-      end
-
       def self.template_dir
         raise NotImplementedError
       end

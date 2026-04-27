@@ -423,7 +423,7 @@ module RubyBindgen
 
       # Check if a type references a skipped symbol (unwrapping pointers).
       def references_skipped_type?(type)
-        type = unwrapped_indirection_type(type)
+        type = type.intrinsic_type
         decl = type.declaration
         return false if decl.kind == :cursor_no_decl_found
         @symbols.skip?(decl)
