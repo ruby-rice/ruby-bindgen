@@ -38,10 +38,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ffi', '>= 1.16'
   spec.add_dependency 'ffi-clang', '>= 0.15.2'
 
-  spec.add_development_dependency 'logger'
   spec.add_development_dependency 'minitest'
   spec.add_development_dependency 'minitest-reporters'
-  spec.add_development_dependency 'mutex_m'
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'simplecov-cobertura'
