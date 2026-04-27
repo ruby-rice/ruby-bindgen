@@ -1,7 +1,7 @@
 <% decl = cursor.type.declaration -%>
 <% if cursor.type.const_qualified? || cursor.type.is_a?(::FFI::Clang::Types::Array) -%>
 define_attr("<%= cursor.ruby_name %>", &<%= qualified_parent %>::<%= cursor.spelling %>, Rice::AttrAccess::Read)
-<% elsif decl.kind == :cursor_no_decl_found || copy_assignable_class?(decl) -%>
+<% elsif decl.copy_assignable? -%>
 define_attr("<%= cursor.ruby_name %>", &<%= qualified_parent %>::<%= cursor.spelling %>)
 <% else -%>
 define_attr("<%= cursor.ruby_name %>", &<%= qualified_parent %>::<%= cursor.spelling %>, Rice::AttrAccess::Read)

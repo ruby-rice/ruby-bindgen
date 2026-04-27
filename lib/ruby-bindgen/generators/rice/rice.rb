@@ -795,16 +795,6 @@ module RubyBindgen
         @export_macros.any? { |macro| source_text.include?(macro) }
       end
 
-      # Check if a class/struct has an accessible copy assignment operator.
-      # Returns false if operator= is private, protected, or deleted.
-      def copy_assignable_class?(decl)
-        decl.find_by_kind(false, :cursor_cxx_method) do |method|
-          next unless method.spelling == "operator="
-          return false if method.deleted? || method.private? || method.protected?
-        end
-        true
-      end
-
       ITERATOR_METHODS = ["begin", "end", "cbegin", "cend", "rbegin", "rend", "crbegin", "crend"].freeze
 
       # Common skip checks for functions and methods
