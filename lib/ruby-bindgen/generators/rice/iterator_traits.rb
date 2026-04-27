@@ -9,7 +9,7 @@ module RubyBindgen
     # iterator. Inputs that already declare the full set of traits, or
     # that live in `std::`, or whose value type can't be recovered, are
     # left alone — the caller emits no specialization for them.
-    module IteratorTraits
+    class IteratorTraits
       # Inferred traits for one iterator. The hash key under which the
       # caller stores this is the iterator's qualified name; we don't
       # repeat it here.

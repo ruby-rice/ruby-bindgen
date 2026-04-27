@@ -1,4 +1,5 @@
 require 'set'
+require_relative 'function_pointer'
 require_relative 'iterator_traits'
 require_relative 'reference_qualifier'
 require_relative 'signature_builder'
@@ -1543,50 +1544,6 @@ module RubyBindgen
                                   :project_header => rice_header, :init_name => init_function, :init_names => @init_names)
         self.outputter.write(rice_cpp, content)
       end
-
-      # Return a callable address expression for free/static functions.
-      # MSVC needs an explicit cast when the name refers to an overload set,
-      # including when a concrete overload coexists with a function template.
-      def callable_reference(cursor, qualified_name, signature)
-        reference = "&#{qualified_name}"
-        return reference unless requires_callable_cast?(cursor, signature)
-
-        "static_cast<#{signature[1...-1]}>(#{reference})"
-      end
-
-      # Check whether a free/static callable shares its spelling with another
-      # overload candidate in the same semantic parent.
-      def requires_callable_cast?(cursor, signature)
-        return false unless signature
-        return false unless cursor.kind == :cursor_function || cursor.static?
-
-        parent = cursor.semantic_parent
-        return false unless parent
-
-        overload_count = 0
-        parent.each(false) do |sibling, _|
-          next unless overload_candidate?(cursor, sibling)
-
-          overload_count += 1
-          return true if overload_count > 1
-        end
-
-        false
-      end
-
-      def overload_candidate?(cursor, sibling)
-        return false unless sibling.spelling == cursor.spelling
-
-        case cursor.kind
-        when :cursor_function
-          [:cursor_function, :cursor_function_template].include?(sibling.kind)
-        when :cursor_cxx_method
-          cursor.static? && [:cursor_cxx_method, :cursor_function_template].include?(sibling.kind)
-        else
-          false
-        end
-      end
-
 
       # Map a cursor kind such as `:cursor_class_decl` to the corresponding
       # visitor method symbol, for example `:visit_class_decl`.

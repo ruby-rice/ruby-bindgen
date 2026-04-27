@@ -1,6 +1,6 @@
 <%- all_args = return_buffer ? (args + ["ReturnBuffer()"]) : args -%>
 <%- if cursor.static? -%>
-<%= is_template && signature && !signature.empty? ? "template " : "" %>define_singleton_function<%= signature %>("<%= name %>", <%= callable_reference(cursor, "#{qualified_parent}::#{cursor.spelling}", signature) %><%= all_args.empty? ? ")" : ",\n  #{all_args.join(", ")})" %>
+<%= is_template && signature && !signature.empty? ? "template " : "" %>define_singleton_function<%= signature %>("<%= name %>", <%= FunctionPointer.format(cursor, "#{qualified_parent}::#{cursor.spelling}", signature) %><%= all_args.empty? ? ")" : ",\n  #{all_args.join(", ")})" %>
 <%- else -%>
 <%= is_template && signature && !signature.empty? ? "template " : "" %>define_method<%= signature %>("<%= name %>", &<%= qualified_parent %>::<%= cursor.spelling %><%= all_args.empty? ? ")" : ",\n  #{all_args.join(", ")})" %>
 <%- end -%>
