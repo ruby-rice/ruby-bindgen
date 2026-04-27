@@ -35,7 +35,6 @@ module RubyBindgen
       # Lazy-load ffi-clang and its refinements so CMake format doesn't need libclang
       require 'ffi/clang'
       require 'ruby-bindgen/refinements/cursor'
-      require 'ruby-bindgen/refinements/type'
 
       @index = FFI::Clang::Index.new(exclude_declarations_from_pch: false, display_diagnostics: true)
     end
