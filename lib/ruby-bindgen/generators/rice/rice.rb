@@ -1152,91 +1152,104 @@ module RubyBindgen
       end
 
       # Render the queued non-member operators grouped by their target class.
-      # This includes ostream-based `inspect`, unary operators, and binary operators.
+      # Includes ostream-based `inspect`, unary operators, and binary operators.
+      # Each branch produces a [target_cursor, rendered_line] pair; we group
+      # the lines by the target class's cruby_name and emit one chained
+      # `class.define(...)...` block per class.
       def render_non_member_operators
-        # Group operators by target class
-        # Each entry stores { lines: [], cpp_type: string } for cross-file Data_Type<T>() usage
+        # cpp_type carries the qualified class name for cross-file Data_Type<T>() refs.
         grouped = Hash.new { |h, k| h[k] = { lines: [], cpp_type: nil } }
 
-        @non_member_operators.each do |cruby_name, operators|
+        @non_member_operators.each_value do |operators|
           operators.each do |op|
             cursor = op[:cursor]
             class_cursor = op[:class_cursor]
 
-            # Handle ostream << specially - generates inspect method on the second arg's class
-            arg0_decl = cursor.type.arg_type(0).non_reference_type.declaration
-            if cursor.spelling.include?("<<") && arg0_decl.location.in_system_header? &&
-               arg0_decl.spelling.end_with?("ostream")
-              arg1_non_ref = cursor.type.arg_type(1).non_reference_type
-              # Use Type#declaration to get the typedef/class cursor directly
-              target_cursor = arg1_non_ref.declaration
-              target_class = target_cursor.cruby_name
-              arg_type = @type_speller.type_spelling(cursor.type.arg_type(1))
-              grouped[target_class][:cpp_type] ||= @type_speller.qualified_class_name(target_cursor)
-              grouped[target_class][:lines] << render_template("non_member_operator_inspect",
-                                                               :arg_type => arg_type).strip
-            elsif cursor.type.args_size == 1
-              # Unary non-member operator (e.g., operator~(const Mat& m), operator-(const Mat& m))
-              arg0_type = @type_speller.type_spelling(cursor.type.arg_type(0))
-              result_type = @type_speller.type_spelling(cursor.result_type)
-              op_symbol = cursor.spelling.sub(/^operator\s*/, '')
-              # Ruby uses +@ and -@ for unary plus/minus, but ~ and ! stay as-is
-              ruby_name = case op_symbol
-                          when '+' then '+@'
-                          when '-' then '-@'
-                          else op_symbol
-                          end
-
-              grouped[cruby_name][:cpp_type] ||= @type_speller.qualified_class_name(class_cursor)
-              grouped[cruby_name][:lines] << render_template("non_member_operator_unary",
-                                                             :ruby_name => ruby_name,
-                                                             :arg0_type => arg0_type,
-                                                             :result_type => result_type,
-                                                             :op_symbol => op_symbol).strip
-            else
-              # Binary non-member operator (e.g., operator+(const Mat& a, const Mat& b))
-              arg0_type = @type_speller.type_spelling(cursor.type.arg_type(0))
-              arg1_type = @type_speller.type_spelling(cursor.type.arg_type(1))
-              result_type = @type_speller.type_spelling(cursor.result_type)
-              op_symbol = cursor.spelling.sub(/^operator\s*/, '')
-              ruby_name = cursor.ruby_name
-
-              # Determine the appropriate return statement based on result type
-              if cursor.result_type.kind == :type_void
-                return_stmt = "self #{op_symbol} other;"
-              elsif cursor.result_type.kind == :type_lvalue_ref &&
-                    cursor.result_type.non_reference_type == cursor.type.arg_type(0).non_reference_type
-                # Returns reference to self (e.g., FileStorage& operator<<)
-                return_stmt = "self #{op_symbol} other;\n  return self;"
+            target_cursor, line =
+              if ostream_insertion?(cursor)
+                render_ostream_inspect(cursor)
+              elsif cursor.type.args_size == 1
+                render_unary_operator(cursor, class_cursor)
               else
-                # Returns a value (e.g., bool, ptrdiff_t)
-                return_stmt = "return self #{op_symbol} other;"
+                render_binary_operator(cursor, class_cursor)
               end
 
-              grouped[cruby_name][:cpp_type] ||= @type_speller.qualified_class_name(class_cursor)
-              grouped[cruby_name][:lines] << render_template("non_member_operator_binary",
-                                                             :ruby_name => ruby_name,
-                                                             :arg0_type => arg0_type,
-                                                             :arg1_type => arg1_type,
-                                                             :result_type => result_type,
-                                                             :return_stmt => return_stmt).strip
-            end
+            target_class = target_cursor.cruby_name
+            grouped[target_class][:cpp_type] ||= @type_speller.qualified_class_name(target_cursor)
+            grouped[target_class][:lines] << line
           end
         end
 
-        # Now render each group as a chained method call
         result = []
         grouped.each do |cruby_name, info|
-          lines = info[:lines]
-          cpp_type = info[:cpp_type]
-          next if lines.empty?
-          # Use variable for locally-defined classes, Data_Type<T>() for cross-file references
-          class_ref = @classes.key?(cruby_name) ? cruby_name : "Data_Type<#{cpp_type}>()"
-          # Join with method chaining, indented 4 spaces (2 for function body + 2 for method chain)
-          content = merge_children({ nil => lines }, indentation: 4, chain: true, terminate: true, strip: true)
+          next if info[:lines].empty?
+          # Local-defined classes use the variable; cross-file refs use Data_Type<T>()
+          class_ref = @classes.key?(cruby_name) ? cruby_name : "Data_Type<#{info[:cpp_type]}>()"
+          # Indent 4 spaces (2 for function body + 2 for method chain)
+          content = merge_children({ nil => info[:lines] }, indentation: 4, chain: true, terminate: true, strip: true)
           result << "#{class_ref}#{content}"
         end
         result.join("\n  \n  ")
+      end
+
+      # `std::ostream& operator<<(std::ostream&, T&)` overloads get translated
+      # to a Ruby `inspect` method on T's class.
+      def ostream_insertion?(cursor)
+        return false unless cursor.spelling.include?("<<")
+        arg0_decl = cursor.type.arg_type(0).non_reference_type.declaration
+        arg0_decl.location.in_system_header? && arg0_decl.spelling.end_with?("ostream")
+      end
+
+      def render_ostream_inspect(cursor)
+        target_cursor = cursor.type.arg_type(1).non_reference_type.declaration
+        arg_type = @type_speller.type_spelling(cursor.type.arg_type(1))
+        line = render_template("non_member_operator_inspect", :arg_type => arg_type).strip
+        [target_cursor, line]
+      end
+
+      # e.g. `operator~(const Mat& m)`, `operator-(const Mat& m)`.
+      def render_unary_operator(cursor, class_cursor)
+        op_symbol = cursor.spelling.sub(/^operator\s*/, '')
+        # Ruby uses +@ and -@ for unary plus/minus; ~ and ! stay as-is.
+        ruby_name = case op_symbol
+                    when '+' then '+@'
+                    when '-' then '-@'
+                    else op_symbol
+                    end
+
+        line = render_template("non_member_operator_unary",
+                               :ruby_name => ruby_name,
+                               :arg0_type => @type_speller.type_spelling(cursor.type.arg_type(0)),
+                               :result_type => @type_speller.type_spelling(cursor.result_type),
+                               :op_symbol => op_symbol).strip
+        [class_cursor, line]
+      end
+
+      # e.g. `operator+(const Mat& a, const Mat& b)`.
+      def render_binary_operator(cursor, class_cursor)
+        op_symbol = cursor.spelling.sub(/^operator\s*/, '')
+        line = render_template("non_member_operator_binary",
+                               :ruby_name => cursor.ruby_name,
+                               :arg0_type => @type_speller.type_spelling(cursor.type.arg_type(0)),
+                               :arg1_type => @type_speller.type_spelling(cursor.type.arg_type(1)),
+                               :result_type => @type_speller.type_spelling(cursor.result_type),
+                               :return_stmt => binary_return_stmt(cursor, op_symbol)).strip
+        [class_cursor, line]
+      end
+
+      # Pick the right return statement shape for a binary operator based on
+      # what the operator returns: void, a reference to self, or a value.
+      def binary_return_stmt(cursor, op_symbol)
+        if cursor.result_type.kind == :type_void
+          "self #{op_symbol} other;"
+        elsif cursor.result_type.kind == :type_lvalue_ref &&
+              cursor.result_type.non_reference_type == cursor.type.arg_type(0).non_reference_type
+          # Returns reference to self (e.g., FileStorage& operator<<)
+          "self #{op_symbol} other;\n  return self;"
+        else
+          # Returns a value (e.g., bool, ptrdiff_t)
+          "return self #{op_symbol} other;"
+        end
       end
 
       # Resolve a top-level typedef or alias to the class template specialization
