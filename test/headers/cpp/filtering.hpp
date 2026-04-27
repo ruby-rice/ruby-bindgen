@@ -5,8 +5,10 @@
 
 #if defined(_MSC_VER)
   #define MY_EXPORT __declspec(dllexport)
+  #define MY_DEPRECATED __declspec(deprecated)
 #else
   #define MY_EXPORT __attribute__((visibility("default")))
+  #define MY_DEPRECATED __attribute__((deprecated))
 #endif
 
 namespace Outer
@@ -77,15 +79,15 @@ namespace Outer
     [[deprecated]] int oldStandardField;
 
     // GCC/MSVC vendor attribute - should be SKIPPED.
-    // Reproduces OpenCV's CV_DEPRECATED_EXTERNAL macro, which expands to
+    // Mirrors OpenCV's CV_DEPRECATED_EXTERNAL, which expands to
     // __attribute__((deprecated)) on GCC and __declspec(deprecated) on MSVC.
-    __attribute__((deprecated)) int oldVendorField;
+    MY_DEPRECATED int oldVendorField;
 
     // Multi-declarator with vendor attribute applied via shared specifier -
     // every declarator should be SKIPPED. Mirrors:
     //   CV_DEPRECATED_EXTERNAL Size kernel, stride, pad, dilation;
     // from cv::dnn::BaseConvolutionLayer.
-    __attribute__((deprecated)) int kernel, stride, pad;
+    MY_DEPRECATED int kernel, stride, pad;
 
     // Normal field - should be INCLUDED
     int normalField;
