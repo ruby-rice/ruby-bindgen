@@ -238,10 +238,6 @@ module RubyBindgen
         end
       end
 
-      def has_unsupported_rice_return_type?(cursor)
-        false
-      end
-
       # Check if the return type of a callable references a skipped symbol.
       def has_skipped_return_type?(cursor)
         type_references_skipped_symbol?(cursor.type.result_type)
@@ -830,7 +826,6 @@ module RubyBindgen
         return if has_skipped_param_type?(cursor)
         return if has_unsupported_rice_param_type?(cursor)
         return if has_skipped_return_type?(cursor)
-        return if has_unsupported_rice_return_type?(cursor)
 
         # Is this an iterator?
         if ITERATOR_METHODS.include?(cursor.spelling)
@@ -1023,7 +1018,6 @@ module RubyBindgen
 
         return unless cursor.type.args_size == 0
         return if has_skipped_return_type?(cursor)
-        return if has_unsupported_rice_return_type?(cursor)
 
         result_type = cursor.type.result_type
 
@@ -1118,7 +1112,6 @@ module RubyBindgen
         return if has_skipped_param_type?(cursor)
         return if has_unsupported_rice_param_type?(cursor)
         return if has_skipped_return_type?(cursor)
-        return if has_unsupported_rice_return_type?(cursor)
         return unless has_export_macro?(cursor)
 
         if cursor.spelling.start_with?('operator') && !cursor.spelling.match?(/^operator\w/)
