@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "bug_tracker_uri"   => "https://github.com/ruby-rice/ruby-bindgen/issues",
-    "changelog_uri"     => "https://github.com/ruby-rice/ruby-bindgen/blob/main/CHANGES.md",
+    "changelog_uri"     => "https://github.com/ruby-rice/ruby-bindgen/blob/main/CHANGELOG.md",
     "source_code_uri"   => "https://github.com/ruby-rice/ruby-bindgen/tree/v#{spec.version}",
   }
 
@@ -20,13 +20,13 @@ Gem::Specification.new do |spec|
   spec.require_path = "lib"
   spec.bindir = "bin"
   spec.executables = ["ruby-bindgen"]
-  spec.files = Dir['CHANGES.md',
+  spec.files = Dir['CHANGELOG.md',
                    'LICENSE',
                    'Rakefile',
                    'README.md',
                    'ruby-bindgen.gemspec',
                    'bin/ruby-bindgen',
-                   'doc/**/*',
+                   'docs/**/*',
                    'lib/**/*',
 ]
 
@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/ruby-rice/ruby-bindgen'
 
   spec.add_dependency 'ffi', '>= 1.16'
-  spec.add_dependency 'ffi-clang', '>= 0.15.1'
+  spec.add_dependency 'ffi-clang', '>= 0.15.2'
 
   spec.add_development_dependency 'logger'
   spec.add_development_dependency 'minitest'
