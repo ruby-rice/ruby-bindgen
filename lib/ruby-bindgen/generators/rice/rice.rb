@@ -1,4 +1,5 @@
 require 'set'
+require_relative 'iterator_traits'
 require_relative 'reference_qualifier'
 require_relative 'signature_builder'
 require_relative 'template_resolver'
@@ -881,88 +882,6 @@ module RubyBindgen
         translation_unit_file?(definition)
       end
 
-      # Check if an iterator type has proper std::iterator_traits.
-      # Returns nil if traits are complete, or a hash with inferred traits if incomplete.
-      def check_iterator_traits(iterator_type)
-        # Get the declaration of the iterator type
-        decl = iterator_type.declaration
-        return nil if decl.kind == :cursor_no_decl_found
-
-        # Skip std:: types - they already have iterator_traits
-        qualified_name = decl.qualified_name
-        return nil if qualified_name&.start_with?('std::')
-
-        # If decl is a typedef, get the underlying type's declaration
-        # e.g., typedef SparseMatConstIterator_<uchar> SparseMatConstIterator
-        if decl.kind == :cursor_typedef_decl || decl.kind == :cursor_type_alias_decl
-          underlying_type = iterator_type.canonical
-          underlying_decl = underlying_type.declaration
-          decl = underlying_decl if underlying_decl.kind != :cursor_no_decl_found
-        end
-
-        # Check for required typedefs: value_type, reference, pointer, difference_type, iterator_category
-        has_value_type = false
-        has_reference = false
-        has_pointer = false
-        has_difference_type = false
-        has_iterator_category = false
-
-        decl.each(false) do |child, _|
-          if child.kind == :cursor_type_alias_decl || child.kind == :cursor_typedef_decl
-            case child.spelling
-            when "value_type" then has_value_type = true
-            when "reference" then has_reference = true
-            when "pointer" then has_pointer = true
-            when "difference_type" then has_difference_type = true
-            when "iterator_category" then has_iterator_category = true
-            end
-          end
-        end
-
-        # If all traits are present, return nil (no specialization needed)
-        return nil if has_value_type && has_reference && has_pointer && has_difference_type && has_iterator_category
-
-        # Infer traits from operator* return type
-        # Use recursive iteration to find inherited methods from base classes
-        # Note: Iterators without operator* (like OpenCV's SparseMatConstIterator which uses node())
-        # cannot have traits auto-generated. Add them to the skip list in the symbols config.
-        value_type = nil
-        is_const = false
-        decl.each do |child, _|
-          if child.kind == :cursor_cxx_method && child.spelling == "operator*"
-            # non_reference_type is a no-op on non-references, so this handles
-            # `T`, `T &`, and `const T &` uniformly. unqualified_type strips
-            # cv-qualifiers via libclang regardless of which side they were
-            # spelled on (clang normalizes to West-const anyway).
-            value_type = child.result_type.non_reference_type
-            is_const = value_type.const_qualified?
-            break
-          end
-        end
-
-        return nil unless value_type  # Can't infer traits without operator*
-
-        # Get fully qualified iterator type name from declaration
-        # This works for non-std types since we skip std:: types above
-        qualified_iterator = qualified_name
-
-        # Prefer the value type's qualified name from its declaration, falling
-        # back to the unqualified type spelling for primitives (no decl).
-        value_type_decl = value_type.declaration
-        qualified_value_type = if value_type_decl && value_type_decl.kind != :cursor_no_decl_found
-                                 value_type_decl.qualified_name
-                               else
-                                 value_type.unqualified_type.spelling
-                               end
-
-        # Return inferred traits
-        {
-          iterator_type: qualified_iterator,
-          value_type: qualified_value_type,
-          is_const: is_const
-        }
-      end
-
       # Generates Rice define_iterator calls for C++ iterator methods.
       # In C++, cbegin/crbegin can be called on non-const objects but return const iterators,
       # while begin/rbegin const can only be called on const objects. In Ruby this distinction
@@ -994,10 +913,11 @@ module RubyBindgen
 
         # Check if iterator needs std::iterator_traits specialization
         iterator_type = cursor.result_type
-        traits = check_iterator_traits(iterator_type)
-        if traits
-          # Record this iterator for traits generation (use type as key to avoid duplicates)
-          @incomplete_iterators[traits[:iterator_type]] = traits
+        inference = IteratorTraits.infer(iterator_type)
+        if inference
+          # Key by qualified iterator name so the same iterator hit via
+          # different begin/rbegin/etc. callsites gets one specialization.
+          @incomplete_iterators[iterator_type.declaration.qualified_name] = inference
         end
 
         qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)

@@ -8,15 +8,15 @@
 // Iterator traits specializations for iterators missing std::iterator_traits
 namespace std
 {
-<%- incomplete_iterators.each do |_, traits| -%>
+<%- incomplete_iterators.each do |iterator_name, inference| -%>
   template<>
-  struct iterator_traits<<%= traits[:iterator_type] %>>
+  struct iterator_traits<<%= iterator_name %>>
   {
     using iterator_category = forward_iterator_tag;
-    using value_type = <%= traits[:value_type] %>;
+    using value_type = <%= inference.value_type %>;
     using difference_type = ptrdiff_t;
-    using pointer = <%= traits[:value_type] %>*;
-    using reference = <%= traits[:is_const] ? "const #{traits[:value_type]}&" : "#{traits[:value_type]}&" %>;
+    using pointer = <%= inference.value_type %>*;
+    using reference = <%= inference.is_const ? "const #{inference.value_type}&" : "#{inference.value_type}&" %>;
   };
 
 <%- end -%>
