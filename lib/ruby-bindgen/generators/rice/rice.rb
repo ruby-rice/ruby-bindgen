@@ -1,6 +1,6 @@
 require 'set'
 require_relative 'function_pointer'
-require_relative 'iterator_traits'
+require_relative 'iterator_collector'
 require_relative 'reference_qualifier'
 require_relative 'signature_builder'
 require_relative 'template_resolver'
@@ -177,10 +177,7 @@ module RubyBindgen
                                                   fundamental_types: FUNDAMENTAL_TYPES)
         # Non-member operators grouped by target class cruby_name
         @non_member_operators = Hash.new { |h, k| h[k] = [] }
-        # Iterators that need std::iterator_traits specialization
-        @incomplete_iterators = Hash.new
-        # Iterator names per class (for aliasing each_const -> each)
-        @class_iterator_names = Hash.new { |h, k| h[k] = Set.new }
+        @iterator_collector = IteratorCollector.new
       end
 
       # Parse the configured inputs with libclang and stream the resulting
@@ -426,8 +423,7 @@ module RubyBindgen
         @classes.clear
         @auto_generated_bases.clear
         @non_member_operators.clear
-        @incomplete_iterators.clear
-        @class_iterator_names.clear
+        @iterator_collector.clear
         cursor = translation_unit.cursor
         @translation_unit_cursor = cursor
         @type_speller.printing_policy = cursor.printing_policy
@@ -480,7 +476,7 @@ module RubyBindgen
                                 :includes => @includes,
                                 :init_name => init_name,
                                 :rice_header => rice_header,
-                                :incomplete_iterators => @incomplete_iterators,
+                                :incomplete_iterators => @iterator_collector.incomplete_iterators,
                                 :rice_ipp => rice_ipp ? File.basename(rice_ipp) : nil)
         self.outputter.write(rice_cpp, content)
 
@@ -624,8 +620,7 @@ module RubyBindgen
                                      :has_incomplete_classes => has_incomplete_classes)
 
         # Alias each_const to each if the class only has const iterators
-        iterator_names = @class_iterator_names[cursor.cruby_name]
-        if iterator_names.include?("each_const") && !iterator_names.include?("each")
+        if @iterator_collector.each_const_only?(cursor.cruby_name)
           result[nil] << render_template("iterator_alias", :cruby_name => cursor.cruby_name)
         end
 
@@ -884,46 +879,26 @@ module RubyBindgen
       end
 
       # Generates Rice define_iterator calls for C++ iterator methods.
-      # In C++, cbegin/crbegin can be called on non-const objects but return const iterators,
-      # while begin/rbegin const can only be called on const objects. In Ruby this distinction
-      # doesn't exist, so we skip cbegin/crbegin to avoid generating duplicate "each_const"
-      # and "each_reverse_const" methods.
+      # In C++, cbegin/crbegin can be called on non-const objects but return
+      # const iterators while const begin/rbegin require a const receiver.
+      # Ruby has no such distinction, so the collector skips cbegin/crbegin
+      # to avoid emitting duplicate each_const / each_reverse_const methods.
       def visit_cxx_iterator_method(cursor)
-        iterator_name = case cursor.spelling
-                          when "begin"
-                            cursor.const? ? "each_const" : "each"
-                          when "cbegin"
-                            return
-                          when "rbegin"
-                            cursor.const? ? "each_reverse_const" : "each_reverse"
-                          when "crbegin"
-                            return
-                          else
-                            # We don't care about end methods (end, cend, rend, crend)
-                            return
-                        end
+        iterator_name = @iterator_collector.record(cursor)
+        return unless iterator_name
 
-        @class_iterator_names[cursor.semantic_parent.cruby_name] << iterator_name
+        signature = @signature_builder.method_signature(cursor)
+        return unless signature
 
         begin_method = cursor.spelling
         end_method = begin_method.sub("begin", "end")
-        signature = @signature_builder.method_signature(cursor)
         is_template = cursor.semantic_parent.kind == :cursor_class_template
-
-        return unless signature
-
-        # Check if iterator needs std::iterator_traits specialization
-        iterator_type = cursor.result_type
-        inference = IteratorTraits.infer(iterator_type)
-        if inference
-          # Key by qualified iterator name so the same iterator hit via
-          # different begin/rbegin/etc. callsites gets one specialization.
-          @incomplete_iterators[iterator_type.declaration.qualified_name] = inference
-        end
-
         qualified_parent = @type_speller.qualified_display_name(cursor.semantic_parent)
-        self.render_cursor(cursor, "cxx_iterator_method", :name => iterator_name,
-                           :begin_method => begin_method, :end_method => end_method,
+
+        self.render_cursor(cursor, "cxx_iterator_method",
+                           :name => iterator_name,
+                           :begin_method => begin_method,
+                           :end_method => end_method,
                            :signature => signature,
                            :is_template => is_template,
                            :qualified_parent => qualified_parent)
