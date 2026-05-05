@@ -291,7 +291,7 @@ module RubyBindgen
       end
 
       def variant_like_type?(decl)
-        decl.spelling == "variant" || decl.qualified_name&.end_with?("::variant")
+        decl.spelling == "variant" || decl.qualified_name == "std::variant"
       end
 
       def rice_equality_supported?(type)
