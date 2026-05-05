@@ -54,15 +54,15 @@ For cross-file typedef issues, use:
 ## Regenerating opencv-ruby Bindings
 
 Use the project configs in:
-- `/mnt/c/Source/opencv-ruby/ext/rice-bindings.yaml`
-- `/mnt/c/Source/opencv-ruby/ext/cmake-bindings.yaml`
+- `<opencv-ruby>/ext/rice-bindings.yaml`
+- `<opencv-ruby>/ext/cmake-bindings.yaml`
 
 Generate with:
 
 ```bash
-cd /mnt/c/Source/ruby-bindgen
+cd <ruby-bindgen>
 # 1. Generate Rice source files
-bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/rice-bindings.yaml
+bundle exec ruby -Ilib bin/ruby-bindgen <opencv-ruby>/ext/rice-bindings.yaml
 # 2. Generate CMake files
-bundle exec ruby -Ilib bin/ruby-bindgen /mnt/c/Source/opencv-ruby/ext/cmake-bindings.yaml
+bundle exec ruby -Ilib bin/ruby-bindgen <opencv-ruby>/ext/cmake-bindings.yaml
 ```
