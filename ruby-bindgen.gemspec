@@ -32,8 +32,6 @@ Gem::Specification.new do |spec|
 
   spec.test_files = Dir["test/*_test.rb"]
   spec.required_ruby_version = '>= 3.2.0'
-  spec.date = Time.now.strftime('%Y-%m-%d')
-  spec.homepage = 'https://github.com/ruby-rice/ruby-bindgen'
 
   spec.add_dependency 'ffi', '>= 1.16'
   spec.add_dependency 'ffi-clang', '>= 0.16.0'
