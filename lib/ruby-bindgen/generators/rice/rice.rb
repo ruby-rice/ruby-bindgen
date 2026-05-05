@@ -668,7 +668,7 @@ module RubyBindgen
             # the underlying `Container<Item>` specialization.
             decl, instantiated_type, instantiated_type_source = parameter_template_instantiation(type, param)
             next unless decl && decl.kind == :cursor_class_template
-            next unless (decl.location.file == cursor.location.file rescue false)
+            next unless decl.location.file == cursor.location.file
 
             # Auto-instantiate if no typedef exists
             instantiated_type = @type_speller.qualify_class_static_members(instantiated_type, cursor)
