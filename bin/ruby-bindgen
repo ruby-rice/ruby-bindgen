@@ -1,6 +1,7 @@
 #! /usr/bin/env ruby
 
 require 'ruby-bindgen/config'
+require 'ruby-bindgen/version'
 
 module RubyBindgen
   class Cmd
@@ -17,6 +18,11 @@ module RubyBindgen
       if ARGV.empty? || ARGV[0] == '-h' || ARGV[0] == '--help'
         puts usage
         exit(ARGV.empty? ? 1 : 0)
+      end
+
+      if ARGV[0] == '-v' || ARGV[0] == '--version'
+        puts "ruby-bindgen #{RubyBindgen::VERSION}"
+        exit 0
       end
 
       @config_path = ARGV[0]
@@ -37,7 +43,8 @@ module RubyBindgen
         See documentation for config file format: https://github.com/ruby-rice/ruby-bindgen/blob/main/docs/configuration.md
 
         Options:
-          -h, --help    Show this help message
+          -h, --help       Show this help message
+          -v, --version    Print the ruby-bindgen version and exit
       USAGE
     end
 
