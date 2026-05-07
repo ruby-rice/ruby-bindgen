@@ -12,13 +12,14 @@ CI runs them all in one minitest process and passes.
 
 ## Run all tests
 
-Either form works and runs the same set CI uses:
-
 ```bash
-bundle exec ruby -Ilib -Itest test/*_test.rb
-# or
 bundle exec rake test
 ```
+
+This is what CI runs. Do **not** try `ruby -Ilib -Itest test/*_test.rb` —
+Ruby only loads the first positional arg as a script (the rest become
+`ARGV`), so the glob silently runs nothing and reports "0 runs". Use rake
+or invoke each file individually.
 
 ## Run a specific test
 
