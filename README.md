@@ -53,6 +53,14 @@ Full documentation is at [ruby-rice.github.io/ruby-bindgen](https://ruby-rice.gi
 - [C (FFI) Getting Started](https://ruby-rice.github.io/ruby-bindgen/c/getting_started/)
 - [Configuration Reference](https://ruby-rice.github.io/ruby-bindgen/configuration/)
 
+## Real-world bindings
+
+These projects use `ruby-bindgen` to generate their Ruby bindings:
+
+- [BitmapPlusPlus-ruby](https://github.com/ruby-rice/BitmapPlusPlus-ruby) — C++ bitmap library, fully automated end-to-end example.
+- [proj4rb](https://github.com/cfis/proj4rb) — bindings for the PROJ cartographic projections C library.
+- [opencv-ruby](https://github.com/cfis/opencv-ruby) — bindings for OpenCV (thousands of classes, tens of thousands of methods).
+
 ## License
 
 BSD-2-Clause
