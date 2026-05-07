@@ -103,10 +103,23 @@ module RubyBindgen
   end
 end
 
+debug = ENV['BINDGEN_DEBUG']
+
 begin
   cmd = RubyBindgen::Cmd.new
+rescue => e
+  # Setup-time errors (missing/invalid config, bad arguments). Treat as user
+  # errors and skip the backtrace unless BINDGEN_DEBUG is set.
+  STDERR.puts "Error: #{e.message}"
+  STDERR.puts e.backtrace if debug
+  exit 1
+end
+
+begin
   cmd.run
 rescue => e
+  # Runtime errors during generation. Print the backtrace because these
+  # usually indicate a bug worth reporting.
   STDERR.puts "Error: #{e.message}"
   STDERR.puts e.backtrace
   exit 1
