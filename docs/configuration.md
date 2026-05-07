@@ -28,7 +28,7 @@ These options apply to all formats.
 | `skip`          | `[]`               | Array of glob patterns specifying which files to skip. For Rice/FFI, these match header file paths. For CMake, these match generated `*-rb.cpp` file paths. In most cases, it's better to add skips to the Rice/FFI config so the files are never generated, rather than skipping them in CMake after the fact. |
 | `symbols`       | `{}`               | Symbol actions and name mappings grouped by type. See [Symbols](#symbols).                  |
 | `export_macros` | `[]`               | List of macros that indicate a function is exported. See [Export Macros](#export-macros). |
-| `version_check` | none | Identifier used for version guards. Required when `symbols.versions` is non-empty. For **Rice**, this is a C preprocessor macro — symbols are wrapped in `#if version_check >= version` / `#endif`. For **FFI**, this is a Ruby method name — symbols are wrapped in `if version_check >= version` / `end`. See [Version Guards](#version-guards). |
+| `version_check` | none | Identifier used for version guards. Required when `symbols.versions` is non-empty. For **Rice**, this is a C preprocessor macro — symbols are wrapped in `#if version_check >= version` / `#endif`. For **FFI**, this is a Ruby method name — symbols are wrapped in `if version_check >= version` / `end`. See [Versions](#versions). |
 
 ## C (FFI) Options
 
