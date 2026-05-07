@@ -105,7 +105,9 @@ lib/ruby-bindgen/
 └── generators/
     ├── generator.rb             # Base class shared by generators
     ├── rice/                    # C++ Rice binding generator
-    │   ├── rice.rb              # Main C++ generator (AST visitor)
+    │   ├── rice.rb              # Main C++ generator (AST visitor); the helpers
+    │   │                        # below are nested under Rice (e.g.
+    │   │                        # RubyBindgen::Generators::Rice::TypeSpeller).
     │   ├── type_speller.rb      # Reconstructs qualified C++ type names
     │   ├── type_index.rb        # Index of typedefs and template instantiations
     │   ├── signature_builder.rb # Builds Rice method signatures

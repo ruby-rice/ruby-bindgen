@@ -1,4 +1,15 @@
 require 'set'
+
+# Forward declaration so the helper files below can nest their classes
+# under Rice (Ruby would otherwise see `class Rice` with no superclass
+# in the helpers and TypeError when this file later says `< Generator`).
+module RubyBindgen
+  module Generators
+    class Rice < Generator
+    end
+  end
+end
+
 require_relative 'function_pointer'
 require_relative 'iterator_collector'
 require_relative 'reference_qualifier'

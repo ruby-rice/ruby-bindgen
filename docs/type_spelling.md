@@ -183,7 +183,7 @@ The current design reflects these constraints deliberately.
 
 ## Code Locations
 
-All type-spelling logic lives in the `TypeSpeller` class:
+All type-spelling logic lives in the `RubyBindgen::Generators::Rice::TypeSpeller` class:
 
 - `lib/ruby-bindgen/generators/rice/type_speller.rb`
   - Top-level entry points: `type_spelling`, `type_spellings`,

@@ -60,11 +60,11 @@ class RiceAbstractTest < AbstractTest
                                    RubyBindgen::Generators::Rice::CONVERSION_TYPE_MAPPINGS)
     FFI::Clang::Cursor.namer = namer
 
-    type_index = RubyBindgen::Generators::TypeIndex.new
+    type_index = RubyBindgen::Generators::Rice::TypeIndex.new
     type_index.build!(parsed.translation_unit.cursor)
 
-    reference_qualifier = RubyBindgen::Generators::ReferenceQualifier.new
-    type_speller = RubyBindgen::Generators::TypeSpeller.new(type_index: type_index)
+    reference_qualifier = RubyBindgen::Generators::Rice::ReferenceQualifier.new
+    type_speller = RubyBindgen::Generators::Rice::TypeSpeller.new(type_index: type_index)
     type_speller.printing_policy = parsed.translation_unit.cursor.printing_policy
 
     inputter = RubyBindgen::Inputter.new(parsed.dir, ["fixture.hpp"])
@@ -72,13 +72,13 @@ class RiceAbstractTest < AbstractTest
 
     {
       reference_qualifier: reference_qualifier,
-      signature_builder: RubyBindgen::Generators::SignatureBuilder.new(
+      signature_builder: RubyBindgen::Generators::Rice::SignatureBuilder.new(
         type_speller: type_speller,
         reference_qualifier: reference_qualifier,
         cursor_literals: RubyBindgen::Generators::Rice::CURSOR_LITERALS,
         fundamental_types: RubyBindgen::Generators::Rice::FUNDAMENTAL_TYPES
       ),
-      template_resolver: RubyBindgen::Generators::TemplateResolver.new(
+      template_resolver: RubyBindgen::Generators::Rice::TemplateResolver.new(
         reference_qualifier: reference_qualifier,
         type_speller: type_speller,
         namer: namer
