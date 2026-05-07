@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
   spec.metadata = {
     "bug_tracker_uri"   => "https://github.com/ruby-rice/ruby-bindgen/issues",
     "changelog_uri"     => "https://github.com/ruby-rice/ruby-bindgen/blob/main/CHANGELOG.md",
+    "documentation_uri" => "https://ruby-rice.github.io/ruby-bindgen/",
     "source_code_uri"   => "https://github.com/ruby-rice/ruby-bindgen",
   }
 
