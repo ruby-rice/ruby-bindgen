@@ -88,29 +88,39 @@ The [key classes](#key-classes) live under `lib/ruby-bindgen/`. Each output form
 
 ```
 lib/ruby-bindgen/
-├── config.rb                  # YAML config loading
-├── inputter.rb                # Header file discovery
-├── outputter.rb               # File writing with cleanup
-├── parser.rb                  # ffi-clang AST parsing
-├── name_mapper.rb             # Exact/regex name remapping
-├── namer.rb                   # C++ → Ruby name conversion
-├── symbols.rb                 # skip/version/override matching
+├── config.rb                    # YAML config loading
+├── inputter.rb                  # Header file discovery
+├── outputter.rb                 # File writing with cleanup
+├── parser.rb                    # ffi-clang AST parsing
+├── name_mapper.rb               # Exact/regex name remapping
+├── namer.rb                     # C++ → Ruby name conversion
+├── symbols.rb                   # skip / version / override matching
+├── symbol_entry.rb              # Per-symbol skip/version/override record
+├── symbol_candidates.rb         # Candidate name generation for lookup
+├── type_pointer_formatter.rb    # Pointer type formatting helpers
 ├── version.rb
-├── refinements/               # Extensions to ffi-clang classes
-│   ├── cursor.rb
-│   ├── type.rb
-│   ├── string.rb
+├── refinements/                 # Extensions to ffi-clang and stdlib classes
+│   ├── cursor.rb                # Cursor: ruby_name, cruby_name, anonymous_definer, namer
+│   └── string.rb                # String: camelize, underscore, upcase_first
 └── generators/
-    ├── generator.rb           # Base class shared by generators
-    ├── rice/                  # C++ Rice binding generator
-    │   ├── rice.rb            # Main C++ generator
-    │   └── *.erb              # ERB templates
-    ├── ffi/                   # C FFI binding generator
-    │   ├── ffi.rb             # Main C generator
-    │   └── *.erb              # ERB templates
-    └── cmake/                 # CMake build file generator
-        ├── cmake.rb           # Main CMake generator
-        └── *.erb              # ERB templates
+    ├── generator.rb             # Base class shared by generators
+    ├── rice/                    # C++ Rice binding generator
+    │   ├── rice.rb              # Main C++ generator (AST visitor)
+    │   ├── type_speller.rb      # Reconstructs qualified C++ type names
+    │   ├── type_index.rb        # Index of typedefs and template instantiations
+    │   ├── signature_builder.rb # Builds Rice method signatures
+    │   ├── template_resolver.rb # Class template resolution
+    │   ├── iterator_collector.rb# Detects begin/end iterator pairs
+    │   ├── function_pointer.rb  # Function pointer typedef handling
+    │   ├── reference_qualifier.rb# Reference / const qualifiers
+    │   └── *.erb                # ERB templates
+    ├── ffi/                     # C FFI binding generator
+    │   ├── ffi.rb               # Main C generator
+    │   └── *.erb                # ERB templates
+    └── cmake/                   # CMake build file generator
+        ├── cmake.rb             # Main CMake generator
+        ├── guard.rb             # Per-target build guards
+        └── *.erb                # ERB templates
 ```
 
 Most generator methods delegate to ERB templates for code generation. Each template receives the current cursor and any generator state as local variables, and outputs a string of generated code.
@@ -165,20 +175,29 @@ The `Namer` class converts C++ names to Ruby conventions:
 
 - `CamelCase` class names stay as-is (Ruby classes are CamelCase)
 - `camelCase` and `PascalCase` method names become `snake_case`
-- `isFoo()` / `hasFoo()` become `foo?`
+- `isFoo()` / `is_foo()` become `foo?` (any `bool`-returning method whose name starts with `is`, plus any zero-arg `bool`-returning method, gets the `?` suffix)
 - C++ operators map to Ruby operators (`operator+` → `+`, `operator==` → `==`)
 - `operator[]` maps to both `[]` and `[]=` (if the return type is a reference)
 - `operator()` maps to `call`
 - Conversion operators like `operator int()` map to `to_i`, `operator string()` to `to_s`
 - C variable names for Rice classes use the `rb_c` prefix (e.g., `rb_cCvMat`)
 
-## Refinements to ffi-clang
+## Extensions to ffi-clang and stdlib
 
-`ruby-bindgen` extends ffi-clang's classes using Ruby refinements in `lib/ruby-bindgen/refinements/`:
+The `lib/ruby-bindgen/refinements/` directory holds open monkey-patches that
+extend ffi-clang and Ruby's `String`. They are loaded globally — not actual
+Ruby refinements — so any code that loads `ruby-bindgen` sees the additions.
 
-- **Cursor** - adds `ruby_name`, `cruby_name`, and `anonymous_definer`
-- **Type** - adds `fully_qualified_name` compatibility and helpers for reconstructing C++ type names with proper namespace qualification and template arguments
-- **String** - adds `camelize` and `underscore` for name conversion
+- **Cursor** (`refinements/cursor.rb`) — adds `ruby_name`, `cruby_name`,
+  `anonymous_definer`, and a class-level `namer` accessor that the generators
+  set during `generate`.
+- **String** (`refinements/string.rb`) — adds `camelize`, `underscore`, and
+  `upcase_first` for name conversion.
+
+Reconstructing qualified C++ type names is handled by the `TypeSpeller` class
+(`lib/ruby-bindgen/generators/rice/type_speller.rb`), which calls
+`FFI::Clang::Type#fully_qualified_name` (provided directly by ffi-clang ≥
+0.16) and post-processes the result. See [Type Spelling](type_spelling.md).
 
 ## Rice Generator Details
 
@@ -198,7 +217,7 @@ C++ class templates require special treatment. See [templates](cpp/templates.md)
 
 ### Type Spelling
 
-Reconstructing correct C++ type names from libclang's type information is one of the trickiest parts of the codebase. The `type_spelling` family of methods handles:
+Reconstructing correct C++ type names from libclang's type information is one of the trickiest parts of the codebase. The `TypeSpeller` class (`lib/ruby-bindgen/generators/rice/type_speller.rb`) handles:
 
 - Namespace qualification (`cv::Mat` not `Mat`)
 - Template argument qualification (`std::vector<cv::Point>` not `std::vector<Point>`)
