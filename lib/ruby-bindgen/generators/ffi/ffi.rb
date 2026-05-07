@@ -392,10 +392,16 @@ module RubyBindgen
       # (2.5f, 100000L, 42U, 1ULL, 0xABCDuLL) flow through unchanged and break
       # the generated module. Char ('A') and string ("hello") literals are
       # returned as-is — they're already valid Ruby strings.
-      C_NUMERIC_SUFFIX = /(?:[uU][lL]{0,2}|[lL]{1,2}[uU]?|[fF])\z/.freeze
+      #
+      # Hex literals need different treatment: f/F are valid hex digits, so
+      # 0xff must NOT have its trailing f stripped (would yield 0xf = 15
+      # instead of 255). Hex strips integer suffixes only.
+      C_INT_SUFFIX   = /(?:[uU][lL]{0,2}|[lL]{1,2}[uU]?)\z/.freeze
+      C_FLOAT_SUFFIX = /(?:[uU][lL]{0,2}|[lL]{1,2}[uU]?|[fFlL])\z/.freeze
       def literal_to_ruby(spelling)
         return spelling if spelling.start_with?("'", '"')
-        spelling.sub(C_NUMERIC_SUFFIX, '')
+        suffix = spelling.match?(/\A[+-]?0[xX]/) ? C_INT_SUFFIX : C_FLOAT_SUFFIX
+        spelling.sub(suffix, '')
       end
 
       def figure_method(cursor)

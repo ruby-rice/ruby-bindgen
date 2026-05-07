@@ -5,6 +5,10 @@ const float CONST_FLOAT = 2.5f;
 const char CONST_CHAR = 'A';
 const long CONST_LONG = 100000L;
 const unsigned int CONST_UINT = 42;
+const unsigned long long CONST_ULL = 1ULL;
+const unsigned long long CONST_ULL_LONG = 0xffffffffULL;
+const int CONST_HEX = 0xff;
+const int CONST_HEX_UPPER = 0xFF;
 
 // Anonymous enum - constants should be emitted, not crash
 enum { ANON_MAX_SIZE = 100, ANON_MIN_SIZE = 10 };

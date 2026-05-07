@@ -8,6 +8,10 @@ module Constants
   ConstChar = 'A'
   ConstLong = 100000
   ConstUint = 42
+  ConstUll = 1
+  ConstUllLong = 0xffffffff
+  ConstHex = 0xff
+  ConstHexUpper = 0xFF
 
   enum(
     :ANON_MAX_SIZE, 100,
