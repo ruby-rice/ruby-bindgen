@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.metadata = {
     "bug_tracker_uri"   => "https://github.com/ruby-rice/ruby-bindgen/issues",
     "changelog_uri"     => "https://github.com/ruby-rice/ruby-bindgen/blob/main/CHANGELOG.md",
-    "source_code_uri"   => "https://github.com/ruby-rice/ruby-bindgen/tree/v#{spec.version}",
+    "source_code_uri"   => "https://github.com/ruby-rice/ruby-bindgen",
   }
 
   spec.author = "Charlie Savage"
