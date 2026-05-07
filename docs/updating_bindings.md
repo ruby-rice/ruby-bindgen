@@ -48,7 +48,7 @@ git apply manual_updates.diff
 
 ### Option B: Agent File
 
-Maintain a structured document (`manual_updates.md`) that describes each change declaratively. An AI assistant or a human can follow the instructions after each regeneration. For an example, see opencv-ruby's [manual_updates.md](https://github.com/ruby-rice/opencv-ruby/blob/main/ext/manual_updates.md).
+Maintain a structured document (`manual_updates.md`) that describes each change declaratively. An AI assistant or a human can follow the instructions after each regeneration. For an example, see opencv-ruby's [manual_updates.md](https://github.com/cfis/opencv-ruby/blob/main/ext/manual_updates.md).
 
 **Pros**: Survives large formatting changes, human-readable, an AI assistant can apply the instructions even when line numbers shift.
 
