@@ -63,7 +63,7 @@ For CMake bindings, `ruby-bindgen` runs as a second pass, scanning the output di
 ``` mermaid
 flowchart TD
     subgraph Input
-        Y["bindings.yaml"]
+        Y["cmake-bindings.yaml"]
         S["*-rb.cpp"]
     end
 
