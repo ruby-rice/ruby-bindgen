@@ -1,6 +1,8 @@
 # Troubleshooting
 
-Common failures and how to fix them.
+Common failures and how to fix them. Section headings match the exact
+error string `ruby-bindgen` prints, so you can search for the message
+verbatim.
 
 ## Pipeline and Failure Points
 
@@ -20,7 +22,9 @@ flowchart LR
   X6["Fail: shared library not found"] -.-> F
 ```
 
-## `Error: Config file not found`
+For the full backtrace on any of these errors, set `BINDGEN_DEBUG=1`.
+
+## `Error: Config file not found: <path>`
 
 Cause:
 - Wrong path passed to `ruby-bindgen`
@@ -30,18 +34,42 @@ Fix:
 ruby-bindgen /absolute/path/to/config.yaml
 ```
 
-## `Input path must be a directory`
+## `Error: Config must specify 'output'`
 
 Cause:
-- `input:` points to a missing path or file
+- The YAML file is missing the required top-level `output:` key.
 
 Fix:
-- Set `input:` to an existing directory containing headers
+- Add `output: /path/to/output/dir` (the directory generated bindings are written to).
 
-## `Output path must be a directory`
+## `Error: Config must specify 'format'`
 
 Cause:
-- `output:` directory does not exist
+- The YAML file is missing the required top-level `format:` key.
+
+Fix:
+- Add `format: Rice` (C++ via Rice), `format: FFI` (C via FFI), or `format: CMake` (CMake build files).
+
+## `Error: Format must be 'FFI', 'Rice', or 'CMake', got: <value>`
+
+Cause:
+- `format:` is set to something other than the three accepted values. Match is case-sensitive.
+
+Fix:
+- Use exactly `Rice`, `FFI`, or `CMake`.
+
+## `Error: Input path must be a directory: <path>`
+
+Cause:
+- `input:` points to a missing path or file (not a directory).
+
+Fix:
+- Set `input:` to an existing directory containing headers. For `format: CMake`, `input:` defaults to `output:` (the directory containing the generated `*-rb.cpp` files).
+
+## `Error: Output path must be a directory: <path>`
+
+Cause:
+- `output:` directory does not exist.
 
 Fix:
 ```bash
@@ -49,7 +77,45 @@ mkdir -p /path/to/output
 ruby-bindgen config.yaml
 ```
 
-## `libclang` load failures
+## `Error: Project name must be a valid C/C++ identifier (hyphens allowed): <name>`
+
+Cause:
+- `project:` contains characters other than letters, digits, underscore, or hyphen, or starts with a digit.
+
+Fix:
+- Use a name like `my_extension` or `my-extension`. Hyphens are normalized to underscores in generated C++ identifiers.
+
+## `Error: Rice include header not found: <path>`
+
+Cause:
+- `include:` (under a Rice config) names a header that does not exist under `output:`.
+
+Fix:
+- Confirm the file path is relative to `output:` and that the header is present before running. Without it, every generated `*-rb.hpp` would `#include` a missing file and the C++ build would fail far from the cause.
+
+## `Error: libclang library not found: <path>`
+
+Cause:
+- `clang.libclang:` (or `clang-cl.libclang:`) explicitly points to a missing shared library.
+
+Fix:
+- Either correct the path or remove the `libclang:` key and rely on `ffi-clang`'s default discovery.
+
+## `Error: clang args must be a YAML list, got: String`
+
+Cause:
+- `clang.args:` (or `clang-cl.args:`) is written as a single string instead of a YAML sequence.
+
+Fix:
+```yaml
+clang:
+  args:
+    - -I/usr/include
+    - -std=c++17
+    - -xc++
+```
+
+## `libclang` runtime load failures
 
 Symptoms:
 - FFI load error for libclang
