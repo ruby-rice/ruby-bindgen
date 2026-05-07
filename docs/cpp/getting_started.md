@@ -24,7 +24,7 @@ clang:
 
 Key options:
 
-- `project` — name used for the extension init function (`Init_MyExtension`) and project wrapper files
+- `project` — name used for the extension init function (`Init_my_extension`) and project wrapper files
 - `input` — directory containing header files
 - `output` — where generated C++ files are written
 - `match` — glob patterns selecting which headers to process

@@ -62,8 +62,8 @@ flowchart LR
     RB --> P1 & P2 & P3
 ```
 
-* `my_extension-rb.hpp` declares the main Ruby init function `Init_MyExtension` with the appropriate export attribute (`__declspec(dllexport)` on Windows, `__attribute__((visibility("default")))` on Linux/macOS)
-* `my_extension-rb.cpp` defines `Init_MyExtension`, which calls each per-header `Init_` function (e.g., `Init_Matrix`, `Init_Image`, `Init_Filter`)
+* `my_extension-rb.hpp` declares the main Ruby init function `Init_my_extension` with the appropriate export attribute (`__declspec(dllexport)` on Windows, `__attribute__((visibility("default")))` on Linux/macOS)
+* `my_extension-rb.cpp` defines `Init_my_extension`, which calls each per-header `Init_` function (e.g., `Init_Matrix`, `Init_Image`, `Init_Filter`)
 * `rice_include.hpp` is the default [include header](#include-header) that all generated translation units include
 
 To suppress project file generation, omit the `project` option from your configuration. This is useful when you want to manage the top-level init function yourself.
@@ -115,7 +115,7 @@ When Ruby loads an extension, it calls the top-level `Init_<extension>` function
 
 ```mermaid
 flowchart TD
-  A["Ruby loads extension"] --> B["Init_MyExtension"]
+  A["Ruby loads extension"] --> B["Init_my_extension"]
   B --> C["Init_Core"]
   B --> D["Init_Mat"]
   B --> E["Init_*"]
