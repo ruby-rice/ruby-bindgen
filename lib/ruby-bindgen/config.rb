@@ -18,6 +18,9 @@ module RubyBindgen
       @data[key]
     end
 
+    # @api private
+    # Used by tests for ad-hoc overrides and by the CLI to default :input to
+    # :output. Not intended for downstream code; the public contract is read-only.
     def []=(key, value)
       @data[key] = value
     end
