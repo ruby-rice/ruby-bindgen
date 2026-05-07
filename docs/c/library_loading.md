@@ -15,6 +15,10 @@ FFI loads the target shared library at runtime. The `library_names`, `library_ve
 
 The unversioned `libproj` entry is always included as a fallback.
 
+The platform's loader appends the conventional shared-library suffix at
+load time (`.so` on Linux, `.dylib` on macOS, `.dll` on Windows), so a
+macOS entry like `libproj.25` resolves to `libproj.25.dylib`.
+
 ## Library Versions
 
 C shared libraries use version suffixes that vary by platform and change across releases. `library_versions` lets you list known version suffixes so FFI can find whichever version is installed.
