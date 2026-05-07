@@ -33,7 +33,7 @@ Common reasons to add refinements include:
 | Custom type handling    | `Type<T>`, `From_Ruby<T>`, and `To_Ruby<T>`              |
 | Custom STL names        | `define_vector<cv::Vec3b>(...)`                          |
 | Non-member operators    | `+`, `-`, `*`, `/`, `==`                                 |
-| Iteration               | Add `std::iterator_types`                                |
+| Iteration               | Add `std::iterator_traits`                               |
 | Method renames          | `rb_alias` to rename methods to match Ruby idioms        |
 
 Just like in Ruby, you can take advantage of Ruby’s open classes to add new functionality.
