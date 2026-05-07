@@ -34,6 +34,8 @@ ruby-bindgen rice-bindings.yaml
 
 This produces `.cpp`, `.hpp`, and `.ipp` files ready to compile as a Ruby extension.
 
+Relative paths (`./include`, `./ext/generated`, `-I./include`) are resolved relative to the config file's directory, so you can run `ruby-bindgen` from anywhere.
+
 ## Install
 
 ```console
