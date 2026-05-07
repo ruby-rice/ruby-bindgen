@@ -191,3 +191,53 @@ Fix:
 - Add likely version suffixes to `library_versions`
 - If the library is outside the standard loader path, use `library_search_path` and set the corresponding environment variable at runtime
 - Confirm installation path is on loader search path
+
+## Windows-specific
+
+ruby-bindgen runs on Windows under both MSVC (mswin Ruby builds) and MinGW.
+The toolchain is auto-detected via `RUBY_PLATFORM` — `mswin` uses the
+`clang-cl:` config block, everything else uses `clang:`.
+
+### Choosing MSVC vs MinGW
+
+- **MSVC (`mswin`)** — recommended if you need to link against vcpkg or
+  other MSVC-built dependencies. Uses `clang-cl` (Clang's MSVC-compatible
+  driver) for header parsing.
+- **MinGW** — uses regular `clang` and works with Unix-style include paths.
+  Easier setup if the library is already buildable with MinGW.
+
+### libclang load failure on Windows
+
+Symptoms:
+- `Error: libclang library not found: ...`
+- FFI load error at startup
+
+Fix:
+- Visual Studio bundles libclang at
+  `C:\Program Files\Microsoft Visual Studio\<edition>\<year>\VC\Tools\Llvm\x64\bin\libclang.dll`.
+  Either install the "Clang/LLVM tools" component in the VS installer or
+  install LLVM standalone and set `clang-cl.libclang:` to its `libclang.dll`.
+- For MinGW Ruby, install LLVM via `pacman -S mingw-w64-clang-x86_64-clang`
+  (or the appropriate variant) and set `clang.libclang:` to the resulting
+  `libclang.dll`.
+
+### Path separators
+
+Use forward slashes (`/`) in YAML config paths even on Windows. The
+inputter normalizes backslashes internally, but forward slashes avoid
+YAML escape issues.
+
+### vcpkg integration (MSVC)
+
+If your library is installed via vcpkg, point `clang-cl.args:` at the
+vcpkg include directory and `library_search_path:` at the bin directory:
+
+```yaml
+clang-cl:
+  libclang: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/x64/bin/libclang.dll
+  args:
+    - -IC:/vcpkg/installed/x64-windows/include
+    - -std:c++17
+
+library_search_path: PATH
+```
