@@ -91,4 +91,4 @@ namespace std
 
 ## Examples
 
-See [test/headers/cpp/iterators.hpp](../test/headers/cpp/iterators.hpp) for example iterator classes, including both complete and incomplete iterators. The generated bindings are in [test/bindings/cpp/iterators-rb.cpp](../test/bindings/cpp/iterators-rb.cpp).
+See [test/headers/cpp/iterators.hpp](https://github.com/ruby-rice/ruby-bindgen/blob/main/test/headers/cpp/iterators.hpp) for example iterator classes, including both complete and incomplete iterators. The generated bindings are in [test/bindings/cpp/iterators-rb.cpp](https://github.com/ruby-rice/ruby-bindgen/blob/main/test/bindings/cpp/iterators-rb.cpp).

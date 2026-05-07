@@ -40,7 +40,7 @@ The test suite includes bindings generated from some popular C libraries:
 | [SQLite](https://sqlite.org/)   | Database engine                   |
 | [libclang](https://clang.llvm.org/) | C/C++ parsing library             |
 
-See [test/headers/c](../../test/headers/c) for the input headers and [test/bindings/c](../../test/bindings/c) for the generated Ruby bindings.
+See [test/headers/c](https://github.com/ruby-rice/ruby-bindgen/tree/main/test/headers/c) for the input headers and [test/bindings/c](https://github.com/ruby-rice/ruby-bindgen/tree/main/test/bindings/c) for the generated Ruby bindings.
 
 ## Ruby Wrapper Classes
 
