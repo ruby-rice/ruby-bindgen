@@ -31,6 +31,7 @@ nav = [
     { "Operators" = "cpp/operators.md" },
     { "Iterators" = "cpp/iterators.md" },
     { "Buffers" = "cpp/buffers.md" },
+    { "Version Guards" = "version_guards.md" },
     { "Customizing" = "cpp/customizing.md" },
   ]},
   { "CMake Bindings" = [
@@ -41,8 +42,14 @@ nav = [
   ]},
   { "Configuration" = "configuration.md" },
   { "Updating Bindings" = "updating_bindings.md" },
+  { "Examples" = "examples.md" },
+  { "Troubleshooting" = "troubleshooting.md" },
   { "Prior Art" = "prior_art.md" },
-  { "Architecture" = "architecture.md" },
+  { "Internals" = [
+    { "Architecture" = "architecture.md" },
+    { "Type Spelling" = "type_spelling.md" },
+    { "Contributing" = "contributing.md" },
+  ]},
 ]
 
 [project.theme]
