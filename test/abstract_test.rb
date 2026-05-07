@@ -86,7 +86,10 @@ class AbstractTest < Minitest::Test
 
     # Detect stale expected files that were not generated this run.
     # Group generated files by base name prefix (e.g., "classes-rb") and check
-    # for extra files on disk with the same prefix.
+    # for extra files on disk with the same prefix. Note: this only catches
+    # stale outputs that share a basename with currently-generated files;
+    # leftover files in the same directory with unrelated names slip through
+    # (run tests with the full set of inputs to surface those).
     prefixes = generated_paths.map { |p| File.basename(p).sub(/\.(cpp|hpp|ipp|rb)$/, '') }.uniq
     prefixes.each do |prefix|
       dir = File.dirname(generated_paths.first)
