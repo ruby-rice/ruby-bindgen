@@ -7,6 +7,14 @@ Gem::Specification.new do |spec|
   spec.version = RubyBindgen::VERSION
   spec.homepage = "https://github.com/ruby-rice/ruby-bindgen/"
   spec.summary = "C and C++ binding generator for Ruby"
+  spec.description = <<~DESC
+    ruby-bindgen reads C and C++ headers with libclang and emits Ruby bindings.
+    It supports three output formats: Rice C++ source for high-fidelity C++ wrappers,
+    raw FFI for plain C libraries, and CMake build files to compile the generated
+    extensions. Bindings are driven from a YAML configuration that controls header
+    matching, symbol filtering, name mapping, and version guards. Battle-tested
+    against OpenCV (thousands of classes) and PROJ.
+  DESC
   spec.license = 'BSD-2-Clause'
 
   spec.metadata = {
