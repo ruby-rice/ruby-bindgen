@@ -29,7 +29,7 @@ However, `.by_ref` is **wrong** when the pointer is actually an array of structs
 Below are two common patterns to help decide.
 
 ### Array parameters
-Look for aa count parameter that either precedes or follows the struct pointer:
+Look for a count parameter that either precedes or follows the struct pointer:
 
 ```c
 PJ *proj_create_conversion(PJ_CONTEXT *ctx, ..., int param_count,
