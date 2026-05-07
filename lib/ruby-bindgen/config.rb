@@ -6,7 +6,10 @@ module RubyBindgen
     def initialize(config_path)
       @config_dir = File.dirname(File.expand_path(config_path))
       raw = YAML.safe_load(File.read(config_path), permitted_classes: [], permitted_symbols: [], aliases: true)
-      @data = symbolize_keys(raw)
+      # YAML.safe_load returns nil for an empty file. Treat that as an empty
+      # config so the CLI's validate_config can produce its useful "Config
+      # must specify 'output'" message instead of a NoMethodError.
+      @data = raw.is_a?(Hash) ? symbolize_keys(raw) : {}
       resolve_toolchain
       resolve_paths
     end
