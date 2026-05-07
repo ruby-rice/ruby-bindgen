@@ -183,15 +183,18 @@ The current design reflects these constraints deliberately.
 
 ## Code Locations
 
-- Core logic:
-  `lib/ruby-bindgen/generators/rice/rice.rb`
-  (`type_spelling`, `type_spelling_elaborated`)
+All type-spelling logic lives in the `TypeSpeller` class:
 
-- Qualified name helpers:
-  `lib/ruby-bindgen/refinements/type.rb`
-  (`fully_qualified_name`)
+- `lib/ruby-bindgen/generators/rice/type_speller.rb`
+  - Top-level entry points: `type_spelling`, `type_spellings`,
+    `qualified_class_name`, `qualified_display_name`
+  - Declared / unexposed type handling: `type_spelling_declared`,
+    `type_spelling_unexposed`, `type_spelling_pointer`
+  - Template handling: `qualify_template_args`,
+    `qualify_dependent_types_in_template_args`,
+    `qualify_template_parameter_packs`,
+    `qualify_class_template_typedefs`
+  - Static member qualification: `qualify_class_static_members`
 
-- Template argument qualification:
-  `lib/ruby-bindgen/generators/rice/rice.rb`
-  `qualify_template_args`  
-  `qualify_dependent_types_in_template_args`
+The `fully_qualified_name` helper used by `TypeSpeller` is provided
+directly by `FFI::Clang::Type` (ffi-clang ≥ 0.16).
