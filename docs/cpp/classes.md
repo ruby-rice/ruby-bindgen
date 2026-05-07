@@ -84,7 +84,7 @@ Type conversion operators generate appropriately named Ruby methods:
 
 ```cpp
 operator bool() const;           // to_bool
-operator std::string() const;    // to_std_string
+operator std::string() const;    // to_s
 operator int*();                 // to_ptr (non-const)
 operator const int*() const;     // to_const_ptr
 ```
