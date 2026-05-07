@@ -1,6 +1,7 @@
 /.idea
 /.vs
 /.claude
+/.codex
 Gemfile.lock
 /test/bindings/cpp/build
 /test/bindings/lib
