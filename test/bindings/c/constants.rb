@@ -4,9 +4,9 @@ module Constants
   ConstInt = 10
   StaticConstInt = 20
   ConstDouble = 3.14
-  ConstFloat = 2.5f
+  ConstFloat = 2.5
   ConstChar = 'A'
-  ConstLong = 100000L
+  ConstLong = 100000
   ConstUint = 42
 
   enum(

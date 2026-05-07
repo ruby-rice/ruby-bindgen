@@ -380,11 +380,22 @@ module RubyBindgen
           if eq_index && tokens.tokens[eq_index + 1]&.kind == :literal
             return render_cursor(cursor, "constant",
                                  name: cursor.ruby_name,
-                                 value: tokens.tokens[eq_index + 1].spelling)
+                                 value: literal_to_ruby(tokens.tokens[eq_index + 1].spelling))
           end
         end
 
         self.render_cursor(cursor, "variable")
+      end
+
+      # Convert a C literal token spelling into something that parses as Ruby.
+      # libclang gives us the verbatim source text, so C numeric suffixes
+      # (2.5f, 100000L, 42U, 1ULL, 0xABCDuLL) flow through unchanged and break
+      # the generated module. Char ('A') and string ("hello") literals are
+      # returned as-is — they're already valid Ruby strings.
+      C_NUMERIC_SUFFIX = /(?:[uU][lL]{0,2}|[lL]{1,2}[uU]?|[fF])\z/.freeze
+      def literal_to_ruby(spelling)
+        return spelling if spelling.start_with?("'", '"')
+        spelling.sub(C_NUMERIC_SUFFIX, '')
       end
 
       def figure_method(cursor)

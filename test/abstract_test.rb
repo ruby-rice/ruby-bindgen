@@ -57,12 +57,22 @@ class AbstractTest < Minitest::Test
     validate_result(generator.outputter, &block)
   end
 
+  # Generated Ruby (FFI bindings) must be syntactically valid. Catches
+  # regressions like emitting C numeric suffixes (2.5f, 100000L) that look
+  # right in a string-compare but blow up on require.
+  def assert_ruby_parses(path, content)
+    RubyVM::AbstractSyntaxTree.parse(content)
+  rescue SyntaxError => e
+    flunk "Generated Ruby is not syntactically valid: #{path}\n#{e.message}"
+  end
+
   def validate_result(outputter)
     generated_paths = Set.new
 
     outputter.output_paths.each do |path, content|
       generated_paths << path
       content = yield(content) if block_given?
+      assert_ruby_parses(path, content) if path.end_with?(".rb")
       if ENV["UPDATE_EXPECTED"]
         FileUtils.mkdir_p(File.dirname(path))
         File.open(path, 'wb') do |file|
