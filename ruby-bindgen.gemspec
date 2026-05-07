@@ -37,9 +37,9 @@ Gem::Specification.new do |spec|
                    'bin/ruby-bindgen',
                    'docs/**/*',
                    'lib/**/*',
-]
+                   'test/**/*',
+] - Dir['test/bindings/lib/**/*', 'test/bindings/cpp/build/**/*']
 
-  spec.test_files = Dir["test/*_test.rb"]
   spec.required_ruby_version = '>= 3.2.0'
 
   spec.add_dependency 'ffi', '>= 1.16'
