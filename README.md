@@ -1,8 +1,8 @@
 # ruby-bindgen
 
-Wrapping C and C++ libraries by hand for use in Ruby has traditionally been a long, arduous task. For large, complex libraries it can take months. As a result, many C/C++ libraries are either never exposed to Ruby or their bindings quickly become outdated, especially in scientific and technical domains.
+`ruby-bindgen` generates Ruby bindings from C and C++ header files. It can even generate a CMake build system if needed. It has been battle-tested against large C/C++ libraries such as Proj and OpenCV.
 
-`ruby-bindgen` solves this problem by automatically creating bindings from C and C++ header files. It can even generate a CMake build system if needed. It has been battle-tested against large C/C++ libraries such as Proj and OpenCV.
+Traditionally, wrapping large C and C++ libraries for use in Ruby has been a long, arduous task, especially for large, complex libraries . As a result, many C/C++ libraries are either never exposed to Ruby or their bindings quickly become outdated, especially in scientific and technical domains.
 
 For much more information, read the extensive [documentation](https://ruby-rice.github.io/ruby-bindgen/).
 
